@@ -1,0 +1,7 @@
+agents:
+  credit_appraisal:
+    url: "http://localhost:8091"
+    version: "1.0.0"
+  asset_appraisal:
+    url: "http://localhost:8092"
+    version: "1.0.0"
