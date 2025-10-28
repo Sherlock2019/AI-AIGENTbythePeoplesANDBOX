@@ -1,0 +1,19 @@
+version: "3.9"
+services:
+  hub:
+    build: ./services/api
+    ports:
+      - "8090:8090"
+    depends_on:
+      - credit
+      - asset
+
+  credit:
+    build: ./agents/credit-appraisal
+    ports:
+      - "8091:8091"
+
+  asset:
+    build: ./agents/asset-appraisal
+    ports:
+      - "8092:8092"

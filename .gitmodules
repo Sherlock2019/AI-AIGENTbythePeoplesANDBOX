@@ -1,0 +1,3 @@
+[submodule "AI-AIGENTbythePeoplesANDBOX/agents/credit-appraisal"]
+	path = AI-AIGENTbythePeoplesANDBOX/agents/credit-appraisal
+	url = https://github.com/Sherlock2019/credit-appraisal-agent-poc.git

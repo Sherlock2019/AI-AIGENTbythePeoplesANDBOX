@@ -1,0 +1,9 @@
+agents:
+  credit_appraisal:
+    url: "http://localhost:8091"
+    version: "1.2.0"
+    repo: "https://github.com/Sherlock2019/credit-appraisal-agent-poc"
+  asset_appraisal:
+    url: "http://localhost:8092"
+    version: "1.0.3"
+    repo: "https://github.com/Sherlock2019/asset-appraisal-agent-"
