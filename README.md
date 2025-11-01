@@ -106,23 +106,23 @@
 
 ```mermaid
 flowchart LR
-    UI[Streamlit UI]\n(Landing / Agents / Runs) --> API[FastAPI]
+  UI["Streamlit UI<br/>(Landing · Agents · Runs)"] --> API[FastAPI]
 
-    subgraph Agents
-      CA[Credit Appraisal]\n(/run /explain /train)
-      AA[Asset Appraisal]\n(/run /explain /train)
-      DA[Data Anonymizer]\n(/sanitize)
-    end
+  subgraph Agents
+    CA["Credit Appraisal<br/>/run · /explain · /train"]
+    AA["Asset Appraisal<br/>/run · /explain · /train"]
+    DA["Data Anonymizer<br/>/sanitize"]
+  end
 
-    API --> CA
-    API --> AA
-    API --> DA
+  API --> CA
+  API --> AA
+  API --> DA
 
-    CA --- FS[(Feature Store)]
-    AA --- FS
-    CA --> MLOps[(Models & Versioning)]
-    AA --> MLOps
-    API --> Logs[(Audit & Metrics)]
+  CA --- FS[(Feature Store)]
+  AA --- FS
+  CA --> MLOps[(Models & Versioning)]
+  AA --> MLOps
+  API --> Logs[(Audit & Metrics)]
 ```
 
 **Tenets / Nguyên tắc**: HTTP/JSON contracts • Deterministic run IDs • Replaceable models/backends • Edge anonymization by default.
