@@ -1,10 +1,10 @@
 # 🏦 Banking Agent Liberty
 
-> **AI agents for regulated banking workflows — fast, explainable, production‑ready.**
-> **Thư viện tác nhân AI cho ngân hàng — nhanh, minh bạch, sẵn sàng triển khai.**
+> **AI agents for regulated banking workflows — fast • explainable • production‑ready.**
+> **Thư viện tác nhân AI cho ngân hàng — nhanh • minh bạch • sẵn sàng triển khai.**
 
 <p align="center">
-  <img src="docs/hero-banner.png" alt="Banking Agent Liberty – Hero" width="960"/>
+  <img src="docs/hero-banner.png" alt="Banking Agent Liberty – Hero" width="1000"/>
 </p>
 
 <p align="center">
@@ -22,44 +22,45 @@
 * [What](#-what) • [So What](#-so-what) • [For Who](#-for-who) • [Where](#-where) • [What Now](#-what-now)
 * [Key Features](#-key-features) • [KPIs](#-kpis) • [Architecture](#-architecture) • [Screenshots](#-screenshots)
 * [Quickstart](#-quickstart) • [Docker](#-docker) • [Configuration](#-configuration)
-* [Roadmap](#-roadmap) • [Contributing](#-contributing) • [License](#-license)
+* [Security & Compliance](#-security--compliance) • [Roadmap](#-roadmap) • [Contributing](#-contributing) • [License](#-license)
 
 ---
 
 ## ❓ What
 
-**EN:** Banking Agent Liberty is a modular **AI agent library** for retail‑bank workflows. It ships with plug‑and‑play agents (Credit Appraisal, Asset Appraisal, KYC/AML helpers, Data Anonymization), a shared UI (Streamlit) and API layer (FastAPI), plus reproducible configs for on‑prem/OpenStack or cloud GPUs.
+**EN:** Banking Agent Liberty is a modular **AI agent library** for retail‑bank workflows. It provides plug‑and‑play agents—**Credit Appraisal**, **Asset Appraisal**, **Data Anonymization**, KYC/AML helpers—plus a shared **Streamlit UI** and **FastAPI** layer. Deploy on on‑prem **OpenStack** or cloud GPUs with identical configs.
 
-**VI:** Banking Agent Liberty là thư viện **tác nhân AI** dạng mô‑đun cho nghiệp vụ ngân hàng bán lẻ. Dự án cung cấp sẵn các agent (Thẩm định tín dụng, Định giá tài sản, hỗ trợ KYC/AML, Ẩn danh dữ liệu), UI dùng chung (Streamlit), API (FastAPI) và cấu hình triển khai lặp lại được trên OpenStack/on‑prem hoặc cloud GPU.
+**VI:** Banking Agent Liberty là thư viện **tác nhân AI** mô‑đun cho nghiệp vụ ngân hàng bán lẻ: **Thẩm định tín dụng**, **Định giá tài sản**, **Ẩn danh dữ liệu**, KYC/AML. Dự án có **UI Streamlit**, **API FastAPI** và cấu hình triển khai đồng nhất trên **OpenStack** hoặc cloud GPU.
 
-**Design contract / Giao ước thiết kế:** mỗi agent là một micro‑service với endpoint rõ ràng: `POST /run`, `GET /explain`, `POST /train`, `GET /health`.
+**Agent Contract / Giao ước thiết kế:** `POST /run` • `GET /explain` • `POST /train` • `GET /health`.
 
 ---
 
 ## 💡 So What
 
-**EN:** Traditional lending and collateral processes are slow, manual, siloed. Liberty makes them **explainable, auditable, automatable**.
+* **Speed / Nhanh:** Synthetic seeding, one‑click anonymization, batch runs, cached explainability → **days ➜ minutes**.
+* **Quality / Chất lượng:** Feature store hygiene, SHAP‑style explanations, policy guards reduce bias & drift.
+* **Compliance / Tuân thủ:** Data localization defaults, immutable logs, human‑in‑the‑loop audit trails.
+* **Extensibility / Mở rộng:** Swap models (HF/LightGBM/scikit‑learn) & vector DBs without UI changes.
 
-* **Speed:** Synthetic seeding, one‑click anonymization, batch appraisal, cached explainability → days ➜ minutes.
-* **Quality:** Feature store, SHAP‑style explainers, policy guards reduce bias & drift.
-* **Compliance:** Data sovereignty defaults, verifiable logs, human‑in‑the‑loop trails for regulators.
-* **Extensibility:** Swap models (HF, LightGBM, scikit‑learn) & vector DBs without UI changes.
-
-**VI:** Quy trình tín dụng/tài sản truyền thống chậm, thủ công, rời rạc. Liberty biến chúng thành **minh bạch, kiểm toán được, tự động hóa** với tốc độ cao, chất lượng ổn định, tuân thủ chuẩn.
+**Outcome:** faster approvals, lower risk, clearer audits.
+**Kết quả:** phê duyệt nhanh hơn, rủi ro thấp hơn, kiểm toán minh bạch hơn.
 
 ---
 
 ## 👥 For Who
 
-* **EN:** Retail Banks, Fintechs, AI/Data teams, Solution Architects, Ops & Risk.
-* **VI:** Ngân hàng bán lẻ, Fintech, đội AI/Dữ liệu, Kiến trúc sư giải pháp, Vận hành & Quản trị rủi ro.
+* **Banks & Fintechs** needing faster, auditable credit/collateral flows.
+* **AI/Data Teams** wanting reproducible, explainable agents with clean APIs.
+* **Solution Architects** targeting hybrid OpenStack ↔ Cloud.
+* **Ops & Risk** requiring clear logs, approvals, and rollback paths.
 
 ---
 
 ## 📍 Where
 
-* **EN:** Run on laptop, on‑prem OpenStack, or cloud GPUs. Data stays sovereign with edge anonymization.
-* **VI:** Chạy trên máy cá nhân, OpenStack nội bộ hoặc cloud GPU; dữ liệu tuân thủ chủ quyền bằng ẩn danh tại biên.
+* **Runs Anywhere:** laptop, on‑prem OpenStack, or cloud GPUs.
+* **Data Sovereignty:** anonymize at the edge before training/inference.
 
 ---
 
@@ -68,7 +69,7 @@
 1. **Clone & configure** (SSH)
 2. **Launch Agent Hub UI** (try credit/asset flows)
 3. **Connect data**: CSV/parquet or synthetic generator
-4. **Ship** behind SSO & policies
+4. **Enable policies + SSO**
 5. **Measure KPIs** & iterate
 
 > ⏩ Jump to [Quickstart](#-quickstart).
@@ -77,14 +78,14 @@
 
 ## ✨ Key Features
 
-* **Credit Appraisal Agent** — decision + explanation (SHAP), scorecards, policy checks.
-* **Asset Appraisal Agent** — market‑driven valuation, inspector field input, geo‑tag heatmaps.
-* **Data Anonymizer** — PII masking & tokenization; reversible under custody keys.
+* **Credit Appraisal Agent** — decision + SHAP explanations, scorecards, policy checks.
+* **Asset Appraisal Agent** — market comps, inspector intake, geo‑tag heatmaps, uncertainty bands.
+* **Data Anonymizer** — PII masking/tokenization; reversible under custody keys.
 * **Feedback → Retrain** — capture human outcomes, re‑train safely, version models.
-* **Observability** — structured run IDs, audit logs, metrics, exportable reports.
-* **Modular Backends** — Hugging Face, scikit‑learn/LightGBM, pluggable vector DBs.
+* **Observability** — run IDs, artifacts, audit logs, exportable reports.
+* **Modular Backends** — Hugging Face, scikit‑learn/LightGBM, pluggable vector DBs (FAISS/pgvector/Qdrant).
 
-> **Compliance lenses / Ống kính tuân thủ:** data localization, least‑privilege keys, immutable logs, model lineage.
+> **Compliance lenses / Ống kính tuân thủ:** data residency, least‑privilege keys, immutable logs, lineage.
 
 ---
 
@@ -93,7 +94,7 @@
 | Domain     | KPI                              | Why it matters               | How Liberty helps                                     |
 | ---------- | -------------------------------- | ---------------------------- | ----------------------------------------------------- |
 | Credit     | **TAT (Time‑to‑Approve)**        | Faster decisions ➜ better CX | Synthetic seeding, batch scoring, cached explanations |
-| Credit     | **Approval Quality / Default Δ** | Reduce risk                  | Feature store hygiene, policy guards, bias checks     |
+| Credit     | **Approval Quality / Default Δ** | Reduce risk                  | Feature hygiene, policy guards, bias checks           |
 | Asset      | **Valuation Variance**           | Pricing confidence           | Market comps + uncertainty bands                      |
 | Asset      | **Inspector SLA**                | Field ops efficiency         | Mobile/CSV intake, geotag reminders                   |
 | Ops        | **Model Drift / Fairness**       | Reliability & fairness       | Drift alerts, re‑train loop                           |
@@ -105,16 +106,12 @@
 
 ```mermaid
 flowchart LR
-    UI[Streamlit UI]
-(Landing / Agents / Runs) --> API[FastAPI]
+    UI[Streamlit UI]\n(Landing / Agents / Runs) --> API[FastAPI]
 
     subgraph Agents
-      CA[Credit Appraisal]
-(/run /explain /train)
-      AA[Asset Appraisal]
-(/run /explain /train)
-      DA[Data Anonymizer]
-(/sanitize)
+      CA[Credit Appraisal]\n(/run /explain /train)
+      AA[Asset Appraisal]\n(/run /explain /train)
+      DA[Data Anonymizer]\n(/sanitize)
     end
 
     API --> CA
@@ -128,18 +125,13 @@ flowchart LR
     API --> Logs[(Audit & Metrics)]
 ```
 
-**Tenets / Nguyên tắc**
-
-* Loose coupling via HTTP/JSON
-* Deterministic runs with run IDs & artifacts
-* Replaceable models & vector backends
-* Edge anonymization + sovereign data defaults
+**Tenets / Nguyên tắc**: HTTP/JSON contracts • Deterministic run IDs • Replaceable models/backends • Edge anonymization by default.
 
 ---
 
 ## 🖼️ Screenshots
 
-> Replace placeholders in `docs/` with your actual captures.
+> Replace placeholders under `docs/` with your real captures.
 
 * **Agent Hub UI:** `docs/ui-overview.png`
 * **Credit Appraisal:** `docs/ui-credit.png`
@@ -148,7 +140,7 @@ flowchart LR
 
 ```html
 <p align="center">
-  <img src="docs/ui-overview.png" alt="Agent Hub" width="960"/>
+  <img src="docs/ui-overview.png" alt="Agent Hub" width="1000"/>
 </p>
 ```
 
@@ -207,28 +199,17 @@ docker compose logs -f ui api
 ```
 
 * Put trained models under `agents/<agent>/models/trained/`
-* Or start with **synthetic → anonymize → train** directly in UI
+* Or start with **synthetic → anonymize → train** directly in the UI
 * Vector DB backends are pluggable (FAISS/pgvector/Qdrant)
 
 ---
 
-## 🗺️ Reference Flows
+## 🔐 Security & Compliance
 
-**Credit Appraisal (EN/VI)**
-
-1. Upload data / Tải dữ liệu (hoặc sinh tổng hợp)
-2. Anonymize / Ẩn danh PII
-3. Appraisal → score, decision, explanation / Thẩm định → điểm, quyết định, giải thích
-4. Human review + policy check / Duyệt tay + kiểm chính sách
-5. Export to core & logs / Xuất kết quả & lưu vết
-
-**Asset Appraisal (EN/VI)**
-
-1. Upload inventory or inspector report / Tải danh mục tài sản hoặc biên bản kiểm tra
-2. Market comps + rules / So sánh thị trường + luật
-3. Valuation + uncertainty / Định giá + độ bất định
-4. Review + geo‑map / Duyệt + bản đồ vị trí
-5. Export to credit flow / Đẩy sang luồng tín dụng
+* **Data Sovereignty by Default:** anonymize/pseudonymize at the edge.
+* **Immutable Audit Trails:** run IDs, model/version lineage, signed artifacts.
+* **Least‑Privilege Keys & Secrets:** scoped tokens; rotate regularly.
+* **Human‑in‑the‑Loop Controls:** approvals and overrides are logged and exportable.
 
 ---
 
@@ -236,8 +217,8 @@ docker compose logs -f ui api
 
 * [ ] Agent marketplace cards + per‑agent KPIs
 * [ ] GPU profile selector & benchmarks
-* [ ] Built‑in fairness & drift dashboards
-* [ ] Pluggable vector DB (FAISS/PGVector/Qdrant)
+* [ ] Fairness & drift dashboards
+* [ ] Pluggable vector DB (FAISS/pgvector/Qdrant)
 * [ ] Multi‑tenant RBAC & SSO
 * [ ] Mobile inspector intake app (offline‑first)
 
