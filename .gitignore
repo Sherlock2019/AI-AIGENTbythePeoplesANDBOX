@@ -20,3 +20,16 @@ backups/
 
 # Local config overrides
 .env
+
+# Backup artifacts
+**/*.bak
+*.bak
+*.ok.*.bak
+
+# Logs
+**/*.log
+*.log
+.logs/
+logs/
+services/ui/.logs/
+services/api/.logs/
