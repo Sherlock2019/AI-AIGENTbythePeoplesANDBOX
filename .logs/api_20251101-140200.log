@@ -1,0 +1,45 @@
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [50726] using WatchFiles
+INFO:     Started server process [50736]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:45170 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45170 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54008 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54020 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38390 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38404 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59834 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59842 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59850 - "GET /v1/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59858 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40730 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40744 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34064 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34072 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34080 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34088 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34094 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34096 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34112 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34114 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42262 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42274 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42278 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'services/ui/app.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [50736]
+INFO:     Started server process [50997]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/ui/app.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [50997]
+INFO:     Started server process [51086]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.

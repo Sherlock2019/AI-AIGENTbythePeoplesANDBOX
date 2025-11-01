@@ -1,0 +1,217 @@
+# services/api/routers/agents.py
+from __future__ import annotations
+
+import os
+import io
+import json
+from uuid import uuid4
+from datetime import datetime, timezone
+from typing import Dict, Any, Optional
+
+import pandas as pd
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Request
+from fastapi.responses import JSONResponse
+
+router = APIRouter(prefix="/v1/agents", tags=["agents"])
+
+# ─────────────────────────────────────────────────────────────
+# Storage for run artifacts (CSV/JSON) + simple in-memory index
+# ─────────────────────────────────────────────────────────────
+RUNS_DIR = os.path.expanduser(
+    "~/credit-appraisal-agent-poc/services/api/.runs"
+)
+os.makedirs(RUNS_DIR, exist_ok=True)
+
+RUN_INDEX: Dict[str, Dict[str, Any]] = {}
+
+
+def _ts() -> str:
+    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+
+
+def _save_run_df(run_id: str, df: pd.DataFrame) -> Dict[str, str]:
+    csv_path = os.path.join(RUNS_DIR, f"{run_id}.merged.csv")
+    json_path = os.path.join(RUNS_DIR, f"{run_id}.json")
+    df.to_csv(csv_path, index=False)
+    df.to_json(json_path, orient="records")
+    return {"merged_csv": csv_path, "merged_json": json_path}
+
+
+# ─────────────────────────────────────────────────────────────
+# Agent runners (use your real runners if present; else safe stubs)
+# ─────────────────────────────────────────────────────────────
+try:
+    from agents.asset_appraisal.runner import run as _asset_runner  # type: ignore
+except Exception:
+    def _asset_runner(df: pd.DataFrame, params: Dict[str, Any]) -> pd.DataFrame:
+        out = df.copy()
+        if "valuation" not in out.columns:
+            # simple derived valuation if collateral_value present
+            if "collateral_value" in out.columns:
+                out["valuation"] = (out["collateral_value"].astype(float) * 1.02).round(2)
+            else:
+                out["valuation"] = 0.0
+        if "decision" not in out.columns:
+            out["decision"] = "ok"
+        if "confidence" not in out.columns:
+            out["confidence"] = 0.80
+        return out
+
+try:
+    from agents.credit_appraisal.runner import run as _credit_runner  # type: ignore
+except Exception:
+    def _credit_runner(df: pd.DataFrame, params: Dict[str, Any]) -> pd.DataFrame:
+        out = df.copy()
+        if "decision" not in out.columns:
+            out["decision"] = "approved"
+        if "score" not in out.columns:
+            out["score"] = 0.67
+        if "confidence" not in out.columns:
+            out["confidence"] = 0.75
+        return out
+
+AGENT_REGISTRY: Dict[str, Dict[str, Any]] = {
+    "asset_appraisal": {
+        "id": "asset_appraisal",
+        "display_name": "Asset Appraisal Agent",
+        "aliases": ["asset"],
+        "runner": _asset_runner,
+    },
+    "credit_appraisal": {
+        "id": "credit_appraisal",
+        "display_name": "Credit Appraisal Agent",
+        "aliases": ["credit"],
+        "runner": _credit_runner,
+    },
+}
+
+_ALIAS_TO_CANON: Dict[str, str] = {}
+for canon, meta in AGENT_REGISTRY.items():
+    _ALIAS_TO_CANON[canon] = canon
+    for al in meta.get("aliases", []):
+        _ALIAS_TO_CANON[al] = canon
+
+
+def _canonicalize(agent_id: str) -> str:
+    cid = _ALIAS_TO_CANON.get(agent_id)
+    if not cid:
+        raise HTTPException(status_code=404, detail=f"Unknown agent '{agent_id}'")
+    return cid
+
+
+def _read_csv_bytes(raw: bytes) -> pd.DataFrame:
+    try:
+        return pd.read_csv(io.BytesIO(raw))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"CSV parse error: {e}") from e
+
+
+# ─────────────────────────────────────────────────────────────
+# Public helpers for reports router to reuse the same index
+# ─────────────────────────────────────────────────────────────
+def get_run_record(run_id: str) -> Dict[str, Any]:
+    rec = RUN_INDEX.get(run_id)
+    if not rec:
+        raise HTTPException(status_code=404, detail=f"Unknown run_id '{run_id}'")
+    return rec
+
+
+# ─────────────────────────────────────────────────────────────
+# Endpoints
+# ─────────────────────────────────────────────────────────────
+@router.get("")
+def list_agents():
+    items = []
+    for meta in AGENT_REGISTRY.values():
+        items.append(
+            {
+                "id": meta["id"],
+                "display_name": meta.get("display_name", meta["id"]),
+                "aliases": meta.get("aliases", []),
+            }
+        )
+    return {"agents": items}
+
+
+@router.get("/list")
+def list_agents_alt():
+    return list_agents()
+
+
+@router.post("/{agent_id}/run")
+async def run_agent(
+    request: Request,
+    agent_id: str,
+    file: UploadFile = File(..., description="CSV file for the agent to process"),
+    # we accept any extra UI form fields generically:
+    use_llm_narrative: Optional[str] = Form(None),
+    llm_model: Optional[str] = Form(None),
+    hardware_flavor: Optional[str] = Form(None),
+    currency_code: Optional[str] = Form(None),
+    currency_symbol: Optional[str] = Form(None),
+    # legacy/other knobs—UI may or may not send them, safe to ignore here
+    threshold: Optional[str] = Form(None),
+    target_approval_rate: Optional[str] = Form(None),
+    random_band: Optional[str] = Form(None),
+    rule_mode: Optional[str] = Form(None),
+):
+    canon = _canonicalize(agent_id)
+
+    raw = await file.read()
+    df = _read_csv_bytes(raw)
+
+    # Collect all form fields (robust to future UI changes)
+    try:
+        form = await request.form()
+        params = {k: (form.get(k)) for k in form.keys()}
+    except Exception:
+        params = {}
+    # also ensure we include explicitly captured ones
+    params.update(
+        {
+            "use_llm_narrative": use_llm_narrative,
+            "llm_model": llm_model,
+            "hardware_flavor": hardware_flavor,
+            "currency_code": currency_code,
+            "currency_symbol": currency_symbol,
+            "threshold": threshold,
+            "target_approval_rate": target_approval_rate,
+            "random_band": random_band,
+            "rule_mode": rule_mode,
+            "agent_id": canon,
+        }
+    )
+
+    runner = AGENT_REGISTRY[canon]["runner"]
+    out_df = runner(df, params)
+    if not isinstance(out_df, pd.DataFrame):
+        raise HTTPException(status_code=500, detail="Runner did not return a DataFrame")
+
+    # Build run_id + persist artifacts
+    run_id = f"{canon}_{_ts()}_{uuid4().hex[:8]}"
+    artifacts = _save_run_df(run_id, out_df)
+
+    # Index for reports
+    RUN_INDEX[run_id] = {
+        "agent_id": canon,
+        "created_at": _ts(),
+        "artifacts": artifacts,
+        "rows": int(out_df.shape[0]),
+        "cols": int(out_df.shape[1]),
+        "meta": {
+            "currency_code": currency_code,
+            "currency_symbol": currency_symbol,
+        },
+    }
+
+    # Preview (limit to 200 rows to keep payload light)
+    preview = out_df.head(200).to_dict(orient="records")
+
+    payload = {
+        "run_id": run_id,
+        "agent_id": canon,
+        "result": preview,
+        "artifacts": artifacts,
+        "meta": RUN_INDEX[run_id]["meta"] | {"rows": RUN_INDEX[run_id]["rows"], "cols": RUN_INDEX[run_id]["cols"]},
+    }
+    return JSONResponse(payload)

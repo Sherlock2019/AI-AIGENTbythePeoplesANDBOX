@@ -1,0 +1,31 @@
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [577593] using WatchFiles
+INFO:     Started server process [577605]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:53714 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53714 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57666 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57680 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38690 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38700 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45596 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45608 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45624 - "GET /v1/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45632 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56398 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45406 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45420 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45430 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45444 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45460 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45464 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54012 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54018 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54024 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [577605]
+INFO:     Stopping reloader process [577593]

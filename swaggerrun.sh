@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Absolute paths so sudo/home issues don't bite us
-ROOT="/home/dzoan/demo-library"
+ROOT="/home/dzoan/credit-appraisal-agent-poc"
 VENV="$ROOT/services/api/.venv"
 PORT="${PORT:-8090}"
 

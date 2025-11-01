@@ -1,0 +1,67 @@
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc/services/ui']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [321377] using WatchFiles
+INFO:     Started server process [321387]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:36036 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36052 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36054 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36064 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36080 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36088 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50296 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50308 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50324 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50328 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40218 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40228 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40230 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40242 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44106 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but StandardScaler was fitted with feature names
+  warnings.warn(
+INFO:     127.0.0.1:44108 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44116 - "GET /v1/runs/run_1761559088/report?format=csv HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44130 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49524 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49536 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43470 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43472 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43486 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43500 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43512 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43524 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58670 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58680 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37472 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37480 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37486 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/agents/credit_appraisal/model_utils.py:150: FutureWarning: errors='ignore' is deprecated and will raise in a future version. Use to_numeric without passing `errors` and catch exceptions explicitly instead
+  out[c] = pd.to_numeric(out[c], errors="ignore")
+INFO:     127.0.0.1:37490 - "POST /v1/training/train HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37498 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37510 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37514 - "POST /v1/training/promote HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37526 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54038 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54044 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36414 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but StandardScaler was fitted with feature names
+  warnings.warn(
+INFO:     127.0.0.1:36428 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36430 - "GET /v1/runs/run_1761559145/report?format=csv HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36434 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36448 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36464 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36472 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but StandardScaler was fitted with feature names
+  warnings.warn(
+INFO:     127.0.0.1:36476 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36490 - "GET /v1/runs/run_1761559149/report?format=csv HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36498 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [321387]
+INFO:     Stopping reloader process [321377]

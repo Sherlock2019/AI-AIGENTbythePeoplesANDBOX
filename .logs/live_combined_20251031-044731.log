@@ -1,0 +1,96 @@
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-044731.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-044731.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-044731.log <==
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [336383] using WatchFiles
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-044731.log <==
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-044731.log <==
+INFO:     Started server process [336393]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-044731.log <==
+2025-10-31 04:48:09.199 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-31 04:48:11.572 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-31 04:48:11.580 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 667, in code_to_exec
+    _mpa_v1(self._main_script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 165, in _mpa_v1
+    page.run()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/navigation/page.py", line 300, in run
+    exec(code, module.__dict__)  # noqa: S102
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/pages/asset_appraisal.py", line 82, in <module>
+    for c in df.select_dtypes(include=str).columns:
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/pandas/core/frame.py", line 5064, in select_dtypes
+    invalidate_string_dtypes(dtypes)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/pandas/core/dtypes/cast.py", line 970, in invalidate_string_dtypes
+    raise TypeError("string dtypes are not allowed, use 'object' instead")
+TypeError: string dtypes are not allowed, use 'object' instead
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-044731.log <==
+INFO:     127.0.0.1:50354 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50362 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-044731.log <==
+2025-10-31 04:48:43.266 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-31 04:48:47.514 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-31 04:48:47.520 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 667, in code_to_exec
+    _mpa_v1(self._main_script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 165, in _mpa_v1
+    page.run()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/navigation/page.py", line 300, in run
+    exec(code, module.__dict__)  # noqa: S102
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/pages/asset_appraisal.py", line 82, in <module>
+    for c in df.select_dtypes(include=str).columns:
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/pandas/core/frame.py", line 5064, in select_dtypes
+    invalidate_string_dtypes(dtypes)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/pandas/core/dtypes/cast.py", line 970, in invalidate_string_dtypes
+    raise TypeError("string dtypes are not allowed, use 'object' instead")
+TypeError: string dtypes are not allowed, use 'object' instead
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-044731.log <==
+INFO:     127.0.0.1:45782 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45788 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-044731.log <==
+  Stopping...
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-044731.log <==
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [336393]
+INFO:     Stopping reloader process [336383]

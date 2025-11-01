@@ -1,0 +1,191 @@
+# agents/credit_appraisal/runner.py
+# Unified output schema for UI compatibility (credit ↔ asset)
+from __future__ import annotations
+import math
+from typing import Any, Dict, List, Optional
+
+import numpy as np
+import pandas as pd
+
+# Columns your UI expects across agents
+_UI_REQUIRED_NUMERIC = [
+    "market_value",          # if available for credit rows (optional)
+    "loan_amount",
+    "ai_adjusted",
+    "confidence",
+    "DTI",
+    "LTV",
+    "ltv_ai",
+    "ltv_cap",
+]
+_UI_NICE_TO_HAVE = [
+    "decision",
+    "policy_breaches",
+    "rule_reasons",
+    "asset_type",
+    "city"
+]
+
+# Candidate keys to rename to `application_id`
+_ID_CANDIDATES = [
+    "application_id", "app_id", "loan_application_id", "loan_id",
+    "credit_id", "request_id", "record_id", "id", "uuid", "ref"
+]
+
+def _ensure_application_id_column(df: pd.DataFrame) -> pd.DataFrame:
+    if "application_id" not in df.columns:
+        for c in _ID_CANDIDATES:
+            if c in df.columns:
+                df = df.rename(columns={c: "application_id"})
+                break
+    if "application_id" not in df.columns:
+        df = df.reset_index(drop=False).rename(columns={"index": "application_id"})
+        df["application_id"] = df["application_id"].apply(
+            lambda i: f"APP_{int(i):06d}" if pd.api.types.is_integer(i) else f"APP_{i}"
+        )
+    df["application_id"] = df["application_id"].astype(str)
+    return df
+
+def _coerce_numeric(df: pd.DataFrame, col: str) -> None:
+    if col not in df.columns:
+        df[col] = np.nan
+    df[col] = pd.to_numeric(df[col], errors="coerce")
+
+def _safe_div(a: float, b: float) -> float:
+    try:
+        if b is None or float(b) == 0.0:
+            return np.nan
+        return float(a) / float(b)
+    except Exception:
+        return np.nan
+
+def _compute_rule_reasons(row: pd.Series, params: Dict[str, Any]) -> (str, Dict[str, bool], str):
+    # Basic bank-style rules (credit)
+    max_dti       = float(params.get("max_dti", 0.45))
+    min_emp       = int(params.get("min_emp", 2))
+    min_hist      = int(params.get("min_hist", 3))
+    max_delin     = int(params.get("max_delin", 2))
+    req_min       = float(params.get("req_min", 1_000))
+    req_max       = float(params.get("req_max", 200_000))
+    monthly_rel   = float(params.get("monthly_relief", 0.5))
+
+    reasons = {
+        "max_dti"          : float(row.get("DTI", 1.0)) <= max_dti,
+        "min_emp_years"    : float(row.get("employment_years", 0)) >= min_emp,
+        "min_credit_hist"  : float(row.get("credit_history_years", 0)) >= min_hist,
+        "max_delinquencies": float(row.get("delinquencies", 99)) <= max_delin,
+        "amount_min"       : float(row.get("loan_amount", 0)) >= req_min,
+        "amount_max"       : float(row.get("loan_amount", 0)) <= req_max,
+    }
+    decision_ok = all(reasons.values())
+    decision = "approved" if decision_ok else "denied"
+
+    # Simple policy_breaches string (for the pie chart fallback)
+    breaches = [k for k, v in reasons.items() if not v]
+    policy_breaches = ", ".join(breaches)
+
+    return decision, reasons, policy_breaches
+
+def _post_compute_columns(df: pd.DataFrame, params: Dict[str, Any]) -> pd.DataFrame:
+    # Ensure key numerics
+    for c in _UI_REQUIRED_NUMERIC:
+        _coerce_numeric(df, c)
+
+    # Compute LTV if missing (needs loan_amount & market_value)
+    if df["LTV"].isna().all():
+        if "market_value" in df.columns:
+            df["LTV"] = df.apply(lambda r: _safe_div(r.get("loan_amount"), r.get("market_value")), axis=1)
+
+    # Compute ai_adjusted / confidence if backend omitted
+    if df["ai_adjusted"].isna().all():
+        # Naive fallback: equal to requested loan or market value
+        if "market_value" in df.columns and not df["market_value"].isna().all():
+            df["ai_adjusted"] = df["market_value"]
+        else:
+            df["ai_adjusted"] = df["loan_amount"]
+
+    if df["confidence"].isna().all():
+        # Heuristic confidence from DTI and LTV (bounded 50..95)
+        def _conf(r):
+            dti = float(r.get("DTI", np.nan))
+            ltv = float(r.get("LTV", np.nan))
+            base = 85.0
+            if not math.isnan(dti): base -= (dti * 15.0)
+            if not math.isnan(ltv): base -= max(0.0, (ltv - 0.6)) * 25.0
+            return float(np.clip(base, 50.0, 95.0))
+        df["confidence"] = df.apply(_conf, axis=1)
+
+    # ltv_ai = loan / ai_adjusted
+    df["ltv_ai"] = df.apply(lambda r: _safe_div(r.get("loan_amount"), r.get("ai_adjusted")), axis=1)
+
+    # ltv_cap default (if absent): 0.8 for houses, else 0.7
+    if df["ltv_cap"].isna().all():
+        def _cap(r):
+            t = str(r.get("asset_type", "")).lower()
+            if "house" in t or "apartment" in t or "residential" in t:
+                return 0.80
+            return 0.70
+        df["ltv_cap"] = df.apply(_cap, axis=1)
+
+    # decision / rule_reasons / policy_breaches if missing
+    if "decision" not in df.columns:
+        df["decision"] = None
+    if "rule_reasons" not in df.columns:
+        df["rule_reasons"] = None
+    if "policy_breaches" not in df.columns:
+        df["policy_breaches"] = ""
+
+    need_rules = df["decision"].isna() | df["rule_reasons"].isna()
+    if need_rules.any():
+        tmp = df.loc[need_rules].apply(lambda r: _compute_rule_reasons(r, params), axis=1)
+        df.loc[need_rules, "decision"]       = [t[0] for t in tmp]
+        df.loc[need_rules, "rule_reasons"]   = [t[1] for t in tmp]
+        df.loc[need_rules, "policy_breaches"] = [t[2] for t in tmp]
+
+    return df
+
+def run_credit_appraisal(
+    data: pd.DataFrame,
+    params: Optional[Dict[str, Any]] = None
+) -> List[Dict[str, Any]]:
+    """
+    Main runner entry called by the API layer.
+    Returns a list[dict] with a unified schema compatible with the Streamlit UI.
+    """
+    params = params or {}
+    df = data.copy()
+
+    # Normalize ID and minimal columns
+    df = _ensure_application_id_column(df)
+
+    # Make sure common numeric columns exist (even if NaN)
+    for c in _UI_REQUIRED_NUMERIC:
+        if c not in df.columns:
+            df[c] = np.nan
+
+    # Minimal sensible defaults frequently present in credit data
+    if "DTI" not in df.columns:
+        df["DTI"] = np.nan
+    if "market_value" not in df.columns:
+        # Credit rows may not know collateral value; leave NaN (UI handles it)
+        df["market_value"] = np.nan
+
+    # Compute post columns and rules
+    df = _post_compute_columns(df, params)
+
+    # Return as list of dicts (stable for JSON)
+    records = df.to_dict(orient="records")
+    return records
+
+# Optional: tiny smoke helper used by unit tests
+def smoke() -> List[Dict[str, Any]]:
+    demo = pd.DataFrame([{
+        "loan_amount": 120_000,
+        "DTI": 0.38,
+        "employment_years": 6,
+        "credit_history_years": 7,
+        "delinquencies": 0,
+        "asset_type": "House",
+        "city": "HCMC"
+    }])
+    return run_credit_appraisal(demo, params={"max_dti": 0.45, "min_emp": 2, "min_hist": 3, "max_delin": 2})

@@ -1,0 +1,69 @@
+# services/api/routers/reports.py
+from __future__ import annotations
+
+import os
+import io
+import json
+
+import pandas as pd
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import StreamingResponse, JSONResponse, PlainTextResponse
+
+from services.api.routers.agents import get_run_record
+
+router = APIRouter(prefix="/v1/runs", tags=["reports"])
+
+
+@router.get("/{run_id}/report")
+def get_report(run_id: str, format: str = Query("csv")):
+    """
+    Serve artifacts for a run:
+      - format=csv            → merged CSV
+      - format=json           → merged JSON (list of rows)
+      - format=scores_csv     → (optional) score-focused CSV
+      - format=explanations_csv → (optional) explanations-focused CSV
+    """
+    rec = get_run_record(run_id)
+    artifacts = rec.get("artifacts") or {}
+    csv_path = artifacts.get("merged_csv")
+    json_path = artifacts.get("merged_json")
+
+    if not csv_path or not os.path.exists(csv_path):
+        raise HTTPException(status_code=404, detail="No merged_csv for this run or file missing")
+
+    if format == "csv":
+        with open(csv_path, "rb") as f:
+            data = f.read()
+        return StreamingResponse(
+            io.BytesIO(data),
+            media_type="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="{run_id}.csv"'},
+        )
+
+    elif format == "json":
+        if not json_path or not os.path.exists(json_path):
+            # fall back by generating from CSV
+            df = pd.read_csv(csv_path)
+            return JSONResponse(json.loads(df.to_json(orient="records")))
+        with open(json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return JSONResponse(data)
+
+    elif format == "scores_csv":
+        df = pd.read_csv(csv_path)
+        cols = [c for c in df.columns if c.lower() in ("application_id", "score", "decision")]
+        out = df[cols] if cols else df.head(0)
+        buf = io.StringIO()
+        out.to_csv(buf, index=False)
+        return PlainTextResponse(buf.getvalue(), media_type="text/csv")
+
+    elif format == "explanations_csv":
+        df = pd.read_csv(csv_path)
+        cols = [c for c in df.columns if "explanation" in c.lower() or "rule_reason" in c.lower()]
+        out = df[cols] if cols else df.head(0)
+        buf = io.StringIO()
+        out.to_csv(buf, index=False)
+        return PlainTextResponse(buf.getvalue(), media_type="text/csv")
+
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported format")

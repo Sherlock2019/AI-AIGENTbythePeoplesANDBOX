@@ -1,0 +1,344 @@
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-173006.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-173006.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-173006.log <==
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc/services/ui']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [329201] using WatchFiles
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-173006.log <==
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-173006.log <==
+INFO:     Started server process [329211]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:38384 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38396 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39986 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39998 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40008 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40016 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-173006.log <==
+2025-10-27 17:30:41.256 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-173006.log <==
+INFO:     127.0.0.1:40018 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40026 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57898 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57910 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-173006.log <==
+2025-10-27 17:30:47.827 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-173006.log <==
+INFO:     127.0.0.1:57924 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57932 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39804 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39808 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-173006.log <==
+2025-10-27 17:31:01.940 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:01.962 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-173006.log <==
+INFO:     127.0.0.1:49538 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49554 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-173006.log <==
+2025-10-27 17:31:03.744 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:03.764 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-173006.log <==
+INFO:     127.0.0.1:54650 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but StandardScaler was fitted with feature names
+  warnings.warn(
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-173006.log <==
+2025-10-27 17:31:17.721 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:17.733 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-173006.log <==
+INFO:     127.0.0.1:54658 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54662 - "GET /v1/runs/run_1761561077/report?format=csv HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54674 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-173006.log <==
+2025-10-27 17:31:17.906 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:18.251 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:18.275 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:18.522 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:18.529 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:18.540 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-173006.log <==
+INFO:     127.0.0.1:54678 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54684 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-173006.log <==
+2025-10-27 17:31:21.147 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:21.167 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:21.238 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-173006.log <==
+INFO:     127.0.0.1:56006 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56010 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-173006.log <==
+2025-10-27 17:31:33.108 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:33.126 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:33.195 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-173006.log <==
+INFO:     127.0.0.1:56012 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56026 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-173006.log <==
+2025-10-27 17:31:34.391 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:34.406 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:34.454 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-173006.log <==
+INFO:     127.0.0.1:56032 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56046 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-173006.log <==
+2025-10-27 17:31:37.238 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:37.250 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:37.318 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-173006.log <==
+INFO:     127.0.0.1:46598 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46600 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-173006.log <==
+2025-10-27 17:31:49.101 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:49.116 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:49.174 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-173006.log <==
+INFO:     127.0.0.1:46604 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/agents/credit_appraisal/model_utils.py:150: FutureWarning: errors='ignore' is deprecated and will raise in a future version. Use to_numeric without passing `errors` and catch exceptions explicitly instead
+  out[c] = pd.to_numeric(out[c], errors="ignore")
+INFO:     127.0.0.1:46606 - "POST /v1/training/train HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:46610 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-173006.log <==
+2025-10-27 17:31:51.267 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:51.279 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:51.327 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-173006.log <==
+INFO:     127.0.0.1:60920 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60930 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-173006.log <==
+2025-10-27 17:31:59.074 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:59.088 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:31:59.129 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-173006.log <==
+INFO:     127.0.0.1:60940 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/agents/credit_appraisal/model_utils.py:150: FutureWarning: errors='ignore' is deprecated and will raise in a future version. Use to_numeric without passing `errors` and catch exceptions explicitly instead
+  out[c] = pd.to_numeric(out[c], errors="ignore")
+INFO:     127.0.0.1:60950 - "POST /v1/training/train HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60966 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-173006.log <==
+2025-10-27 17:32:00.990 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:32:01.002 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:32:01.041 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-173006.log <==
+INFO:     127.0.0.1:60980 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-173006.log <==
+2025-10-27 17:32:02.351 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-27 17:32:02.364 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-173006.log <==
+INFO:     127.0.0.1:60994 - "POST /v1/training/promote HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32776 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-173006.log <==
+2025-10-27 17:32:02.402 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-173006.log <==
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [329211]
+INFO:     Stopping reloader process [329201]
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-173006.log <==
+  Stopping...

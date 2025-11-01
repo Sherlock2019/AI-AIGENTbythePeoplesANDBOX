@@ -4,7 +4,7 @@ set -euo pipefail
 # Restore every "*.bak.py" file back to "*.py"
 # Example: app.bak.py → app.py
 
-ROOT="/home/dzoan/demo-library"
+ROOT="/home/dzoan/credit-appraisal-agent-poc"
 
 echo "🔄 Restoring all '*.bak.py' files under: $ROOT"
 echo

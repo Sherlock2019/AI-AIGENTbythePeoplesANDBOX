@@ -1,0 +1,56 @@
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-040144.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-040144.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-040144.log <==
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [317446] using WatchFiles
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-040144.log <==
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-040144.log <==
+INFO:     Started server process [317456]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:53486 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53500 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-040144.log <==
+2025-10-31 04:02:07.246 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-040144.log <==
+INFO:     127.0.0.1:53514 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53522 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-040144.log <==
+2025-10-31 04:02:09.590 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-040144.log <==
+INFO:     127.0.0.1:53532 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53536 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53540 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53550 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-040144.log <==
+  Stopping...
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-040144.log <==
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [317456]
+INFO:     Stopping reloader process [317446]

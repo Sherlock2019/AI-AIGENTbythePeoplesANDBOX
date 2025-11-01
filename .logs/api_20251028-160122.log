@@ -1,0 +1,72 @@
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [407749] using WatchFiles
+INFO:     Started server process [407762]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:37518 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37528 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57152 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57154 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57168 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57182 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57192 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but StandardScaler was fitted with feature names
+  warnings.warn(
+INFO:     127.0.0.1:57198 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57200 - "GET /v1/runs/run_1761642110/report?format=csv HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57204 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42204 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42220 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42226 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42242 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42250 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42256 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42260 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42276 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42288 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42292 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42306 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42312 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42322 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42336 - "POST /v1/training/train HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:42338 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51366 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51374 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51388 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/agents/credit_appraisal/model_utils.py:150: FutureWarning: errors='ignore' is deprecated and will raise in a future version. Use to_numeric without passing `errors` and catch exceptions explicitly instead
+  out[c] = pd.to_numeric(out[c], errors="ignore")
+INFO:     127.0.0.1:51400 - "POST /v1/training/train HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51412 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51420 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51428 - "POST /v1/training/promote HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51434 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34662 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34670 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34684 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34686 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34694 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34706 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34722 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34736 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34750 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34760 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34774 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34778 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34782 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34786 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34800 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34806 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39020 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39036 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39052 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39062 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39068 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39078 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39080 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39084 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [407762]
+INFO:     Stopping reloader process [407749]

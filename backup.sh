@@ -9,15 +9,15 @@ set -euo pipefail
 BACKUP_EXT=".bak"
 
 FILES=(
-  "/home/dzoan/demo-library/services/ui/app.py"
-  "/home/dzoan/demo-library/services/api/routers/agents.py"
-  "/home/dzoan/demo-library/services/api/routers/reports.py"
-  "/home/dzoan/demo-library/services/api/routers/settings.py"
-  "/home/dzoan/demo-library/agent_platform/agent_sdk/sdk.py"
-  "/home/dzoan/demo-library/agents/credit_appraisal/agent.py"
-  "/home/dzoan/demo-library/agents/credit_appraisal/model_utils.py"
-  "/home/dzoan/demo-library/app.py"
-  "/home/dzoan/demo-library/services/api/main.py"
+  "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py"
+  "/home/dzoan/credit-appraisal-agent-poc/services/api/routers/agents.py"
+  "/home/dzoan/credit-appraisal-agent-poc/services/api/routers/reports.py"
+  "/home/dzoan/credit-appraisal-agent-poc/services/api/routers/settings.py"
+  "/home/dzoan/credit-appraisal-agent-poc/agent_platform/agent_sdk/sdk.py"
+  "/home/dzoan/credit-appraisal-agent-poc/agents/credit_appraisal/agent.py"
+  "/home/dzoan/credit-appraisal-agent-poc/agents/credit_appraisal/model_utils.py"
+  "/home/dzoan/credit-appraisal-agent-poc/app.py"
+  "/home/dzoan/credit-appraisal-agent-poc/services/api/main.py"
 )
 
 echo "📋 Target files to back up:"

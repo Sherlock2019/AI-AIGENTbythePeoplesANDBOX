@@ -1,0 +1,40 @@
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-103008.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-103008.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-103008.log <==
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [369030] using WatchFiles
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-103008.log <==
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-103008.log <==
+INFO:     Started server process [369040]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:49384 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49384 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47456 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47466 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52402 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52406 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52408 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52422 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52424 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52430 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38376 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38380 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [369040]
+INFO:     Stopping reloader process [369030]
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-103008.log <==
+  Stopping...

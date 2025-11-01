@@ -1,0 +1,43 @@
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [409077] using WatchFiles
+INFO:     Started server process [409087]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:39778 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39786 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60474 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60478 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46988 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/agents/credit_appraisal/model_utils.py:150: FutureWarning: errors='ignore' is deprecated and will raise in a future version. Use to_numeric without passing `errors` and catch exceptions explicitly instead
+  out[c] = pd.to_numeric(out[c], errors="ignore")
+INFO:     127.0.0.1:46992 - "POST /v1/training/train HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46998 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47006 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47020 - "POST /v1/training/promote HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47036 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50804 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50816 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53764 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53770 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53774 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53784 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53800 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53816 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48642 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48652 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33876 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33880 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33894 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/agents/credit_appraisal/model_utils.py:150: FutureWarning: errors='ignore' is deprecated and will raise in a future version. Use to_numeric without passing `errors` and catch exceptions explicitly instead
+  out[c] = pd.to_numeric(out[c], errors="ignore")
+INFO:     127.0.0.1:33904 - "POST /v1/training/train HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33912 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33916 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33924 - "POST /v1/training/promote HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33938 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [409087]
+INFO:     Stopping reloader process [409077]

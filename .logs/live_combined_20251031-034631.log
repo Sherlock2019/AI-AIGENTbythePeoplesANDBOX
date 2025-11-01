@@ -1,0 +1,45 @@
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-034631.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-034631.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-034631.log <==
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [314517] using WatchFiles
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-034631.log <==
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-034631.log <==
+INFO:     Started server process [314527]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-034631.log <==
+2025-10-31 03:46:36.640 Script compilation error
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 571, in _run_script
+    code = self._script_cache.get_bytecode(script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_cache.py", line 72, in get_bytecode
+    filebody = magic.add_magic(filebody, script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/magic.py", line 45, in add_magic
+    tree = ast.parse(code, script_path, "exec")
+  File "/usr/lib/python3.10/ast.py", line 50, in parse
+    return compile(source, filename, mode, flags,
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 2106
+    elif st.session_state.stage == "asset_agent":
+    ^^^^
+SyntaxError: invalid syntax
+2025-10-31 03:46:36.642 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+  Stopping...
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-034631.log <==
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [314527]
+INFO:     Stopping reloader process [314517]

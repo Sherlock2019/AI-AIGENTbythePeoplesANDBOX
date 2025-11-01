@@ -1,0 +1,75 @@
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [64581] using WatchFiles
+INFO:     Started server process [64593]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:56182 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56182 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56190 - "POST /v1/agents/Asset_appraisal/training/train_asset HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:43964 - "POST /v1/agents/asset_appraisal/training/train_asset HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:32894 - "GET /v1/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47566 - "POST /v1/agents/asset_appraisal/training/train_asset HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:49054 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49064 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49076 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49078 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49090 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59638 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59648 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59654 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59658 - "GET /v1/runs/credit_appraisal_20251101T082505Z_b25db45a/report?format=csv HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59670 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49024 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49040 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49042 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49048 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49050 - "GET /v1/runs/credit_appraisal_20251101T082517Z_e0983f12/report?format=csv HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49066 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47150 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47162 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47168 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47176 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47192 - "GET /v1/runs/credit_appraisal_20251101T082543Z_c1a21bda/report?format=csv HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47204 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37708 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37712 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46454 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46462 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46478 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46486 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37284 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37292 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37300 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37302 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37318 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38536 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38544 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56162 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56168 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56180 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56184 - "POST /v1/training/train HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56190 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56196 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56210 - "POST /v1/training/promote HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56224 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56240 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56244 - "POST /v1/training/promote HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56258 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33834 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33844 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42442 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42448 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36366 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36376 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36390 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36392 - "POST /v1/training/promote HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:36400 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36408 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36414 - "POST /v1/training/train HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:36420 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [64593]
+INFO:     Stopping reloader process [64581]

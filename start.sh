@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -11,6 +11,15 @@ mkdir -p "$LOGDIR" \
          "${ROOT}/services/api/.runs" \
          "${ROOT}/agents/credit_appraisal/models/production" \
          "${ROOT}/.pids"
+
+# ─────────────────────────────────────────────
+# 🧹 PRE-CLEANUP — Kill old processes on used ports
+# ─────────────────────────────────────────────
+echo "🧹 Checking for existing processes on ports ${APIPORT} and ${UIPORT}..."
+sudo fuser -k "${APIPORT}/tcp" 2>/dev/null || true
+sudo fuser -k "${UIPORT}/tcp" 2>/dev/null || true
+sleep 1
+echo "✅ Old processes cleaned up."
 
 # ─────────────────────────────────────────────
 # Timestamped logs

@@ -1,0 +1,57 @@
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251026-113330.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251026-113330.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251026-113330.log <==
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc/services/ui']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [184708] using WatchFiles
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251026-113330.log <==
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251026-113330.log <==
+INFO:     Started server process [184718]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:38256 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251026-113330.log <==
+2025-10-26 11:33:35.874 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/state/session_state.py", line 469, in __getitem__
+    return self._getitem(widget_id, key)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/state/session_state.py", line 517, in _getitem
+    raise KeyError
+KeyError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 1646, in <module>
+    "user_name": st.session_state["user_info"]["name"],
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/state/session_state_proxy.py", line 101, in __getitem__
+    return get_session_state()[key]
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/state/safe_session_state.py", line 104, in __getitem__
+    return self._state[key]
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/state/session_state.py", line 471, in __getitem__
+    raise KeyError(_missing_key_error_message(key))
+KeyError: 'st.session_state has no key "user_info". Did you forget to initialize it? More info: https://docs.streamlit.io/develop/concepts/architecture/session-state#initialization'
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251026-113330.log <==
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [184718]
+INFO:     Stopping reloader process [184708]
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251026-113330.log <==
+  Stopping...

@@ -20,7 +20,7 @@ from agents.credit_appraisal.agent import agent as credit_agent  # type: ignore
 router = APIRouter(prefix="/v1/agents", tags=["agents"])
 
 # Paths
-ROOT = os.path.expanduser("~/demo-library")
+ROOT = os.path.expanduser("~/credit-appraisal-agent-poc")
 RUNS_ROOT = os.path.join(ROOT, "services", "api", ".runs")
 os.makedirs(RUNS_ROOT, exist_ok=True)
 

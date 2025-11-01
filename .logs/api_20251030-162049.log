@@ -1,0 +1,5 @@
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [97470] using WatchFiles
+ERROR:    Error loading ASGI app. Could not import module "services.api.main".
+INFO:     Stopping reloader process [97470]

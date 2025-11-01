@@ -1,0 +1,19 @@
+{
+  "run_id": "run_1761816457",
+  "summary": {
+    "counts": {
+      "denied": 1
+    },
+    "threshold": 0.5,
+    "rule_mode": "classic",
+    "n_rows": 1,
+    "currency_code": null,
+    "currency_symbol": null,
+    "selected_model_name": null
+  },
+  "artifacts": {
+    "merged_csv": "/home/dzoan/credit-appraisal-agent-poc/services/api/.runs/run_1761816457/merged.csv",
+    "scores_csv": "/home/dzoan/credit-appraisal-agent-poc/services/api/.runs/run_1761816457/scores.csv",
+    "explanations_csv": "/home/dzoan/credit-appraisal-agent-poc/services/api/.runs/run_1761816457/explanations.csv"
+  }
+}

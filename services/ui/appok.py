@@ -1,4 +1,4 @@
-# ~/demo-library/services/ui/app.py
+# ~/credit-appraisal-agent-poc/services/ui/app.py
 from __future__ import annotations
 import os
 import io
@@ -14,7 +14,7 @@ import streamlit as st
 # ─────────────────────────────────────────────
 # CONFIG
 API_URL = os.getenv("API_URL", "http://localhost:8090")
-RUNS_DIR = os.path.expanduser("~/demo-library/services/api/.runs")
+RUNS_DIR = os.path.expanduser("~/credit-appraisal-agent-poc/services/api/.runs")
 os.makedirs(RUNS_DIR, exist_ok=True)
 
 st.set_page_config(page_title="AI Credit Appraisal Platform", layout="wide")

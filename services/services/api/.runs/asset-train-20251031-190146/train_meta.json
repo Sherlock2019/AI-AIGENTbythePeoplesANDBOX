@@ -1,0 +1,25 @@
+{
+  "agent_id": "asset_appraisal",
+  "saved_model": "/home/dzoan/credit-appraisal-agent-poc/services/agents/asset_appraisal/models/trained/model-20251031-190146.joblib",
+  "features": [
+    "age_years",
+    "condition_score",
+    "legal_penalty",
+    "loan_amount",
+    "employment_years",
+    "credit_history_years",
+    "delinquencies",
+    "current_loans",
+    "DTI",
+    "LTV"
+  ],
+  "target": "ai_adjusted",
+  "rows": 300,
+  "meta": {
+    "user_name": "dzoan",
+    "agent_name": "asset_appraisal",
+    "algo_name": "asset_lr"
+  },
+  "sklearn": true,
+  "ts": "20251031-190146"
+}

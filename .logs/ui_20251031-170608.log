@@ -1,0 +1,32 @@
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+2025-10-31 17:06:29.715 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 667, in code_to_exec
+    _mpa_v1(self._main_script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 165, in _mpa_v1
+    page.run()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/navigation/page.py", line 300, in run
+    exec(code, module.__dict__)  # noqa: S102
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/pages/asset_appraisal.py", line 1, in <module>
+    cat > services/ui/pages/asset_appraisal.py <<'PY'
+NameError: name 'cat' is not defined
+2025-10-31 17:06:37.582 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 667, in code_to_exec
+    _mpa_v1(self._main_script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 165, in _mpa_v1
+    page.run()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/navigation/page.py", line 300, in run
+    exec(code, module.__dict__)  # noqa: S102
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/pages/asset_appraisal.py", line 1, in <module>
+    cat > services/ui/pages/asset_appraisal.py <<'PY'
+NameError: name 'cat' is not defined
+  Stopping...

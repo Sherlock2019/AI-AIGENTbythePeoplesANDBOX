@@ -1,0 +1,56 @@
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-110144.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-110144.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-110144.log <==
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [370488] using WatchFiles
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-110144.log <==
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-110144.log <==
+INFO:     Started server process [370498]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:48282 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48292 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-110144.log <==
+2025-10-31 11:01:58.661 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 667, in code_to_exec
+    _mpa_v1(self._main_script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 165, in _mpa_v1
+    page.run()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/navigation/page.py", line 296, in run
+    code = ctx.pages_manager.get_page_script_byte_code(str(self._page))
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/pages_manager.py", line 160, in get_page_script_byte_code
+    return self._script_cache.get_bytecode(script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_cache.py", line 72, in get_bytecode
+    filebody = magic.add_magic(filebody, script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/magic.py", line 45, in add_magic
+    tree = ast.parse(code, script_path, "exec")
+  File "/usr/lib/python3.10/ast.py", line 50, in parse
+    return compile(source, filename, mode, flags,
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/pages/asset_appraisal.py", line 177
+    st.caption(f"Market-driven collateral valuation workflow — powered by FAIR AI Agents | 👋 Logg
+               ^
+SyntaxError: unterminated string literal (detected at line 177)
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-110144.log <==
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [370498]
+INFO:     Stopping reloader process [370488]
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-110144.log <==
+  Stopping...

@@ -1,0 +1,44 @@
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251030-201401.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251030-201401.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251030-201401.log <==
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [182513] using WatchFiles
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251030-201401.log <==
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251030-201401.log <==
+INFO:     Started server process [182523]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:53206 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57232 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251030-201401.log <==
+2025-10-30 20:14:15.726 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251030-201401.log <==
+INFO:     127.0.0.1:57246 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57254 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57258 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251030-201401.log <==
+  Stopping...
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251030-201401.log <==
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [182523]
+INFO:     Stopping reloader process [182513]

@@ -1,0 +1,31 @@
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251030-173855.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251030-173855.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251030-173855.log <==
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [133209] using WatchFiles
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251030-173855.log <==
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251030-173855.log <==
+INFO:     Started server process [133219]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:57156 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 400 Bad Request
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251030-173855.log <==
+  Stopping...
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251030-173855.log <==
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [133219]
+INFO:     Stopping reloader process [133209]

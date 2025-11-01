@@ -4,7 +4,7 @@ set -euo pipefail
 # ─────────────────────────────────────────────
 # CONFIG (paths & API)
 # ─────────────────────────────────────────────
-ROOT="$HOME/demo-library"
+ROOT="$HOME/credit-appraisal-agent-poc"
 RUNS_ROOT="$ROOT/services/api/.runs"
 TMP_FEEDBACK="$RUNS_ROOT/tmp_feedback"
 API_URL="http://localhost:8090"

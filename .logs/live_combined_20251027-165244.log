@@ -1,0 +1,62 @@
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-165244.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-165244.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-165244.log <==
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc/services/ui']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [321052] using WatchFiles
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-165244.log <==
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-165244.log <==
+INFO:     Started server process [321062]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-165244.log <==
+2025-10-27 16:52:52.395 Script compilation error
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 571, in _run_script
+    code = self._script_cache.get_bytecode(script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_cache.py", line 72, in get_bytecode
+    filebody = magic.add_magic(filebody, script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/magic.py", line 45, in add_magic
+    tree = ast.parse(code, script_path, "exec")
+  File "/usr/lib/python3.10/ast.py", line 50, in parse
+    return compile(source, filename, mode, flags,
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 382
+    return f"{base} ({sym})" if sym else baseThat `AttributeError` happens because Streamlit ≥ 1.34 replaced every `experimental_*` rerun call with a stable one.
+                                                                                             ^
+SyntaxError: invalid character '≥' (U+2265)
+2025-10-27 16:52:52.409 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-10-27 16:52:54.633 Script compilation error
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 571, in _run_script
+    code = self._script_cache.get_bytecode(script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_cache.py", line 72, in get_bytecode
+    filebody = magic.add_magic(filebody, script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/magic.py", line 45, in add_magic
+    tree = ast.parse(code, script_path, "exec")
+  File "/usr/lib/python3.10/ast.py", line 50, in parse
+    return compile(source, filename, mode, flags,
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 382
+    return f"{base} ({sym})" if sym else baseThat `AttributeError` happens because Streamlit ≥ 1.34 replaced every `experimental_*` rerun call with a stable one.
+                                                                                             ^
+SyntaxError: invalid character '≥' (U+2265)
+2025-10-27 16:52:54.634 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-165244.log <==
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [321062]
+INFO:     Stopping reloader process [321052]
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-165244.log <==
+  Stopping...

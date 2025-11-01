@@ -1,0 +1,32 @@
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+2025-10-27 07:44:17.583 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 1112, in <module>
+    main()
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 1096, in main
+    page_data()
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 676, in page_data
+    with colB:
+NameError: name 'colB' is not defined
+2025-10-27 07:44:30.178 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 1112, in <module>
+    main()
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 1096, in main
+    page_data()
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 676, in page_data
+    with colB:
+NameError: name 'colB' is not defined
+  Stopping...

@@ -1,0 +1,52 @@
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251025-183119.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251025-183119.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251025-183119.log <==
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [97617] using WatchFiles
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251025-183119.log <==
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251025-183119.log <==
+INFO:     Started server process [97627]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251025-183119.log <==
+2025-10-25 18:31:24.891 Script compilation error
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 571, in _run_script
+    code = self._script_cache.get_bytecode(script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_cache.py", line 74, in get_bytecode
+    bytecode = compile(  # type: ignore
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 25
+    from __future__ import annotations
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SyntaxError: from __future__ imports must occur at the beginning of the file
+2025-10-25 18:31:24.892 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-10-25 18:31:32.221 Script compilation error
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 571, in _run_script
+    code = self._script_cache.get_bytecode(script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_cache.py", line 74, in get_bytecode
+    bytecode = compile(  # type: ignore
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 25
+    from __future__ import annotations
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SyntaxError: from __future__ imports must occur at the beginning of the file
+2025-10-25 18:31:32.222 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+  Stopping...
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251025-183119.log <==
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [97627]
+INFO:     Stopping reloader process [97617]

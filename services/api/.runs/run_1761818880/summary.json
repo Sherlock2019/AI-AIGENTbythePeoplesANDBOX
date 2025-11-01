@@ -1,0 +1,12 @@
+{
+  "counts": {
+    "denied": 114,
+    "approved": 86
+  },
+  "threshold": 0.45,
+  "rule_mode": "classic",
+  "n_rows": 200,
+  "currency_code": "USD",
+  "currency_symbol": "$",
+  "selected_model_name": null
+}

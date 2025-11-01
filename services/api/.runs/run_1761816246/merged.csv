@@ -1,0 +1,2 @@
+application_id,income,loan_amount,loan_duration_months,collateral_value,customer_type,score,decision,rule_reasons,top_feature,proposed_loan_option,proposed_consolidation_loan
+APP_0001,5000,2000,24,8000,bank,0.5,denied,"{""model_threshold"": true, ""max_dti"": true, ""min_emp_years"": false, ""min_credit_hist"": false, ""salary_floor"": true, ""max_delinquencies"": true, ""max_current_loans"": true, ""requested_min"": true, ""requested_max"": true, ""allowed_term"": true, ""min_income_debt_ratio"": true}",score,,

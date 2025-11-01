@@ -1,0 +1,41 @@
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [473905] using WatchFiles
+INFO:     Started server process [473915]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:43660 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43662 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48292 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48300 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48312 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48320 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48328 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but StandardScaler was fitted with feature names
+  warnings.warn(
+INFO:     127.0.0.1:48332 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48344 - "GET /v1/runs/run_1761916221/report?format=csv HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48346 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53120 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53122 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53132 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37368 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37370 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39066 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39070 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39078 - "GET /v1/health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:39080 - "GET /v1/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39090 - "GET /v1/agents/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39092 - "GET /v1/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36938 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but StandardScaler was fitted with feature names
+  warnings.warn(
+INFO:     127.0.0.1:36940 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'services/ui/pages/credit_appraisal.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [473915]
+INFO:     Started server process [474114]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.

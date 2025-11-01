@@ -1,0 +1,1529 @@
+2025-11-01 14:22:58 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251101-142256.log <==
+2025-11-01 14:22:58 [STREAM] 
+2025-11-01 14:22:58 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251101-142256.log <==
+2025-11-01 14:22:58 [STREAM] 
+2025-11-01 14:22:58 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251101-142256.log <==
+2025-11-01 14:22:58 [STREAM] INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+2025-11-01 14:22:58 [STREAM] INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+2025-11-01 14:22:58 [STREAM] INFO:     Started reloader process [53930] using WatchFiles
+2025-11-01 14:22:58 [STREAM] 
+2025-11-01 14:22:58 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251101-142256.log <==
+2025-11-01 14:22:58 [STREAM] 2025-11-01 14:22:58.655 Starting new event loop for server
+2025-11-01 14:22:58 [STREAM] 2025-11-01 14:22:58.656 Starting server...
+2025-11-01 14:22:58 [STREAM] 2025-11-01 14:22:58.656 Serving static content from /home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/static
+2025-11-01 14:22:58 [STREAM] 2025-11-01 14:22:58.661 Server started on port 8502
+2025-11-01 14:22:58 [STREAM] 2025-11-01 14:22:58.661 Runtime state: RuntimeState.INITIAL -> RuntimeState.NO_SESSIONS_CONNECTED
+2025-11-01 14:22:58 [STREAM] 
+2025-11-01 14:22:58 [STREAM]   You can now view your Streamlit app in your browser.
+2025-11-01 14:22:58 [STREAM] 
+2025-11-01 14:22:58 [STREAM]   URL: http://0.0.0.0:8502
+2025-11-01 14:22:58 [STREAM] 
+2025-11-01 14:22:58 [STREAM] 2025-11-01 14:22:58.662 Setting up signal handler
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.631 AppSession initialized (id=5f55fd33-1b4f-4c88-8995-7434d82d62d8)
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.631 Created new session for client 132671148417056. Session ID: 5f55fd33-1b4f-4c88-8995-7434d82d62d8
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.631 Runtime state: RuntimeState.NO_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.658 AppSession initialized (id=3d0f68a7-ea69-4d4c-b61a-96bddc98c6a3)
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.658 Created new session for client 132671148419456. Session ID: 3d0f68a7-ea69-4d4c-b61a-96bddc98c6a3
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.658 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.675 AppSession initialized (id=bb132fc7-3bec-43a6-89ae-1f91c65b2f22)
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.675 Created new session for client 132671148424016. Session ID: bb132fc7-3bec-43a6-89ae-1f91c65b2f22
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.675 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.694 AppSession initialized (id=cb45ae7c-622d-42e9-83c0-e66bf1be988f)
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.695 Created new session for client 132671146804416. Session ID: cb45ae7c-622d-42e9-83c0-e66bf1be988f
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.695 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.723 AppSession initialized (id=02415c79-8b81-41a9-bcba-c82b73f1f6df)
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.724 Created new session for client 132671146807824. Session ID: 02415c79-8b81-41a9-bcba-c82b73f1f6df
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.724 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.741 AppSession initialized (id=b4c2eec8-94bd-4eaa-a1db-a45e1368970a)
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.741 Created new session for client 132671146810176. Session ID: b4c2eec8-94bd-4eaa-a1db-a45e1368970a
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.741 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.759 AppSession initialized (id=e4b43b2b-3e65-46a1-ac76-6d9972423b70)
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.759 Created new session for client 132671146812480. Session ID: e4b43b2b-3e65-46a1-ac76-6d9972423b70
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.759 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.777 AppSession initialized (id=9f9b7aa8-49df-4b3a-8989-108460dd1f4e)
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.777 Created new session for client 132671146814784. Session ID: 9f9b7aa8-49df-4b3a-8989-108460dd1f4e
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.777 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.805 AppSession initialized (id=11b90185-615c-4a5d-8092-c11e2ac6e7b1)
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.805 Created new session for client 132671146817088. Session ID: 11b90185-615c-4a5d-8092-c11e2ac6e7b1
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.806 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.823 AppSession initialized (id=5f807793-b2ba-48bb-91a0-e41239fd0cb6)
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.823 Created new session for client 132671146819392. Session ID: 5f807793-b2ba-48bb-91a0-e41239fd0cb6
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.823 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.839 AppSession initialized (id=0cfa6d9a-27a2-400c-b66e-4654e3ab7207)
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.840 Created new session for client 132671146952832. Session ID: 0cfa6d9a-27a2-400c-b66e-4654e3ab7207
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.840 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.870 AppSession initialized (id=ab94f4f7-20f9-4017-bfd3-9d60f3bef8c2)
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.871 Created new session for client 132671146955136. Session ID: ab94f4f7-20f9-4017-bfd3-9d60f3bef8c2
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.871 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.887 AppSession initialized (id=e15d5255-493b-44b9-b4f8-3a2bbc9236a9)
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.888 Created new session for client 132671146957392. Session ID: e15d5255-493b-44b9-b4f8-3a2bbc9236a9
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.888 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.905 AppSession initialized (id=0745f7ad-61ee-4810-aa11-741472fb4a92)
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.906 Created new session for client 132671146959744. Session ID: 0745f7ad-61ee-4810-aa11-741472fb4a92
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.906 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.922 AppSession initialized (id=18fb8569-254e-4e73-b4b8-9d9c9cd8aa26)
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.923 Created new session for client 132671146962048. Session ID: 18fb8569-254e-4e73-b4b8-9d9c9cd8aa26
+2025-11-01 14:22:59 [STREAM] 2025-11-01 14:22:59.923 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 14:22:59 [STREAM] 
+2025-11-01 14:22:59 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251101-142256.log <==
+2025-11-01 14:22:59 [STREAM] INFO:     Started server process [53942]
+2025-11-01 14:22:59 [STREAM] INFO:     Waiting for application startup.
+2025-11-01 14:22:59 [STREAM] INFO:     Application startup complete.
+2025-11-01 14:23:00 [STREAM] INFO:     127.0.0.1:47396 - "GET /docs HTTP/1.1" 200 OK
+2025-11-01 14:23:00 [STREAM] INFO:     127.0.0.1:47396 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-11-01 14:23:04 [STREAM] 
+2025-11-01 14:23:04 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251101-142256.log <==
+2025-11-01 14:23:04 [STREAM] 2025-11-01 14:23:04.313 AppSession initialized (id=01ae7943-ad35-4b10-a897-ca1f39fadb36)
+2025-11-01 14:23:04 [STREAM] 2025-11-01 14:23:04.313 Created new session for client 132671146811904. Session ID: 01ae7943-ad35-4b10-a897-ca1f39fadb36
+2025-11-01 14:23:04 [STREAM] 2025-11-01 14:23:04.313 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 14:23:04 [STREAM] 2025-11-01 14:23:04.315 Received the following back message:
+2025-11-01 14:23:04 [STREAM] rerun_script {
+2025-11-01 14:23:04 [STREAM]   widget_states {
+2025-11-01 14:23:04 [STREAM]   }
+2025-11-01 14:23:04 [STREAM]   context_info {
+2025-11-01 14:23:04 [STREAM]     timezone: "Asia/Bangkok"
+2025-11-01 14:23:04 [STREAM]     timezone_offset: -420
+2025-11-01 14:23:04 [STREAM]     locale: "en-US"
+2025-11-01 14:23:04 [STREAM]     url: "http://localhost:8502/"
+2025-11-01 14:23:04 [STREAM]     is_embedded: false
+2025-11-01 14:23:04 [STREAM]     color_scheme: "light"
+2025-11-01 14:23:04 [STREAM]   }
+2025-11-01 14:23:04 [STREAM] }
+2025-11-01 14:23:04 [STREAM] 
+2025-11-01 14:23:04 [STREAM] 2025-11-01 14:23:04.315 Beginning script thread
+2025-11-01 14:23:04 [STREAM] 2025-11-01 14:23:04.316 Running script RerunData(widget_states=, context_info=timezone: "Asia/Bangkok"
+2025-11-01 14:23:04 [STREAM] timezone_offset: -420
+2025-11-01 14:23:04 [STREAM] locale: "en-US"
+2025-11-01 14:23:04 [STREAM] url: "http://localhost:8502/"
+2025-11-01 14:23:04 [STREAM] is_embedded: false
+2025-11-01 14:23:04 [STREAM] color_scheme: "light"
+2025-11-01 14:23:04 [STREAM] )
+2025-11-01 14:23:04 [STREAM] 2025-11-01 14:23:04.316 Disconnecting files for session with ID 01ae7943-ad35-4b10-a897-ca1f39fadb36
+2025-11-01 14:23:04 [STREAM] 2025-11-01 14:23:04.316 Sessions still active: dict_keys([])
+2025-11-01 14:23:04 [STREAM] 2025-11-01 14:23:04.316 Files: 0; Sessions with files: 0
+2025-11-01 14:23:05 [STREAM] 2025-11-01 14:23:05.112 Removing orphaned files...
+2025-11-01 14:23:06 [STREAM] 2025-11-01 14:23:06.843 Received the following back message:
+2025-11-01 14:23:06 [STREAM] rerun_script {
+2025-11-01 14:23:06 [STREAM]   widget_states {
+2025-11-01 14:23:06 [STREAM]     widgets {
+2025-11-01 14:23:06 [STREAM]       id: "$$ID-ddc0270cbc3cd2468b6293e097bf75f7-upload_logo_hidden"
+2025-11-01 14:23:06 [STREAM]       file_uploader_state_value {
+2025-11-01 14:23:06 [STREAM]       }
+2025-11-01 14:23:06 [STREAM]     }
+2025-11-01 14:23:06 [STREAM]     widgets {
+2025-11-01 14:23:06 [STREAM]       id: "$$ID-163960d6a02d16629fcb6a17e7682c68-btn_start_build_now"
+2025-11-01 14:23:06 [STREAM]       trigger_value: true
+2025-11-01 14:23:06 [STREAM]     }
+2025-11-01 14:23:06 [STREAM]   }
+2025-11-01 14:23:06 [STREAM]   page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+2025-11-01 14:23:06 [STREAM]   cached_message_hashes: "27d2e897be5ce95d9e50eced825033d7"
+2025-11-01 14:23:06 [STREAM]   context_info {
+2025-11-01 14:23:06 [STREAM]     timezone: "Asia/Bangkok"
+2025-11-01 14:23:06 [STREAM]     timezone_offset: -420
+2025-11-01 14:23:06 [STREAM]     locale: "en-US"
+2025-11-01 14:23:06 [STREAM]     url: "http://localhost:8502/"
+2025-11-01 14:23:06 [STREAM]     is_embedded: false
+2025-11-01 14:23:06 [STREAM]     color_scheme: "light"
+2025-11-01 14:23:06 [STREAM]   }
+2025-11-01 14:23:06 [STREAM] }
+2025-11-01 14:23:06 [STREAM] 
+2025-11-01 14:23:06 [STREAM] 2025-11-01 14:23:06.844 Beginning script thread
+2025-11-01 14:23:06 [STREAM] 2025-11-01 14:23:06.844 Running script RerunData(widget_states=widgets {
+2025-11-01 14:23:06 [STREAM]   id: "$$ID-ddc0270cbc3cd2468b6293e097bf75f7-upload_logo_hidden"
+2025-11-01 14:23:06 [STREAM]   file_uploader_state_value {
+2025-11-01 14:23:06 [STREAM]   }
+2025-11-01 14:23:06 [STREAM] }
+2025-11-01 14:23:06 [STREAM] widgets {
+2025-11-01 14:23:06 [STREAM]   id: "$$ID-163960d6a02d16629fcb6a17e7682c68-btn_start_build_now"
+2025-11-01 14:23:06 [STREAM]   trigger_value: true
+2025-11-01 14:23:06 [STREAM] }
+2025-11-01 14:23:06 [STREAM] , page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', cached_message_hashes={'27d2e897be5ce95d9e50eced825033d7'}, context_info=timezone: "Asia/Bangkok"
+2025-11-01 14:23:06 [STREAM] timezone_offset: -420
+2025-11-01 14:23:06 [STREAM] locale: "en-US"
+2025-11-01 14:23:06 [STREAM] url: "http://localhost:8502/"
+2025-11-01 14:23:06 [STREAM] is_embedded: false
+2025-11-01 14:23:06 [STREAM] color_scheme: "light"
+2025-11-01 14:23:06 [STREAM] )
+2025-11-01 14:23:06 [STREAM] 2025-11-01 14:23:06.845 Disconnecting files for session with ID 01ae7943-ad35-4b10-a897-ca1f39fadb36
+2025-11-01 14:23:06 [STREAM] 2025-11-01 14:23:06.845 Sessions still active: dict_keys([])
+2025-11-01 14:23:06 [STREAM] 2025-11-01 14:23:06.845 Files: 0; Sessions with files: 0
+2025-11-01 14:23:06 [STREAM] 2025-11-01 14:23:06.921 Sending cached message ref (hash=27d2e897be5ce95d9e50eced825033d7)
+2025-11-01 14:23:06 [STREAM] 2025-11-01 14:23:06.925 Removing orphaned files...
+2025-11-01 14:23:06 [STREAM] 2025-11-01 14:23:06.990 Running script RerunData(page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', cached_message_hashes={'27d2e897be5ce95d9e50eced825033d7'}, context_info=timezone: "Asia/Bangkok"
+2025-11-01 14:23:06 [STREAM] timezone_offset: -420
+2025-11-01 14:23:06 [STREAM] locale: "en-US"
+2025-11-01 14:23:06 [STREAM] url: "http://localhost:8502/"
+2025-11-01 14:23:06 [STREAM] is_embedded: false
+2025-11-01 14:23:06 [STREAM] color_scheme: "light"
+2025-11-01 14:23:06 [STREAM] )
+2025-11-01 14:23:06 [STREAM] 2025-11-01 14:23:06.990 Disconnecting files for session with ID 01ae7943-ad35-4b10-a897-ca1f39fadb36
+2025-11-01 14:23:06 [STREAM] 2025-11-01 14:23:06.990 Sessions still active: dict_keys([])
+2025-11-01 14:23:06 [STREAM] 2025-11-01 14:23:06.990 Files: 0; Sessions with files: 0
+2025-11-01 14:23:07 [STREAM] 2025-11-01 14:23:07.004 Removing orphaned files...
+2025-11-01 14:23:10 [STREAM] 2025-11-01 14:23:10.963 AppSession initialized (id=1a8ef673-e939-46c2-87ca-8dbda0cfb0b0)
+2025-11-01 14:23:10 [STREAM] 2025-11-01 14:23:10.963 Created new session for client 132670406191728. Session ID: 1a8ef673-e939-46c2-87ca-8dbda0cfb0b0
+2025-11-01 14:23:10 [STREAM] 2025-11-01 14:23:10.963 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 14:23:10 [STREAM] 2025-11-01 14:23:10.976 Received the following back message:
+2025-11-01 14:23:10 [STREAM] rerun_script {
+2025-11-01 14:23:10 [STREAM]   query_string: "agent=credit&stage=login"
+2025-11-01 14:23:10 [STREAM]   widget_states {
+2025-11-01 14:23:10 [STREAM]   }
+2025-11-01 14:23:10 [STREAM]   context_info {
+2025-11-01 14:23:10 [STREAM]     timezone: "Asia/Bangkok"
+2025-11-01 14:23:10 [STREAM]     timezone_offset: -420
+2025-11-01 14:23:10 [STREAM]     locale: "en-US"
+2025-11-01 14:23:10 [STREAM]     url: "http://localhost:8502/"
+2025-11-01 14:23:10 [STREAM]     is_embedded: false
+2025-11-01 14:23:10 [STREAM]     color_scheme: "light"
+2025-11-01 14:23:10 [STREAM]   }
+2025-11-01 14:23:10 [STREAM] }
+2025-11-01 14:23:10 [STREAM] 
+2025-11-01 14:23:10 [STREAM] 2025-11-01 14:23:10.977 Beginning script thread
+2025-11-01 14:23:10 [STREAM] 2025-11-01 14:23:10.977 Running script RerunData(query_string='agent=credit&stage=login', widget_states=, context_info=timezone: "Asia/Bangkok"
+2025-11-01 14:23:10 [STREAM] timezone_offset: -420
+2025-11-01 14:23:10 [STREAM] locale: "en-US"
+2025-11-01 14:23:10 [STREAM] url: "http://localhost:8502/"
+2025-11-01 14:23:10 [STREAM] is_embedded: false
+2025-11-01 14:23:10 [STREAM] color_scheme: "light"
+2025-11-01 14:23:10 [STREAM] )
+2025-11-01 14:23:10 [STREAM] 2025-11-01 14:23:10.977 Disconnecting files for session with ID 1a8ef673-e939-46c2-87ca-8dbda0cfb0b0
+2025-11-01 14:23:10 [STREAM] 2025-11-01 14:23:10.977 Sessions still active: dict_keys([])
+2025-11-01 14:23:10 [STREAM] 2025-11-01 14:23:10.977 Files: 0; Sessions with files: 0
+2025-11-01 14:23:10 [STREAM] 2025-11-01 14:23:10.983 Removing orphaned files...
+2025-11-01 14:23:11 [STREAM] 2025-11-01 14:23:11.037 Running script RerunData(page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+2025-11-01 14:23:11 [STREAM] timezone_offset: -420
+2025-11-01 14:23:11 [STREAM] locale: "en-US"
+2025-11-01 14:23:11 [STREAM] url: "http://localhost:8502/"
+2025-11-01 14:23:11 [STREAM] is_embedded: false
+2025-11-01 14:23:11 [STREAM] color_scheme: "light"
+2025-11-01 14:23:11 [STREAM] )
+2025-11-01 14:23:11 [STREAM] 2025-11-01 14:23:11.038 Disconnecting files for session with ID 1a8ef673-e939-46c2-87ca-8dbda0cfb0b0
+2025-11-01 14:23:11 [STREAM] 2025-11-01 14:23:11.038 Sessions still active: dict_keys([])
+2025-11-01 14:23:11 [STREAM] 2025-11-01 14:23:11.038 Files: 0; Sessions with files: 0
+2025-11-01 14:23:11 [STREAM] 2025-11-01 14:23:11.053 Removing orphaned files...
+2025-11-01 14:23:13 [STREAM] 2025-11-01 14:23:13.729 Received the following back message:
+2025-11-01 14:23:13 [STREAM] rerun_script {
+2025-11-01 14:23:13 [STREAM]   widget_states {
+2025-11-01 14:23:13 [STREAM]     widgets {
+2025-11-01 14:23:13 [STREAM]       id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+2025-11-01 14:23:13 [STREAM]       string_value: "dzoan"
+2025-11-01 14:23:13 [STREAM]     }
+2025-11-01 14:23:13 [STREAM]     widgets {
+2025-11-01 14:23:13 [STREAM]       id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+2025-11-01 14:23:13 [STREAM]       string_value: ""
+2025-11-01 14:23:13 [STREAM]     }
+2025-11-01 14:23:13 [STREAM]     widgets {
+2025-11-01 14:23:13 [STREAM]       id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+2025-11-01 14:23:13 [STREAM]       string_value: ""
+2025-11-01 14:23:13 [STREAM]     }
+2025-11-01 14:23:13 [STREAM]   }
+2025-11-01 14:23:13 [STREAM]   page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+2025-11-01 14:23:13 [STREAM]   context_info {
+2025-11-01 14:23:13 [STREAM]     timezone: "Asia/Bangkok"
+2025-11-01 14:23:13 [STREAM]     timezone_offset: -420
+2025-11-01 14:23:13 [STREAM]     locale: "en-US"
+2025-11-01 14:23:13 [STREAM]     url: "http://localhost:8502/"
+2025-11-01 14:23:13 [STREAM]     is_embedded: false
+2025-11-01 14:23:13 [STREAM]     color_scheme: "light"
+2025-11-01 14:23:13 [STREAM]   }
+2025-11-01 14:23:13 [STREAM] }
+2025-11-01 14:23:13 [STREAM] 
+2025-11-01 14:23:13 [STREAM] 2025-11-01 14:23:13.730 Beginning script thread
+2025-11-01 14:23:13 [STREAM] 2025-11-01 14:23:13.730 Running script RerunData(widget_states=widgets {
+2025-11-01 14:23:13 [STREAM]   id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+2025-11-01 14:23:13 [STREAM]   string_value: "dzoan"
+2025-11-01 14:23:13 [STREAM] }
+2025-11-01 14:23:13 [STREAM] widgets {
+2025-11-01 14:23:13 [STREAM]   id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+2025-11-01 14:23:13 [STREAM]   string_value: ""
+2025-11-01 14:23:13 [STREAM] }
+2025-11-01 14:23:13 [STREAM] widgets {
+2025-11-01 14:23:13 [STREAM]   id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+2025-11-01 14:23:13 [STREAM]   string_value: ""
+2025-11-01 14:23:13 [STREAM] }
+2025-11-01 14:23:13 [STREAM] , page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+2025-11-01 14:23:13 [STREAM] timezone_offset: -420
+2025-11-01 14:23:13 [STREAM] locale: "en-US"
+2025-11-01 14:23:13 [STREAM] url: "http://localhost:8502/"
+2025-11-01 14:23:13 [STREAM] is_embedded: false
+2025-11-01 14:23:13 [STREAM] color_scheme: "light"
+2025-11-01 14:23:13 [STREAM] )
+2025-11-01 14:23:13 [STREAM] 2025-11-01 14:23:13.730 Disconnecting files for session with ID 1a8ef673-e939-46c2-87ca-8dbda0cfb0b0
+2025-11-01 14:23:13 [STREAM] 2025-11-01 14:23:13.730 Sessions still active: dict_keys([])
+2025-11-01 14:23:13 [STREAM] 2025-11-01 14:23:13.730 Files: 0; Sessions with files: 0
+2025-11-01 14:23:13 [STREAM] 2025-11-01 14:23:13.741 Removing orphaned files...
+2025-11-01 14:23:15 [STREAM] 2025-11-01 14:23:15.866 Received the following back message:
+2025-11-01 14:23:15 [STREAM] rerun_script {
+2025-11-01 14:23:15 [STREAM]   widget_states {
+2025-11-01 14:23:15 [STREAM]     widgets {
+2025-11-01 14:23:15 [STREAM]       id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+2025-11-01 14:23:15 [STREAM]       string_value: "dzoan"
+2025-11-01 14:23:15 [STREAM]     }
+2025-11-01 14:23:15 [STREAM]     widgets {
+2025-11-01 14:23:15 [STREAM]       id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+2025-11-01 14:23:15 [STREAM]       string_value: "dzoan@gmail.com"
+2025-11-01 14:23:15 [STREAM]     }
+2025-11-01 14:23:15 [STREAM]     widgets {
+2025-11-01 14:23:15 [STREAM]       id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+2025-11-01 14:23:15 [STREAM]       string_value: ""
+2025-11-01 14:23:15 [STREAM]     }
+2025-11-01 14:23:15 [STREAM]   }
+2025-11-01 14:23:15 [STREAM]   page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+2025-11-01 14:23:15 [STREAM]   context_info {
+2025-11-01 14:23:15 [STREAM]     timezone: "Asia/Bangkok"
+2025-11-01 14:23:15 [STREAM]     timezone_offset: -420
+2025-11-01 14:23:15 [STREAM]     locale: "en-US"
+2025-11-01 14:23:15 [STREAM]     url: "http://localhost:8502/"
+2025-11-01 14:23:15 [STREAM]     is_embedded: false
+2025-11-01 14:23:15 [STREAM]     color_scheme: "light"
+2025-11-01 14:23:15 [STREAM]   }
+2025-11-01 14:23:15 [STREAM] }
+2025-11-01 14:23:15 [STREAM] 
+2025-11-01 14:23:15 [STREAM] 2025-11-01 14:23:15.867 Beginning script thread
+2025-11-01 14:23:15 [STREAM] 2025-11-01 14:23:15.867 Running script RerunData(widget_states=widgets {
+2025-11-01 14:23:15 [STREAM]   id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+2025-11-01 14:23:15 [STREAM]   string_value: "dzoan"
+2025-11-01 14:23:15 [STREAM] }
+2025-11-01 14:23:15 [STREAM] widgets {
+2025-11-01 14:23:15 [STREAM]   id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+2025-11-01 14:23:15 [STREAM]   string_value: "dzoan@gmail.com"
+2025-11-01 14:23:15 [STREAM] }
+2025-11-01 14:23:15 [STREAM] widgets {
+2025-11-01 14:23:15 [STREAM]   id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+2025-11-01 14:23:15 [STREAM]   string_value: ""
+2025-11-01 14:23:15 [STREAM] }
+2025-11-01 14:23:15 [STREAM] , page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+2025-11-01 14:23:15 [STREAM] timezone_offset: -420
+2025-11-01 14:23:15 [STREAM] locale: "en-US"
+2025-11-01 14:23:15 [STREAM] url: "http://localhost:8502/"
+2025-11-01 14:23:15 [STREAM] is_embedded: false
+2025-11-01 14:23:15 [STREAM] color_scheme: "light"
+2025-11-01 14:23:15 [STREAM] )
+2025-11-01 14:23:15 [STREAM] 2025-11-01 14:23:15.867 Disconnecting files for session with ID 1a8ef673-e939-46c2-87ca-8dbda0cfb0b0
+2025-11-01 14:23:15 [STREAM] 2025-11-01 14:23:15.867 Sessions still active: dict_keys([])
+2025-11-01 14:23:15 [STREAM] 2025-11-01 14:23:15.867 Files: 0; Sessions with files: 0
+2025-11-01 14:23:15 [STREAM] 2025-11-01 14:23:15.877 Removing orphaned files...
+2025-11-01 14:23:17 [STREAM] 2025-11-01 14:23:17.271 Received the following back message:
+2025-11-01 14:23:17 [STREAM] rerun_script {
+2025-11-01 14:23:17 [STREAM]   widget_states {
+2025-11-01 14:23:17 [STREAM]     widgets {
+2025-11-01 14:23:17 [STREAM]       id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+2025-11-01 14:23:17 [STREAM]       string_value: "dzoan"
+2025-11-01 14:23:17 [STREAM]     }
+2025-11-01 14:23:17 [STREAM]     widgets {
+2025-11-01 14:23:17 [STREAM]       id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+2025-11-01 14:23:17 [STREAM]       string_value: "dzoan@gmail.com"
+2025-11-01 14:23:17 [STREAM]     }
+2025-11-01 14:23:17 [STREAM]     widgets {
+2025-11-01 14:23:17 [STREAM]       id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+2025-11-01 14:23:17 [STREAM]       string_value: "afaffasf"
+2025-11-01 14:23:17 [STREAM]     }
+2025-11-01 14:23:17 [STREAM]   }
+2025-11-01 14:23:17 [STREAM]   page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+2025-11-01 14:23:17 [STREAM]   context_info {
+2025-11-01 14:23:17 [STREAM]     timezone: "Asia/Bangkok"
+2025-11-01 14:23:17 [STREAM]     timezone_offset: -420
+2025-11-01 14:23:17 [STREAM]     locale: "en-US"
+2025-11-01 14:23:17 [STREAM]     url: "http://localhost:8502/"
+2025-11-01 14:23:17 [STREAM]     is_embedded: false
+2025-11-01 14:23:17 [STREAM]     color_scheme: "light"
+2025-11-01 14:23:17 [STREAM]   }
+2025-11-01 14:23:17 [STREAM] }
+2025-11-01 14:23:17 [STREAM] 
+2025-11-01 14:23:17 [STREAM] 2025-11-01 14:23:17.271 Beginning script thread
+2025-11-01 14:23:17 [STREAM] 2025-11-01 14:23:17.272 Running script RerunData(widget_states=widgets {
+2025-11-01 14:23:17 [STREAM]   id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+2025-11-01 14:23:17 [STREAM]   string_value: "dzoan"
+2025-11-01 14:23:17 [STREAM] }
+2025-11-01 14:23:17 [STREAM] widgets {
+2025-11-01 14:23:17 [STREAM]   id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+2025-11-01 14:23:17 [STREAM]   string_value: "dzoan@gmail.com"
+2025-11-01 14:23:17 [STREAM] }
+2025-11-01 14:23:17 [STREAM] widgets {
+2025-11-01 14:23:17 [STREAM]   id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+2025-11-01 14:23:17 [STREAM]   string_value: "afaffasf"
+2025-11-01 14:23:17 [STREAM] }
+2025-11-01 14:23:17 [STREAM] , page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+2025-11-01 14:23:17 [STREAM] timezone_offset: -420
+2025-11-01 14:23:17 [STREAM] locale: "en-US"
+2025-11-01 14:23:17 [STREAM] url: "http://localhost:8502/"
+2025-11-01 14:23:17 [STREAM] is_embedded: false
+2025-11-01 14:23:17 [STREAM] color_scheme: "light"
+2025-11-01 14:23:17 [STREAM] )
+2025-11-01 14:23:17 [STREAM] 2025-11-01 14:23:17.272 Disconnecting files for session with ID 1a8ef673-e939-46c2-87ca-8dbda0cfb0b0
+2025-11-01 14:23:17 [STREAM] 2025-11-01 14:23:17.272 Sessions still active: dict_keys([])
+2025-11-01 14:23:17 [STREAM] 2025-11-01 14:23:17.272 Files: 0; Sessions with files: 0
+2025-11-01 14:23:17 [STREAM] 2025-11-01 14:23:17.280 Removing orphaned files...
+2025-11-01 14:23:17 [STREAM] 2025-11-01 14:23:17.373 Received the following back message:
+2025-11-01 14:23:17 [STREAM] rerun_script {
+2025-11-01 14:23:17 [STREAM]   widget_states {
+2025-11-01 14:23:17 [STREAM]     widgets {
+2025-11-01 14:23:17 [STREAM]       id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+2025-11-01 14:23:17 [STREAM]       string_value: "dzoan"
+2025-11-01 14:23:17 [STREAM]     }
+2025-11-01 14:23:17 [STREAM]     widgets {
+2025-11-01 14:23:17 [STREAM]       id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+2025-11-01 14:23:17 [STREAM]       string_value: "dzoan@gmail.com"
+2025-11-01 14:23:17 [STREAM]     }
+2025-11-01 14:23:17 [STREAM]     widgets {
+2025-11-01 14:23:17 [STREAM]       id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+2025-11-01 14:23:17 [STREAM]       string_value: "afaffasf"
+2025-11-01 14:23:17 [STREAM]     }
+2025-11-01 14:23:17 [STREAM]     widgets {
+2025-11-01 14:23:17 [STREAM]       id: "$$ID-9735ad692572309cd313a7098f129c21-btn_login_submit"
+2025-11-01 14:23:17 [STREAM]       trigger_value: true
+2025-11-01 14:23:17 [STREAM]     }
+2025-11-01 14:23:17 [STREAM]   }
+2025-11-01 14:23:17 [STREAM]   page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+2025-11-01 14:23:17 [STREAM]   context_info {
+2025-11-01 14:23:17 [STREAM]     timezone: "Asia/Bangkok"
+2025-11-01 14:23:17 [STREAM]     timezone_offset: -420
+2025-11-01 14:23:17 [STREAM]     locale: "en-US"
+2025-11-01 14:23:17 [STREAM]     url: "http://localhost:8502/"
+2025-11-01 14:23:17 [STREAM]     is_embedded: false
+2025-11-01 14:23:17 [STREAM]     color_scheme: "light"
+2025-11-01 14:23:17 [STREAM]   }
+2025-11-01 14:23:17 [STREAM] }
+2025-11-01 14:23:17 [STREAM] 
+2025-11-01 14:23:17 [STREAM] 2025-11-01 14:23:17.374 Beginning script thread
+2025-11-01 14:23:17 [STREAM] 2025-11-01 14:23:17.374 Running script RerunData(widget_states=widgets {
+2025-11-01 14:23:17 [STREAM]   id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+2025-11-01 14:23:17 [STREAM]   string_value: "dzoan"
+2025-11-01 14:23:17 [STREAM] }
+2025-11-01 14:23:17 [STREAM] widgets {
+2025-11-01 14:23:17 [STREAM]   id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+2025-11-01 14:23:17 [STREAM]   string_value: "dzoan@gmail.com"
+2025-11-01 14:23:17 [STREAM] }
+2025-11-01 14:23:17 [STREAM] widgets {
+2025-11-01 14:23:17 [STREAM]   id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+2025-11-01 14:23:17 [STREAM]   string_value: "afaffasf"
+2025-11-01 14:23:17 [STREAM] }
+2025-11-01 14:23:17 [STREAM] widgets {
+2025-11-01 14:23:17 [STREAM]   id: "$$ID-9735ad692572309cd313a7098f129c21-btn_login_submit"
+2025-11-01 14:23:17 [STREAM]   trigger_value: true
+2025-11-01 14:23:17 [STREAM] }
+2025-11-01 14:23:17 [STREAM] , page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+2025-11-01 14:23:17 [STREAM] timezone_offset: -420
+2025-11-01 14:23:17 [STREAM] locale: "en-US"
+2025-11-01 14:23:17 [STREAM] url: "http://localhost:8502/"
+2025-11-01 14:23:17 [STREAM] is_embedded: false
+2025-11-01 14:23:17 [STREAM] color_scheme: "light"
+2025-11-01 14:23:17 [STREAM] )
+2025-11-01 14:23:17 [STREAM] 2025-11-01 14:23:17.374 Disconnecting files for session with ID 1a8ef673-e939-46c2-87ca-8dbda0cfb0b0
+2025-11-01 14:23:17 [STREAM] 2025-11-01 14:23:17.374 Sessions still active: dict_keys([])
+2025-11-01 14:23:17 [STREAM] 2025-11-01 14:23:17.374 Files: 0; Sessions with files: 0
+2025-11-01 14:23:17 [STREAM] 2025-11-01 14:23:17.384 Removing orphaned files...
+2025-11-01 14:23:17 [STREAM] 2025-11-01 14:23:17.438 Running script RerunData(page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+2025-11-01 14:23:17 [STREAM] timezone_offset: -420
+2025-11-01 14:23:17 [STREAM] locale: "en-US"
+2025-11-01 14:23:17 [STREAM] url: "http://localhost:8502/"
+2025-11-01 14:23:17 [STREAM] is_embedded: false
+2025-11-01 14:23:17 [STREAM] color_scheme: "light"
+2025-11-01 14:23:17 [STREAM] )
+2025-11-01 14:23:17 [STREAM] 2025-11-01 14:23:17.438 Disconnecting files for session with ID 1a8ef673-e939-46c2-87ca-8dbda0cfb0b0
+2025-11-01 14:23:17 [STREAM] 2025-11-01 14:23:17.439 Sessions still active: dict_keys([])
+2025-11-01 14:23:17 [STREAM] 2025-11-01 14:23:17.439 Files: 0; Sessions with files: 0
+2025-11-01 14:23:17 [STREAM] 
+2025-11-01 14:23:17 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251101-142256.log <==
+2025-11-01 14:23:17 [STREAM] INFO:     127.0.0.1:49388 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+2025-11-01 14:23:17 [STREAM] INFO:     127.0.0.1:49394 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+2025-11-01 14:23:17 [STREAM] 
+2025-11-01 14:23:17 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251101-142256.log <==
+2025-11-01 14:23:17 [STREAM] 2025-11-01 14:23:17.570 Removing orphaned files...
+2025-11-01 14:23:18 [STREAM] 2025-11-01 14:23:18.760 Received the following back message:
+2025-11-01 14:23:18 [STREAM] rerun_script {
+2025-11-01 14:23:18 [STREAM]   widget_states {
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-beb18e73fa29052e896740a50e731525-None"
+2025-11-01 14:23:18 [STREAM]       file_uploader_state_value {
+2025-11-01 14:23:18 [STREAM]       }
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-f28c8dfc2b1b4fe1bb70241a89fbcc76-review_csv_loader"
+2025-11-01 14:23:18 [STREAM]       file_uploader_state_value {
+2025-11-01 14:23:18 [STREAM]       }
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-a99b320c116b8588c8cc7328f8f4875b-train_feedback_uploader"
+2025-11-01 14:23:18 [STREAM]       file_uploader_state_value {
+2025-11-01 14:23:18 [STREAM]       }
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-a6941d61d20aa7688d04d8dd56df2a58-None"
+2025-11-01 14:23:18 [STREAM]       string_value: "USD"
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-c70b24b57d53487aeb488cedd7d573fa-None"
+2025-11-01 14:23:18 [STREAM]       double_array_value {
+2025-11-01 14:23:18 [STREAM]         data: 200
+2025-11-01 14:23:18 [STREAM]       }
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-f7197ee29881ea29d381602cecae9c2e-None"
+2025-11-01 14:23:18 [STREAM]       double_array_value {
+2025-11-01 14:23:18 [STREAM]         data: 0.3
+2025-11-01 14:23:18 [STREAM]       }
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-822457c795cdd11c9f61574ac8abc610-None"
+2025-11-01 14:23:18 [STREAM]       string_value: "credit_lr-dzoan-credit-appraisal-20251025-191409.joblib — Nov 01, 2025 07:01"
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-90bd4fdb41d0d53c562fddbe1c38b231-None"
+2025-11-01 14:23:18 [STREAM]       string_value: "Mistral 7B Instruct — CPU slow / GPU OK"
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-3976fcb9839d75a0dd5bdecb3b69789d-None"
+2025-11-01 14:23:18 [STREAM]       string_value: "m4.medium"
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-0b2d15503359118f7861b697351ac797-None"
+2025-11-01 14:23:18 [STREAM]       string_value: "Use synthetic (ANON)"
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-d1775a34cd44a0ca1af0dc05ef8f58eb-None"
+2025-11-01 14:23:18 [STREAM]       double_array_value {
+2025-11-01 14:23:18 [STREAM]         data: 0.45
+2025-11-01 14:23:18 [STREAM]       }
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-7f94ed476e2a8f2cb87b11cde38c8bc1-None"
+2025-11-01 14:23:18 [STREAM]       double_array_value {
+2025-11-01 14:23:18 [STREAM]         data: 0.35
+2025-11-01 14:23:18 [STREAM]       }
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-e04b9069aaa0b2634f4b66e59e2a4559-None"
+2025-11-01 14:23:18 [STREAM]       double_array_value {
+2025-11-01 14:23:18 [STREAM]         data: 1
+2025-11-01 14:23:18 [STREAM]       }
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-c35c73527ccf7fc2915f1827da4ec296-None"
+2025-11-01 14:23:18 [STREAM]       double_array_value {
+2025-11-01 14:23:18 [STREAM]         data: 0.5
+2025-11-01 14:23:18 [STREAM]       }
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-7cdbe51e487c4d6cfd82cc7d032a5ef3-None"
+2025-11-01 14:23:18 [STREAM]       double_array_value {
+2025-11-01 14:23:18 [STREAM]         data: 0.45
+2025-11-01 14:23:18 [STREAM]       }
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-8484fa1e9380c3c8446a80b681fa2451-None"
+2025-11-01 14:23:18 [STREAM]       string_value: "💳 Credit Appraisal Agent"
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-ce187aa4bd9a90fc6a4e3ede7bd1eb1c-None"
+2025-11-01 14:23:18 [STREAM]       double_array_value {
+2025-11-01 14:23:18 [STREAM]         data: 5
+2025-11-01 14:23:18 [STREAM]       }
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-9eef6f576cddc798ee1bee018ce163f6-None"
+2025-11-01 14:23:18 [STREAM]       bool_value: false
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-a29a6c1b9c67f3d8b7afdd5b5aaf3d6c-None"
+2025-11-01 14:23:18 [STREAM]       int_value: 0
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-3c84b807a084412907a4fbac78dfe1c5-None"
+2025-11-01 14:23:18 [STREAM]       int_value: 2
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-091da9fb170c67d668db4097a770a6c9-None"
+2025-11-01 14:23:18 [STREAM]       int_value: 3
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-d95b8bf9df5b5a6fafbbbf64031a8458-None"
+2025-11-01 14:23:18 [STREAM]       int_value: 3000
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-85cbb5694cdc676495a873a1191f3d70-None"
+2025-11-01 14:23:18 [STREAM]       int_value: 2
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-5afd5d94c68bf750633653ee32d9cf77-None"
+2025-11-01 14:23:18 [STREAM]       int_value: 3
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-a996fa4522aee701f22b0e4be23f2fc1-None"
+2025-11-01 14:23:18 [STREAM]       int_value: 1000
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-ce1a19f34f1933206adc408592157014-None"
+2025-11-01 14:23:18 [STREAM]       int_value: 200000
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-97d0be66f31125c9aeeb4937222c7cbd-None"
+2025-11-01 14:23:18 [STREAM]       string_array_value {
+2025-11-01 14:23:18 [STREAM]         data: "12"
+2025-11-01 14:23:18 [STREAM]         data: "24"
+2025-11-01 14:23:18 [STREAM]         data: "36"
+2025-11-01 14:23:18 [STREAM]         data: "48"
+2025-11-01 14:23:18 [STREAM]         data: "60"
+2025-11-01 14:23:18 [STREAM]       }
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-1cf68da1a9cd1a8c1a5fabbf77ca826f-None"
+2025-11-01 14:23:18 [STREAM]       bool_value: false
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-4151498aa4c7b9112ea14a419bc6da76-None"
+2025-11-01 14:23:18 [STREAM]       bool_value: true
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-4ed9d05a835a0e8372fcec2e75bddc99-None"
+2025-11-01 14:23:18 [STREAM]       string_value: ""
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]     widgets {
+2025-11-01 14:23:18 [STREAM]       id: "$$ID-97036b980add746d1dfaeadc8b7293fb-None"
+2025-11-01 14:23:18 [STREAM]       trigger_value: true
+2025-11-01 14:23:18 [STREAM]     }
+2025-11-01 14:23:18 [STREAM]   }
+2025-11-01 14:23:18 [STREAM]   page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+2025-11-01 14:23:18 [STREAM]   context_info {
+2025-11-01 14:23:18 [STREAM]     timezone: "Asia/Bangkok"
+2025-11-01 14:23:18 [STREAM]     timezone_offset: -420
+2025-11-01 14:23:18 [STREAM]     locale: "en-US"
+2025-11-01 14:23:18 [STREAM]     url: "http://localhost:8502/"
+2025-11-01 14:23:18 [STREAM]     is_embedded: false
+2025-11-01 14:23:18 [STREAM]     color_scheme: "light"
+2025-11-01 14:23:18 [STREAM]   }
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] 
+2025-11-01 14:23:18 [STREAM] 2025-11-01 14:23:18.761 Beginning script thread
+2025-11-01 14:23:18 [STREAM] 2025-11-01 14:23:18.761 Running script RerunData(widget_states=widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-beb18e73fa29052e896740a50e731525-None"
+2025-11-01 14:23:18 [STREAM]   file_uploader_state_value {
+2025-11-01 14:23:18 [STREAM]   }
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-f28c8dfc2b1b4fe1bb70241a89fbcc76-review_csv_loader"
+2025-11-01 14:23:18 [STREAM]   file_uploader_state_value {
+2025-11-01 14:23:18 [STREAM]   }
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-a99b320c116b8588c8cc7328f8f4875b-train_feedback_uploader"
+2025-11-01 14:23:18 [STREAM]   file_uploader_state_value {
+2025-11-01 14:23:18 [STREAM]   }
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-a6941d61d20aa7688d04d8dd56df2a58-None"
+2025-11-01 14:23:18 [STREAM]   string_value: "USD"
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-c70b24b57d53487aeb488cedd7d573fa-None"
+2025-11-01 14:23:18 [STREAM]   double_array_value {
+2025-11-01 14:23:18 [STREAM]     data: 200
+2025-11-01 14:23:18 [STREAM]   }
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-f7197ee29881ea29d381602cecae9c2e-None"
+2025-11-01 14:23:18 [STREAM]   double_array_value {
+2025-11-01 14:23:18 [STREAM]     data: 0.3
+2025-11-01 14:23:18 [STREAM]   }
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-822457c795cdd11c9f61574ac8abc610-None"
+2025-11-01 14:23:18 [STREAM]   string_value: "credit_lr-dzoan-credit-appraisal-20251025-191409.joblib — Nov 01, 2025 07:01"
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-90bd4fdb41d0d53c562fddbe1c38b231-None"
+2025-11-01 14:23:18 [STREAM]   string_value: "Mistral 7B Instruct — CPU slow / GPU OK"
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-3976fcb9839d75a0dd5bdecb3b69789d-None"
+2025-11-01 14:23:18 [STREAM]   string_value: "m4.medium"
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-0b2d15503359118f7861b697351ac797-None"
+2025-11-01 14:23:18 [STREAM]   string_value: "Use synthetic (ANON)"
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-d1775a34cd44a0ca1af0dc05ef8f58eb-None"
+2025-11-01 14:23:18 [STREAM]   double_array_value {
+2025-11-01 14:23:18 [STREAM]     data: 0.45
+2025-11-01 14:23:18 [STREAM]   }
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-7f94ed476e2a8f2cb87b11cde38c8bc1-None"
+2025-11-01 14:23:18 [STREAM]   double_array_value {
+2025-11-01 14:23:18 [STREAM]     data: 0.35
+2025-11-01 14:23:18 [STREAM]   }
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-e04b9069aaa0b2634f4b66e59e2a4559-None"
+2025-11-01 14:23:18 [STREAM]   double_array_value {
+2025-11-01 14:23:18 [STREAM]     data: 1
+2025-11-01 14:23:18 [STREAM]   }
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-c35c73527ccf7fc2915f1827da4ec296-None"
+2025-11-01 14:23:18 [STREAM]   double_array_value {
+2025-11-01 14:23:18 [STREAM]     data: 0.5
+2025-11-01 14:23:18 [STREAM]   }
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-7cdbe51e487c4d6cfd82cc7d032a5ef3-None"
+2025-11-01 14:23:18 [STREAM]   double_array_value {
+2025-11-01 14:23:18 [STREAM]     data: 0.45
+2025-11-01 14:23:18 [STREAM]   }
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-8484fa1e9380c3c8446a80b681fa2451-None"
+2025-11-01 14:23:18 [STREAM]   string_value: "💳 Credit Appraisal Agent"
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-ce187aa4bd9a90fc6a4e3ede7bd1eb1c-None"
+2025-11-01 14:23:18 [STREAM]   double_array_value {
+2025-11-01 14:23:18 [STREAM]     data: 5
+2025-11-01 14:23:18 [STREAM]   }
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-9eef6f576cddc798ee1bee018ce163f6-None"
+2025-11-01 14:23:18 [STREAM]   bool_value: false
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-a29a6c1b9c67f3d8b7afdd5b5aaf3d6c-None"
+2025-11-01 14:23:18 [STREAM]   int_value: 0
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-3c84b807a084412907a4fbac78dfe1c5-None"
+2025-11-01 14:23:18 [STREAM]   int_value: 2
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-091da9fb170c67d668db4097a770a6c9-None"
+2025-11-01 14:23:18 [STREAM]   int_value: 3
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-d95b8bf9df5b5a6fafbbbf64031a8458-None"
+2025-11-01 14:23:18 [STREAM]   int_value: 3000
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-85cbb5694cdc676495a873a1191f3d70-None"
+2025-11-01 14:23:18 [STREAM]   int_value: 2
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-5afd5d94c68bf750633653ee32d9cf77-None"
+2025-11-01 14:23:18 [STREAM]   int_value: 3
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-a996fa4522aee701f22b0e4be23f2fc1-None"
+2025-11-01 14:23:18 [STREAM]   int_value: 1000
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-ce1a19f34f1933206adc408592157014-None"
+2025-11-01 14:23:18 [STREAM]   int_value: 200000
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-97d0be66f31125c9aeeb4937222c7cbd-None"
+2025-11-01 14:23:18 [STREAM]   string_array_value {
+2025-11-01 14:23:18 [STREAM]     data: "12"
+2025-11-01 14:23:18 [STREAM]     data: "24"
+2025-11-01 14:23:18 [STREAM]     data: "36"
+2025-11-01 14:23:18 [STREAM]     data: "48"
+2025-11-01 14:23:18 [STREAM]     data: "60"
+2025-11-01 14:23:18 [STREAM]   }
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-1cf68da1a9cd1a8c1a5fabbf77ca826f-None"
+2025-11-01 14:23:18 [STREAM]   bool_value: false
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-4151498aa4c7b9112ea14a419bc6da76-None"
+2025-11-01 14:23:18 [STREAM]   bool_value: true
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-4ed9d05a835a0e8372fcec2e75bddc99-None"
+2025-11-01 14:23:18 [STREAM]   string_value: ""
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] widgets {
+2025-11-01 14:23:18 [STREAM]   id: "$$ID-97036b980add746d1dfaeadc8b7293fb-None"
+2025-11-01 14:23:18 [STREAM]   trigger_value: true
+2025-11-01 14:23:18 [STREAM] }
+2025-11-01 14:23:18 [STREAM] , page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+2025-11-01 14:23:18 [STREAM] timezone_offset: -420
+2025-11-01 14:23:18 [STREAM] locale: "en-US"
+2025-11-01 14:23:18 [STREAM] url: "http://localhost:8502/"
+2025-11-01 14:23:18 [STREAM] is_embedded: false
+2025-11-01 14:23:18 [STREAM] color_scheme: "light"
+2025-11-01 14:23:18 [STREAM] )
+2025-11-01 14:23:18 [STREAM] 2025-11-01 14:23:18.761 Disconnecting files for session with ID 1a8ef673-e939-46c2-87ca-8dbda0cfb0b0
+2025-11-01 14:23:18 [STREAM] 2025-11-01 14:23:18.761 Sessions still active: dict_keys([])
+2025-11-01 14:23:18 [STREAM] 2025-11-01 14:23:18.761 Files: 0; Sessions with files: 0
+2025-11-01 14:23:18 [STREAM] 2025-11-01 14:23:18.793 Please replace `use_container_width` with `width`.
+2025-11-01 14:23:18 [STREAM] 
+2025-11-01 14:23:18 [STREAM] `use_container_width` will be removed after 2025-12-31.
+2025-11-01 14:23:18 [STREAM] 
+2025-11-01 14:23:18 [STREAM] For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-11-01 14:23:18 [STREAM] 2025-11-01 14:23:18.804 Adding media file 3de2c45d91361a5d794f9bc8ba48c6b01b3020051e36a3ac7dfdceb8
+2025-11-01 14:23:18 [STREAM] 
+2025-11-01 14:23:18 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251101-142256.log <==
+2025-11-01 14:23:18 [STREAM] INFO:     127.0.0.1:49402 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+2025-11-01 14:23:18 [STREAM] INFO:     127.0.0.1:49408 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+2025-11-01 14:23:18 [STREAM] 
+2025-11-01 14:23:18 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251101-142256.log <==
+2025-11-01 14:23:18 [STREAM] 2025-11-01 14:23:18.850 Removing orphaned files...
+2025-11-01 14:23:18 [STREAM] 2025-11-01 14:23:18.918 MediaFileHandler: GET 3de2c45d91361a5d794f9bc8ba48c6b01b3020051e36a3ac7dfdceb8.csv
+2025-11-01 14:23:18 [STREAM] 2025-11-01 14:23:18.919 MediaFileHandler: Sending text/csv file 3de2c45d91361a5d794f9bc8ba48c6b01b3020051e36a3ac7dfdceb8.csv
+2025-11-01 14:23:18 [STREAM] 2025-11-01 14:23:18.919 MediaFileHandler: GET 3de2c45d91361a5d794f9bc8ba48c6b01b3020051e36a3ac7dfdceb8.csv
+2025-11-01 14:23:18 [STREAM] 2025-11-01 14:23:18.919 MediaFileHandler: Sending text/csv file 3de2c45d91361a5d794f9bc8ba48c6b01b3020051e36a3ac7dfdceb8.csv
+2025-11-01 14:23:20 [STREAM] 2025-11-01 14:23:20.033 Received the following back message:
+2025-11-01 14:23:20 [STREAM] rerun_script {
+2025-11-01 14:23:20 [STREAM]   widget_states {
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-beb18e73fa29052e896740a50e731525-None"
+2025-11-01 14:23:20 [STREAM]       file_uploader_state_value {
+2025-11-01 14:23:20 [STREAM]       }
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-f28c8dfc2b1b4fe1bb70241a89fbcc76-review_csv_loader"
+2025-11-01 14:23:20 [STREAM]       file_uploader_state_value {
+2025-11-01 14:23:20 [STREAM]       }
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-a99b320c116b8588c8cc7328f8f4875b-train_feedback_uploader"
+2025-11-01 14:23:20 [STREAM]       file_uploader_state_value {
+2025-11-01 14:23:20 [STREAM]       }
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-a6941d61d20aa7688d04d8dd56df2a58-None"
+2025-11-01 14:23:20 [STREAM]       string_value: "USD"
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-c70b24b57d53487aeb488cedd7d573fa-None"
+2025-11-01 14:23:20 [STREAM]       double_array_value {
+2025-11-01 14:23:20 [STREAM]         data: 200
+2025-11-01 14:23:20 [STREAM]       }
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-f7197ee29881ea29d381602cecae9c2e-None"
+2025-11-01 14:23:20 [STREAM]       double_array_value {
+2025-11-01 14:23:20 [STREAM]         data: 0.3
+2025-11-01 14:23:20 [STREAM]       }
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-822457c795cdd11c9f61574ac8abc610-None"
+2025-11-01 14:23:20 [STREAM]       string_value: "credit_lr-dzoan-credit-appraisal-20251025-191409.joblib — Nov 01, 2025 07:01"
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-90bd4fdb41d0d53c562fddbe1c38b231-None"
+2025-11-01 14:23:20 [STREAM]       string_value: "Mistral 7B Instruct — CPU slow / GPU OK"
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-3976fcb9839d75a0dd5bdecb3b69789d-None"
+2025-11-01 14:23:20 [STREAM]       string_value: "m4.medium"
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-0b2d15503359118f7861b697351ac797-None"
+2025-11-01 14:23:20 [STREAM]       string_value: "Use synthetic (ANON)"
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-d1775a34cd44a0ca1af0dc05ef8f58eb-None"
+2025-11-01 14:23:20 [STREAM]       double_array_value {
+2025-11-01 14:23:20 [STREAM]         data: 0.45
+2025-11-01 14:23:20 [STREAM]       }
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-7f94ed476e2a8f2cb87b11cde38c8bc1-None"
+2025-11-01 14:23:20 [STREAM]       double_array_value {
+2025-11-01 14:23:20 [STREAM]         data: 0.35
+2025-11-01 14:23:20 [STREAM]       }
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-e04b9069aaa0b2634f4b66e59e2a4559-None"
+2025-11-01 14:23:20 [STREAM]       double_array_value {
+2025-11-01 14:23:20 [STREAM]         data: 1
+2025-11-01 14:23:20 [STREAM]       }
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-c35c73527ccf7fc2915f1827da4ec296-None"
+2025-11-01 14:23:20 [STREAM]       double_array_value {
+2025-11-01 14:23:20 [STREAM]         data: 0.5
+2025-11-01 14:23:20 [STREAM]       }
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-7cdbe51e487c4d6cfd82cc7d032a5ef3-None"
+2025-11-01 14:23:20 [STREAM]       double_array_value {
+2025-11-01 14:23:20 [STREAM]         data: 0.45
+2025-11-01 14:23:20 [STREAM]       }
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-8484fa1e9380c3c8446a80b681fa2451-None"
+2025-11-01 14:23:20 [STREAM]       string_value: "💳 Credit Appraisal Agent"
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-ce187aa4bd9a90fc6a4e3ede7bd1eb1c-None"
+2025-11-01 14:23:20 [STREAM]       double_array_value {
+2025-11-01 14:23:20 [STREAM]         data: 5
+2025-11-01 14:23:20 [STREAM]       }
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-9eef6f576cddc798ee1bee018ce163f6-None"
+2025-11-01 14:23:20 [STREAM]       bool_value: false
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-a29a6c1b9c67f3d8b7afdd5b5aaf3d6c-None"
+2025-11-01 14:23:20 [STREAM]       int_value: 0
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-3c84b807a084412907a4fbac78dfe1c5-None"
+2025-11-01 14:23:20 [STREAM]       int_value: 2
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-091da9fb170c67d668db4097a770a6c9-None"
+2025-11-01 14:23:20 [STREAM]       int_value: 3
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-d95b8bf9df5b5a6fafbbbf64031a8458-None"
+2025-11-01 14:23:20 [STREAM]       int_value: 3000
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-85cbb5694cdc676495a873a1191f3d70-None"
+2025-11-01 14:23:20 [STREAM]       int_value: 2
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-5afd5d94c68bf750633653ee32d9cf77-None"
+2025-11-01 14:23:20 [STREAM]       int_value: 3
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-a996fa4522aee701f22b0e4be23f2fc1-None"
+2025-11-01 14:23:20 [STREAM]       int_value: 1000
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-ce1a19f34f1933206adc408592157014-None"
+2025-11-01 14:23:20 [STREAM]       int_value: 200000
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-97d0be66f31125c9aeeb4937222c7cbd-None"
+2025-11-01 14:23:20 [STREAM]       string_array_value {
+2025-11-01 14:23:20 [STREAM]         data: "12"
+2025-11-01 14:23:20 [STREAM]         data: "24"
+2025-11-01 14:23:20 [STREAM]         data: "36"
+2025-11-01 14:23:20 [STREAM]         data: "48"
+2025-11-01 14:23:20 [STREAM]         data: "60"
+2025-11-01 14:23:20 [STREAM]       }
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-1cf68da1a9cd1a8c1a5fabbf77ca826f-None"
+2025-11-01 14:23:20 [STREAM]       bool_value: false
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-4151498aa4c7b9112ea14a419bc6da76-None"
+2025-11-01 14:23:20 [STREAM]       bool_value: true
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-4ed9d05a835a0e8372fcec2e75bddc99-None"
+2025-11-01 14:23:20 [STREAM]       string_value: ""
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]     widgets {
+2025-11-01 14:23:20 [STREAM]       id: "$$ID-3801379c8b442e1d7912cd77c6b18265-None"
+2025-11-01 14:23:20 [STREAM]       trigger_value: true
+2025-11-01 14:23:20 [STREAM]     }
+2025-11-01 14:23:20 [STREAM]   }
+2025-11-01 14:23:20 [STREAM]   page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+2025-11-01 14:23:20 [STREAM]   context_info {
+2025-11-01 14:23:20 [STREAM]     timezone: "Asia/Bangkok"
+2025-11-01 14:23:20 [STREAM]     timezone_offset: -420
+2025-11-01 14:23:20 [STREAM]     locale: "en-US"
+2025-11-01 14:23:20 [STREAM]     url: "http://localhost:8502/"
+2025-11-01 14:23:20 [STREAM]     is_embedded: false
+2025-11-01 14:23:20 [STREAM]     color_scheme: "light"
+2025-11-01 14:23:20 [STREAM]   }
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] 
+2025-11-01 14:23:20 [STREAM] 2025-11-01 14:23:20.034 Beginning script thread
+2025-11-01 14:23:20 [STREAM] 2025-11-01 14:23:20.035 MediaFileHandler: GET 3de2c45d91361a5d794f9bc8ba48c6b01b3020051e36a3ac7dfdceb8.csv
+2025-11-01 14:23:20 [STREAM] 2025-11-01 14:23:20.035 Running script RerunData(widget_states=widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-beb18e73fa29052e896740a50e731525-None"
+2025-11-01 14:23:20 [STREAM]   file_uploader_state_value {
+2025-11-01 14:23:20 [STREAM]   }
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-f28c8dfc2b1b4fe1bb70241a89fbcc76-review_csv_loader"
+2025-11-01 14:23:20 [STREAM]   file_uploader_state_value {
+2025-11-01 14:23:20 [STREAM]   }
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-a99b320c116b8588c8cc7328f8f4875b-train_feedback_uploader"
+2025-11-01 14:23:20 [STREAM]   file_uploader_state_value {
+2025-11-01 14:23:20 [STREAM]   }
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-a6941d61d20aa7688d04d8dd56df2a58-None"
+2025-11-01 14:23:20 [STREAM]   string_value: "USD"
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-c70b24b57d53487aeb488cedd7d573fa-None"
+2025-11-01 14:23:20 [STREAM]   double_array_value {
+2025-11-01 14:23:20 [STREAM]     data: 200
+2025-11-01 14:23:20 [STREAM]   }
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-f7197ee29881ea29d381602cecae9c2e-None"
+2025-11-01 14:23:20 [STREAM]   double_array_value {
+2025-11-01 14:23:20 [STREAM]     data: 0.3
+2025-11-01 14:23:20 [STREAM]   }
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-822457c795cdd11c9f61574ac8abc610-None"
+2025-11-01 14:23:20 [STREAM]   string_value: "credit_lr-dzoan-credit-appraisal-20251025-191409.joblib — Nov 01, 2025 07:01"
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-90bd4fdb41d0d53c562fddbe1c38b231-None"
+2025-11-01 14:23:20 [STREAM]   string_value: "Mistral 7B Instruct — CPU slow / GPU OK"
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-3976fcb9839d75a0dd5bdecb3b69789d-None"
+2025-11-01 14:23:20 [STREAM]   string_value: "m4.medium"
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-0b2d15503359118f7861b697351ac797-None"
+2025-11-01 14:23:20 [STREAM]   string_value: "Use synthetic (ANON)"
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-d1775a34cd44a0ca1af0dc05ef8f58eb-None"
+2025-11-01 14:23:20 [STREAM]   double_array_value {
+2025-11-01 14:23:20 [STREAM]     data: 0.45
+2025-11-01 14:23:20 [STREAM]   }
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-7f94ed476e2a8f2cb87b11cde38c8bc1-None"
+2025-11-01 14:23:20 [STREAM]   double_array_value {
+2025-11-01 14:23:20 [STREAM]     data: 0.35
+2025-11-01 14:23:20 [STREAM]   }
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-e04b9069aaa0b2634f4b66e59e2a4559-None"
+2025-11-01 14:23:20 [STREAM]   double_array_value {
+2025-11-01 14:23:20 [STREAM]     data: 1
+2025-11-01 14:23:20 [STREAM]   }
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-c35c73527ccf7fc2915f1827da4ec296-None"
+2025-11-01 14:23:20 [STREAM]   double_array_value {
+2025-11-01 14:23:20 [STREAM]     data: 0.5
+2025-11-01 14:23:20 [STREAM]   }
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-7cdbe51e487c4d6cfd82cc7d032a5ef3-None"
+2025-11-01 14:23:20 [STREAM]   double_array_value {
+2025-11-01 14:23:20 [STREAM]     data: 0.45
+2025-11-01 14:23:20 [STREAM]   }
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-8484fa1e9380c3c8446a80b681fa2451-None"
+2025-11-01 14:23:20 [STREAM]   string_value: "💳 Credit Appraisal Agent"
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-ce187aa4bd9a90fc6a4e3ede7bd1eb1c-None"
+2025-11-01 14:23:20 [STREAM]   double_array_value {
+2025-11-01 14:23:20 [STREAM]     data: 5
+2025-11-01 14:23:20 [STREAM]   }
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-9eef6f576cddc798ee1bee018ce163f6-None"
+2025-11-01 14:23:20 [STREAM]   bool_value: false
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-a29a6c1b9c67f3d8b7afdd5b5aaf3d6c-None"
+2025-11-01 14:23:20 [STREAM]   int_value: 0
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-3c84b807a084412907a4fbac78dfe1c5-None"
+2025-11-01 14:23:20 [STREAM]   int_value: 2
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-091da9fb170c67d668db4097a770a6c9-None"
+2025-11-01 14:23:20 [STREAM]   int_value: 3
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-d95b8bf9df5b5a6fafbbbf64031a8458-None"
+2025-11-01 14:23:20 [STREAM]   int_value: 3000
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-85cbb5694cdc676495a873a1191f3d70-None"
+2025-11-01 14:23:20 [STREAM]   int_value: 2
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-5afd5d94c68bf750633653ee32d9cf77-None"
+2025-11-01 14:23:20 [STREAM]   int_value: 3
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-a996fa4522aee701f22b0e4be23f2fc1-None"
+2025-11-01 14:23:20 [STREAM]   int_value: 1000
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-ce1a19f34f1933206adc408592157014-None"
+2025-11-01 14:23:20 [STREAM]   int_value: 200000
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-97d0be66f31125c9aeeb4937222c7cbd-None"
+2025-11-01 14:23:20 [STREAM]   string_array_value {
+2025-11-01 14:23:20 [STREAM]     data: "12"
+2025-11-01 14:23:20 [STREAM]     data: "24"
+2025-11-01 14:23:20 [STREAM]     data: "36"
+2025-11-01 14:23:20 [STREAM]     data: "48"
+2025-11-01 14:23:20 [STREAM]     data: "60"
+2025-11-01 14:23:20 [STREAM]   }
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-1cf68da1a9cd1a8c1a5fabbf77ca826f-None"
+2025-11-01 14:23:20 [STREAM]   bool_value: false
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-4151498aa4c7b9112ea14a419bc6da76-None"
+2025-11-01 14:23:20 [STREAM]   bool_value: true
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-4ed9d05a835a0e8372fcec2e75bddc99-None"
+2025-11-01 14:23:20 [STREAM]   string_value: ""
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] widgets {
+2025-11-01 14:23:20 [STREAM]   id: "$$ID-3801379c8b442e1d7912cd77c6b18265-None"
+2025-11-01 14:23:20 [STREAM]   trigger_value: true
+2025-11-01 14:23:20 [STREAM] }
+2025-11-01 14:23:20 [STREAM] , page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+2025-11-01 14:23:20 [STREAM] timezone_offset: -420
+2025-11-01 14:23:20 [STREAM] locale: "en-US"
+2025-11-01 14:23:20 [STREAM] url: "http://localhost:8502/"
+2025-11-01 14:23:20 [STREAM] is_embedded: false
+2025-11-01 14:23:20 [STREAM] color_scheme: "light"
+2025-11-01 14:23:20 [STREAM] )
+2025-11-01 14:23:20 [STREAM] 2025-11-01 14:23:20.036 MediaFileHandler: Sending text/csv file 3de2c45d91361a5d794f9bc8ba48c6b01b3020051e36a3ac7dfdceb8.csv
+2025-11-01 14:23:20 [STREAM] 2025-11-01 14:23:20.036 Disconnecting files for session with ID 1a8ef673-e939-46c2-87ca-8dbda0cfb0b0
+2025-11-01 14:23:20 [STREAM] 2025-11-01 14:23:20.036 Sessions still active: dict_keys([])
+2025-11-01 14:23:20 [STREAM] 2025-11-01 14:23:20.036 Files: 1; Sessions with files: 0
+2025-11-01 14:23:20 [STREAM] 
+2025-11-01 14:23:20 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251101-142256.log <==
+2025-11-01 14:23:20 [STREAM] INFO:     127.0.0.1:49422 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+2025-11-01 14:23:20 [STREAM] INFO:     127.0.0.1:49438 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+2025-11-01 14:23:20 [STREAM] 
+2025-11-01 14:23:20 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251101-142256.log <==
+2025-11-01 14:23:20 [STREAM] 2025-11-01 14:23:20.114 Removing orphaned files...
+2025-11-01 14:23:25 [STREAM] 2025-11-01 14:23:25.839 Received the following back message:
+2025-11-01 14:23:25 [STREAM] rerun_script {
+2025-11-01 14:23:25 [STREAM]   widget_states {
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-beb18e73fa29052e896740a50e731525-None"
+2025-11-01 14:23:25 [STREAM]       file_uploader_state_value {
+2025-11-01 14:23:25 [STREAM]       }
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-f28c8dfc2b1b4fe1bb70241a89fbcc76-review_csv_loader"
+2025-11-01 14:23:25 [STREAM]       file_uploader_state_value {
+2025-11-01 14:23:25 [STREAM]       }
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-a99b320c116b8588c8cc7328f8f4875b-train_feedback_uploader"
+2025-11-01 14:23:25 [STREAM]       file_uploader_state_value {
+2025-11-01 14:23:25 [STREAM]       }
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-a6941d61d20aa7688d04d8dd56df2a58-None"
+2025-11-01 14:23:25 [STREAM]       string_value: "USD"
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-c70b24b57d53487aeb488cedd7d573fa-None"
+2025-11-01 14:23:25 [STREAM]       double_array_value {
+2025-11-01 14:23:25 [STREAM]         data: 200
+2025-11-01 14:23:25 [STREAM]       }
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-f7197ee29881ea29d381602cecae9c2e-None"
+2025-11-01 14:23:25 [STREAM]       double_array_value {
+2025-11-01 14:23:25 [STREAM]         data: 0.3
+2025-11-01 14:23:25 [STREAM]       }
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-822457c795cdd11c9f61574ac8abc610-None"
+2025-11-01 14:23:25 [STREAM]       string_value: "credit_lr-dzoan-credit-appraisal-20251025-191409.joblib — Nov 01, 2025 07:01"
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-90bd4fdb41d0d53c562fddbe1c38b231-None"
+2025-11-01 14:23:25 [STREAM]       string_value: "Mistral 7B Instruct — CPU slow / GPU OK"
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-3976fcb9839d75a0dd5bdecb3b69789d-None"
+2025-11-01 14:23:25 [STREAM]       string_value: "m4.medium"
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-0b2d15503359118f7861b697351ac797-None"
+2025-11-01 14:23:25 [STREAM]       string_value: "Use synthetic (ANON)"
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-d1775a34cd44a0ca1af0dc05ef8f58eb-None"
+2025-11-01 14:23:25 [STREAM]       double_array_value {
+2025-11-01 14:23:25 [STREAM]         data: 0.45
+2025-11-01 14:23:25 [STREAM]       }
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-7f94ed476e2a8f2cb87b11cde38c8bc1-None"
+2025-11-01 14:23:25 [STREAM]       double_array_value {
+2025-11-01 14:23:25 [STREAM]         data: 0.35
+2025-11-01 14:23:25 [STREAM]       }
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-e04b9069aaa0b2634f4b66e59e2a4559-None"
+2025-11-01 14:23:25 [STREAM]       double_array_value {
+2025-11-01 14:23:25 [STREAM]         data: 1
+2025-11-01 14:23:25 [STREAM]       }
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-c35c73527ccf7fc2915f1827da4ec296-None"
+2025-11-01 14:23:25 [STREAM]       double_array_value {
+2025-11-01 14:23:25 [STREAM]         data: 0.5
+2025-11-01 14:23:25 [STREAM]       }
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-7cdbe51e487c4d6cfd82cc7d032a5ef3-None"
+2025-11-01 14:23:25 [STREAM]       double_array_value {
+2025-11-01 14:23:25 [STREAM]         data: 0.45
+2025-11-01 14:23:25 [STREAM]       }
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-8484fa1e9380c3c8446a80b681fa2451-None"
+2025-11-01 14:23:25 [STREAM]       string_value: "💳 Credit Appraisal Agent"
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-ce187aa4bd9a90fc6a4e3ede7bd1eb1c-None"
+2025-11-01 14:23:25 [STREAM]       double_array_value {
+2025-11-01 14:23:25 [STREAM]         data: 5
+2025-11-01 14:23:25 [STREAM]       }
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-9eef6f576cddc798ee1bee018ce163f6-None"
+2025-11-01 14:23:25 [STREAM]       bool_value: false
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-a29a6c1b9c67f3d8b7afdd5b5aaf3d6c-None"
+2025-11-01 14:23:25 [STREAM]       int_value: 0
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-3c84b807a084412907a4fbac78dfe1c5-None"
+2025-11-01 14:23:25 [STREAM]       int_value: 2
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-091da9fb170c67d668db4097a770a6c9-None"
+2025-11-01 14:23:25 [STREAM]       int_value: 3
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-d95b8bf9df5b5a6fafbbbf64031a8458-None"
+2025-11-01 14:23:25 [STREAM]       int_value: 3000
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-85cbb5694cdc676495a873a1191f3d70-None"
+2025-11-01 14:23:25 [STREAM]       int_value: 2
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-5afd5d94c68bf750633653ee32d9cf77-None"
+2025-11-01 14:23:25 [STREAM]       int_value: 3
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-a996fa4522aee701f22b0e4be23f2fc1-None"
+2025-11-01 14:23:25 [STREAM]       int_value: 1000
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-ce1a19f34f1933206adc408592157014-None"
+2025-11-01 14:23:25 [STREAM]       int_value: 200000
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-97d0be66f31125c9aeeb4937222c7cbd-None"
+2025-11-01 14:23:25 [STREAM]       string_array_value {
+2025-11-01 14:23:25 [STREAM]         data: "12"
+2025-11-01 14:23:25 [STREAM]         data: "24"
+2025-11-01 14:23:25 [STREAM]         data: "36"
+2025-11-01 14:23:25 [STREAM]         data: "48"
+2025-11-01 14:23:25 [STREAM]         data: "60"
+2025-11-01 14:23:25 [STREAM]       }
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-1cf68da1a9cd1a8c1a5fabbf77ca826f-None"
+2025-11-01 14:23:25 [STREAM]       bool_value: false
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-4151498aa4c7b9112ea14a419bc6da76-None"
+2025-11-01 14:23:25 [STREAM]       bool_value: true
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-4ed9d05a835a0e8372fcec2e75bddc99-None"
+2025-11-01 14:23:25 [STREAM]       string_value: ""
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]     widgets {
+2025-11-01 14:23:25 [STREAM]       id: "$$ID-2906c323b25f8ddc2e35dd25623c612e-None"
+2025-11-01 14:23:25 [STREAM]       trigger_value: true
+2025-11-01 14:23:25 [STREAM]     }
+2025-11-01 14:23:25 [STREAM]   }
+2025-11-01 14:23:25 [STREAM]   page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+2025-11-01 14:23:25 [STREAM]   context_info {
+2025-11-01 14:23:25 [STREAM]     timezone: "Asia/Bangkok"
+2025-11-01 14:23:25 [STREAM]     timezone_offset: -420
+2025-11-01 14:23:25 [STREAM]     locale: "en-US"
+2025-11-01 14:23:25 [STREAM]     url: "http://localhost:8502/"
+2025-11-01 14:23:25 [STREAM]     is_embedded: false
+2025-11-01 14:23:25 [STREAM]     color_scheme: "light"
+2025-11-01 14:23:25 [STREAM]   }
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] 
+2025-11-01 14:23:25 [STREAM] 2025-11-01 14:23:25.840 Beginning script thread
+2025-11-01 14:23:25 [STREAM] 2025-11-01 14:23:25.840 Running script RerunData(widget_states=widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-beb18e73fa29052e896740a50e731525-None"
+2025-11-01 14:23:25 [STREAM]   file_uploader_state_value {
+2025-11-01 14:23:25 [STREAM]   }
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-f28c8dfc2b1b4fe1bb70241a89fbcc76-review_csv_loader"
+2025-11-01 14:23:25 [STREAM]   file_uploader_state_value {
+2025-11-01 14:23:25 [STREAM]   }
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-a99b320c116b8588c8cc7328f8f4875b-train_feedback_uploader"
+2025-11-01 14:23:25 [STREAM]   file_uploader_state_value {
+2025-11-01 14:23:25 [STREAM]   }
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-a6941d61d20aa7688d04d8dd56df2a58-None"
+2025-11-01 14:23:25 [STREAM]   string_value: "USD"
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-c70b24b57d53487aeb488cedd7d573fa-None"
+2025-11-01 14:23:25 [STREAM]   double_array_value {
+2025-11-01 14:23:25 [STREAM]     data: 200
+2025-11-01 14:23:25 [STREAM]   }
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-f7197ee29881ea29d381602cecae9c2e-None"
+2025-11-01 14:23:25 [STREAM]   double_array_value {
+2025-11-01 14:23:25 [STREAM]     data: 0.3
+2025-11-01 14:23:25 [STREAM]   }
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-822457c795cdd11c9f61574ac8abc610-None"
+2025-11-01 14:23:25 [STREAM]   string_value: "credit_lr-dzoan-credit-appraisal-20251025-191409.joblib — Nov 01, 2025 07:01"
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-90bd4fdb41d0d53c562fddbe1c38b231-None"
+2025-11-01 14:23:25 [STREAM]   string_value: "Mistral 7B Instruct — CPU slow / GPU OK"
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-3976fcb9839d75a0dd5bdecb3b69789d-None"
+2025-11-01 14:23:25 [STREAM]   string_value: "m4.medium"
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-0b2d15503359118f7861b697351ac797-None"
+2025-11-01 14:23:25 [STREAM]   string_value: "Use synthetic (ANON)"
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-d1775a34cd44a0ca1af0dc05ef8f58eb-None"
+2025-11-01 14:23:25 [STREAM]   double_array_value {
+2025-11-01 14:23:25 [STREAM]     data: 0.45
+2025-11-01 14:23:25 [STREAM]   }
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-7f94ed476e2a8f2cb87b11cde38c8bc1-None"
+2025-11-01 14:23:25 [STREAM]   double_array_value {
+2025-11-01 14:23:25 [STREAM]     data: 0.35
+2025-11-01 14:23:25 [STREAM]   }
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-e04b9069aaa0b2634f4b66e59e2a4559-None"
+2025-11-01 14:23:25 [STREAM]   double_array_value {
+2025-11-01 14:23:25 [STREAM]     data: 1
+2025-11-01 14:23:25 [STREAM]   }
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-c35c73527ccf7fc2915f1827da4ec296-None"
+2025-11-01 14:23:25 [STREAM]   double_array_value {
+2025-11-01 14:23:25 [STREAM]     data: 0.5
+2025-11-01 14:23:25 [STREAM]   }
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-7cdbe51e487c4d6cfd82cc7d032a5ef3-None"
+2025-11-01 14:23:25 [STREAM]   double_array_value {
+2025-11-01 14:23:25 [STREAM]     data: 0.45
+2025-11-01 14:23:25 [STREAM]   }
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-8484fa1e9380c3c8446a80b681fa2451-None"
+2025-11-01 14:23:25 [STREAM]   string_value: "💳 Credit Appraisal Agent"
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-ce187aa4bd9a90fc6a4e3ede7bd1eb1c-None"
+2025-11-01 14:23:25 [STREAM]   double_array_value {
+2025-11-01 14:23:25 [STREAM]     data: 5
+2025-11-01 14:23:25 [STREAM]   }
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-9eef6f576cddc798ee1bee018ce163f6-None"
+2025-11-01 14:23:25 [STREAM]   bool_value: false
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-a29a6c1b9c67f3d8b7afdd5b5aaf3d6c-None"
+2025-11-01 14:23:25 [STREAM]   int_value: 0
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-3c84b807a084412907a4fbac78dfe1c5-None"
+2025-11-01 14:23:25 [STREAM]   int_value: 2
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-091da9fb170c67d668db4097a770a6c9-None"
+2025-11-01 14:23:25 [STREAM]   int_value: 3
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-d95b8bf9df5b5a6fafbbbf64031a8458-None"
+2025-11-01 14:23:25 [STREAM]   int_value: 3000
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-85cbb5694cdc676495a873a1191f3d70-None"
+2025-11-01 14:23:25 [STREAM]   int_value: 2
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-5afd5d94c68bf750633653ee32d9cf77-None"
+2025-11-01 14:23:25 [STREAM]   int_value: 3
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-a996fa4522aee701f22b0e4be23f2fc1-None"
+2025-11-01 14:23:25 [STREAM]   int_value: 1000
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-ce1a19f34f1933206adc408592157014-None"
+2025-11-01 14:23:25 [STREAM]   int_value: 200000
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-97d0be66f31125c9aeeb4937222c7cbd-None"
+2025-11-01 14:23:25 [STREAM]   string_array_value {
+2025-11-01 14:23:25 [STREAM]     data: "12"
+2025-11-01 14:23:25 [STREAM]     data: "24"
+2025-11-01 14:23:25 [STREAM]     data: "36"
+2025-11-01 14:23:25 [STREAM]     data: "48"
+2025-11-01 14:23:25 [STREAM]     data: "60"
+2025-11-01 14:23:25 [STREAM]   }
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-1cf68da1a9cd1a8c1a5fabbf77ca826f-None"
+2025-11-01 14:23:25 [STREAM]   bool_value: false
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-4151498aa4c7b9112ea14a419bc6da76-None"
+2025-11-01 14:23:25 [STREAM]   bool_value: true
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-4ed9d05a835a0e8372fcec2e75bddc99-None"
+2025-11-01 14:23:25 [STREAM]   string_value: ""
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] widgets {
+2025-11-01 14:23:25 [STREAM]   id: "$$ID-2906c323b25f8ddc2e35dd25623c612e-None"
+2025-11-01 14:23:25 [STREAM]   trigger_value: true
+2025-11-01 14:23:25 [STREAM] }
+2025-11-01 14:23:25 [STREAM] , page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+2025-11-01 14:23:25 [STREAM] timezone_offset: -420
+2025-11-01 14:23:25 [STREAM] locale: "en-US"
+2025-11-01 14:23:25 [STREAM] url: "http://localhost:8502/"
+2025-11-01 14:23:25 [STREAM] is_embedded: false
+2025-11-01 14:23:25 [STREAM] color_scheme: "light"
+2025-11-01 14:23:25 [STREAM] )
+2025-11-01 14:23:25 [STREAM] 2025-11-01 14:23:25.841 Disconnecting files for session with ID 1a8ef673-e939-46c2-87ca-8dbda0cfb0b0
+2025-11-01 14:23:25 [STREAM] 2025-11-01 14:23:25.841 Sessions still active: dict_keys([])
+2025-11-01 14:23:25 [STREAM] 2025-11-01 14:23:25.841 Files: 1; Sessions with files: 0
+2025-11-01 14:23:25 [STREAM] 
+2025-11-01 14:23:25 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251101-142256.log <==
+2025-11-01 14:23:25 [STREAM] INFO:     127.0.0.1:44514 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+2025-11-01 14:23:25 [STREAM] INFO:     127.0.0.1:44530 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+2025-11-01 14:23:25 [STREAM] INFO:     127.0.0.1:44540 - "GET /v1/runs/credit_appraisal_20251101T072325Z_38a6d3ca/report?format=csv HTTP/1.1" 404 Not Found
+2025-11-01 14:23:25 [STREAM] 
+2025-11-01 14:23:25 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251101-142256.log <==
+2025-11-01 14:23:25 [STREAM] 2025-11-01 14:23:25.998 Removing orphaned files...
+2025-11-01 14:23:25 [STREAM] 2025-11-01 14:23:25.999 Deleting File: 3de2c45d91361a5d794f9bc8ba48c6b01b3020051e36a3ac7dfdceb8
+2025-11-01 14:23:57 [STREAM]   Stopping...
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.448 Runtime stopping...
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.448 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.STOPPING
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.449 Shutting down (id=5f55fd33-1b4f-4c88-8995-7434d82d62d8)
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.449 Disconnecting files for session with ID 5f55fd33-1b4f-4c88-8995-7434d82d62d8
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.449 Sessions still active: dict_keys([])
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.449 Files: 0; Sessions with files: 0
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.449 Removing orphaned files...
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.449 Shutting down (id=3d0f68a7-ea69-4d4c-b61a-96bddc98c6a3)
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.449 Disconnecting files for session with ID 3d0f68a7-ea69-4d4c-b61a-96bddc98c6a3
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.449 Sessions still active: dict_keys([])
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.449 Files: 0; Sessions with files: 0
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.449 Removing orphaned files...
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.449 Shutting down (id=bb132fc7-3bec-43a6-89ae-1f91c65b2f22)
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.449 Disconnecting files for session with ID bb132fc7-3bec-43a6-89ae-1f91c65b2f22
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.449 Sessions still active: dict_keys([])
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.450 Files: 0; Sessions with files: 0
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.450 Removing orphaned files...
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.450 Shutting down (id=cb45ae7c-622d-42e9-83c0-e66bf1be988f)
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.450 Disconnecting files for session with ID cb45ae7c-622d-42e9-83c0-e66bf1be988f
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.450 Sessions still active: dict_keys([])
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.450 Files: 0; Sessions with files: 0
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.450 Removing orphaned files...
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.450 Shutting down (id=02415c79-8b81-41a9-bcba-c82b73f1f6df)
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.450 Disconnecting files for session with ID 02415c79-8b81-41a9-bcba-c82b73f1f6df
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.450 Sessions still active: dict_keys([])
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.450 Files: 0; Sessions with files: 0
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.450 Removing orphaned files...
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.450 Shutting down (id=b4c2eec8-94bd-4eaa-a1db-a45e1368970a)
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.450 Disconnecting files for session with ID b4c2eec8-94bd-4eaa-a1db-a45e1368970a
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.450 Sessions still active: dict_keys([])
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Files: 0; Sessions with files: 0
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Removing orphaned files...
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Shutting down (id=9f9b7aa8-49df-4b3a-8989-108460dd1f4e)
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Disconnecting files for session with ID 9f9b7aa8-49df-4b3a-8989-108460dd1f4e
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Sessions still active: dict_keys([])
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Files: 0; Sessions with files: 0
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Removing orphaned files...
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Shutting down (id=11b90185-615c-4a5d-8092-c11e2ac6e7b1)
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Disconnecting files for session with ID 11b90185-615c-4a5d-8092-c11e2ac6e7b1
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Sessions still active: dict_keys([])
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Files: 0; Sessions with files: 0
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Removing orphaned files...
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Shutting down (id=5f807793-b2ba-48bb-91a0-e41239fd0cb6)
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Disconnecting files for session with ID 5f807793-b2ba-48bb-91a0-e41239fd0cb6
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Sessions still active: dict_keys([])
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Files: 0; Sessions with files: 0
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Removing orphaned files...
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Shutting down (id=0cfa6d9a-27a2-400c-b66e-4654e3ab7207)
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Disconnecting files for session with ID 0cfa6d9a-27a2-400c-b66e-4654e3ab7207
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Sessions still active: dict_keys([])
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.451 Files: 0; Sessions with files: 0
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Removing orphaned files...
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Shutting down (id=ab94f4f7-20f9-4017-bfd3-9d60f3bef8c2)
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Disconnecting files for session with ID ab94f4f7-20f9-4017-bfd3-9d60f3bef8c2
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Sessions still active: dict_keys([])
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Files: 0; Sessions with files: 0
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Removing orphaned files...
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Shutting down (id=e15d5255-493b-44b9-b4f8-3a2bbc9236a9)
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Disconnecting files for session with ID e15d5255-493b-44b9-b4f8-3a2bbc9236a9
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Sessions still active: dict_keys([])
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Files: 0; Sessions with files: 0
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Removing orphaned files...
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Shutting down (id=0745f7ad-61ee-4810-aa11-741472fb4a92)
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Disconnecting files for session with ID 0745f7ad-61ee-4810-aa11-741472fb4a92
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Sessions still active: dict_keys([])
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Files: 0; Sessions with files: 0
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Removing orphaned files...
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Shutting down (id=18fb8569-254e-4e73-b4b8-9d9c9cd8aa26)
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Disconnecting files for session with ID 18fb8569-254e-4e73-b4b8-9d9c9cd8aa26
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Sessions still active: dict_keys([])
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Files: 0; Sessions with files: 0
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Removing orphaned files...
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Shutting down (id=01ae7943-ad35-4b10-a897-ca1f39fadb36)
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Disconnecting files for session with ID 01ae7943-ad35-4b10-a897-ca1f39fadb36
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.452 Sessions still active: dict_keys([])
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.453 Files: 0; Sessions with files: 0
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.453 Removing orphaned files...
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.453 Shutting down (id=1a8ef673-e939-46c2-87ca-8dbda0cfb0b0)
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.455 Disconnecting files for session with ID 1a8ef673-e939-46c2-87ca-8dbda0cfb0b0
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.455 Sessions still active: dict_keys([])
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.455 Files: 0; Sessions with files: 0
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.455 Removing orphaned files...
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.456 Shutting down (id=e4b43b2b-3e65-46a1-ac76-6d9972423b70)
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.456 Disconnecting files for session with ID e4b43b2b-3e65-46a1-ac76-6d9972423b70
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.456 Sessions still active: dict_keys([])
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.456 Files: 0; Sessions with files: 0
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.456 Removing orphaned files...
+2025-11-01 14:23:57 [STREAM] 2025-11-01 14:23:57.456 Runtime state: RuntimeState.STOPPING -> RuntimeState.STOPPED
+2025-11-01 14:23:57 [STR

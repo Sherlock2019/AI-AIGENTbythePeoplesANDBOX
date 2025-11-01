@@ -1,0 +1,36 @@
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [388770] using WatchFiles
+INFO:     Started server process [388780]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:44580 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44580 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44620 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44624 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51010 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51018 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56310 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58658 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58674 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58676 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58690 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58698 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58712 - "GET /v1/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58726 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52948 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35588 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35598 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35600 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35606 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53784 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43322 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43336 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43338 - "POST /v1/agents/asset_appraisal/training/train_asset HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43340 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43348 - "POST /v1/agents/asset_appraisal/training/promote_last HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [388780]
+INFO:     Stopping reloader process [388770]

@@ -1,0 +1,22 @@
+# Virtual env & cache
+.venv/
+__pycache__/
+*.pyc
+
+# Models and datasets
+models/
+data/raw/
+data/*.csv
+*.pkl
+*.bin
+
+# Logs & backups
+logs/
+backups/
+
+# Hugging Face caches
+~/.cache/
+~/.huggingface/
+
+# Local config overrides
+.env

@@ -1,0 +1,52 @@
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [398097] using WatchFiles
+INFO:     Started server process [398107]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:44236 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44244 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44254 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44256 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44258 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44266 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46946 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46950 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58416 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58428 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58434 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58444 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42008 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42024 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42032 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42042 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60992 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32772 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32774 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32776 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49434 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but StandardScaler was fitted with feature names
+  warnings.warn(
+INFO:     127.0.0.1:49446 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49448 - "GET /v1/runs/run_1761637687/report?format=csv HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49454 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38180 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38186 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38202 - "GET /v1/runs/run_1761637687/report?format=pdf HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:38206 - "GET /v1/runs/run_1761637687/report?format=scores_csv HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38218 - "GET /v1/runs/run_1761637687/report?format=pdf HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:47310 - "GET /v1/runs/run_1761637687/report?format=csv HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47310 - "GET /v1/runs/run_1761637687/report?format=json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37164 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37178 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37180 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37196 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41464 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41472 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41482 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41486 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [398107]
+INFO:     Stopping reloader process [398097]

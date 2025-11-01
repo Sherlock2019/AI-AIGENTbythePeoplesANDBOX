@@ -1,0 +1,65 @@
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251026-151950.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251026-151950.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251026-151950.log <==
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc/services/ui']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [204273] using WatchFiles
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251026-151950.log <==
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251026-151950.log <==
+INFO:     Started server process [204283]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251026-151950.log <==
+2025-10-26 15:20:16.622 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 910, in <module>
+    raw_df = append_user_info(generate_raw_synthetic(rows, non_bank_ratio))
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 420, in append_user_info
+    out["created_at"] = meta["timestamp"]
+KeyError: 'timestamp'
+2025-10-26 15:21:45.250 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 910, in <module>
+    raw_df = append_user_info(generate_raw_synthetic(rows, non_bank_ratio))
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 420, in append_user_info
+    out["created_at"] = meta["timestamp"]
+KeyError: 'timestamp'
+2025-10-26 15:35:33.275 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 924, in <module>
+    anon_df = append_user_info(generate_anon_synthetic(rows, non_bank_ratio))
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 420, in append_user_info
+    out["created_at"] = meta["timestamp"]
+KeyError: 'timestamp'
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251026-151950.log <==
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [204283]
+INFO:     Stopping reloader process [204273]
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251026-151950.log <==
+  Stopping...

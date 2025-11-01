@@ -1,0 +1,15 @@
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251029-191722.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251029-191722.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251029-191722.log <==
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+ERROR:    [Errno 98] Address already in use
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251029-191722.log <==
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+  Stopping...

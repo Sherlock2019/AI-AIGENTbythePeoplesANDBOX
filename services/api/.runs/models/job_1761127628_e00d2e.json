@@ -6,7 +6,7 @@
   "matching_score": 0.98,
   "cfg": {
     "base_csv_globs": [
-      "/home/dzoan/demo-library/services/api/.runs/latest/results.csv"
+      "/home/dzoan/credit-appraisal-agent-poc/services/api/.runs/latest/results.csv"
     ],
     "cutoff_date": "2024-01-01"
   }

@@ -1,0 +1,126 @@
+# services/ui/asset_appraisal.py
+# ────────────────────────────────
+# 🏦 Asset Appraisal Agent UI
+# Built on same Streamlit framework as Credit Agent
+# ────────────────────────────────
+import streamlit as st
+import pandas as pd
+import numpy as np
+import datetime
+import json
+import io
+import requests
+import os
+
+st.set_page_config(page_title="🏦 Asset Appraisal Agent", layout="wide")
+
+st.title("🏦 AI Asset Appraisal Platform")
+st.caption("Generate, inspect, and appraise assets using AI-driven valuation + human insight.")
+
+# Tabs
+tab_gen, tab_field, tab_ai, tab_review, tab_train, tab_feedback = st.tabs([
+    "🏗 Synthetic Asset Generator",
+    "🧾 Field Inspection & Data Validation",
+    "🤖 Asset Valuation by AI Agent",
+    "🧑‍⚖️ Human Review & Verification",
+    "🔁 Training (Feedback → Retrain)",
+    "💬 Feedback & Improvement"
+])
+
+# Base directories
+BASE_DIR = os.path.expanduser("~/credit-appraisal-agent-poc/services/ui")
+RUNS_DIR = os.path.join(BASE_DIR, ".runs")
+os.makedirs(RUNS_DIR, exist_ok=True)
+API_URL = os.getenv("API_URL", "http://localhost:8090")
+
+# ───────────────────────────────
+# 🏗 Synthetic Data Generator
+with tab_gen:
+    st.subheader("🏗 Generate Synthetic Asset Dataset")
+    n = st.slider("Number of assets", 50, 2000, 200, step=50)
+    asset_types = ["Apartment", "Car", "Land Plot", "Factory", "Condo", "Shop"]
+    rng = np.random.default_rng(42)
+
+    df = pd.DataFrame({
+        "asset_id": [f"A-{i:05d}" for i in range(1, n+1)],
+        "asset_type": np.random.choice(asset_types, n),
+        "asset_age_years": rng.integers(0, 40, n),
+        "market_value": rng.integers(50_000, 5_000_000, n),
+        "area_m2": rng.integers(20, 500, n),
+        "location_quality": np.random.choice(["A", "B", "C", "D"], n, p=[0.2, 0.3, 0.3, 0.2]),
+        "legal_status": np.random.choice(["Clean", "Disputed", "Pending Verification"], n, p=[0.8, 0.1, 0.1]),
+        "last_appraised": datetime.datetime.now().strftime("%Y-%m-%d")
+    })
+
+    st.dataframe(df.head(10), use_container_width=True)
+    csv_bytes = df.to_csv(index=False).encode("utf-8")
+    st.download_button("⬇️ Download Synthetic Asset CSV", csv_bytes, "synthetic_assets.csv", "text/csv")
+
+# ───────────────────────────────
+# 🧾 Field Inspection Upload
+with tab_field:
+    st.subheader("🧾 Upload Field Inspection Data")
+    st.markdown("Field inspectors submit verified data or notes from local authorities.")
+    uploaded = st.file_uploader("Upload Inspection CSV", type=["csv"])
+    if uploaded:
+        try:
+            insp_df = pd.read_csv(uploaded)
+            st.success(f"Loaded {len(insp_df)} inspection records.")
+            st.dataframe(insp_df.head(10), use_container_width=True)
+            st.session_state["inspection_df"] = insp_df
+        except Exception as e:
+            st.error(f"Error reading file: {e}")
+
+# ───────────────────────────────
+# 🤖 AI Valuation
+with tab_ai:
+    st.subheader("🤖 Asset Appraisal by AI Agent")
+    data_source = st.selectbox("Data source", ["Synthetic Data", "Field Inspection Upload"])
+    if st.button("🚀 Run AI Valuation", use_container_width=True):
+        try:
+            df_input = st.session_state.get("inspection_df") if data_source == "Field Inspection Upload" else df
+            buf = io.StringIO()
+            df_input.to_csv(buf, index=False)
+            files = {"file": ("assets.csv", buf.getvalue().encode("utf-8"), "text/csv")}
+            r = requests.post(f"{API_URL}/v1/agents/asset_appraisal/run", files=files, timeout=120)
+            if r.ok:
+                res = r.json()
+                st.success("✅ AI Valuation completed!")
+                st.json(res.get("summary", {}))
+            else:
+                st.error(f"Error: {r.status_code} — {r.text}")
+        except Exception as e:
+            st.exception(e)
+
+# ───────────────────────────────
+# 🧑‍⚖️ Human Review
+with tab_review:
+    st.subheader("🧑‍⚖️ Human Review — Adjust Valuations")
+    review_upload = st.file_uploader("Upload AI outputs CSV", type=["csv"], key="asset_review_csv")
+    if review_upload:
+        df_rev = pd.read_csv(review_upload)
+        df_rev["human_adjusted_value"] = df_rev["predicted_value"] * np.random.uniform(0.95, 1.05, len(df_rev))
+        st.dataframe(df_rev.head(10), use_container_width=True)
+        st.download_button("⬇️ Export Reviewed CSV", df_rev.to_csv(index=False).encode("utf-8"), "reviewed_assets.csv")
+
+# ───────────────────────────────
+# 🔁 Training
+with tab_train:
+    st.subheader("🔁 Retrain Asset Model using Reviewed Data")
+    train_up = st.file_uploader("Upload Reviewed CSV", type=["csv"], key="asset_train_csv")
+    if train_up:
+        try:
+            df_train = pd.read_csv(train_up)
+            st.write("Training with sample:", df_train.head(3))
+            r = requests.post(f"{API_URL}/v1/training/train_asset", timeout=90)
+            st.success("✅ Retraining triggered!")
+        except Exception as e:
+            st.error(f"Training failed: {e}")
+
+# ───────────────────────────────
+# 💬 Feedback
+with tab_feedback:
+    st.subheader("💬 Feedback & Feature Requests")
+    idea = st.text_area("What should we improve?")
+    if st.button("📨 Submit"):
+        st.success("Thank you for your feedback!")

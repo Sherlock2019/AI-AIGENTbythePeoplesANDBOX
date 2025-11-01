@@ -1,0 +1,39 @@
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251026-100205.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251026-100205.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251026-100205.log <==
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [175208] using WatchFiles
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251026-100205.log <==
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251026-100205.log <==
+INFO:     Started server process [175218]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251026-100205.log <==
+2025-10-26 10:02:11.725 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251026-100205.log <==
+INFO:     Shutting down
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251026-100205.log <==
+  Stopping...
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251026-100205.log <==
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [175218]
+INFO:     Stopping reloader process [175208]

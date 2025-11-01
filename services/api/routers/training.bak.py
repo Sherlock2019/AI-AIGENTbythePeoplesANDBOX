@@ -5,8 +5,8 @@ from datetime import datetime
 import os, pandas as pd, uuid, subprocess, json
 
 router = APIRouter(prefix="/v1/training", tags=["training"])
-FEEDBACK_DIR = os.path.expanduser("~/demo-library/services/api/.runs/feedback")
-RUNS_DIR = os.path.expanduser("~/demo-library/services/api/.runs")
+FEEDBACK_DIR = os.path.expanduser("~/credit-appraisal-agent-poc/services/api/.runs/feedback")
+RUNS_DIR = os.path.expanduser("~/credit-appraisal-agent-poc/services/api/.runs")
 TRAIN_LOG_DIR = os.path.join(RUNS_DIR, "train")
 os.makedirs(FEEDBACK_DIR, exist_ok=True)
 os.makedirs(TRAIN_LOG_DIR, exist_ok=True)
@@ -67,7 +67,7 @@ def launch_training(config: dict):
     with open(cfg_path, "w") as f:
         json.dump(config, f)
     # Simple subprocess call to trainer
-    trainer = os.path.expanduser("~/demo-library/services/train/train_credit.py")
+    trainer = os.path.expanduser("~/credit-appraisal-agent-poc/services/train/train_credit.py")
     if not os.path.exists(trainer):
         raise HTTPException(500, detail="trainer script not found")
     proc = subprocess.Popen(

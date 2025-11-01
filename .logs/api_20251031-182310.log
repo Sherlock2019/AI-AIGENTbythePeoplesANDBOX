@@ -1,0 +1,41 @@
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [388413] using WatchFiles
+INFO:     Started server process [388423]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:39146 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39162 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45814 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45818 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48578 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45834 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45848 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58786 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58790 - "GET /v1/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58794 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35022 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52016 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53408 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53412 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53416 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53426 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35092 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35098 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35112 - "POST /v1/agents/asset_appraisal/training/train_asset HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:35128 - "POST /v1/agents/credit_appraisal/training/train_asset HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:35138 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35142 - "POST /v1/agents/asset_appraisal/training/promote_last HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:35154 - "POST /v1/agents/credit_appraisal/training/promote_last HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60234 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60238 - "POST /v1/agents/asset_appraisal/training/train_asset HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60246 - "POST /v1/agents/credit_appraisal/training/train_asset HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:36014 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36020 - "GET /v1/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36024 - "GET /v1/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36038 - "GET /v1/agents/list HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [388423]
+INFO:     Stopping reloader process [388413]

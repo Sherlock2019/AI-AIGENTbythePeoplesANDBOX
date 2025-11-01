@@ -1,0 +1,119 @@
+2025-11-01 11:21:20.462 Starting new event loop for server
+2025-11-01 11:21:20.462 Starting server...
+2025-11-01 11:21:20.463 Serving static content from /home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/static
+2025-11-01 11:21:20.468 Server started on port 8502
+2025-11-01 11:21:20.468 Runtime state: RuntimeState.INITIAL -> RuntimeState.NO_SESSIONS_CONNECTED
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+2025-11-01 11:21:20.469 Setting up signal handler
+2025-11-01 11:21:21.245 AppSession initialized (id=d9fc6df8-8849-4e8b-9787-81e1fe7c1d0f)
+2025-11-01 11:21:21.245 Created new session for client 133958044083360. Session ID: d9fc6df8-8849-4e8b-9787-81e1fe7c1d0f
+2025-11-01 11:21:21.245 Runtime state: RuntimeState.NO_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 11:21:21.273 AppSession initialized (id=1fdd204c-0b77-49d2-b44c-1a7701b03bd8)
+2025-11-01 11:21:21.273 Created new session for client 133958044085760. Session ID: 1fdd204c-0b77-49d2-b44c-1a7701b03bd8
+2025-11-01 11:21:21.273 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 11:21:21.289 AppSession initialized (id=7df770ce-b44e-43e7-bfb7-c38e3b130078)
+2025-11-01 11:21:21.290 Created new session for client 133958044088064. Session ID: 7df770ce-b44e-43e7-bfb7-c38e3b130078
+2025-11-01 11:21:21.290 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 11:21:21.308 AppSession initialized (id=89e0815a-241b-4138-aff0-a9b40708cc13)
+2025-11-01 11:21:21.309 Created new session for client 133958042468416. Session ID: 89e0815a-241b-4138-aff0-a9b40708cc13
+2025-11-01 11:21:21.309 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 11:21:21.336 AppSession initialized (id=4b3b00e3-add7-40ed-851c-58c73a152b4b)
+2025-11-01 11:21:21.336 Created new session for client 133958042470720. Session ID: 4b3b00e3-add7-40ed-851c-58c73a152b4b
+2025-11-01 11:21:21.336 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 11:21:21.352 AppSession initialized (id=b79c2c39-5d05-4a7b-bd5f-09f20d51e13c)
+2025-11-01 11:21:21.352 Created new session for client 133958042473024. Session ID: b79c2c39-5d05-4a7b-bd5f-09f20d51e13c
+2025-11-01 11:21:21.353 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 11:21:21.369 AppSession initialized (id=487883e2-5085-4100-bab5-7d4376cdedcf)
+2025-11-01 11:21:21.369 Created new session for client 133958042475328. Session ID: 487883e2-5085-4100-bab5-7d4376cdedcf
+2025-11-01 11:21:21.369 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 11:21:21.400 AppSession initialized (id=b9b0c6de-8b4b-4938-92aa-90363e9b8b0b)
+2025-11-01 11:21:21.400 Created new session for client 133958042477632. Session ID: b9b0c6de-8b4b-4938-92aa-90363e9b8b0b
+2025-11-01 11:21:21.400 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 11:21:21.416 AppSession initialized (id=e887aadd-78a7-4b9b-a216-e7a63c7e0c3a)
+2025-11-01 11:21:21.416 Created new session for client 133958042479936. Session ID: e887aadd-78a7-4b9b-a216-e7a63c7e0c3a
+2025-11-01 11:21:21.416 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 11:21:21.432 AppSession initialized (id=df7aa809-da7d-474a-a868-babc9dd746ef)
+2025-11-01 11:21:21.432 Created new session for client 133958042482240. Session ID: df7aa809-da7d-474a-a868-babc9dd746ef
+2025-11-01 11:21:21.432 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 11:21:21.449 AppSession initialized (id=3ce03fa4-3ffd-4c0d-9810-6084614b116d)
+2025-11-01 11:21:21.450 Created new session for client 133958042484544. Session ID: 3ce03fa4-3ffd-4c0d-9810-6084614b116d
+2025-11-01 11:21:21.450 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 11:21:21.479 AppSession initialized (id=eae46216-9160-44ec-8c3b-f195994b71fd)
+2025-11-01 11:21:21.479 Created new session for client 133958042634368. Session ID: eae46216-9160-44ec-8c3b-f195994b71fd
+2025-11-01 11:21:21.479 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 11:21:22.255 AppSession initialized (id=54827828-eea6-4464-b004-dd94ed870415)
+2025-11-01 11:21:22.255 Created new session for client 133958042636672. Session ID: 54827828-eea6-4464-b004-dd94ed870415
+2025-11-01 11:21:22.256 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+  Stopping...
+2025-11-01 11:23:52.918 Runtime stopping...
+2025-11-01 11:23:52.918 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.STOPPING
+2025-11-01 11:23:52.919 Shutting down (id=d9fc6df8-8849-4e8b-9787-81e1fe7c1d0f)
+2025-11-01 11:23:52.919 Disconnecting files for session with ID d9fc6df8-8849-4e8b-9787-81e1fe7c1d0f
+2025-11-01 11:23:52.919 Sessions still active: dict_keys([])
+2025-11-01 11:23:52.919 Files: 0; Sessions with files: 0
+2025-11-01 11:23:52.919 Removing orphaned files...
+2025-11-01 11:23:52.919 Shutting down (id=1fdd204c-0b77-49d2-b44c-1a7701b03bd8)
+2025-11-01 11:23:52.919 Disconnecting files for session with ID 1fdd204c-0b77-49d2-b44c-1a7701b03bd8
+2025-11-01 11:23:52.919 Sessions still active: dict_keys([])
+2025-11-01 11:23:52.919 Files: 0; Sessions with files: 0
+2025-11-01 11:23:52.919 Removing orphaned files...
+2025-11-01 11:23:52.919 Shutting down (id=7df770ce-b44e-43e7-bfb7-c38e3b130078)
+2025-11-01 11:23:52.919 Disconnecting files for session with ID 7df770ce-b44e-43e7-bfb7-c38e3b130078
+2025-11-01 11:23:52.919 Sessions still active: dict_keys([])
+2025-11-01 11:23:52.919 Files: 0; Sessions with files: 0
+2025-11-01 11:23:52.919 Removing orphaned files...
+2025-11-01 11:23:52.919 Shutting down (id=89e0815a-241b-4138-aff0-a9b40708cc13)
+2025-11-01 11:23:52.919 Disconnecting files for session with ID 89e0815a-241b-4138-aff0-a9b40708cc13
+2025-11-01 11:23:52.919 Sessions still active: dict_keys([])
+2025-11-01 11:23:52.919 Files: 0; Sessions with files: 0
+2025-11-01 11:23:52.919 Removing orphaned files...
+2025-11-01 11:23:52.919 Shutting down (id=4b3b00e3-add7-40ed-851c-58c73a152b4b)
+2025-11-01 11:23:52.920 Disconnecting files for session with ID 4b3b00e3-add7-40ed-851c-58c73a152b4b
+2025-11-01 11:23:52.920 Sessions still active: dict_keys([])
+2025-11-01 11:23:52.920 Files: 0; Sessions with files: 0
+2025-11-01 11:23:52.920 Removing orphaned files...
+2025-11-01 11:23:52.920 Shutting down (id=b79c2c39-5d05-4a7b-bd5f-09f20d51e13c)
+2025-11-01 11:23:52.920 Disconnecting files for session with ID b79c2c39-5d05-4a7b-bd5f-09f20d51e13c
+2025-11-01 11:23:52.920 Sessions still active: dict_keys([])
+2025-11-01 11:23:52.920 Files: 0; Sessions with files: 0
+2025-11-01 11:23:52.920 Removing orphaned files...
+2025-11-01 11:23:52.920 Shutting down (id=487883e2-5085-4100-bab5-7d4376cdedcf)
+2025-11-01 11:23:52.920 Disconnecting files for session with ID 487883e2-5085-4100-bab5-7d4376cdedcf
+2025-11-01 11:23:52.920 Sessions still active: dict_keys([])
+2025-11-01 11:23:52.920 Files: 0; Sessions with files: 0
+2025-11-01 11:23:52.920 Removing orphaned files...
+2025-11-01 11:23:52.920 Shutting down (id=b9b0c6de-8b4b-4938-92aa-90363e9b8b0b)
+2025-11-01 11:23:52.920 Disconnecting files for session with ID b9b0c6de-8b4b-4938-92aa-90363e9b8b0b
+2025-11-01 11:23:52.920 Sessions still active: dict_keys([])
+2025-11-01 11:23:52.920 Files: 0; Sessions with files: 0
+2025-11-01 11:23:52.920 Removing orphaned files...
+2025-11-01 11:23:52.920 Shutting down (id=e887aadd-78a7-4b9b-a216-e7a63c7e0c3a)
+2025-11-01 11:23:52.920 Disconnecting files for session with ID e887aadd-78a7-4b9b-a216-e7a63c7e0c3a
+2025-11-01 11:23:52.920 Sessions still active: dict_keys([])
+2025-11-01 11:23:52.920 Files: 0; Sessions with files: 0
+2025-11-01 11:23:52.920 Removing orphaned files...
+2025-11-01 11:23:52.920 Shutting down (id=df7aa809-da7d-474a-a868-babc9dd746ef)
+2025-11-01 11:23:52.920 Disconnecting files for session with ID df7aa809-da7d-474a-a868-babc9dd746ef
+2025-11-01 11:23:52.920 Sessions still active: dict_keys([])
+2025-11-01 11:23:52.920 Files: 0; Sessions with files: 0
+2025-11-01 11:23:52.920 Removing orphaned files...
+2025-11-01 11:23:52.920 Shutting down (id=3ce03fa4-3ffd-4c0d-9810-6084614b116d)
+2025-11-01 11:23:52.920 Disconnecting files for session with ID 3ce03fa4-3ffd-4c0d-9810-6084614b116d
+2025-11-01 11:23:52.920 Sessions still active: dict_keys([])
+2025-11-01 11:23:52.920 Files: 0; Sessions with files: 0
+2025-11-01 11:23:52.920 Removing orphaned files...
+2025-11-01 11:23:52.920 Shutting down (id=eae46216-9160-44ec-8c3b-f195994b71fd)
+2025-11-01 11:23:52.920 Disconnecting files for session with ID eae46216-9160-44ec-8c3b-f195994b71fd
+2025-11-01 11:23:52.920 Sessions still active: dict_keys([])
+2025-11-01 11:23:52.920 Files: 0; Sessions with files: 0
+2025-11-01 11:23:52.920 Removing orphaned files...
+2025-11-01 11:23:52.920 Shutting down (id=54827828-eea6-4464-b004-dd94ed870415)
+2025-11-01 11:23:52.920 Disconnecting files for session with ID 54827828-eea6-4464-b004-dd94ed870415
+2025-11-01 11:23:52.920 Sessions still active: dict_keys([])
+2025-11-01 11:23:52.920 Files: 0; Sessions with files: 0
+2025-11-01 11:23:52.920 Removing orphaned files...
+2025-11-01 11:23:52.921 Runtime state: RuntimeState.STOPPING -> RuntimeState.STOPPED

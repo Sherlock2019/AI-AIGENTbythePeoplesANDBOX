@@ -1,0 +1,1484 @@
+2025-11-01 12:46:45.202 Starting new event loop for server
+2025-11-01 12:46:45.203 Starting server...
+2025-11-01 12:46:45.203 Serving static content from /home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/static
+2025-11-01 12:46:45.209 Server started on port 8502
+2025-11-01 12:46:45.209 Runtime state: RuntimeState.INITIAL -> RuntimeState.NO_SESSIONS_CONNECTED
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+2025-11-01 12:46:45.210 Setting up signal handler
+2025-11-01 12:46:46.648 AppSession initialized (id=7c1f3ee7-a027-4057-a8d0-2d7241dbf409)
+2025-11-01 12:46:46.648 Created new session for client 124421178764704. Session ID: 7c1f3ee7-a027-4057-a8d0-2d7241dbf409
+2025-11-01 12:46:46.649 Runtime state: RuntimeState.NO_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 12:46:46.682 AppSession initialized (id=7213ae0a-08b4-4e6b-9468-7dd8d9fa3509)
+2025-11-01 12:46:46.682 Created new session for client 124421178767104. Session ID: 7213ae0a-08b4-4e6b-9468-7dd8d9fa3509
+2025-11-01 12:46:46.682 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 12:46:46.711 AppSession initialized (id=00087df6-5eed-4cff-bf1b-3a4df7fe7dbb)
+2025-11-01 12:46:46.711 Created new session for client 124421178769360. Session ID: 00087df6-5eed-4cff-bf1b-3a4df7fe7dbb
+2025-11-01 12:46:46.712 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 12:46:46.735 AppSession initialized (id=461f7bfa-a26b-4273-b479-244ee6a7df1e)
+2025-11-01 12:46:46.735 Created new session for client 124421177116992. Session ID: 461f7bfa-a26b-4273-b479-244ee6a7df1e
+2025-11-01 12:46:46.735 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 12:46:46.766 AppSession initialized (id=0283ec50-7766-4a25-bcad-51923a304548)
+2025-11-01 12:46:46.766 Created new session for client 124421177119248. Session ID: 0283ec50-7766-4a25-bcad-51923a304548
+2025-11-01 12:46:46.766 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 12:46:46.796 AppSession initialized (id=86d644e5-0acc-400b-9997-fb8d7f931f02)
+2025-11-01 12:46:46.796 Created new session for client 124421177121600. Session ID: 86d644e5-0acc-400b-9997-fb8d7f931f02
+2025-11-01 12:46:46.796 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 12:46:46.817 AppSession initialized (id=fddfdb52-44d8-410a-af5d-9c4888eafa74)
+2025-11-01 12:46:46.817 Created new session for client 124421177123856. Session ID: fddfdb52-44d8-410a-af5d-9c4888eafa74
+2025-11-01 12:46:46.817 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 12:46:46.851 AppSession initialized (id=9969eb23-a80b-4242-b261-081e4b56b1b0)
+2025-11-01 12:46:46.851 Created new session for client 124421177126208. Session ID: 9969eb23-a80b-4242-b261-081e4b56b1b0
+2025-11-01 12:46:46.851 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 12:46:46.874 AppSession initialized (id=46194915-c299-435b-a1f2-ffe9ed90e028)
+2025-11-01 12:46:46.875 Created new session for client 124421177128464. Session ID: 46194915-c299-435b-a1f2-ffe9ed90e028
+2025-11-01 12:46:46.875 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 12:46:46.904 AppSession initialized (id=6b359489-ee41-47e2-9201-5c2e3470b3c4)
+2025-11-01 12:46:46.904 Created new session for client 124421177130816. Session ID: 6b359489-ee41-47e2-9201-5c2e3470b3c4
+2025-11-01 12:46:46.904 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 12:46:46.924 AppSession initialized (id=e7ae151e-ca66-4797-a8e5-f1dd7119a919)
+2025-11-01 12:46:46.924 Created new session for client 124421177297024. Session ID: e7ae151e-ca66-4797-a8e5-f1dd7119a919
+2025-11-01 12:46:46.924 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 12:46:46.953 AppSession initialized (id=93c22f82-621d-436d-826a-87a4d5f7e410)
+2025-11-01 12:46:46.953 Created new session for client 124421177299328. Session ID: 93c22f82-621d-436d-826a-87a4d5f7e410
+2025-11-01 12:46:46.953 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 12:46:46.983 AppSession initialized (id=793847dc-fd71-44fb-bbef-46f6725237e7)
+2025-11-01 12:46:46.983 Created new session for client 124421177301632. Session ID: 793847dc-fd71-44fb-bbef-46f6725237e7
+2025-11-01 12:46:46.983 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 12:46:49.367 AppSession initialized (id=beff6d99-86d8-403c-a045-faf6075f3a08)
+2025-11-01 12:46:49.367 Created new session for client 124421178763984. Session ID: beff6d99-86d8-403c-a045-faf6075f3a08
+2025-11-01 12:46:49.367 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 12:46:49.369 Received the following back message:
+rerun_script {
+  widget_states {
+  }
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 12:46:49.370 Beginning script thread
+2025-11-01 12:46:49.370 Running script RerunData(widget_states=, context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 12:46:49.371 Disconnecting files for session with ID beff6d99-86d8-403c-a045-faf6075f3a08
+2025-11-01 12:46:49.371 Sessions still active: dict_keys([])
+2025-11-01 12:46:49.371 Files: 0; Sessions with files: 0
+2025-11-01 12:46:50.420 Removing orphaned files...
+2025-11-01 12:46:52.566 Received the following back message:
+rerun_script {
+  widget_states {
+    widgets {
+      id: "$$ID-ddc0270cbc3cd2468b6293e097bf75f7-upload_logo_hidden"
+      file_uploader_state_value {
+      }
+    }
+    widgets {
+      id: "$$ID-163960d6a02d16629fcb6a17e7682c68-btn_start_build_now"
+      trigger_value: true
+    }
+  }
+  page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+  cached_message_hashes: "27d2e897be5ce95d9e50eced825033d7"
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 12:46:52.567 Beginning script thread
+2025-11-01 12:46:52.567 Running script RerunData(widget_states=widgets {
+  id: "$$ID-ddc0270cbc3cd2468b6293e097bf75f7-upload_logo_hidden"
+  file_uploader_state_value {
+  }
+}
+widgets {
+  id: "$$ID-163960d6a02d16629fcb6a17e7682c68-btn_start_build_now"
+  trigger_value: true
+}
+, page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', cached_message_hashes={'27d2e897be5ce95d9e50eced825033d7'}, context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 12:46:52.567 Disconnecting files for session with ID beff6d99-86d8-403c-a045-faf6075f3a08
+2025-11-01 12:46:52.567 Sessions still active: dict_keys([])
+2025-11-01 12:46:52.567 Files: 0; Sessions with files: 0
+2025-11-01 12:46:52.650 Sending cached message ref (hash=27d2e897be5ce95d9e50eced825033d7)
+2025-11-01 12:46:52.655 Removing orphaned files...
+2025-11-01 12:46:52.718 Running script RerunData(page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', cached_message_hashes={'27d2e897be5ce95d9e50eced825033d7'}, context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 12:46:52.718 Disconnecting files for session with ID beff6d99-86d8-403c-a045-faf6075f3a08
+2025-11-01 12:46:52.718 Sessions still active: dict_keys([])
+2025-11-01 12:46:52.718 Files: 0; Sessions with files: 0
+2025-11-01 12:46:52.739 Removing orphaned files...
+2025-11-01 12:46:55.983 AppSession initialized (id=79836c21-ee33-452b-a8f9-158c4f618deb)
+2025-11-01 12:46:55.983 Created new session for client 124420361996464. Session ID: 79836c21-ee33-452b-a8f9-158c4f618deb
+2025-11-01 12:46:55.983 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 12:46:55.995 Received the following back message:
+rerun_script {
+  query_string: "agent=credit&stage=login"
+  widget_states {
+  }
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 12:46:55.995 Beginning script thread
+2025-11-01 12:46:55.995 Running script RerunData(query_string='agent=credit&stage=login', widget_states=, context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 12:46:55.995 Disconnecting files for session with ID 79836c21-ee33-452b-a8f9-158c4f618deb
+2025-11-01 12:46:55.995 Sessions still active: dict_keys([])
+2025-11-01 12:46:55.995 Files: 0; Sessions with files: 0
+2025-11-01 12:46:56.000 Removing orphaned files...
+2025-11-01 12:46:56.053 Running script RerunData(page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 12:46:56.053 Disconnecting files for session with ID 79836c21-ee33-452b-a8f9-158c4f618deb
+2025-11-01 12:46:56.053 Sessions still active: dict_keys([])
+2025-11-01 12:46:56.053 Files: 0; Sessions with files: 0
+2025-11-01 12:46:56.068 Removing orphaned files...
+2025-11-01 12:46:59.319 Received the following back message:
+rerun_script {
+  widget_states {
+    widgets {
+      id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+      string_value: "dzoan"
+    }
+    widgets {
+      id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+      string_value: ""
+    }
+    widgets {
+      id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+      string_value: ""
+    }
+  }
+  page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 12:46:59.320 Beginning script thread
+2025-11-01 12:46:59.320 Running script RerunData(widget_states=widgets {
+  id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+  string_value: "dzoan"
+}
+widgets {
+  id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+  string_value: ""
+}
+widgets {
+  id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+  string_value: ""
+}
+, page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 12:46:59.320 Disconnecting files for session with ID 79836c21-ee33-452b-a8f9-158c4f618deb
+2025-11-01 12:46:59.320 Sessions still active: dict_keys([])
+2025-11-01 12:46:59.320 Files: 0; Sessions with files: 0
+2025-11-01 12:46:59.333 Removing orphaned files...
+2025-11-01 12:47:01.119 Received the following back message:
+rerun_script {
+  widget_states {
+    widgets {
+      id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+      string_value: "dzoan"
+    }
+    widgets {
+      id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+      string_value: "dzoan@gmail.com"
+    }
+    widgets {
+      id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+      string_value: ""
+    }
+  }
+  page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 12:47:01.119 Beginning script thread
+2025-11-01 12:47:01.119 Running script RerunData(widget_states=widgets {
+  id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+  string_value: "dzoan"
+}
+widgets {
+  id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+  string_value: "dzoan@gmail.com"
+}
+widgets {
+  id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+  string_value: ""
+}
+, page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 12:47:01.120 Disconnecting files for session with ID 79836c21-ee33-452b-a8f9-158c4f618deb
+2025-11-01 12:47:01.120 Sessions still active: dict_keys([])
+2025-11-01 12:47:01.120 Files: 0; Sessions with files: 0
+2025-11-01 12:47:01.130 Removing orphaned files...
+2025-11-01 12:47:03.119 Received the following back message:
+rerun_script {
+  widget_states {
+    widgets {
+      id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+      string_value: "dzoan"
+    }
+    widgets {
+      id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+      string_value: "dzoan@gmail.com"
+    }
+    widgets {
+      id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+      string_value: "sdasddad"
+    }
+  }
+  page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 12:47:03.120 Beginning script thread
+2025-11-01 12:47:03.120 Running script RerunData(widget_states=widgets {
+  id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+  string_value: "dzoan"
+}
+widgets {
+  id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+  string_value: "dzoan@gmail.com"
+}
+widgets {
+  id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+  string_value: "sdasddad"
+}
+, page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 12:47:03.120 Disconnecting files for session with ID 79836c21-ee33-452b-a8f9-158c4f618deb
+2025-11-01 12:47:03.120 Sessions still active: dict_keys([])
+2025-11-01 12:47:03.120 Files: 0; Sessions with files: 0
+2025-11-01 12:47:03.130 Removing orphaned files...
+2025-11-01 12:47:03.255 Received the following back message:
+rerun_script {
+  widget_states {
+    widgets {
+      id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+      string_value: "dzoan"
+    }
+    widgets {
+      id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+      string_value: "dzoan@gmail.com"
+    }
+    widgets {
+      id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+      string_value: "sdasddad"
+    }
+    widgets {
+      id: "$$ID-9735ad692572309cd313a7098f129c21-btn_login_submit"
+      trigger_value: true
+    }
+  }
+  page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 12:47:03.256 Beginning script thread
+2025-11-01 12:47:03.256 Running script RerunData(widget_states=widgets {
+  id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+  string_value: "dzoan"
+}
+widgets {
+  id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+  string_value: "dzoan@gmail.com"
+}
+widgets {
+  id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+  string_value: "sdasddad"
+}
+widgets {
+  id: "$$ID-9735ad692572309cd313a7098f129c21-btn_login_submit"
+  trigger_value: true
+}
+, page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 12:47:03.256 Disconnecting files for session with ID 79836c21-ee33-452b-a8f9-158c4f618deb
+2025-11-01 12:47:03.256 Sessions still active: dict_keys([])
+2025-11-01 12:47:03.256 Files: 0; Sessions with files: 0
+2025-11-01 12:47:03.269 Removing orphaned files...
+2025-11-01 12:47:03.322 Running script RerunData(page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 12:47:03.322 Disconnecting files for session with ID 79836c21-ee33-452b-a8f9-158c4f618deb
+2025-11-01 12:47:03.323 Sessions still active: dict_keys([])
+2025-11-01 12:47:03.323 Files: 0; Sessions with files: 0
+2025-11-01 12:47:03 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): localhost:8090
+2025-11-01 12:47:03 DEBUG [urllib3.connectionpool] http://localhost:8090 "GET /v1/training/production_meta HTTP/1.1" 200 246
+2025-11-01 12:47:03 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): localhost:8090
+2025-11-01 12:47:03 DEBUG [urllib3.connectionpool] http://localhost:8090 "GET /v1/training/production_meta HTTP/1.1" 200 246
+2025-11-01 12:47:03.494 Removing orphaned files...
+2025-11-01 12:47:04.903 Received the following back message:
+rerun_script {
+  widget_states {
+    widgets {
+      id: "$$ID-a6941d61d20aa7688d04d8dd56df2a58-None"
+      string_value: "USD"
+    }
+    widgets {
+      id: "$$ID-6bc93b26c6ce677cc06260d67aecabe8-None"
+      string_value: "credit_lr-dzoan-credit-appraisal-20251025-191409.joblib — Nov 01, 2025 04:37"
+    }
+    widgets {
+      id: "$$ID-90bd4fdb41d0d53c562fddbe1c38b231-None"
+      string_value: "Mistral 7B Instruct — CPU slow / GPU OK"
+    }
+    widgets {
+      id: "$$ID-3976fcb9839d75a0dd5bdecb3b69789d-None"
+      string_value: "m4.medium"
+    }
+    widgets {
+      id: "$$ID-0b2d15503359118f7861b697351ac797-None"
+      string_value: "Use synthetic (ANON)"
+    }
+    widgets {
+      id: "$$ID-c70b24b57d53487aeb488cedd7d573fa-None"
+      double_array_value {
+        data: 200
+      }
+    }
+    widgets {
+      id: "$$ID-f7197ee29881ea29d381602cecae9c2e-None"
+      double_array_value {
+        data: 0.3
+      }
+    }
+    widgets {
+      id: "$$ID-d1775a34cd44a0ca1af0dc05ef8f58eb-None"
+      double_array_value {
+        data: 0.45
+      }
+    }
+    widgets {
+      id: "$$ID-7f94ed476e2a8f2cb87b11cde38c8bc1-None"
+      double_array_value {
+        data: 0.35
+      }
+    }
+    widgets {
+      id: "$$ID-e04b9069aaa0b2634f4b66e59e2a4559-None"
+      double_array_value {
+        data: 1
+      }
+    }
+    widgets {
+      id: "$$ID-c35c73527ccf7fc2915f1827da4ec296-None"
+      double_array_value {
+        data: 0.5
+      }
+    }
+    widgets {
+      id: "$$ID-7cdbe51e487c4d6cfd82cc7d032a5ef3-None"
+      double_array_value {
+        data: 0.45
+      }
+    }
+    widgets {
+      id: "$$ID-8484fa1e9380c3c8446a80b681fa2451-None"
+      string_value: "💳 Credit Appraisal Agent"
+    }
+    widgets {
+      id: "$$ID-ce187aa4bd9a90fc6a4e3ede7bd1eb1c-None"
+      double_array_value {
+        data: 5
+      }
+    }
+    widgets {
+      id: "$$ID-beb18e73fa29052e896740a50e731525-None"
+      file_uploader_state_value {
+      }
+    }
+    widgets {
+      id: "$$ID-f28c8dfc2b1b4fe1bb70241a89fbcc76-review_csv_loader"
+      file_uploader_state_value {
+      }
+    }
+    widgets {
+      id: "$$ID-a99b320c116b8588c8cc7328f8f4875b-train_feedback_uploader"
+      file_uploader_state_value {
+      }
+    }
+    widgets {
+      id: "$$ID-9eef6f576cddc798ee1bee018ce163f6-None"
+      bool_value: false
+    }
+    widgets {
+      id: "$$ID-a29a6c1b9c67f3d8b7afdd5b5aaf3d6c-None"
+      int_value: 0
+    }
+    widgets {
+      id: "$$ID-3c84b807a084412907a4fbac78dfe1c5-None"
+      int_value: 2
+    }
+    widgets {
+      id: "$$ID-091da9fb170c67d668db4097a770a6c9-None"
+      int_value: 3
+    }
+    widgets {
+      id: "$$ID-d95b8bf9df5b5a6fafbbbf64031a8458-None"
+      int_value: 3000
+    }
+    widgets {
+      id: "$$ID-85cbb5694cdc676495a873a1191f3d70-None"
+      int_value: 2
+    }
+    widgets {
+      id: "$$ID-5afd5d94c68bf750633653ee32d9cf77-None"
+      int_value: 3
+    }
+    widgets {
+      id: "$$ID-a996fa4522aee701f22b0e4be23f2fc1-None"
+      int_value: 1000
+    }
+    widgets {
+      id: "$$ID-ce1a19f34f1933206adc408592157014-None"
+      int_value: 200000
+    }
+    widgets {
+      id: "$$ID-97d0be66f31125c9aeeb4937222c7cbd-None"
+      string_array_value {
+        data: "12"
+        data: "24"
+        data: "36"
+        data: "48"
+        data: "60"
+      }
+    }
+    widgets {
+      id: "$$ID-1cf68da1a9cd1a8c1a5fabbf77ca826f-None"
+      bool_value: false
+    }
+    widgets {
+      id: "$$ID-4151498aa4c7b9112ea14a419bc6da76-None"
+      bool_value: true
+    }
+    widgets {
+      id: "$$ID-4ed9d05a835a0e8372fcec2e75bddc99-None"
+      string_value: ""
+    }
+    widgets {
+      id: "$$ID-97036b980add746d1dfaeadc8b7293fb-None"
+      trigger_value: true
+    }
+  }
+  page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 12:47:04.903 Beginning script thread
+2025-11-01 12:47:04.904 Running script RerunData(widget_states=widgets {
+  id: "$$ID-a6941d61d20aa7688d04d8dd56df2a58-None"
+  string_value: "USD"
+}
+widgets {
+  id: "$$ID-6bc93b26c6ce677cc06260d67aecabe8-None"
+  string_value: "credit_lr-dzoan-credit-appraisal-20251025-191409.joblib — Nov 01, 2025 04:37"
+}
+widgets {
+  id: "$$ID-90bd4fdb41d0d53c562fddbe1c38b231-None"
+  string_value: "Mistral 7B Instruct — CPU slow / GPU OK"
+}
+widgets {
+  id: "$$ID-3976fcb9839d75a0dd5bdecb3b69789d-None"
+  string_value: "m4.medium"
+}
+widgets {
+  id: "$$ID-0b2d15503359118f7861b697351ac797-None"
+  string_value: "Use synthetic (ANON)"
+}
+widgets {
+  id: "$$ID-c70b24b57d53487aeb488cedd7d573fa-None"
+  double_array_value {
+    data: 200
+  }
+}
+widgets {
+  id: "$$ID-f7197ee29881ea29d381602cecae9c2e-None"
+  double_array_value {
+    data: 0.3
+  }
+}
+widgets {
+  id: "$$ID-d1775a34cd44a0ca1af0dc05ef8f58eb-None"
+  double_array_value {
+    data: 0.45
+  }
+}
+widgets {
+  id: "$$ID-7f94ed476e2a8f2cb87b11cde38c8bc1-None"
+  double_array_value {
+    data: 0.35
+  }
+}
+widgets {
+  id: "$$ID-e04b9069aaa0b2634f4b66e59e2a4559-None"
+  double_array_value {
+    data: 1
+  }
+}
+widgets {
+  id: "$$ID-c35c73527ccf7fc2915f1827da4ec296-None"
+  double_array_value {
+    data: 0.5
+  }
+}
+widgets {
+  id: "$$ID-7cdbe51e487c4d6cfd82cc7d032a5ef3-None"
+  double_array_value {
+    data: 0.45
+  }
+}
+widgets {
+  id: "$$ID-8484fa1e9380c3c8446a80b681fa2451-None"
+  string_value: "💳 Credit Appraisal Agent"
+}
+widgets {
+  id: "$$ID-ce187aa4bd9a90fc6a4e3ede7bd1eb1c-None"
+  double_array_value {
+    data: 5
+  }
+}
+widgets {
+  id: "$$ID-beb18e73fa29052e896740a50e731525-None"
+  file_uploader_state_value {
+  }
+}
+widgets {
+  id: "$$ID-f28c8dfc2b1b4fe1bb70241a89fbcc76-review_csv_loader"
+  file_uploader_state_value {
+  }
+}
+widgets {
+  id: "$$ID-a99b320c116b8588c8cc7328f8f4875b-train_feedback_uploader"
+  file_uploader_state_value {
+  }
+}
+widgets {
+  id: "$$ID-9eef6f576cddc798ee1bee018ce163f6-None"
+  bool_value: false
+}
+widgets {
+  id: "$$ID-a29a6c1b9c67f3d8b7afdd5b5aaf3d6c-None"
+  int_value: 0
+}
+widgets {
+  id: "$$ID-3c84b807a084412907a4fbac78dfe1c5-None"
+  int_value: 2
+}
+widgets {
+  id: "$$ID-091da9fb170c67d668db4097a770a6c9-None"
+  int_value: 3
+}
+widgets {
+  id: "$$ID-d95b8bf9df5b5a6fafbbbf64031a8458-None"
+  int_value: 3000
+}
+widgets {
+  id: "$$ID-85cbb5694cdc676495a873a1191f3d70-None"
+  int_value: 2
+}
+widgets {
+  id: "$$ID-5afd5d94c68bf750633653ee32d9cf77-None"
+  int_value: 3
+}
+widgets {
+  id: "$$ID-a996fa4522aee701f22b0e4be23f2fc1-None"
+  int_value: 1000
+}
+widgets {
+  id: "$$ID-ce1a19f34f1933206adc408592157014-None"
+  int_value: 200000
+}
+widgets {
+  id: "$$ID-97d0be66f31125c9aeeb4937222c7cbd-None"
+  string_array_value {
+    data: "12"
+    data: "24"
+    data: "36"
+    data: "48"
+    data: "60"
+  }
+}
+widgets {
+  id: "$$ID-1cf68da1a9cd1a8c1a5fabbf77ca826f-None"
+  bool_value: false
+}
+widgets {
+  id: "$$ID-4151498aa4c7b9112ea14a419bc6da76-None"
+  bool_value: true
+}
+widgets {
+  id: "$$ID-4ed9d05a835a0e8372fcec2e75bddc99-None"
+  string_value: ""
+}
+widgets {
+  id: "$$ID-97036b980add746d1dfaeadc8b7293fb-None"
+  trigger_value: true
+}
+, page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 12:47:04.904 Disconnecting files for session with ID 79836c21-ee33-452b-a8f9-158c4f618deb
+2025-11-01 12:47:04.904 Sessions still active: dict_keys([])
+2025-11-01 12:47:04.904 Files: 0; Sessions with files: 0
+2025-11-01 12:47:04.953 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-11-01 12:47:04.971 Adding media file 9dad17115f53385d69799de1aa3c710cb6911d2816384ee859584714
+2025-11-01 12:47:04 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): localhost:8090
+2025-11-01 12:47:04 DEBUG [urllib3.connectionpool] http://localhost:8090 "GET /v1/training/production_meta HTTP/1.1" 200 246
+2025-11-01 12:47:05 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): localhost:8090
+2025-11-01 12:47:05 DEBUG [urllib3.connectionpool] http://localhost:8090 "GET /v1/training/production_meta HTTP/1.1" 200 246
+2025-11-01 12:47:05.033 Removing orphaned files...
+2025-11-01 12:47:05.104 MediaFileHandler: GET 9dad17115f53385d69799de1aa3c710cb6911d2816384ee859584714.csv
+2025-11-01 12:47:05.104 MediaFileHandler: Sending text/csv file 9dad17115f53385d69799de1aa3c710cb6911d2816384ee859584714.csv
+2025-11-01 12:47:05.104 MediaFileHandler: GET 9dad17115f53385d69799de1aa3c710cb6911d2816384ee859584714.csv
+2025-11-01 12:47:05.104 MediaFileHandler: Sending text/csv file 9dad17115f53385d69799de1aa3c710cb6911d2816384ee859584714.csv
+2025-11-01 12:47:06.344 Received the following back message:
+rerun_script {
+  widget_states {
+    widgets {
+      id: "$$ID-a6941d61d20aa7688d04d8dd56df2a58-None"
+      string_value: "USD"
+    }
+    widgets {
+      id: "$$ID-6bc93b26c6ce677cc06260d67aecabe8-None"
+      string_value: "credit_lr-dzoan-credit-appraisal-20251025-191409.joblib — Nov 01, 2025 04:37"
+    }
+    widgets {
+      id: "$$ID-90bd4fdb41d0d53c562fddbe1c38b231-None"
+      string_value: "Mistral 7B Instruct — CPU slow / GPU OK"
+    }
+    widgets {
+      id: "$$ID-3976fcb9839d75a0dd5bdecb3b69789d-None"
+      string_value: "m4.medium"
+    }
+    widgets {
+      id: "$$ID-0b2d15503359118f7861b697351ac797-None"
+      string_value: "Use synthetic (ANON)"
+    }
+    widgets {
+      id: "$$ID-c70b24b57d53487aeb488cedd7d573fa-None"
+      double_array_value {
+        data: 200
+      }
+    }
+    widgets {
+      id: "$$ID-f7197ee29881ea29d381602cecae9c2e-None"
+      double_array_value {
+        data: 0.3
+      }
+    }
+    widgets {
+      id: "$$ID-d1775a34cd44a0ca1af0dc05ef8f58eb-None"
+      double_array_value {
+        data: 0.45
+      }
+    }
+    widgets {
+      id: "$$ID-7f94ed476e2a8f2cb87b11cde38c8bc1-None"
+      double_array_value {
+        data: 0.35
+      }
+    }
+    widgets {
+      id: "$$ID-e04b9069aaa0b2634f4b66e59e2a4559-None"
+      double_array_value {
+        data: 1
+      }
+    }
+    widgets {
+      id: "$$ID-c35c73527ccf7fc2915f1827da4ec296-None"
+      double_array_value {
+        data: 0.5
+      }
+    }
+    widgets {
+      id: "$$ID-7cdbe51e487c4d6cfd82cc7d032a5ef3-None"
+      double_array_value {
+        data: 0.45
+      }
+    }
+    widgets {
+      id: "$$ID-8484fa1e9380c3c8446a80b681fa2451-None"
+      string_value: "💳 Credit Appraisal Agent"
+    }
+    widgets {
+      id: "$$ID-ce187aa4bd9a90fc6a4e3ede7bd1eb1c-None"
+      double_array_value {
+        data: 5
+      }
+    }
+    widgets {
+      id: "$$ID-beb18e73fa29052e896740a50e731525-None"
+      file_uploader_state_value {
+      }
+    }
+    widgets {
+      id: "$$ID-f28c8dfc2b1b4fe1bb70241a89fbcc76-review_csv_loader"
+      file_uploader_state_value {
+      }
+    }
+    widgets {
+      id: "$$ID-a99b320c116b8588c8cc7328f8f4875b-train_feedback_uploader"
+      file_uploader_state_value {
+      }
+    }
+    widgets {
+      id: "$$ID-9eef6f576cddc798ee1bee018ce163f6-None"
+      bool_value: false
+    }
+    widgets {
+      id: "$$ID-a29a6c1b9c67f3d8b7afdd5b5aaf3d6c-None"
+      int_value: 0
+    }
+    widgets {
+      id: "$$ID-3c84b807a084412907a4fbac78dfe1c5-None"
+      int_value: 2
+    }
+    widgets {
+      id: "$$ID-091da9fb170c67d668db4097a770a6c9-None"
+      int_value: 3
+    }
+    widgets {
+      id: "$$ID-d95b8bf9df5b5a6fafbbbf64031a8458-None"
+      int_value: 3000
+    }
+    widgets {
+      id: "$$ID-85cbb5694cdc676495a873a1191f3d70-None"
+      int_value: 2
+    }
+    widgets {
+      id: "$$ID-5afd5d94c68bf750633653ee32d9cf77-None"
+      int_value: 3
+    }
+    widgets {
+      id: "$$ID-a996fa4522aee701f22b0e4be23f2fc1-None"
+      int_value: 1000
+    }
+    widgets {
+      id: "$$ID-ce1a19f34f1933206adc408592157014-None"
+      int_value: 200000
+    }
+    widgets {
+      id: "$$ID-97d0be66f31125c9aeeb4937222c7cbd-None"
+      string_array_value {
+        data: "12"
+        data: "24"
+        data: "36"
+        data: "48"
+        data: "60"
+      }
+    }
+    widgets {
+      id: "$$ID-1cf68da1a9cd1a8c1a5fabbf77ca826f-None"
+      bool_value: false
+    }
+    widgets {
+      id: "$$ID-4151498aa4c7b9112ea14a419bc6da76-None"
+      bool_value: true
+    }
+    widgets {
+      id: "$$ID-4ed9d05a835a0e8372fcec2e75bddc99-None"
+      string_value: ""
+    }
+    widgets {
+      id: "$$ID-3bbc6b1d1c5f8c58b36c9ec61bd1fd90-None"
+      trigger_value: true
+    }
+  }
+  page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 12:47:06.345 Beginning script thread
+2025-11-01 12:47:06.345 Running script RerunData(widget_states=widgets {
+  id: "$$ID-a6941d61d20aa7688d04d8dd56df2a58-None"
+  string_value: "USD"
+}
+widgets {
+  id: "$$ID-6bc93b26c6ce677cc06260d67aecabe8-None"
+  string_value: "credit_lr-dzoan-credit-appraisal-20251025-191409.joblib — Nov 01, 2025 04:37"
+}
+widgets {
+  id: "$$ID-90bd4fdb41d0d53c562fddbe1c38b231-None"
+  string_value: "Mistral 7B Instruct — CPU slow / GPU OK"
+}
+widgets {
+  id: "$$ID-3976fcb9839d75a0dd5bdecb3b69789d-None"
+  string_value: "m4.medium"
+}
+widgets {
+  id: "$$ID-0b2d15503359118f7861b697351ac797-None"
+  string_value: "Use synthetic (ANON)"
+}
+widgets {
+  id: "$$ID-c70b24b57d53487aeb488cedd7d573fa-None"
+  double_array_value {
+    data: 200
+  }
+}
+widgets {
+  id: "$$ID-f7197ee29881ea29d381602cecae9c2e-None"
+  double_array_value {
+    data: 0.3
+  }
+}
+widgets {
+  id: "$$ID-d1775a34cd44a0ca1af0dc05ef8f58eb-None"
+  double_array_value {
+    data: 0.45
+  }
+}
+widgets {
+  id: "$$ID-7f94ed476e2a8f2cb87b11cde38c8bc1-None"
+  double_array_value {
+    data: 0.35
+  }
+}
+widgets {
+  id: "$$ID-e04b9069aaa0b2634f4b66e59e2a4559-None"
+  double_array_value {
+    data: 1
+  }
+}
+widgets {
+  id: "$$ID-c35c73527ccf7fc2915f1827da4ec296-None"
+  double_array_value {
+    data: 0.5
+  }
+}
+widgets {
+  id: "$$ID-7cdbe51e487c4d6cfd82cc7d032a5ef3-None"
+  double_array_value {
+    data: 0.45
+  }
+}
+widgets {
+  id: "$$ID-8484fa1e9380c3c8446a80b681fa2451-None"
+  string_value: "💳 Credit Appraisal Agent"
+}
+widgets {
+  id: "$$ID-ce187aa4bd9a90fc6a4e3ede7bd1eb1c-None"
+  double_array_value {
+    data: 5
+  }
+}
+widgets {
+  id: "$$ID-beb18e73fa29052e896740a50e731525-None"
+  file_uploader_state_value {
+  }
+}
+widgets {
+  id: "$$ID-f28c8dfc2b1b4fe1bb70241a89fbcc76-review_csv_loader"
+  file_uploader_state_value {
+  }
+}
+widgets {
+  id: "$$ID-a99b320c116b8588c8cc7328f8f4875b-train_feedback_uploader"
+  file_uploader_state_value {
+  }
+}
+widgets {
+  id: "$$ID-9eef6f576cddc798ee1bee018ce163f6-None"
+  bool_value: false
+}
+widgets {
+  id: "$$ID-a29a6c1b9c67f3d8b7afdd5b5aaf3d6c-None"
+  int_value: 0
+}
+widgets {
+  id: "$$ID-3c84b807a084412907a4fbac78dfe1c5-None"
+  int_value: 2
+}
+widgets {
+  id: "$$ID-091da9fb170c67d668db4097a770a6c9-None"
+  int_value: 3
+}
+widgets {
+  id: "$$ID-d95b8bf9df5b5a6fafbbbf64031a8458-None"
+  int_value: 3000
+}
+widgets {
+  id: "$$ID-85cbb5694cdc676495a873a1191f3d70-None"
+  int_value: 2
+}
+widgets {
+  id: "$$ID-5afd5d94c68bf750633653ee32d9cf77-None"
+  int_value: 3
+}
+widgets {
+  id: "$$ID-a996fa4522aee701f22b0e4be23f2fc1-None"
+  int_value: 1000
+}
+widgets {
+  id: "$$ID-ce1a19f34f1933206adc408592157014-None"
+  int_value: 200000
+}
+widgets {
+  id: "$$ID-97d0be66f31125c9aeeb4937222c7cbd-None"
+  string_array_value {
+    data: "12"
+    data: "24"
+    data: "36"
+    data: "48"
+    data: "60"
+  }
+}
+widgets {
+  id: "$$ID-1cf68da1a9cd1a8c1a5fabbf77ca826f-None"
+  bool_value: false
+}
+widgets {
+  id: "$$ID-4151498aa4c7b9112ea14a419bc6da76-None"
+  bool_value: true
+}
+widgets {
+  id: "$$ID-4ed9d05a835a0e8372fcec2e75bddc99-None"
+  string_value: ""
+}
+widgets {
+  id: "$$ID-3bbc6b1d1c5f8c58b36c9ec61bd1fd90-None"
+  trigger_value: true
+}
+, page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 12:47:06.345 Disconnecting files for session with ID 79836c21-ee33-452b-a8f9-158c4f618deb
+2025-11-01 12:47:06.345 Sessions still active: dict_keys([])
+2025-11-01 12:47:06.345 Files: 1; Sessions with files: 0
+2025-11-01 12:47:06.347 MediaFileHandler: GET 9dad17115f53385d69799de1aa3c710cb6911d2816384ee859584714.csv
+2025-11-01 12:47:06.347 MediaFileHandler: Sending text/csv file 9dad17115f53385d69799de1aa3c710cb6911d2816384ee859584714.csv
+2025-11-01 12:47:06 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): localhost:8090
+2025-11-01 12:47:06 DEBUG [urllib3.connectionpool] http://localhost:8090 "GET /v1/training/production_meta HTTP/1.1" 200 246
+2025-11-01 12:47:06 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): localhost:8090
+2025-11-01 12:47:06 DEBUG [urllib3.connectionpool] http://localhost:8090 "GET /v1/training/production_meta HTTP/1.1" 200 246
+2025-11-01 12:47:06.428 Removing orphaned files...
+2025-11-01 12:47:14.535 Received the following back message:
+rerun_script {
+  widget_states {
+    widgets {
+      id: "$$ID-a6941d61d20aa7688d04d8dd56df2a58-None"
+      string_value: "USD"
+    }
+    widgets {
+      id: "$$ID-6bc93b26c6ce677cc06260d67aecabe8-None"
+      string_value: "credit_lr-dzoan-credit-appraisal-20251025-191409.joblib — Nov 01, 2025 04:37"
+    }
+    widgets {
+      id: "$$ID-90bd4fdb41d0d53c562fddbe1c38b231-None"
+      string_value: "Mistral 7B Instruct — CPU slow / GPU OK"
+    }
+    widgets {
+      id: "$$ID-3976fcb9839d75a0dd5bdecb3b69789d-None"
+      string_value: "m4.medium"
+    }
+    widgets {
+      id: "$$ID-0b2d15503359118f7861b697351ac797-None"
+      string_value: "Use synthetic (ANON)"
+    }
+    widgets {
+      id: "$$ID-c70b24b57d53487aeb488cedd7d573fa-None"
+      double_array_value {
+        data: 200
+      }
+    }
+    widgets {
+      id: "$$ID-f7197ee29881ea29d381602cecae9c2e-None"
+      double_array_value {
+        data: 0.3
+      }
+    }
+    widgets {
+      id: "$$ID-d1775a34cd44a0ca1af0dc05ef8f58eb-None"
+      double_array_value {
+        data: 0.45
+      }
+    }
+    widgets {
+      id: "$$ID-7f94ed476e2a8f2cb87b11cde38c8bc1-None"
+      double_array_value {
+        data: 0.35
+      }
+    }
+    widgets {
+      id: "$$ID-e04b9069aaa0b2634f4b66e59e2a4559-None"
+      double_array_value {
+        data: 1
+      }
+    }
+    widgets {
+      id: "$$ID-c35c73527ccf7fc2915f1827da4ec296-None"
+      double_array_value {
+        data: 0.5
+      }
+    }
+    widgets {
+      id: "$$ID-7cdbe51e487c4d6cfd82cc7d032a5ef3-None"
+      double_array_value {
+        data: 0.45
+      }
+    }
+    widgets {
+      id: "$$ID-8484fa1e9380c3c8446a80b681fa2451-None"
+      string_value: "💳 Credit Appraisal Agent"
+    }
+    widgets {
+      id: "$$ID-ce187aa4bd9a90fc6a4e3ede7bd1eb1c-None"
+      double_array_value {
+        data: 5
+      }
+    }
+    widgets {
+      id: "$$ID-beb18e73fa29052e896740a50e731525-None"
+      file_uploader_state_value {
+      }
+    }
+    widgets {
+      id: "$$ID-f28c8dfc2b1b4fe1bb70241a89fbcc76-review_csv_loader"
+      file_uploader_state_value {
+      }
+    }
+    widgets {
+      id: "$$ID-a99b320c116b8588c8cc7328f8f4875b-train_feedback_uploader"
+      file_uploader_state_value {
+      }
+    }
+    widgets {
+      id: "$$ID-9eef6f576cddc798ee1bee018ce163f6-None"
+      bool_value: false
+    }
+    widgets {
+      id: "$$ID-a29a6c1b9c67f3d8b7afdd5b5aaf3d6c-None"
+      int_value: 0
+    }
+    widgets {
+      id: "$$ID-3c84b807a084412907a4fbac78dfe1c5-None"
+      int_value: 2
+    }
+    widgets {
+      id: "$$ID-091da9fb170c67d668db4097a770a6c9-None"
+      int_value: 3
+    }
+    widgets {
+      id: "$$ID-d95b8bf9df5b5a6fafbbbf64031a8458-None"
+      int_value: 3000
+    }
+    widgets {
+      id: "$$ID-85cbb5694cdc676495a873a1191f3d70-None"
+      int_value: 2
+    }
+    widgets {
+      id: "$$ID-5afd5d94c68bf750633653ee32d9cf77-None"
+      int_value: 3
+    }
+    widgets {
+      id: "$$ID-a996fa4522aee701f22b0e4be23f2fc1-None"
+      int_value: 1000
+    }
+    widgets {
+      id: "$$ID-ce1a19f34f1933206adc408592157014-None"
+      int_value: 200000
+    }
+    widgets {
+      id: "$$ID-97d0be66f31125c9aeeb4937222c7cbd-None"
+      string_array_value {
+        data: "12"
+        data: "24"
+        data: "36"
+        data: "48"
+        data: "60"
+      }
+    }
+    widgets {
+      id: "$$ID-1cf68da1a9cd1a8c1a5fabbf77ca826f-None"
+      bool_value: false
+    }
+    widgets {
+      id: "$$ID-4151498aa4c7b9112ea14a419bc6da76-None"
+      bool_value: true
+    }
+    widgets {
+      id: "$$ID-4ed9d05a835a0e8372fcec2e75bddc99-None"
+      string_value: ""
+    }
+    widgets {
+      id: "$$ID-2906c323b25f8ddc2e35dd25623c612e-None"
+      trigger_value: true
+    }
+  }
+  page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 12:47:14.537 Beginning script thread
+2025-11-01 12:47:14.537 Running script RerunData(widget_states=widgets {
+  id: "$$ID-a6941d61d20aa7688d04d8dd56df2a58-None"
+  string_value: "USD"
+}
+widgets {
+  id: "$$ID-6bc93b26c6ce677cc06260d67aecabe8-None"
+  string_value: "credit_lr-dzoan-credit-appraisal-20251025-191409.joblib — Nov 01, 2025 04:37"
+}
+widgets {
+  id: "$$ID-90bd4fdb41d0d53c562fddbe1c38b231-None"
+  string_value: "Mistral 7B Instruct — CPU slow / GPU OK"
+}
+widgets {
+  id: "$$ID-3976fcb9839d75a0dd5bdecb3b69789d-None"
+  string_value: "m4.medium"
+}
+widgets {
+  id: "$$ID-0b2d15503359118f7861b697351ac797-None"
+  string_value: "Use synthetic (ANON)"
+}
+widgets {
+  id: "$$ID-c70b24b57d53487aeb488cedd7d573fa-None"
+  double_array_value {
+    data: 200
+  }
+}
+widgets {
+  id: "$$ID-f7197ee29881ea29d381602cecae9c2e-None"
+  double_array_value {
+    data: 0.3
+  }
+}
+widgets {
+  id: "$$ID-d1775a34cd44a0ca1af0dc05ef8f58eb-None"
+  double_array_value {
+    data: 0.45
+  }
+}
+widgets {
+  id: "$$ID-7f94ed476e2a8f2cb87b11cde38c8bc1-None"
+  double_array_value {
+    data: 0.35
+  }
+}
+widgets {
+  id: "$$ID-e04b9069aaa0b2634f4b66e59e2a4559-None"
+  double_array_value {
+    data: 1
+  }
+}
+widgets {
+  id: "$$ID-c35c73527ccf7fc2915f1827da4ec296-None"
+  double_array_value {
+    data: 0.5
+  }
+}
+widgets {
+  id: "$$ID-7cdbe51e487c4d6cfd82cc7d032a5ef3-None"
+  double_array_value {
+    data: 0.45
+  }
+}
+widgets {
+  id: "$$ID-8484fa1e9380c3c8446a80b681fa2451-None"
+  string_value: "💳 Credit Appraisal Agent"
+}
+widgets {
+  id: "$$ID-ce187aa4bd9a90fc6a4e3ede7bd1eb1c-None"
+  double_array_value {
+    data: 5
+  }
+}
+widgets {
+  id: "$$ID-beb18e73fa29052e896740a50e731525-None"
+  file_uploader_state_value {
+  }
+}
+widgets {
+  id: "$$ID-f28c8dfc2b1b4fe1bb70241a89fbcc76-review_csv_loader"
+  file_uploader_state_value {
+  }
+}
+widgets {
+  id: "$$ID-a99b320c116b8588c8cc7328f8f4875b-train_feedback_uploader"
+  file_uploader_state_value {
+  }
+}
+widgets {
+  id: "$$ID-9eef6f576cddc798ee1bee018ce163f6-None"
+  bool_value: false
+}
+widgets {
+  id: "$$ID-a29a6c1b9c67f3d8b7afdd5b5aaf3d6c-None"
+  int_value: 0
+}
+widgets {
+  id: "$$ID-3c84b807a084412907a4fbac78dfe1c5-None"
+  int_value: 2
+}
+widgets {
+  id: "$$ID-091da9fb170c67d668db4097a770a6c9-None"
+  int_value: 3
+}
+widgets {
+  id: "$$ID-d95b8bf9df5b5a6fafbbbf64031a8458-None"
+  int_value: 3000
+}
+widgets {
+  id: "$$ID-85cbb5694cdc676495a873a1191f3d70-None"
+  int_value: 2
+}
+widgets {
+  id: "$$ID-5afd5d94c68bf750633653ee32d9cf77-None"
+  int_value: 3
+}
+widgets {
+  id: "$$ID-a996fa4522aee701f22b0e4be23f2fc1-None"
+  int_value: 1000
+}
+widgets {
+  id: "$$ID-ce1a19f34f1933206adc408592157014-None"
+  int_value: 200000
+}
+widgets {
+  id: "$$ID-97d0be66f31125c9aeeb4937222c7cbd-None"
+  string_array_value {
+    data: "12"
+    data: "24"
+    data: "36"
+    data: "48"
+    data: "60"
+  }
+}
+widgets {
+  id: "$$ID-1cf68da1a9cd1a8c1a5fabbf77ca826f-None"
+  bool_value: false
+}
+widgets {
+  id: "$$ID-4151498aa4c7b9112ea14a419bc6da76-None"
+  bool_value: true
+}
+widgets {
+  id: "$$ID-4ed9d05a835a0e8372fcec2e75bddc99-None"
+  string_value: ""
+}
+widgets {
+  id: "$$ID-2906c323b25f8ddc2e35dd25623c612e-None"
+  trigger_value: true
+}
+, page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 12:47:14.537 Disconnecting files for session with ID 79836c21-ee33-452b-a8f9-158c4f618deb
+2025-11-01 12:47:14.538 Sessions still active: dict_keys([])
+2025-11-01 12:47:14.538 Files: 1; Sessions with files: 0
+2025-11-01 12:47:14 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): localhost:8090
+2025-11-01 12:47:14 DEBUG [urllib3.connectionpool] http://localhost:8090 "GET /v1/training/production_meta HTTP/1.1" 200 246
+2025-11-01 12:47:14 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): localhost:8090
+2025-11-01 12:47:14 DEBUG [urllib3.connectionpool] http://localhost:8090 "POST /v1/agents/credit_appraisal/run HTTP/1.1" 500 21
+2025-11-01 12:47:14.751 Removing orphaned files...
+2025-11-01 12:47:14.751 Deleting File: 9dad17115f53385d69799de1aa3c710cb6911d2816384ee859584714
+  Stopping...
+2025-11-01 12:47:30.851 Runtime stopping...
+2025-11-01 12:47:30.852 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.STOPPING
+2025-11-01 12:47:30.852 Shutting down (id=7213ae0a-08b4-4e6b-9468-7dd8d9fa3509)
+2025-11-01 12:47:30.852 Disconnecting files for session with ID 7213ae0a-08b4-4e6b-9468-7dd8d9fa3509
+2025-11-01 12:47:30.852 Sessions still active: dict_keys([])
+2025-11-01 12:47:30.852 Files: 0; Sessions with files: 0
+2025-11-01 12:47:30.852 Removing orphaned files...
+2025-11-01 12:47:30.852 Shutting down (id=00087df6-5eed-4cff-bf1b-3a4df7fe7dbb)
+2025-11-01 12:47:30.853 Disconnecting files for session with ID 00087df6-5eed-4cff-bf1b-3a4df7fe7dbb
+2025-11-01 12:47:30.853 Sessions still active: dict_keys([])
+2025-11-01 12:47:30.853 Files: 0; Sessions with files: 0
+2025-11-01 12:47:30.853 Removing orphaned files...
+2025-11-01 12:47:30.853 Shutting down (id=461f7bfa-a26b-4273-b479-244ee6a7df1e)
+2025-11-01 12:47:30.853 Disconnecting files for session with ID 461f7bfa-a26b-4273-b479-244ee6a7df1e
+2025-11-01 12:47:30.853 Sessions still active: dict_keys([])
+2025-11-01 12:47:30.853 Files: 0; Sessions with files: 0
+2025-11-01 12:47:30.853 Removing orphaned files...
+2025-11-01 12:47:30.853 Shutting down (id=0283ec50-7766-4a25-bcad-51923a304548)
+2025-11-01 12:47:30.853 Disconnecting files for session with ID 0283ec50-7766-4a25-bcad-51923a304548
+2025-11-01 12:47:30.853 Sessions still active: dict_keys([])
+2025-11-01 12:47:30.853 Files: 0; Sessions with files: 0
+2025-11-01 12:47:30.853 Removing orphaned files...
+2025-11-01 12:47:30.854 Shutting down (id=86d644e5-0acc-400b-9997-fb8d7f931f02)
+2025-11-01 12:47:30.854 Disconnecting files for session with ID 86d644e5-0acc-400b-9997-fb8d7f931f02
+2025-11-01 12:47:30.854 Sessions still active: dict_keys([])
+2025-11-01 12:47:30.854 Files: 0; Sessions with files: 0
+2025-11-01 12:47:30.854 Removing orphaned files...
+2025-11-01 12:47:30.854 Shutting down (id=fddfdb52-44d8-410a-af5d-9c4888eafa74)
+2025-11-01 12:47:30.854 Disconnecting files for session with ID fddfdb52-44d8-410a-af5d-9c4888eafa74
+2025-11-01 12:47:30.854 Sessions still active: dict_keys([])
+2025-11-01 12:47:30.854 Files: 0; Sessions with files: 0
+2025-11-01 12:47:30.854 Removing orphaned files...
+2025-11-01 12:47:30.854 Shutting down (id=9969eb23-a80b-4242-b261-081e4b56b1b0)
+2025-11-01 12:47:30.854 Disconnecting files for session with ID 9969eb23-a80b-4242-b261-081e4b56b1b0
+2025-11-01 12:47:30.855 Sessions still active: dict_keys([])
+2025-11-01 12:47:30.855 Files: 0; Sessions with files: 0
+2025-11-01 12:47:30.855 Removing orphaned files...
+2025-11-01 12:47:30.855 Shutting down (id=46194915-c299-435b-a1f2-ffe9ed90e028)
+2025-11-01 12:47:30.855 Disconnecting files for session with ID 46194915-c299-435b-a1f2-ffe9ed90e028
+2025-11-01 12:47:30.855 Sessions still active: dict_keys([])
+2025-11-01 12:47:30.855 Files: 0; Sessions with files: 0
+2025-11-01 12:47:30.855 Removing orphaned files...
+2025-11-01 12:47:30.855 Shutting down (id=6b359489-ee41-47e2-9201-5c2e3470b3c4)
+2025-11-01 12:47:30.855 Disconnecting files for session with ID 6b359489-ee41-47e2-9201-5c2e3470b3c4
+2025-11-01 12:47:30.855 Sessions still active: dict_keys([])
+2025-11-01 12:47:30.855 Files: 0; Sessions with files: 0
+2025-11-01 12:47:30.855 Removing orphaned files...
+2025-11-01 12:47:30.855 Shutting down (id=e7ae151e-ca66-4797-a8e5-f1dd7119a919)
+2025-11-01 12:47:30.855 Disconnecting files for session with ID e7ae151e-ca66-4797-a8e5-f1dd7119a919
+2025-11-01 12:47:30.855 Sessions still active: dict_keys([])
+2025-11-01 12:47:30.855 Files: 0; Sessions with files: 0
+2025-11-01 12:47:30.855 Removing orphaned files...
+2025-11-01 12:47:30.856 Shutting down (id=93c22f82-621d-436d-826a-87a4d5f7e410)
+2025-11-01 12:47:30.856 Disconnecting files for session with ID 93c22f82-621d-436d-826a-87a4d5f7e410
+2025-11-01 12:47:30.856 Sessions still active: dict_keys([])
+2025-11-01 12:47:30.856 Files: 0; Sessions with files: 0
+2025-11-01 12:47:30.856 Removing orphaned files...
+2025-11-01 12:47:30.856 Shutting down (id=793847dc-fd71-44fb-bbef-46f6725237e7)
+2025-11-01 12:47:30.856 Disconnecting files for session with ID 793847dc-fd71-44fb-bbef-46f6725237e7
+2025-11-01 12:47:30.856 Sessions still active: dict_keys([])
+2025-11-01 12:47:30.856 Files: 0; Sessions with files: 0
+2025-11-01 12:47:30.856 Removing orphaned files...
+2025-11-01 12:47:30.856 Shutting down (id=beff6d99-86d8-403c-a045-faf6075f3a08)
+2025-11-01 12:47:30.856 Disconnecting files for session with ID beff6d99-86d8-403c-a045-faf6075f3a08
+2025-11-01 12:47:30.856 Sessions still active: dict_keys([])
+2025-11-01 12:47:30.856 Files: 0; Sessions with files: 0
+2025-11-01 12:47:30.856 Removing orphaned files...
+2025-11-01 12:47:30.856 Shutting down (id=79836c21-ee33-452b-a8f9-158c4f618deb)
+2025-11-01 12:47:30.856 Disconnecting files for session with ID 79836c21-ee33-452b-a8f9-158c4f618deb
+2025-11-01 12:47:30.857 Sessions still active: dict_keys([])
+2025-11-01 12:47:30.857 Files: 0; Sessions with files: 0
+2025-11-01 12:47:30.857 Removing orphaned files...
+2025-11-01 12:47:30.857 Shutting down (id=7c1f3ee7-a027-4057-a8d0-2d7241dbf409)
+2025-11-01 12:47:30.857 Disconnecting files for session with ID 7c1f3ee7-a027-4057-a8d0-2d7241dbf409
+2025-11-01 12:47:30.857 Sessions still active: dict_keys([])
+2025-11-01 12:47:30.857 Files: 0; Sessions with files: 0
+2025-11-01 12:47:30.857 Removing orphaned files...
+2025-11-01 12:47:30.857 Runtime state: RuntimeState.STOPPING -> RuntimeState.STOPPED

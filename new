@@ -1,0 +1,85 @@
+# ─────────────────────────────────────────────
+# Ports you care about
+# ─────────────────────────────────────────────
+APIPORT="${APIPORT:-8090}"
+UIPORT="${UIPORT:-8052}"   # << focus UI on 8052 as requested
+
+# line-buffer helper
+STDBUF=""
+if command -v stdbuf >/dev/null 2>&1; then
+  STDBUF="stdbuf -oL -eL"
+fi
+
+TS="$(date +"%Y%m%d-%H%M%S")"
+API_LOG="${LOGDIR}/api_${TS}.log"
+UI_LOG="${LOGDIR}/ui_${TS}.log"
+ERROR_LOG="${LOGDIR}/error.log"      # stable, always appended
+
+# Optional: make sure file exists
+touch "$ERROR_LOG" "$API_LOG" "$UI_LOG"
+
+# ─────────────────────────────────────────────
+# Start API (real-time pipe → console + logs)
+# ─────────────────────────────────────────────
+if [[ -f "${ROOT}/.pids/api.pid" ]] && kill -0 "$(cat "${ROOT}/.pids/api.pid")" 2>/dev/null; then
+  color_echo yellow "API already running (PID $(cat "${ROOT}/.pids/api.pid"))."
+else
+  color_echo blue "Starting API on :${APIPORT} …"
+  (
+    ${STDBUF} "${VENV}/bin/uvicorn" services.api.main:app \
+      --host 0.0.0.0 --port "${APIPORT}" --reload --log-level info 2>&1 \
+    | awk -v svc="API:${APIPORT}" -v errf="${ERROR_LOG}" '
+        {
+          ts = strftime("%Y-%m-%d %H:%M:%S");
+          line = ts " [" svc "] " $0;
+          print line; fflush();                 # → real-time to console
+          print line >> "'"${API_LOG}"'"; fflush("'"${API_LOG}"'");  # → per-service log
+          if ($0 ~ /ERROR|CRITICAL|Traceback|Exception/) {
+            print line >> errf; fflush(errf);   # → error.log
+          }
+        }
+      '
+  ) & echo $! > "${ROOT}/.pids/api.pid"
+  color_echo green "✅ API started (PID=$(cat "${ROOT}/.pids/api.pid")) | log: ${API_LOG}"
+fi
+
+# ─────────────────────────────────────────────
+# Start UI (real-time pipe → console + logs)
+# ─────────────────────────────────────────────
+if [[ -f "${ROOT}/.pids/ui.pid" ]] && kill -0 "$(cat "${ROOT}/.pids/ui.pid")" 2>/dev/null; then
+  color_echo yellow "UI already running (PID $(cat "${ROOT}/.pids/ui.pid"))."
+else
+  color_echo blue "Starting Streamlit UI on :${UIPORT} …"
+  cd "${ROOT}/services/ui"
+  (
+    ${STDBUF} "${VENV}/bin/streamlit" run "app.py" \
+      --server.port "${UIPORT}" --server.address 0.0.0.0 --server.fileWatcherType none 2>&1 \
+    | awk -v svc="UI:${UIPORT}" -v errf="${ERROR_LOG}" '
+        {
+          ts = strftime("%Y-%m-%d %H:%M:%S");
+          line = ts " [" svc "] " $0;
+          print line; fflush();                 # → real-time to console
+          print line >> "'"${UI_LOG}"'"; fflush("'"${UI_LOG}"'");    # → per-service log
+          if ($0 ~ /ERROR|CRITICAL|Traceback|Exception/) {
+            print line >> errf; fflush(errf);   # → error.log
+          }
+        }
+      '
+  ) & echo $! > "${ROOT}/.pids/ui.pid"
+  cd "${ROOT}"
+  color_echo green "✅ UI started (PID=$(cat "${ROOT}/.pids/ui.pid")) | log: ${UI_LOG}"
+fi
+
+# ─────────────────────────────────────────────
+# Done: live logs are already on-screen
+# (CTRL+C stops your shell; services keep running in background PIDs)
+# ─────────────────────────────────────────────
+echo "----------------------------------------------------"
+color_echo blue "🎯 Live logs are streaming above (API 8090, UI ${UIPORT})."
+color_echo blue "📘 Swagger: http://localhost:${APIPORT}/docs"
+color_echo blue "🌐 Web UI:  http://localhost:${UIPORT}"
+color_echo blue "🧾 Per-service logs:"
+echo "    - ${API_LOG}"
+echo "    - ${UI_LOG}"
+color_echo red  "❗ Unified errors: ${ERROR_LOG}"
+echo "----------------------------------------------------"

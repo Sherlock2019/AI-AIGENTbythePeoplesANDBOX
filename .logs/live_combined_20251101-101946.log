@@ -1,0 +1,121 @@
+2025-11-01 10:19:48 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251101-101946.log <==
+2025-11-01 10:19:48 [STREAM] 
+2025-11-01 10:19:48 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251101-101946.log <==
+2025-11-01 10:19:49 [STREAM] 
+2025-11-01 10:19:49 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251101-101946.log <==
+2025-11-01 10:19:49 [STREAM] INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+2025-11-01 10:19:49 [STREAM] INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+2025-11-01 10:19:49 [STREAM] INFO:     Started reloader process [540695] using WatchFiles
+2025-11-01 10:19:49 [STREAM] Process SpawnProcess-1:
+2025-11-01 10:19:49 [STREAM] Traceback (most recent call last):
+2025-11-01 10:19:49 [STREAM]   File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+2025-11-01 10:19:49 [STREAM]     self.run()
+2025-11-01 10:19:49 [STREAM]   File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+2025-11-01 10:19:49 [STREAM]     self._target(*self._args, **self._kwargs)
+2025-11-01 10:19:49 [STREAM]   File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/uvicorn/_subprocess.py", line 80, in subprocess_started
+2025-11-01 10:19:49 [STREAM]     target(sockets=sockets)
+2025-11-01 10:19:49 [STREAM]   File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/uvicorn/server.py", line 65, in run
+2025-11-01 10:19:49 [STREAM]     return asyncio.run(self.serve(sockets=sockets))
+2025-11-01 10:19:49 [STREAM]   File "/usr/lib/python3.10/asyncio/runners.py", line 44, in run
+2025-11-01 10:19:49 [STREAM]     return loop.run_until_complete(main)
+2025-11-01 10:19:49 [STREAM]   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+2025-11-01 10:19:49 [STREAM]   File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/uvicorn/server.py", line 69, in serve
+2025-11-01 10:19:49 [STREAM]     await self._serve(sockets)
+2025-11-01 10:19:49 [STREAM]   File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/uvicorn/server.py", line 76, in _serve
+2025-11-01 10:19:49 [STREAM]     config.load()
+2025-11-01 10:19:49 [STREAM]   File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/uvicorn/config.py", line 434, in load
+2025-11-01 10:19:49 [STREAM]     self.loaded_app = import_from_string(self.app)
+2025-11-01 10:19:49 [STREAM]   File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/uvicorn/importer.py", line 19, in import_from_string
+2025-11-01 10:19:49 [STREAM]     module = importlib.import_module(module_str)
+2025-11-01 10:19:49 [STREAM]   File "/usr/lib/python3.10/importlib/__init__.py", line 126, in import_module
+2025-11-01 10:19:49 [STREAM]     return _bootstrap._gcd_import(name[level:], package, level)
+2025-11-01 10:19:49 [STREAM]   File "<frozen importlib._bootstrap>", line 1050, in _gcd_import
+2025-11-01 10:19:49 [STREAM]   File "<frozen importlib._bootstrap>", line 1027, in _find_and_load
+2025-11-01 10:19:49 [STREAM]   File "<frozen importlib._bootstrap>", line 1006, in _find_and_load_unlocked
+2025-11-01 10:19:49 [STREAM]   File "<frozen importlib._bootstrap>", line 688, in _load_unlocked
+2025-11-01 10:19:49 [STREAM]   File "<frozen importlib._bootstrap_external>", line 883, in exec_module
+2025-11-01 10:19:49 [STREAM]   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+2025-11-01 10:19:49 [STREAM]   File "/home/dzoan/credit-appraisal-agent-poc/services/api/main.py", line 13, in <module>
+2025-11-01 10:19:49 [STREAM]     logger = logging.getLogger("api.requests")
+2025-11-01 10:19:49 [STREAM] NameError: name 'logging' is not defined
+2025-11-01 10:19:49 [STREAM] 
+2025-11-01 10:19:49 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251101-101946.log <==
+2025-11-01 10:19:49 [STREAM] 2025-11-01 10:19:49.358 Starting new event loop for server
+2025-11-01 10:19:49 [STREAM] 2025-11-01 10:19:49.358 Starting server...
+2025-11-01 10:19:49 [STREAM] 2025-11-01 10:19:49.359 Serving static content from /home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/static
+2025-11-01 10:19:49 [STREAM] 2025-11-01 10:19:49.364 Server started on port 8502
+2025-11-01 10:19:49 [STREAM] 2025-11-01 10:19:49.364 Runtime state: RuntimeState.INITIAL -> RuntimeState.NO_SESSIONS_CONNECTED
+2025-11-01 10:19:49 [STREAM] 
+2025-11-01 10:19:49 [STREAM]   You can now view your Streamlit app in your browser.
+2025-11-01 10:19:49 [STREAM] 
+2025-11-01 10:19:49 [STREAM]   URL: http://0.0.0.0:8502
+2025-11-01 10:19:49 [STREAM] 
+2025-11-01 10:19:49 [STREAM] 2025-11-01 10:19:49.365 Setting up signal handler
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.010 AppSession initialized (id=672b6de5-4a57-4fc5-a1e9-2da93ce729f2)
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.010 Created new session for client 125647561007136. Session ID: 672b6de5-4a57-4fc5-a1e9-2da93ce729f2
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.010 Runtime state: RuntimeState.NO_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.028 AppSession initialized (id=e1a4544e-4848-43e9-a881-22df2b35e194)
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.028 Created new session for client 125647561009536. Session ID: e1a4544e-4848-43e9-a881-22df2b35e194
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.028 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.043 AppSession initialized (id=e1da7edc-19bd-43bc-9af6-5bb47966566b)
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.043 Created new session for client 125647561011840. Session ID: e1da7edc-19bd-43bc-9af6-5bb47966566b
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.043 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.059 AppSession initialized (id=a4337741-bb8d-4081-8aae-4fbd0396fa4d)
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.059 Created new session for client 125647561014144. Session ID: a4337741-bb8d-4081-8aae-4fbd0396fa4d
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.059 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.083 AppSession initialized (id=76929e7a-e8f2-4286-be4c-41d0a7880ce5)
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.083 Created new session for client 125647561475264. Session ID: 76929e7a-e8f2-4286-be4c-41d0a7880ce5
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.083 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.099 AppSession initialized (id=0f0f2483-d26d-4078-95e3-0700cb6fadb3)
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.099 Created new session for client 125647561477568. Session ID: 0f0f2483-d26d-4078-95e3-0700cb6fadb3
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.099 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.232 AppSession initialized (id=bd11fdf2-e1cb-4a3e-a2a4-a7d040aec11f)
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.232 Created new session for client 125647561479872. Session ID: bd11fdf2-e1cb-4a3e-a2a4-a7d040aec11f
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.232 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.247 AppSession initialized (id=9b6c594e-b890-4192-b602-d98feecf7076)
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.247 Created new session for client 125647561482176. Session ID: 9b6c594e-b890-4192-b602-d98feecf7076
+2025-11-01 10:19:50 [STREAM] 2025-11-01 10:19:50.247 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:20:05 [STREAM] 
+2025-11-01 10:20:05 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251101-101946.log <==
+2025-11-01 10:20:05 [STREAM] INFO:     Stopping reloader process [540695]
+2025-11-01 10:20:05 [STREAM] 
+2025-11-01 10:20:05 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251101-101946.log <==
+2025-11-01 10:20:05 [STREAM]   Stopping...
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Runtime stopping...
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.STOPPING
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Shutting down (id=672b6de5-4a57-4fc5-a1e9-2da93ce729f2)
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Disconnecting files for session with ID 672b6de5-4a57-4fc5-a1e9-2da93ce729f2
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Sessions still active: dict_keys([])
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Files: 0; Sessions with files: 0
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Removing orphaned files...
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Shutting down (id=e1a4544e-4848-43e9-a881-22df2b35e194)
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Disconnecting files for session with ID e1a4544e-4848-43e9-a881-22df2b35e194
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Sessions still active: dict_keys([])
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Files: 0; Sessions with files: 0
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Removing orphaned files...
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Shutting down (id=e1da7edc-19bd-43bc-9af6-5bb47966566b)
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Disconnecting files for session with ID e1da7edc-19bd-43bc-9af6-5bb47966566b
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Sessions still active: dict_keys([])
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Files: 0; Sessions with files: 0
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Removing orphaned files...
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Shutting down (id=a4337741-bb8d-4081-8aae-4fbd0396fa4d)
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Disconnecting files for session with ID a4337741-bb8d-4081-8aae-4fbd0396fa4d
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.088 Sessions still active: dict_keys([])
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.089 Files: 0; Sessions with files: 0
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.089 Removing orphaned files...
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.089 Shutting down (id=76929e7a-e8f2-4286-be4c-41d0a7880ce5)
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.089 Disconnecting files for session with ID 76929e7a-e8f2-4286-be4c-41d0a7880ce5
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.089 Sessions still active: dict_keys([])
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.089 Files: 0; Sessions with files: 0
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.089 Removing orphaned files...
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.089 Shutting down (id=0f0f2483-d26d-4078-95e3-0700cb6fadb3)
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.089 Disconnecting files for session with ID 0f0f2483-d26d-4078-95e3-0700cb6fadb3
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.089 Sessions still active: dict_keys([])
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.089 Files: 0; Sessions with files: 0
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.089 Removing orphaned files...
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.089 Shutting down (id=bd11fdf2-e1cb-4a3e-a2a4-a7d040aec11f)
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.089 Disconnecting files for session with ID bd11fdf2-e1cb-4a3e-a2a4-a7d040aec11f
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.089 Sessions still active: dict_keys([])
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.089 Files: 0; Sessions with files: 0
+2025-11-01 10:20:05 [STREAM] 2025-11-01 10:20:05.089 Removing orphaned files...
+2025-11-01 10:20:

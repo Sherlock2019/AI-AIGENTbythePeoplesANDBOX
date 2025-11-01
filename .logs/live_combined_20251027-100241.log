@@ -1,0 +1,45 @@
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-100241.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-100241.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-100241.log <==
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc/services/ui']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [304218] using WatchFiles
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-100241.log <==
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-100241.log <==
+INFO:     Started server process [304231]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-100241.log <==
+2025-10-27 10:03:48.597 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 1112, in <module>
+    main()
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 1096, in main
+    page_data()
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 676, in page_data
+    with colB:
+NameError: name 'colB' is not defined
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251027-100241.log <==
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [304231]
+INFO:     Stopping reloader process [304218]
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251027-100241.log <==
+  Stopping...

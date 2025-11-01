@@ -1,0 +1,2 @@
+asset_id,asset_type,country,city,geo_lat,geo_lon,location_quality,currency_code,valuation_date,age_years,year_built,area_m2,land_area_m2,zoning,condition_grade,occupancy,monthly_rent,legal_status,ownership_verified,lien_count,registry_id,requested_amount,decision,rule_reasons
+A-EX0001,Apartment,VN,Ho Chi Minh,10.78,106.7,B,USD,2025-10-30,12,2013,76,0,Residential,B,tenant,800,Clean,True,0,REG-123456789,120000,denied,"{'legal_clean': True, 'ltv_le_70': True, 'ltv_le_85': True, 'quality_ge_0_50': False, 'quality_ge_0_55': False}"

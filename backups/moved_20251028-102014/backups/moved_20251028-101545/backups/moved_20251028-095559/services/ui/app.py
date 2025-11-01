@@ -154,21 +154,6 @@ st.markdown(
         padding:10px 22px; font-weight:700; border-radius:12px;
         background:linear-gradient(180deg,#4ea3ff 0%,#2f86ff 60%,#0f6fff 100%);
     }
-    /* Larger workflow tabs */
-    [data-testid="stTabs"] [data-baseweb="tab"] {
-        font-size: 28px !important;
-        font-weight: 800 !important;
-        padding: 20px 40px !important;
-        border-radius: 12px !important;
-        background-color: #1e293b !important;
-        color: #f8fafc !important;
-    }
-    [data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] {
-        background: linear-gradient(90deg, #2563eb, #1d4ed8) !important;
-        color: white !important;
-        border-bottom: 6px solid #60a5fa !important;
-        box-shadow: 0 4px 14px rgba(37,99,235,0.5);
-    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -312,6 +297,16 @@ if st.session_state.stage == "credit_agent":
     with top[1]:
         st.title("💳 AI Credit Appraisal Platform")
         st.caption("Generate, sanitize, and appraise credit with AI agent power and human insight.")
+
+    tabs = st.tabs([
+        "🏦 Synthetic Data Generator",
+        "🧹 Anonymize & Sanitize Data",
+        "🤖 Credit Appraisal by AI Assistant",
+        "🧑‍⚖️ Human Review",
+        "🔁 Training (Feedback → Retrain)",
+    ])
+    st.markdown("<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>", unsafe_allow_html=True)
+
 
 
 

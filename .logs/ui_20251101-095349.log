@@ -1,0 +1,281 @@
+2025-11-01 09:53:52.413 Starting new event loop for server
+2025-11-01 09:53:52.414 Starting server...
+2025-11-01 09:53:52.414 Serving static content from /home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/static
+2025-11-01 09:53:52.421 Server started on port 8502
+2025-11-01 09:53:52.421 Runtime state: RuntimeState.INITIAL -> RuntimeState.NO_SESSIONS_CONNECTED
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+2025-11-01 09:53:52.423 Setting up signal handler
+2025-11-01 09:53:53.049 AppSession initialized (id=c53317f8-9528-43e1-b779-ad819a715d90)
+2025-11-01 09:53:53.049 Created new session for client 134069264212000. Session ID: c53317f8-9528-43e1-b779-ad819a715d90
+2025-11-01 09:53:53.049 Runtime state: RuntimeState.NO_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 09:53:53.237 AppSession initialized (id=352061a3-26aa-42e0-9c47-dc80f21e062c)
+2025-11-01 09:53:53.237 Created new session for client 134069264216656. Session ID: 352061a3-26aa-42e0-9c47-dc80f21e062c
+2025-11-01 09:53:53.237 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 09:53:54.239 AppSession initialized (id=3057c501-94a3-4664-8c3f-abdf1af704ec)
+2025-11-01 09:53:54.240 Created new session for client 134069264219008. Session ID: 3057c501-94a3-4664-8c3f-abdf1af704ec
+2025-11-01 09:53:54.240 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 09:53:55.226 AppSession initialized (id=e813a139-4dbb-40ad-b900-aefd9d383602)
+2025-11-01 09:53:55.226 Created new session for client 134069264663744. Session ID: e813a139-4dbb-40ad-b900-aefd9d383602
+2025-11-01 09:53:55.226 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 09:54:02.088 Received the following back message:
+rerun_script {
+  widget_states {
+    widgets {
+      id: "$$ID-7e24f1ea7748b816f945be419050d8a6-btn_home_agents"
+      trigger_value: true
+    }
+  }
+  page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+  cached_message_hashes: "27d2e897be5ce95d9e50eced825033d7"
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 09:54:02.089 Beginning script thread
+2025-11-01 09:54:02.089 Running script RerunData(widget_states=widgets {
+  id: "$$ID-7e24f1ea7748b816f945be419050d8a6-btn_home_agents"
+  trigger_value: true
+}
+, page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', cached_message_hashes={'27d2e897be5ce95d9e50eced825033d7'}, context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 09:54:02.090 Disconnecting files for session with ID e813a139-4dbb-40ad-b900-aefd9d383602
+2025-11-01 09:54:02.090 Sessions still active: dict_keys([])
+2025-11-01 09:54:02.090 Files: 0; Sessions with files: 0
+2025-11-01 09:54:02.997 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 667, in code_to_exec
+    _mpa_v1(self._main_script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 165, in _mpa_v1
+    page.run()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/navigation/page.py", line 300, in run
+    exec(code, module.__dict__)  # noqa: S102
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 22, in <module>
+    root = logging.getLogger()
+NameError: name 'logging' is not defined
+2025-11-01 09:54:03.071 Removing orphaned files...
+2025-11-01 09:54:04.622 Received the following back message:
+rerun_script {
+  widget_states {
+  }
+  page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+  cached_message_hashes: "27d2e897be5ce95d9e50eced825033d7"
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 09:54:04.623 Beginning script thread
+2025-11-01 09:54:04.623 Running script RerunData(widget_states=, page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', cached_message_hashes={'27d2e897be5ce95d9e50eced825033d7'}, context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 09:54:04.623 Disconnecting files for session with ID e813a139-4dbb-40ad-b900-aefd9d383602
+2025-11-01 09:54:04.623 Sessions still active: dict_keys([])
+2025-11-01 09:54:04.623 Files: 0; Sessions with files: 0
+2025-11-01 09:54:04.625 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 667, in code_to_exec
+    _mpa_v1(self._main_script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 165, in _mpa_v1
+    page.run()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/navigation/page.py", line 300, in run
+    exec(code, module.__dict__)  # noqa: S102
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 22, in <module>
+    root = logging.getLogger()
+NameError: name 'logging' is not defined
+2025-11-01 09:54:04.626 Removing orphaned files...
+2025-11-01 09:54:09.656 Received the following back message:
+rerun_script {
+  widget_states {
+  }
+  page_script_hash: "b72db28f188acedfd30ff7d8fe0a9099"
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 09:54:09.657 Beginning script thread
+2025-11-01 09:54:09.657 Running script RerunData(widget_states=, page_script_hash='b72db28f188acedfd30ff7d8fe0a9099', context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 09:54:09.657 Disconnecting files for session with ID e813a139-4dbb-40ad-b900-aefd9d383602
+2025-11-01 09:54:09.657 Sessions still active: dict_keys([])
+2025-11-01 09:54:09.657 Files: 0; Sessions with files: 0
+2025-11-01 09:54:09.717 Removing orphaned files...
+2025-11-01 09:54:12.814 Received the following back message:
+rerun_script {
+  widget_states {
+    widgets {
+      id: "$$ID-50f54bb30cb58413a4b86487f851620e-None"
+      string_value: ""
+    }
+    widgets {
+      id: "$$ID-046c23c3598f9036386f171bccd48b3e-None"
+      string_value: ""
+    }
+    widgets {
+      id: "$$ID-92835b8a5b2910f78b59f1154be00b8c-None"
+      string_value: ""
+    }
+    widgets {
+      id: "$$ID-f835525e7ead30a95ee1101f27abfd4c-btn_home_asset_login"
+      trigger_value: true
+    }
+  }
+  page_script_hash: "b72db28f188acedfd30ff7d8fe0a9099"
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/asset_appraisal"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 09:54:12.815 Beginning script thread
+2025-11-01 09:54:12.815 Running script RerunData(widget_states=widgets {
+  id: "$$ID-50f54bb30cb58413a4b86487f851620e-None"
+  string_value: ""
+}
+widgets {
+  id: "$$ID-046c23c3598f9036386f171bccd48b3e-None"
+  string_value: ""
+}
+widgets {
+  id: "$$ID-92835b8a5b2910f78b59f1154be00b8c-None"
+  string_value: ""
+}
+widgets {
+  id: "$$ID-f835525e7ead30a95ee1101f27abfd4c-btn_home_asset_login"
+  trigger_value: true
+}
+, page_script_hash='b72db28f188acedfd30ff7d8fe0a9099', context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/asset_appraisal"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 09:54:12.815 Disconnecting files for session with ID e813a139-4dbb-40ad-b900-aefd9d383602
+2025-11-01 09:54:12.815 Sessions still active: dict_keys([])
+2025-11-01 09:54:12.815 Files: 0; Sessions with files: 0
+2025-11-01 09:54:12.819 Removing orphaned files...
+2025-11-01 09:54:12.863 Running script RerunData(page_script_hash='b72db28f188acedfd30ff7d8fe0a9099', context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/asset_appraisal"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 09:54:12.864 Disconnecting files for session with ID e813a139-4dbb-40ad-b900-aefd9d383602
+2025-11-01 09:54:12.864 Sessions still active: dict_keys([])
+2025-11-01 09:54:12.864 Files: 0; Sessions with files: 0
+2025-11-01 09:54:12.867 Removing orphaned files...
+2025-11-01 09:54:20.711 AppSession initialized (id=45f7cb0d-f57a-4966-8612-27e4b047edb5)
+2025-11-01 09:54:20.711 Created new session for client 134069264215984. Session ID: 45f7cb0d-f57a-4966-8612-27e4b047edb5
+2025-11-01 09:54:20.711 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 09:54:20.722 Received the following back message:
+rerun_script {
+  widget_states {
+  }
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 09:54:20.722 Beginning script thread
+2025-11-01 09:54:20.722 Running script RerunData(widget_states=, context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 09:54:20.722 Disconnecting files for session with ID 45f7cb0d-f57a-4966-8612-27e4b047edb5
+2025-11-01 09:54:20.723 Sessions still active: dict_keys([])
+2025-11-01 09:54:20.723 Files: 0; Sessions with files: 0
+2025-11-01 09:54:20.724 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 667, in code_to_exec
+    _mpa_v1(self._main_script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 165, in _mpa_v1
+    page.run()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/navigation/page.py", line 300, in run
+    exec(code, module.__dict__)  # noqa: S102
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 22, in <module>
+    root = logging.getLogger()
+NameError: name 'logging' is not defined
+2025-11-01 09:54:20.726 Removing orphaned files...
+  Stopping...
+2025-11-01 09:55:07.383 Runtime stopping...
+2025-11-01 09:55:07.383 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.STOPPING
+2025-11-01 09:55:07.383 Shutting down (id=c53317f8-9528-43e1-b779-ad819a715d90)
+2025-11-01 09:55:07.383 Disconnecting files for session with ID c53317f8-9528-43e1-b779-ad819a715d90
+2025-11-01 09:55:07.383 Sessions still active: dict_keys([])
+2025-11-01 09:55:07.383 Files: 0; Sessions with files: 0
+2025-11-01 09:55:07.383 Removing orphaned files...
+2025-11-01 09:55:07.384 Shutting down (id=352061a3-26aa-42e0-9c47-dc80f21e062c)
+2025-11-01 09:55:07.384 Disconnecting files for session with ID 352061a3-26aa-42e0-9c47-dc80f21e062c
+2025-11-01 09:55:07.384 Sessions still active: dict_keys([])
+2025-11-01 09:55:07.384 Files: 0; Sessions with files: 0
+2025-11-01 09:55:07.384 Removing orphaned files...
+2025-11-01 09:55:07.384 Shutting down (id=3057c501-94a3-4664-8c3f-abdf1af704ec)
+2025-11-01 09:55:07.384 Disconnecting files for session with ID 3057c501-94a3-4664-8c3f-abdf1af704ec
+2025-11-01 09:55:07.384 Sessions still active: dict_keys([])
+2025-11-01 09:55:07.384 Files: 0; Sessions with files: 0
+2025-11-01 09:55:07.384 Removing orphaned files...
+2025-11-01 09:55:07.384 Shutting down (id=45f7cb0d-f57a-4966-8612-27e4b047edb5)
+2025-11-01 09:55:07.384 Disconnecting files for session with ID 45f7cb0d-f57a-4966-8612-27e4b047edb5
+2025-11-01 09:55:07.384 Sessions still active: dict_keys([])
+2025-11-01 09:55:07.384 Files: 0; Sessions with files: 0
+2025-11-01 09:55:07.384 Removing orphaned files...
+2025-11-01 09:55:07.384 Shutting down (id=e813a139-4dbb-40ad-b900-aefd9d383602)
+2025-11-01 09:55:07.384 Disconnecting files for session with ID e813a139-4dbb-40ad-b900-aefd9d383602
+2025-11-01 09:55:07.384 Sessions still active: dict_keys([])
+2025-11-01 09:55:07.384 Files: 0; Sessions with files: 0
+2025-11-01 09:55:07.384 Removing orphaned files...
+2025-11-01 09:55:07.384 Runtime state: RuntimeState.STOPPING -> RuntimeState.STOPPED

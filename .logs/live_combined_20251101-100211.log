@@ -1,0 +1,415 @@
+2025-11-01 10:02:13 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251101-100211.log <==
+2025-11-01 10:02:13 [STREAM] 
+2025-11-01 10:02:13 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251101-100211.log <==
+2025-11-01 10:02:14 [STREAM] 
+2025-11-01 10:02:14 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251101-100211.log <==
+2025-11-01 10:02:14 [STREAM] INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+2025-11-01 10:02:14 [STREAM] INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+2025-11-01 10:02:14 [STREAM] INFO:     Started reloader process [539642] using WatchFiles
+2025-11-01 10:02:14 [STREAM] Process SpawnProcess-1:
+2025-11-01 10:02:14 [STREAM] Traceback (most recent call last):
+2025-11-01 10:02:14 [STREAM]   File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+2025-11-01 10:02:14 [STREAM]     self.run()
+2025-11-01 10:02:14 [STREAM]   File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+2025-11-01 10:02:14 [STREAM]     self._target(*self._args, **self._kwargs)
+2025-11-01 10:02:14 [STREAM]   File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/uvicorn/_subprocess.py", line 80, in subprocess_started
+2025-11-01 10:02:14 [STREAM]     target(sockets=sockets)
+2025-11-01 10:02:14 [STREAM]   File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/uvicorn/server.py", line 65, in run
+2025-11-01 10:02:14 [STREAM]     return asyncio.run(self.serve(sockets=sockets))
+2025-11-01 10:02:14 [STREAM]   File "/usr/lib/python3.10/asyncio/runners.py", line 44, in run
+2025-11-01 10:02:14 [STREAM]     return loop.run_until_complete(main)
+2025-11-01 10:02:14 [STREAM]   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+2025-11-01 10:02:14 [STREAM]   File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/uvicorn/server.py", line 69, in serve
+2025-11-01 10:02:14 [STREAM]     await self._serve(sockets)
+2025-11-01 10:02:14 [STREAM]   File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/uvicorn/server.py", line 76, in _serve
+2025-11-01 10:02:14 [STREAM]     config.load()
+2025-11-01 10:02:14 [STREAM]   File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/uvicorn/config.py", line 434, in load
+2025-11-01 10:02:14 [STREAM]     self.loaded_app = import_from_string(self.app)
+2025-11-01 10:02:14 [STREAM]   File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/uvicorn/importer.py", line 19, in import_from_string
+2025-11-01 10:02:14 [STREAM]     module = importlib.import_module(module_str)
+2025-11-01 10:02:14 [STREAM]   File "/usr/lib/python3.10/importlib/__init__.py", line 126, in import_module
+2025-11-01 10:02:14 [STREAM]     return _bootstrap._gcd_import(name[level:], package, level)
+2025-11-01 10:02:14 [STREAM]   File "<frozen importlib._bootstrap>", line 1050, in _gcd_import
+2025-11-01 10:02:14 [STREAM]   File "<frozen importlib._bootstrap>", line 1027, in _find_and_load
+2025-11-01 10:02:14 [STREAM]   File "<frozen importlib._bootstrap>", line 1006, in _find_and_load_unlocked
+2025-11-01 10:02:14 [STREAM]   File "<frozen importlib._bootstrap>", line 688, in _load_unlocked
+2025-11-01 10:02:14 [STREAM]   File "<frozen importlib._bootstrap_external>", line 883, in exec_module
+2025-11-01 10:02:14 [STREAM]   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+2025-11-01 10:02:14 [STREAM]   File "/home/dzoan/credit-appraisal-agent-poc/services/api/main.py", line 13, in <module>
+2025-11-01 10:02:14 [STREAM]     logger = logging.getLogger("api.requests")
+2025-11-01 10:02:14 [STREAM] NameError: name 'logging' is not defined
+2025-11-01 10:02:14 [STREAM] 
+2025-11-01 10:02:14 [STREAM] ==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251101-100211.log <==
+2025-11-01 10:02:14 [STREAM] 2025-11-01 10:02:14.445 Starting new event loop for server
+2025-11-01 10:02:14 [STREAM] 2025-11-01 10:02:14.445 Starting server...
+2025-11-01 10:02:14 [STREAM] 2025-11-01 10:02:14.446 Serving static content from /home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/static
+2025-11-01 10:02:14 [STREAM] 2025-11-01 10:02:14.455 Server started on port 8502
+2025-11-01 10:02:14 [STREAM] 2025-11-01 10:02:14.456 Runtime state: RuntimeState.INITIAL -> RuntimeState.NO_SESSIONS_CONNECTED
+2025-11-01 10:02:14 [STREAM] 
+2025-11-01 10:02:14 [STREAM]   You can now view your Streamlit app in your browser.
+2025-11-01 10:02:14 [STREAM] 
+2025-11-01 10:02:14 [STREAM]   URL: http://0.0.0.0:8502
+2025-11-01 10:02:14 [STREAM] 
+2025-11-01 10:02:14 [STREAM] 2025-11-01 10:02:14.458 Setting up signal handler
+2025-11-01 10:02:15 [STREAM] 2025-11-01 10:02:15.259 AppSession initialized (id=632f0521-6919-41a8-abad-58513f3dd12f)
+2025-11-01 10:02:15 [STREAM] 2025-11-01 10:02:15.259 Created new session for client 135411991180192. Session ID: 632f0521-6919-41a8-abad-58513f3dd12f
+2025-11-01 10:02:15 [STREAM] 2025-11-01 10:02:15.259 Runtime state: RuntimeState.NO_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:02:15 [STREAM] 2025-11-01 10:02:15.284 AppSession initialized (id=c3054560-018c-4c0e-8ada-2507b050448b)
+2025-11-01 10:02:15 [STREAM] 2025-11-01 10:02:15.284 Created new session for client 135411991182592. Session ID: c3054560-018c-4c0e-8ada-2507b050448b
+2025-11-01 10:02:15 [STREAM] 2025-11-01 10:02:15.284 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:02:16 [STREAM] 2025-11-01 10:02:16.233 AppSession initialized (id=87453978-1f05-4f16-a726-2627f02aff7a)
+2025-11-01 10:02:16 [STREAM] 2025-11-01 10:02:16.233 Created new session for client 135411989562272. Session ID: 87453978-1f05-4f16-a726-2627f02aff7a
+2025-11-01 10:02:16 [STREAM] 2025-11-01 10:02:16.233 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:02:18 [STREAM] 2025-11-01 10:02:18.229 AppSession initialized (id=237922fa-6155-497c-8133-6efae0f3f75c)
+2025-11-01 10:02:18 [STREAM] 2025-11-01 10:02:18.229 Created new session for client 135411991179808. Session ID: 237922fa-6155-497c-8133-6efae0f3f75c
+2025-11-01 10:02:18 [STREAM] 2025-11-01 10:02:18.229 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:02:18 [STREAM] 2025-11-01 10:02:18.379 AppSession initialized (id=01db243d-a9e9-4ac3-a762-3573e1879b77)
+2025-11-01 10:02:18 [STREAM] 2025-11-01 10:02:18.379 Created new session for client 135411989565632. Session ID: 01db243d-a9e9-4ac3-a762-3573e1879b77
+2025-11-01 10:02:18 [STREAM] 2025-11-01 10:02:18.379 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:02:18 [STREAM] 2025-11-01 10:02:18.381 Received the following back message:
+2025-11-01 10:02:18 [STREAM] rerun_script {
+2025-11-01 10:02:18 [STREAM]   widget_states {
+2025-11-01 10:02:18 [STREAM]   }
+2025-11-01 10:02:18 [STREAM]   context_info {
+2025-11-01 10:02:18 [STREAM]     timezone: "Asia/Bangkok"
+2025-11-01 10:02:18 [STREAM]     timezone_offset: -420
+2025-11-01 10:02:18 [STREAM]     locale: "en-US"
+2025-11-01 10:02:18 [STREAM]     url: "http://localhost:8502/"
+2025-11-01 10:02:18 [STREAM]     is_embedded: false
+2025-11-01 10:02:18 [STREAM]     color_scheme: "light"
+2025-11-01 10:02:18 [STREAM]   }
+2025-11-01 10:02:18 [STREAM] }
+2025-11-01 10:02:18 [STREAM] 
+2025-11-01 10:02:18 [STREAM] 2025-11-01 10:02:18.382 Beginning script thread
+2025-11-01 10:02:18 [STREAM] 2025-11-01 10:02:18.382 Running script RerunData(widget_states=, context_info=timezone: "Asia/Bangkok"
+2025-11-01 10:02:18 [STREAM] timezone_offset: -420
+2025-11-01 10:02:18 [STREAM] locale: "en-US"
+2025-11-01 10:02:18 [STREAM] url: "http://localhost:8502/"
+2025-11-01 10:02:18 [STREAM] is_embedded: false
+2025-11-01 10:02:18 [STREAM] color_scheme: "light"
+2025-11-01 10:02:18 [STREAM] )
+2025-11-01 10:02:18 [STREAM] 2025-11-01 10:02:18.382 Disconnecting files for session with ID 01db243d-a9e9-4ac3-a762-3573e1879b77
+2025-11-01 10:02:18 [STREAM] 2025-11-01 10:02:18.382 Sessions still active: dict_keys([])
+2025-11-01 10:02:18 [STREAM] 2025-11-01 10:02:18.383 Files: 0; Sessions with files: 0
+2025-11-01 10:02:19 [STREAM] 2025-11-01 10:02:19.521 Removing orphaned files...
+2025-11-01 10:02:21 [STREAM] 2025-11-01 10:02:21.794 Received the following back message:
+2025-11-01 10:02:21 [STREAM] rerun_script {
+2025-11-01 10:02:21 [STREAM]   widget_states {
+2025-11-01 10:02:21 [STREAM]     widgets {
+2025-11-01 10:02:21 [STREAM]       id: "$$ID-ddc0270cbc3cd2468b6293e097bf75f7-upload_logo_hidden"
+2025-11-01 10:02:21 [STREAM]       file_uploader_state_value {
+2025-11-01 10:02:21 [STREAM]       }
+2025-11-01 10:02:21 [STREAM]     }
+2025-11-01 10:02:21 [STREAM]     widgets {
+2025-11-01 10:02:21 [STREAM]       id: "$$ID-163960d6a02d16629fcb6a17e7682c68-btn_start_build_now"
+2025-11-01 10:02:21 [STREAM]       trigger_value: true
+2025-11-01 10:02:21 [STREAM]     }
+2025-11-01 10:02:21 [STREAM]   }
+2025-11-01 10:02:21 [STREAM]   page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+2025-11-01 10:02:21 [STREAM]   cached_message_hashes: "27d2e897be5ce95d9e50eced825033d7"
+2025-11-01 10:02:21 [STREAM]   context_info {
+2025-11-01 10:02:21 [STREAM]     timezone: "Asia/Bangkok"
+2025-11-01 10:02:21 [STREAM]     timezone_offset: -420
+2025-11-01 10:02:21 [STREAM]     locale: "en-US"
+2025-11-01 10:02:21 [STREAM]     url: "http://localhost:8502/"
+2025-11-01 10:02:21 [STREAM]     is_embedded: false
+2025-11-01 10:02:21 [STREAM]     color_scheme: "light"
+2025-11-01 10:02:21 [STREAM]   }
+2025-11-01 10:02:21 [STREAM] }
+2025-11-01 10:02:21 [STREAM] 
+2025-11-01 10:02:21 [STREAM] 2025-11-01 10:02:21.795 Beginning script thread
+2025-11-01 10:02:21 [STREAM] 2025-11-01 10:02:21.795 Running script RerunData(widget_states=widgets {
+2025-11-01 10:02:21 [STREAM]   id: "$$ID-ddc0270cbc3cd2468b6293e097bf75f7-upload_logo_hidden"
+2025-11-01 10:02:21 [STREAM]   file_uploader_state_value {
+2025-11-01 10:02:21 [STREAM]   }
+2025-11-01 10:02:21 [STREAM] }
+2025-11-01 10:02:21 [STREAM] widgets {
+2025-11-01 10:02:21 [STREAM]   id: "$$ID-163960d6a02d16629fcb6a17e7682c68-btn_start_build_now"
+2025-11-01 10:02:21 [STREAM]   trigger_value: true
+2025-11-01 10:02:21 [STREAM] }
+2025-11-01 10:02:21 [STREAM] , page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', cached_message_hashes={'27d2e897be5ce95d9e50eced825033d7'}, context_info=timezone: "Asia/Bangkok"
+2025-11-01 10:02:21 [STREAM] timezone_offset: -420
+2025-11-01 10:02:21 [STREAM] locale: "en-US"
+2025-11-01 10:02:21 [STREAM] url: "http://localhost:8502/"
+2025-11-01 10:02:21 [STREAM] is_embedded: false
+2025-11-01 10:02:21 [STREAM] color_scheme: "light"
+2025-11-01 10:02:21 [STREAM] )
+2025-11-01 10:02:21 [STREAM] 2025-11-01 10:02:21.795 Disconnecting files for session with ID 01db243d-a9e9-4ac3-a762-3573e1879b77
+2025-11-01 10:02:21 [STREAM] 2025-11-01 10:02:21.795 Sessions still active: dict_keys([])
+2025-11-01 10:02:21 [STREAM] 2025-11-01 10:02:21.795 Files: 0; Sessions with files: 0
+2025-11-01 10:02:21 [STREAM] 2025-11-01 10:02:21.863 Sending cached message ref (hash=27d2e897be5ce95d9e50eced825033d7)
+2025-11-01 10:02:21 [STREAM] 2025-11-01 10:02:21.867 Removing orphaned files...
+2025-11-01 10:02:22 [STREAM] 2025-11-01 10:02:21.925 Running script RerunData(page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', cached_message_hashes={'27d2e897be5ce95d9e50eced825033d7'}, context_info=timezone: "Asia/Bangkok"
+2025-11-01 10:02:22 [STREAM] timezone_offset: -420
+2025-11-01 10:02:22 [STREAM] locale: "en-US"
+2025-11-01 10:02:22 [STREAM] url: "http://localhost:8502/"
+2025-11-01 10:02:22 [STREAM] is_embedded: false
+2025-11-01 10:02:22 [STREAM] color_scheme: "light"
+2025-11-01 10:02:22 [STREAM] )
+2025-11-01 10:02:22 [STREAM] 2025-11-01 10:02:21.926 Disconnecting files for session with ID 01db243d-a9e9-4ac3-a762-3573e1879b77
+2025-11-01 10:02:22 [STREAM] 2025-11-01 10:02:21.926 Sessions still active: dict_keys([])
+2025-11-01 10:02:22 [STREAM] 2025-11-01 10:02:21.926 Files: 0; Sessions with files: 0
+2025-11-01 10:02:22 [STREAM] 2025-11-01 10:02:21.958 Removing orphaned files...
+2025-11-01 10:02:24 [STREAM] 2025-11-01 10:02:24.556 AppSession initialized (id=57d8d217-03d6-4178-9b93-366a3e538a47)
+2025-11-01 10:02:24 [STREAM] 2025-11-01 10:02:24.556 Created new session for client 135411181089984. Session ID: 57d8d217-03d6-4178-9b93-366a3e538a47
+2025-11-01 10:02:24 [STREAM] 2025-11-01 10:02:24.556 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:02:24 [STREAM] 2025-11-01 10:02:24.569 Received the following back message:
+2025-11-01 10:02:24 [STREAM] rerun_script {
+2025-11-01 10:02:24 [STREAM]   query_string: "agent=credit&stage=login"
+2025-11-01 10:02:24 [STREAM]   widget_states {
+2025-11-01 10:02:24 [STREAM]   }
+2025-11-01 10:02:24 [STREAM]   context_info {
+2025-11-01 10:02:24 [STREAM]     timezone: "Asia/Bangkok"
+2025-11-01 10:02:24 [STREAM]     timezone_offset: -420
+2025-11-01 10:02:24 [STREAM]     locale: "en-US"
+2025-11-01 10:02:24 [STREAM]     url: "http://localhost:8502/"
+2025-11-01 10:02:24 [STREAM]     is_embedded: false
+2025-11-01 10:02:24 [STREAM]     color_scheme: "light"
+2025-11-01 10:02:24 [STREAM]   }
+2025-11-01 10:02:24 [STREAM] }
+2025-11-01 10:02:24 [STREAM] 
+2025-11-01 10:02:24 [STREAM] 2025-11-01 10:02:24.569 Beginning script thread
+2025-11-01 10:02:24 [STREAM] 2025-11-01 10:02:24.570 Running script RerunData(query_string='agent=credit&stage=login', widget_states=, context_info=timezone: "Asia/Bangkok"
+2025-11-01 10:02:24 [STREAM] timezone_offset: -420
+2025-11-01 10:02:24 [STREAM] locale: "en-US"
+2025-11-01 10:02:24 [STREAM] url: "http://localhost:8502/"
+2025-11-01 10:02:24 [STREAM] is_embedded: false
+2025-11-01 10:02:24 [STREAM] color_scheme: "light"
+2025-11-01 10:02:24 [STREAM] )
+2025-11-01 10:02:24 [STREAM] 2025-11-01 10:02:24.570 Disconnecting files for session with ID 57d8d217-03d6-4178-9b93-366a3e538a47
+2025-11-01 10:02:24 [STREAM] 2025-11-01 10:02:24.570 Sessions still active: dict_keys([])
+2025-11-01 10:02:24 [STREAM] 2025-11-01 10:02:24.570 Files: 0; Sessions with files: 0
+2025-11-01 10:02:24 [STREAM] 2025-11-01 10:02:24.574 Removing orphaned files...
+2025-11-01 10:02:24 [STREAM] 2025-11-01 10:02:24.620 Running script RerunData(page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+2025-11-01 10:02:24 [STREAM] timezone_offset: -420
+2025-11-01 10:02:24 [STREAM] locale: "en-US"
+2025-11-01 10:02:24 [STREAM] url: "http://localhost:8502/"
+2025-11-01 10:02:24 [STREAM] is_embedded: false
+2025-11-01 10:02:24 [STREAM] color_scheme: "light"
+2025-11-01 10:02:24 [STREAM] )
+2025-11-01 10:02:24 [STREAM] 2025-11-01 10:02:24.620 Disconnecting files for session with ID 57d8d217-03d6-4178-9b93-366a3e538a47
+2025-11-01 10:02:24 [STREAM] 2025-11-01 10:02:24.620 Sessions still active: dict_keys([])
+2025-11-01 10:02:24 [STREAM] 2025-11-01 10:02:24.620 Files: 0; Sessions with files: 0
+2025-11-01 10:02:24 [STREAM] 2025-11-01 10:02:24.633 Removing orphaned files...
+2025-11-01 10:02:27 [STREAM] 2025-11-01 10:02:27.371 Received the following back message:
+2025-11-01 10:02:27 [STREAM] rerun_script {
+2025-11-01 10:02:27 [STREAM]   widget_states {
+2025-11-01 10:02:27 [STREAM]     widgets {
+2025-11-01 10:02:27 [STREAM]       id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+2025-11-01 10:02:27 [STREAM]       string_value: "dzoan"
+2025-11-01 10:02:27 [STREAM]     }
+2025-11-01 10:02:27 [STREAM]     widgets {
+2025-11-01 10:02:27 [STREAM]       id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+2025-11-01 10:02:27 [STREAM]       string_value: ""
+2025-11-01 10:02:27 [STREAM]     }
+2025-11-01 10:02:27 [STREAM]     widgets {
+2025-11-01 10:02:27 [STREAM]       id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+2025-11-01 10:02:27 [STREAM]       string_value: ""
+2025-11-01 10:02:27 [STREAM]     }
+2025-11-01 10:02:27 [STREAM]   }
+2025-11-01 10:02:27 [STREAM]   page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+2025-11-01 10:02:27 [STREAM]   context_info {
+2025-11-01 10:02:27 [STREAM]     timezone: "Asia/Bangkok"
+2025-11-01 10:02:27 [STREAM]     timezone_offset: -420
+2025-11-01 10:02:27 [STREAM]     locale: "en-US"
+2025-11-01 10:02:27 [STREAM]     url: "http://localhost:8502/"
+2025-11-01 10:02:27 [STREAM]     is_embedded: false
+2025-11-01 10:02:27 [STREAM]     color_scheme: "light"
+2025-11-01 10:02:27 [STREAM]   }
+2025-11-01 10:02:27 [STREAM] }
+2025-11-01 10:02:27 [STREAM] 
+2025-11-01 10:02:27 [STREAM] 2025-11-01 10:02:27.371 Beginning script thread
+2025-11-01 10:02:27 [STREAM] 2025-11-01 10:02:27.371 Running script RerunData(widget_states=widgets {
+2025-11-01 10:02:27 [STREAM]   id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+2025-11-01 10:02:27 [STREAM]   string_value: "dzoan"
+2025-11-01 10:02:27 [STREAM] }
+2025-11-01 10:02:27 [STREAM] widgets {
+2025-11-01 10:02:27 [STREAM]   id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+2025-11-01 10:02:27 [STREAM]   string_value: ""
+2025-11-01 10:02:27 [STREAM] }
+2025-11-01 10:02:27 [STREAM] widgets {
+2025-11-01 10:02:27 [STREAM]   id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+2025-11-01 10:02:27 [STREAM]   string_value: ""
+2025-11-01 10:02:27 [STREAM] }
+2025-11-01 10:02:27 [STREAM] , page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+2025-11-01 10:02:27 [STREAM] timezone_offset: -420
+2025-11-01 10:02:27 [STREAM] locale: "en-US"
+2025-11-01 10:02:27 [STREAM] url: "http://localhost:8502/"
+2025-11-01 10:02:27 [STREAM] is_embedded: false
+2025-11-01 10:02:27 [STREAM] color_scheme: "light"
+2025-11-01 10:02:27 [STREAM] )
+2025-11-01 10:02:27 [STREAM] 2025-11-01 10:02:27.371 Disconnecting files for session with ID 57d8d217-03d6-4178-9b93-366a3e538a47
+2025-11-01 10:02:27 [STREAM] 2025-11-01 10:02:27.371 Sessions still active: dict_keys([])
+2025-11-01 10:02:27 [STREAM] 2025-11-01 10:02:27.372 Files: 0; Sessions with files: 0
+2025-11-01 10:02:27 [STREAM] 2025-11-01 10:02:27.382 Removing orphaned files...
+2025-11-01 10:02:29 [STREAM] 2025-11-01 10:02:29.226 Received the following back message:
+2025-11-01 10:02:29 [STREAM] rerun_script {
+2025-11-01 10:02:29 [STREAM]   widget_states {
+2025-11-01 10:02:29 [STREAM]     widgets {
+2025-11-01 10:02:29 [STREAM]       id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+2025-11-01 10:02:29 [STREAM]       string_value: "dzoan"
+2025-11-01 10:02:29 [STREAM]     }
+2025-11-01 10:02:29 [STREAM]     widgets {
+2025-11-01 10:02:29 [STREAM]       id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+2025-11-01 10:02:29 [STREAM]       string_value: "dzoan@gmail.com"
+2025-11-01 10:02:29 [STREAM]     }
+2025-11-01 10:02:29 [STREAM]     widgets {
+2025-11-01 10:02:29 [STREAM]       id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+2025-11-01 10:02:29 [STREAM]       string_value: ""
+2025-11-01 10:02:29 [STREAM]     }
+2025-11-01 10:02:29 [STREAM]   }
+2025-11-01 10:02:29 [STREAM]   page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+2025-11-01 10:02:29 [STREAM]   context_info {
+2025-11-01 10:02:29 [STREAM]     timezone: "Asia/Bangkok"
+2025-11-01 10:02:29 [STREAM]     timezone_offset: -420
+2025-11-01 10:02:29 [STREAM]     locale: "en-US"
+2025-11-01 10:02:29 [STREAM]     url: "http://localhost:8502/"
+2025-11-01 10:02:29 [STREAM]     is_embedded: false
+2025-11-01 10:02:29 [STREAM]     color_scheme: "light"
+2025-11-01 10:02:29 [STREAM]   }
+2025-11-01 10:02:29 [STREAM] }
+2025-11-01 10:02:29 [STREAM] 
+2025-11-01 10:02:29 [STREAM] 2025-11-01 10:02:29.227 Beginning script thread
+2025-11-01 10:02:29 [STREAM] 2025-11-01 10:02:29.227 Running script RerunData(widget_states=widgets {
+2025-11-01 10:02:29 [STREAM]   id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+2025-11-01 10:02:29 [STREAM]   string_value: "dzoan"
+2025-11-01 10:02:29 [STREAM] }
+2025-11-01 10:02:29 [STREAM] widgets {
+2025-11-01 10:02:29 [STREAM]   id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+2025-11-01 10:02:29 [STREAM]   string_value: "dzoan@gmail.com"
+2025-11-01 10:02:29 [STREAM] }
+2025-11-01 10:02:29 [STREAM] widgets {
+2025-11-01 10:02:29 [STREAM]   id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+2025-11-01 10:02:29 [STREAM]   string_value: ""
+2025-11-01 10:02:29 [STREAM] }
+2025-11-01 10:02:29 [STREAM] , page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+2025-11-01 10:02:29 [STREAM] timezone_offset: -420
+2025-11-01 10:02:29 [STREAM] locale: "en-US"
+2025-11-01 10:02:29 [STREAM] url: "http://localhost:8502/"
+2025-11-01 10:02:29 [STREAM] is_embedded: false
+2025-11-01 10:02:29 [STREAM] color_scheme: "light"
+2025-11-01 10:02:29 [STREAM] )
+2025-11-01 10:02:29 [STREAM] 2025-11-01 10:02:29.227 Disconnecting files for session with ID 57d8d217-03d6-4178-9b93-366a3e538a47
+2025-11-01 10:02:29 [STREAM] 2025-11-01 10:02:29.227 Sessions still active: dict_keys([])
+2025-11-01 10:02:29 [STREAM] 2025-11-01 10:02:29.227 Files: 0; Sessions with files: 0
+2025-11-01 10:02:29 [STREAM] 2025-11-01 10:02:29.237 Removing orphaned files...
+2025-11-01 10:02:30 [STREAM] 2025-11-01 10:02:30.731 Received the following back message:
+2025-11-01 10:02:30 [STREAM] rerun_script {
+2025-11-01 10:02:30 [STREAM]   widget_states {
+2025-11-01 10:02:30 [STREAM]     widgets {
+2025-11-01 10:02:30 [STREAM]       id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+2025-11-01 10:02:30 [STREAM]       string_value: "dzoan"
+2025-11-01 10:02:30 [STREAM]     }
+2025-11-01 10:02:30 [STREAM]     widgets {
+2025-11-01 10:02:30 [STREAM]       id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+2025-11-01 10:02:30 [STREAM]       string_value: "dzoan@gmail.com"
+2025-11-01 10:02:30 [STREAM]     }
+2025-11-01 10:02:30 [STREAM]     widgets {
+2025-11-01 10:02:30 [STREAM]       id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+2025-11-01 10:02:30 [STREAM]       string_value: "dadda"
+2025-11-01 10:02:30 [STREAM]     }
+2025-11-01 10:02:30 [STREAM]   }
+2025-11-01 10:02:30 [STREAM]   page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+2025-11-01 10:02:30 [STREAM]   context_info {
+2025-11-01 10:02:30 [STREAM]     timezone: "Asia/Bangkok"
+2025-11-01 10:02:30 [STREAM]     timezone_offset: -420
+2025-11-01 10:02:30 [STREAM]     locale: "en-US"
+2025-11-01 10:02:30 [STREAM]     url: "http://localhost:8502/"
+2025-11-01 10:02:30 [STREAM]     is_embedded: false
+2025-11-01 10:02:30 [STREAM]     color_scheme: "light"
+2025-11-01 10:02:30 [STREAM]   }
+2025-11-01 10:02:30 [STREAM] }
+2025-11-01 10:02:30 [STREAM] 
+2025-11-01 10:02:30 [STREAM] 2025-11-01 10:02:30.732 Beginning script thread
+2025-11-01 10:02:30 [STREAM] 2025-11-01 10:02:30.732 Running script RerunData(widget_states=widgets {
+2025-11-01 10:02:30 [STREAM]   id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+2025-11-01 10:02:30 [STREAM]   string_value: "dzoan"
+2025-11-01 10:02:30 [STREAM] }
+2025-11-01 10:02:30 [STREAM] widgets {
+2025-11-01 10:02:30 [STREAM]   id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+2025-11-01 10:02:30 [STREAM]   string_value: "dzoan@gmail.com"
+2025-11-01 10:02:30 [STREAM] }
+2025-11-01 10:02:30 [STREAM] widgets {
+2025-11-01 10:02:30 [STREAM]   id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+2025-11-01 10:02:30 [STREAM]   string_value: "dadda"
+2025-11-01 10:02:30 [STREAM] }
+2025-11-01 10:02:30 [STREAM] , page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+2025-11-01 10:02:30 [STREAM] timezone_offset: -420
+2025-11-01 10:02:30 [STREAM] locale: "en-US"
+2025-11-01 10:02:30 [STREAM] url: "http://localhost:8502/"
+2025-11-01 10:02:30 [STREAM] is_embedded: false
+2025-11-01 10:02:30 [STREAM] color_scheme: "light"
+2025-11-01 10:02:30 [STREAM] )
+2025-11-01 10:02:30 [STREAM] 2025-11-01 10:02:30.732 Disconnecting files for session with ID 57d8d217-03d6-4178-9b93-366a3e538a47
+2025-11-01 10:02:30 [STREAM] 2025-11-01 10:02:30.732 Sessions still active: dict_keys([])
+2025-11-01 10:02:30 [STREAM] 2025-11-01 10:02:30.732 Files: 0; Sessions with files: 0
+2025-11-01 10:02:30 [STREAM] 2025-11-01 10:02:30.740 Removing orphaned files...
+2025-11-01 10:02:30 [STREAM] 2025-11-01 10:02:30.830 Received the following back message:
+2025-11-01 10:02:30 [STREAM] rerun_script {
+2025-11-01 10:02:30 [STREAM]   widget_states {
+2025-11-01 10:02:30 [STREAM]     widgets {
+2025-11-01 10:02:30 [STREAM]       id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+2025-11-01 10:02:30 [STREAM]       string_value: "dzoan"
+2025-11-01 10:02:30 [STREAM]     }
+2025-11-01 10:02:30 [STREAM]     widgets {
+2025-11-01 10:02:30 [STREAM]       id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+2025-11-01 10:02:30 [STREAM]       string_value: "dzoan@gmail.com"
+2025-11-01 10:02:30 [STREAM]     }
+2025-11-01 10:02:30 [STREAM]     widgets {
+2025-11-01 10:02:30 [STREAM]       id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+2025-11-01 10:02:30 [STREAM]       string_value: "dadda"
+2025-11-01 10:02:30 [STREAM]     }
+2025-11-01 10:02:30 [STREAM]     widgets {
+2025-11-01 10:02:30 [STREAM]       id: "$$ID-9735ad692572309cd313a7098f129c21-btn_login_submit"
+2025-11-01 10:02:30 [STREAM]       trigger_value: true
+2025-11-01 10:02:30 [STREAM]     }
+2025-11-01 10:02:30 [STREAM]   }
+2025-11-01 10:02:30 [STREAM]   page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+2025-11-01 10:02:30 [STREAM]   context_info {
+2025-11-01 10:02:30 [STREAM]     timezone: "Asia/Bangkok"
+2025-11-01 10:02:30 [STREAM]     timezone_offset: -420
+2025-11-01 10:02:30 [STREAM]     locale: "en-US"
+2025-11-01 10:02:30 [STREAM]     url: "http://localhost:8502/"
+2025-11-01 10:02:30 [STREAM]     is_embedded: false
+2025-11-01 10:02:30 [STREAM]     color_scheme: "light"
+2025-11-01 10:02:30 [STREAM]   }
+2025-11-01 10:02:30 [STREAM] }
+2025-11-01 10:02:30 [STREAM] 
+2025-11-01 10:02:30 [STREAM] 2025-11-01 10:02:30.831 Beginning script thread
+2025-11-01 10:02:30 [STREAM] 2025-11-01 10:02:30.831 Running script RerunData(widget_states=widgets {
+2025-11-01 10:02:30 [STREAM]   id: "$$ID-f9687cc61148c783a3a6e980da54236d-None"
+2025-11-01 10:02:30 [STREAM]   string_value: "dzoan"
+2025-11-01 10:02:30 [STREAM] }
+2025-11-01 10:02:30 [STREAM] widgets {
+2025-11-01 10:02:30 [STREAM]   id: "$$ID-add43ac780afd94917bef0fc026148d4-None"
+2025-11-01 10:02:30 [STREAM]   string_value: "dzoan@gmail.com"
+2025-11-01 10:02:30 [STREAM] }
+2025-11-01 10:02:30 [STREAM] widgets {
+2025-11-01 10:02:30 [STREAM]   id: "$$ID-ce15e20e59cfd4198344783015760699-None"
+2025-11-01 10:02:30 [STREAM]   string_value: "dadda"
+2025-11-01 10:02:30 [STREAM] }
+2025-11-01 10:02:30 [STREAM] widgets {
+2025-11-01 10:02:30 [STREAM]   id: "$$ID-9735ad692572309cd313a7098f129c21-btn_login_submit"
+2025-11-01 10:02:30 [STREAM]   trigger_value: true
+2025-11-01 10:02:30 [STREAM] }
+2025-11-01 10:02:30 [STREAM] , page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+2025-11-01 10:02:30 [STREAM] timezone_offset: -420
+2025-11-01 10:02:30 [STREAM] locale: "en-US"
+2025-11-01 10:02:30 [STREAM] url: "http://localhost:8502/"
+2025-11-01 10:02:30 [STREAM] is_embedded: false
+2025-11-01 10:02:30 [STREAM] color_scheme: "light"
+2025-11-01 10:02:30 [STREAM] )
+2025-11-01 10:02:30 [STREAM] 2025-11-01 10:02:30.831 Disconnecting files for session with ID 57d8d217-03d6-4178-9b93-366a3e538a47
+2025-11-01 10:02:30 [STREAM] 2025-11-01 10:02:30.831 Sessions still active: dict_keys([])
+2025-11-01 10:02:30 [STREAM] 2025-11-01 10:02:30.831 Files: 0; Sessions with files: 0
+2025-11-01 10:02:30 [STREAM] 2025-11-01 10:02:30.840 Uncaught app execution
+2025-11-01 10:02:30 [STREAM] Traceback (most recent call last):
+2025-11-01 10:02:30 [STREAM]   File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+2025-11-01 10:02:30 [STREAM]     result = func()
+2025-11-01 10:02:30 [STREAM]   File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 667, in code_to_exec
+2025-11-01 10:02:30 [STREAM]     _mpa_v1(self._main_script_path)
+2025-11-01 10:02:30 [STREAM]   File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 165, in _mpa_v1
+2025-11-01 10:02:30 [STREAM]     page.run()
+2025-11-01 10:02:30 [STREAM]   File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/navigation/page.py", line 300, in run
+2025-11-01 10:02:30 [STREAM]     exec(code, module.__dict__)  # noqa: S102
+2025-11-01 1

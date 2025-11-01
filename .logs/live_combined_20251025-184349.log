@@ -1,0 +1,45 @@
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251025-184349.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251025-184349.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251025-184349.log <==
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [98938] using WatchFiles
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251025-184349.log <==
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251025-184349.log <==
+INFO:     Started server process [98948]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251025-184349.log <==
+2025-10-25 18:44:21.370 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 816, in <module>
+    raw_path = save_to_runs(raw_df, "synthetic_raw")
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 331, in save_to_runs
+    fpath = os.path.join(RUNS_DIR, fname)
+NameError: name 'RUNS_DIR' is not defined
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251025-184349.log <==
+INFO:     Shutting down
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251025-184349.log <==
+  Stopping...
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251025-184349.log <==
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [98948]
+INFO:     Stopping reloader process [98938]

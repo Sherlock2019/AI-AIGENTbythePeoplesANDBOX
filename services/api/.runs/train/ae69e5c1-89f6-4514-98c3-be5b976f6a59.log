@@ -1,9 +1,9 @@
-[train] job=ae69e5c1-89f6-4514-98c3-be5b976f6a59 cutoff=2024-01-01 base=['/home/dzoan/demo-library/services/api/.runs/latest/results.csv']
+[train] job=ae69e5c1-89f6-4514-98c3-be5b976f6a59 cutoff=2024-01-01 base=['/home/dzoan/credit-appraisal-agent-poc/services/api/.runs/latest/results.csv']
 Traceback (most recent call last):
-  File "/home/dzoan/demo-library/services/train/train_credit.py", line 129, in <module>
+  File "/home/dzoan/credit-appraisal-agent-poc/services/train/train_credit.py", line 129, in <module>
     main()
-  File "/home/dzoan/demo-library/services/train/train_credit.py", line 123, in main
+  File "/home/dzoan/credit-appraisal-agent-poc/services/train/train_credit.py", line 123, in main
     df, feat_cols = build_training_frame(base_csvs, cutoff)
-  File "/home/dzoan/demo-library/services/train/train_credit.py", line 56, in build_training_frame
+  File "/home/dzoan/credit-appraisal-agent-poc/services/train/train_credit.py", line 56, in build_training_frame
     raise RuntimeError("No labels in feedback yet. Append feedback rows first.")
 RuntimeError: No labels in feedback yet. Append feedback rows first.

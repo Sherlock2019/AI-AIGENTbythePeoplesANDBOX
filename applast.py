@@ -23,7 +23,7 @@ except Exception:  # ModuleNotFoundError or others
 # ─────────────────────────────────────────────
 # CONFIG (shared)
 DEFAULT_API_URL = os.getenv("API_URL", "http://localhost:8090")
-RUNS_DIR = os.path.expanduser("~/demo-library/services/api/.runs")
+RUNS_DIR = os.path.expanduser("~/credit-appraisal-agent-poc/services/api/.runs")
 os.makedirs(RUNS_DIR, exist_ok=True)
 
 # Base policies

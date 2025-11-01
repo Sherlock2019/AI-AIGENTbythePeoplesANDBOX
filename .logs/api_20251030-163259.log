@@ -1,0 +1,106 @@
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [110323] using WatchFiles
+INFO:     Started server process [110333]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:53674 - "GET /health HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but StandardScaler was fitted with feature names
+  warnings.warn(
+INFO:     127.0.0.1:53690 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53698 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53702 - "GET /v1/runs/credit_appraisal/%3CRUN_ID%3E/report?format=csv HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53706 - "GET /v1/runs/credit_appraisal/%3CRUN_ID%3E/report?format=json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53710 - "GET /v1/runs/asset_appraisal/%3CASSET_RUN_ID%3E/report?format=json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49480 - "GET /health HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but StandardScaler was fitted with feature names
+  warnings.warn(
+INFO:     127.0.0.1:53630 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53634 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but StandardScaler was fitted with feature names
+  warnings.warn(
+INFO:     127.0.0.1:54182 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42904 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42272 - "GET /v1/runs/credit_appraisal/%3CRUN_ID%3E/report?format=csv HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:45478 - "GET /v1/runs/credit_appraisal/%3CRUN_ID%3E/report?format=json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49428 - "GET /v1/runs/asset_appraisal/%3CASSET_RUN_ID%3E/report?format=json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53082 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53098 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53102 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53104 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53106 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53110 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53118 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53124 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34108 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but StandardScaler was fitted with feature names
+  warnings.warn(
+INFO:     127.0.0.1:34112 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34124 - "GET /v1/runs/run_1761817106/report?format=csv HTTP/1.1" 404 Not Found
+WARNING:  WatchFiles detected changes in 'tests/test_api_e2e.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [110333]
+WARNING:  WatchFiles detected changes in 'agents/credit_appraisal/agent.py', 'services/api/routers/agents.py', 'services/api/routers/settings.py', 'services/api/routers/admin.py', 'services/api/adapters/llm_adapters.py', 'services/api/main.py', 'agent_platform/agent_sdk/sdk.py', 'agents/credit_appraisal/model_utils.py', 'services/api/routers/asset_appraisal.py', 'services/api/routers/training.py', 'agents/asset_appraisal/__init__.py', 'services/api/routers/runs.py', 'agent_platform/agent_sdk/__init__.py', 'scripts/generate_training_dataset.py', 'services/api/routers/export.py', 'services/api/routers/reports.py', 'services/ui/app.py', 'services/api/adapters/__init__.py', 'agents/credit_appraisal/__init__.py', 'services/api/routers/system.py', 'agents/asset_appraisal/agent.py', 'services/train/train_credit.py', 'services/ui/asset_appraisal.py'. Reloading...
+INFO:     Started server process [122094]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Started server process [122125]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:47236 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47236 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38782 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38786 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38798 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38814 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38822 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38826 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33332 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but StandardScaler was fitted with feature names
+  warnings.warn(
+INFO:     127.0.0.1:33342 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33346 - "GET /v1/runs/run_1761817267/report?format=csv HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33360 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59812 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59818 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35444 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35452 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35468 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35480 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35486 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35494 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54180 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54192 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54208 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54210 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40670 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43112 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46262 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35398 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35414 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60672 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60688 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60700 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but StandardScaler was fitted with feature names
+  warnings.warn(
+INFO:     127.0.0.1:60714 - "POST /v1/agents/credit_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60718 - "GET /v1/runs/run_1761817541/report?format=csv HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60722 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'services/ui/asset_appraisal.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [122125]
+INFO:     Started server process [124530]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/ui/asset_appraisal.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [124530]
+INFO:     Started server process [124627]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.

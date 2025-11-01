@@ -1,0 +1,381 @@
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251026-225621.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251026-225621.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251026-225621.log <==
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc/services/ui']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [279128] using WatchFiles
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251026-225621.log <==
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251026-225621.log <==
+INFO:     Started server process [279138]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251026-225621.log <==
+2025-10-26 22:56:44.822 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:56:52.191 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:56:58.694 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:56:58.698 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:57:00.690 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:57:00.694 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:57:00.756 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:57:00.759 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:57:03.166 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:57:03.168 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:57:03.239 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:57:10.110 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251026-225621.log <==
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44040 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251026-225621.log <==
+2025-10-26 22:57:17.610 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:57:17.965 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:57:21.774 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:57:29.053 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:57:49.599 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:57:55.710 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:58:04.430 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:58:08.045 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:58:12.217 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 22:58:12.287 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 23:00:28.544 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 23:00:28.612 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 23:00:32.326 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 23:00:34.221 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 23:00:36.300 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 23:00:36.368 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2025-10-26 23:00:36.371 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251026-225621.log <==
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [279138]
+INFO:     Stopping reloader process [279128]
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251026-225621.log <==
+  Stopping...

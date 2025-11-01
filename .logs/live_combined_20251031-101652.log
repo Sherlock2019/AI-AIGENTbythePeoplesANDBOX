@@ -1,0 +1,72 @@
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-101652.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-101652.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-101652.log <==
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [368464] using WatchFiles
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-101652.log <==
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-101652.log <==
+INFO:     Started server process [368474]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:49624 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49624 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50166 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50174 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41700 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-101652.log <==
+2025-10-31 10:17:27.975 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-101652.log <==
+INFO:     127.0.0.1:41702 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:59974 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54476 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54480 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54482 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54490 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54500 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58132 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58134 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-101652.log <==
+2025-10-31 10:18:13.088 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251031-101652.log <==
+INFO:     127.0.0.1:58144 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58146 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58156 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:58160 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58168 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58174 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:58188 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58202 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58216 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50828 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50842 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50848 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 404 Not Found
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [368474]
+INFO:     Stopping reloader process [368464]
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251031-101652.log <==
+  Stopping...

@@ -1,0 +1,15 @@
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [83533] using WatchFiles
+INFO:     Started server process [83548]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:50208 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50208 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52720 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52736 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [83548]
+INFO:     Stopping reloader process [83533]

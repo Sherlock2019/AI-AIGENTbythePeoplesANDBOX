@@ -1,0 +1,72 @@
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251101-135938.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251101-135938.log <==
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251101-135938.log <==
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [27399] using WatchFiles
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251101-135938.log <==
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251101-135938.log <==
+INFO:     Started server process [27409]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:37844 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37844 - "GET /openapi.json HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251101-135938.log <==
+2025-11-01 13:59:52 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): localhost:8090
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251101-135938.log <==
+INFO:     127.0.0.1:37870 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251101-135938.log <==
+2025-11-01 13:59:52 DEBUG [urllib3.connectionpool] http://localhost:8090 "GET /v1/training/production_meta HTTP/1.1" 200 246
+2025-11-01 13:59:52.324 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 667, in code_to_exec
+    _mpa_v1(self._main_script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 165, in _mpa_v1
+    page.run()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/navigation/page.py", line 300, in run
+    exec(code, module.__dict__)  # noqa: S102
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 2356, in <module>
+    "user_name": st.session_state["user_info"]["name"],
+KeyError: 'name'
+2025-11-01 14:00:07 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): localhost:8090
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251101-135938.log <==
+INFO:     127.0.0.1:41882 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/ui_20251101-135938.log <==
+2025-11-01 14:00:07 DEBUG [urllib3.connectionpool] http://localhost:8090 "GET /v1/training/production_meta HTTP/1.1" 200 246
+2025-11-01 14:00:07.223 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 667, in code_to_exec
+    _mpa_v1(self._main_script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 165, in _mpa_v1
+    page.run()
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/navigation/page.py", line 300, in run
+    exec(code, module.__dict__)  # noqa: S102
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 2356, in <module>
+    "user_name": st.session_state["user_info"]["name"],
+KeyError: 'name'
+  Stopping...
+
+==> /home/dzoan/credit-appraisal-agent-poc/.logs/api_20251101-135938.log <==
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [27409]
+INFO:     Stopping reloader process [27399]

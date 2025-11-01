@@ -1,0 +1,11 @@
+{
+  "counts": {
+    "denied": 2
+  },
+  "threshold": 0.5,
+  "rule_mode": "classic",
+  "n_rows": 2,
+  "currency_code": null,
+  "currency_symbol": null,
+  "selected_model_name": null
+}

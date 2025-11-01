@@ -1,0 +1,119 @@
+2025-11-01 10:15:56.338 Starting new event loop for server
+2025-11-01 10:15:56.339 Starting server...
+2025-11-01 10:15:56.339 Serving static content from /home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/static
+2025-11-01 10:15:56.346 Server started on port 8502
+2025-11-01 10:15:56.347 Runtime state: RuntimeState.INITIAL -> RuntimeState.NO_SESSIONS_CONNECTED
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+2025-11-01 10:15:56.348 Setting up signal handler
+2025-11-01 10:15:56.996 AppSession initialized (id=e8a3efa5-a8ff-49e6-b3d5-ea55a19166ce)
+2025-11-01 10:15:56.996 Created new session for client 136280535588896. Session ID: e8a3efa5-a8ff-49e6-b3d5-ea55a19166ce
+2025-11-01 10:15:56.996 Runtime state: RuntimeState.NO_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:15:57.024 AppSession initialized (id=f87d04a4-0e8d-476d-a340-2d466a348394)
+2025-11-01 10:15:57.025 Created new session for client 136280535591296. Session ID: f87d04a4-0e8d-476d-a340-2d466a348394
+2025-11-01 10:15:57.025 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:15:57.043 AppSession initialized (id=c89dd61b-72ee-4fdd-9ff0-6c0bf3e3c80e)
+2025-11-01 10:15:57.043 Created new session for client 136280535593600. Session ID: c89dd61b-72ee-4fdd-9ff0-6c0bf3e3c80e
+2025-11-01 10:15:57.043 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:15:57.060 AppSession initialized (id=38d3a762-96d6-4a20-a34c-68e16bc8a136)
+2025-11-01 10:15:57.060 Created new session for client 136280535595904. Session ID: 38d3a762-96d6-4a20-a34c-68e16bc8a136
+2025-11-01 10:15:57.060 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:15:57.077 AppSession initialized (id=0ca4a28d-aa46-48c5-888f-22df15084f70)
+2025-11-01 10:15:57.077 Created new session for client 136280533959872. Session ID: 0ca4a28d-aa46-48c5-888f-22df15084f70
+2025-11-01 10:15:57.077 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:15:57.094 AppSession initialized (id=762846ac-94ad-4f07-a755-5692d5b8bbd3)
+2025-11-01 10:15:57.094 Created new session for client 136280533962176. Session ID: 762846ac-94ad-4f07-a755-5692d5b8bbd3
+2025-11-01 10:15:57.094 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:15:58.224 AppSession initialized (id=f98206a5-bf0d-416a-8a4e-f81ede7392bb)
+2025-11-01 10:15:58.224 Created new session for client 136280533964480. Session ID: f98206a5-bf0d-416a-8a4e-f81ede7392bb
+2025-11-01 10:15:58.224 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:16:00.273 AppSession initialized (id=2daba084-a43d-47f8-a456-20f2559decca)
+2025-11-01 10:16:00.273 Created new session for client 136280535593792. Session ID: 2daba084-a43d-47f8-a456-20f2559decca
+2025-11-01 10:16:00.273 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 10:16:00.277 Received the following back message:
+rerun_script {
+  widget_states {
+  }
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 10:16:00.278 Beginning script thread
+2025-11-01 10:16:00.279 Running script RerunData(widget_states=, context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 10:16:00.279 Disconnecting files for session with ID 2daba084-a43d-47f8-a456-20f2559decca
+2025-11-01 10:16:00.279 Sessions still active: dict_keys([])
+2025-11-01 10:16:00.280 Files: 0; Sessions with files: 0
+2025-11-01 10:16:00.327 Script compilation error
+Traceback (most recent call last):
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 571, in _run_script
+    code = self._script_cache.get_bytecode(script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/script_cache.py", line 72, in get_bytecode
+    filebody = magic.add_magic(filebody, script_path)
+  File "/home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/runtime/scriptrunner/magic.py", line 45, in add_magic
+    tree = ast.parse(code, script_path, "exec")
+  File "/usr/lib/python3.10/ast.py", line 50, in parse
+    return compile(source, filename, mode, flags,
+  File "/home/dzoan/credit-appraisal-agent-poc/services/ui/app.py", line 2232
+    (.venv) dzoan@AAD-PW0C4YQD:~/credit-appraisal-agent-poc$
+     ^
+SyntaxError: invalid syntax
+2025-11-01 10:16:00.333 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+  Stopping...
+2025-11-01 10:17:03.584 Runtime stopping...
+2025-11-01 10:17:03.584 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.STOPPING
+2025-11-01 10:17:03.585 Shutting down (id=e8a3efa5-a8ff-49e6-b3d5-ea55a19166ce)
+2025-11-01 10:17:03.585 Disconnecting files for session with ID e8a3efa5-a8ff-49e6-b3d5-ea55a19166ce
+2025-11-01 10:17:03.585 Sessions still active: dict_keys([])
+2025-11-01 10:17:03.585 Files: 0; Sessions with files: 0
+2025-11-01 10:17:03.585 Removing orphaned files...
+2025-11-01 10:17:03.585 Shutting down (id=f87d04a4-0e8d-476d-a340-2d466a348394)
+2025-11-01 10:17:03.585 Disconnecting files for session with ID f87d04a4-0e8d-476d-a340-2d466a348394
+2025-11-01 10:17:03.585 Sessions still active: dict_keys([])
+2025-11-01 10:17:03.585 Files: 0; Sessions with files: 0
+2025-11-01 10:17:03.585 Removing orphaned files...
+2025-11-01 10:17:03.585 Shutting down (id=38d3a762-96d6-4a20-a34c-68e16bc8a136)
+2025-11-01 10:17:03.585 Disconnecting files for session with ID 38d3a762-96d6-4a20-a34c-68e16bc8a136
+2025-11-01 10:17:03.585 Sessions still active: dict_keys([])
+2025-11-01 10:17:03.585 Files: 0; Sessions with files: 0
+2025-11-01 10:17:03.585 Removing orphaned files...
+2025-11-01 10:17:03.585 Shutting down (id=0ca4a28d-aa46-48c5-888f-22df15084f70)
+2025-11-01 10:17:03.585 Disconnecting files for session with ID 0ca4a28d-aa46-48c5-888f-22df15084f70
+2025-11-01 10:17:03.585 Sessions still active: dict_keys([])
+2025-11-01 10:17:03.585 Files: 0; Sessions with files: 0
+2025-11-01 10:17:03.585 Removing orphaned files...
+2025-11-01 10:17:03.585 Shutting down (id=762846ac-94ad-4f07-a755-5692d5b8bbd3)
+2025-11-01 10:17:03.585 Disconnecting files for session with ID 762846ac-94ad-4f07-a755-5692d5b8bbd3
+2025-11-01 10:17:03.585 Sessions still active: dict_keys([])
+2025-11-01 10:17:03.585 Files: 0; Sessions with files: 0
+2025-11-01 10:17:03.585 Removing orphaned files...
+2025-11-01 10:17:03.585 Shutting down (id=f98206a5-bf0d-416a-8a4e-f81ede7392bb)
+2025-11-01 10:17:03.585 Disconnecting files for session with ID f98206a5-bf0d-416a-8a4e-f81ede7392bb
+2025-11-01 10:17:03.585 Sessions still active: dict_keys([])
+2025-11-01 10:17:03.585 Files: 0; Sessions with files: 0
+2025-11-01 10:17:03.585 Removing orphaned files...
+2025-11-01 10:17:03.585 Shutting down (id=2daba084-a43d-47f8-a456-20f2559decca)
+2025-11-01 10:17:03.585 Disconnecting files for session with ID 2daba084-a43d-47f8-a456-20f2559decca
+2025-11-01 10:17:03.586 Sessions still active: dict_keys([])
+2025-11-01 10:17:03.586 Files: 0; Sessions with files: 0
+2025-11-01 10:17:03.586 Removing orphaned files...
+2025-11-01 10:17:03.586 Shutting down (id=c89dd61b-72ee-4fdd-9ff0-6c0bf3e3c80e)
+2025-11-01 10:17:03.586 Disconnecting files for session with ID c89dd61b-72ee-4fdd-9ff0-6c0bf3e3c80e
+2025-11-01 10:17:03.586 Sessions still active: dict_keys([])
+2025-11-01 10:17:03.586 Files: 0; Sessions with files: 0
+2025-11-01 10:17:03.586 Removing orphaned files...
+2025-11-01 10:17:03.586 Runtime state: RuntimeState.STOPPING -> RuntimeState.STOPPED

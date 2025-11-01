@@ -1,0 +1,12 @@
+{
+  "counts": {
+    "approved": 152,
+    "denied": 48
+  },
+  "threshold": 0.45,
+  "rule_mode": "ndi",
+  "n_rows": 200,
+  "currency_code": "JPY",
+  "currency_symbol": "¥",
+  "selected_model_name": null
+}

@@ -5,14 +5,14 @@ set -euo pipefail
 # RAX AI SANDBOX SNAPSHOT TOOL
 # Creates a timestamped ZIP backup of your full working environment:
 #   - agents/, services/, samples/, models/, .runs/, configs, logs
-# Saved to ~/demo-library/backups/rax_ai_sandbox_snapshot_YYYY-MM-DD_HH-MM.zip
+# Saved to ~/credit-appraisal-agent-poc/backups/rax_ai_sandbox_snapshot_YYYY-MM-DD_HH-MM.zip
 #
 # Usage:
 #   chmod +x backup_snapshot.sh
 #   ./backup_snapshot.sh
 # ──────────────────────────────────────────────────────────────
 
-ROOT="${ROOT:-$HOME/demo-library}"
+ROOT="${ROOT:-$HOME/credit-appraisal-agent-poc}"
 BACKUP_DIR="$ROOT/backups"
 DATESTAMP=$(date '+%Y-%m-%d_%H-%M')
 SNAPSHOT_FILE="$BACKUP_DIR/rax_ai_sandbox_snapshot_${DATESTAMP}.zip"

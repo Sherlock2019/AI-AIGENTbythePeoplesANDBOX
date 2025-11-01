@@ -1,0 +1,25 @@
+# ─────────────────────────────────────────────
+# Connection Manifest — defines which files are linked
+# ─────────────────────────────────────────────
+
+services/ui/pages/asset_appraisal.py:
+  - path: services/api/main.py
+    reason: API entrypoint includes asset & training routers
+  - path: services/api/routers/asset_agents.py
+    reason: Endpoint /v1/asset/run used by UI
+  - path: services/api/routers/training.py
+    reason: Receives feedback via /v1/training/train_asset
+  - path: agents/asset_appraisal/agent.py
+    reason: Implements valuation logic
+  - path: agents/asset_appraisal/__init__.py
+    reason: Exports run_asset_appraisal() for router
+  - path: services/ui/app.py
+    reason: Loads Streamlit multi-stage app
+  - path: /tmp/ai_asset_decisions.csv
+    reason: Runtime output sent to Credit Appraisal Agent
+
+services/ui/pages/credit_appraisal.py:
+  - path: services/api/routers/credit_agents.py
+    reason: Handles /v1/credit/run
+  - path: agents/credit_appraisal/agent.py
+    reason: Model logic

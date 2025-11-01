@@ -8,13 +8,13 @@
 #   ./creditpoc.sh restart      # restart both
 #
 # Env overrides:
-#   REPO=~/demo-library API_PORT=8090 UI_PORT=8502 OLLAMA_HOST=http://localhost:11434 ./creditpoc.sh start
+#   REPO=~/credit-appraisal-agent-poc API_PORT=8090 UI_PORT=8502 OLLAMA_HOST=http://localhost:11434 ./creditpoc.sh start
 
 set -Eeuo pipefail
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Config
-REPO="${REPO:-$HOME/demo-library}"
+REPO="${REPO:-$HOME/credit-appraisal-agent-poc}"
 API_PORT="${API_PORT:-8090}"
 UI_PORT="${UI_PORT:-8502}"
 OLLAMA_HOST="${OLLAMA_HOST:-http://localhost:11434}"

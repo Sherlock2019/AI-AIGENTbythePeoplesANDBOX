@@ -15,7 +15,7 @@ set -euo pipefail
 #   ./smart_file_backup.sh
 # ──────────────────────────────────────────────
 
-ROOT="${ROOT:-$HOME/demo-library}"
+ROOT="${ROOT:-$HOME/credit-appraisal-agent-poc}"
 DATESTAMP=$(date '+%Y-%m-%d_%H-%M')
 echo "📦 Creating per-file backups with timestamp $DATESTAMP"
 echo "→ Workspace: $ROOT"

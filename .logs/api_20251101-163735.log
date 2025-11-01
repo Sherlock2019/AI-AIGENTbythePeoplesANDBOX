@@ -1,0 +1,63 @@
+INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
+INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+INFO:     Started reloader process [79077] using WatchFiles
+INFO:     Started server process [79089]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:50000 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50004 - "GET /v1/training/production_meta?agent_id=asset_appraisal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50014 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50016 - "GET /v1/training/production_meta?agent_id=asset_appraisal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36060 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36076 - "GET /v1/training/production_meta?agent_id=asset_appraisal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36090 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36102 - "GET /v1/training/production_meta?agent_id=asset_appraisal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36114 - "GET /v1/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36118 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36122 - "GET /v1/runs/asset_appraisal_20251101T093757Z_71100e8e/report?format=csv HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36128 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36138 - "GET /v1/training/production_meta?agent_id=asset_appraisal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49408 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49410 - "GET /v1/training/production_meta?agent_id=asset_appraisal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50320 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50324 - "GET /v1/training/production_meta?agent_id=asset_appraisal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50330 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50332 - "GET /v1/training/production_meta?agent_id=asset_appraisal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50338 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50342 - "GET /v1/training/production_meta?agent_id=asset_appraisal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45102 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45108 - "GET /v1/training/production_meta?agent_id=asset_appraisal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45114 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45130 - "GET /v1/training/production_meta?agent_id=asset_appraisal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45146 - "POST /v1/agents/asset_appraisal/training/train_asset HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45156 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45170 - "GET /v1/training/production_meta?agent_id=asset_appraisal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45178 - "POST /v1/agents/asset_appraisal/training/promote_last HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35754 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35756 - "GET /v1/training/production_meta?agent_id=asset_appraisal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40274 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40284 - "GET /v1/training/production_meta?agent_id=asset_appraisal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40300 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40316 - "GET /v1/training/production_meta?agent_id=asset_appraisal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40326 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40336 - "GET /v1/training/production_meta?agent_id=asset_appraisal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40342 - "POST /v1/agents/asset_appraisal/training/promote_last HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40350 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40356 - "GET /v1/training/production_meta?agent_id=asset_appraisal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51214 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51222 - "GET /v1/training/production_meta?agent_id=asset_appraisal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51224 - "POST /v1/agents/asset_appraisal/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51228 - "GET /v1/runs/asset_appraisal_20251101T093902Z_64fd1371/report?format=csv HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51240 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51246 - "GET /v1/training/production_meta?agent_id=asset_appraisal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57984 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57992 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33782 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33794 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33114 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33124 - "GET /v1/training/production_meta HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [79089]
+INFO:     Stopping reloader process [79077]

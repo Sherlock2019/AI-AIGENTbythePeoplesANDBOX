@@ -1,0 +1,419 @@
+2025-11-01 17:07:45.477 Starting new event loop for server
+2025-11-01 17:07:45.478 Starting server...
+2025-11-01 17:07:45.478 Serving static content from /home/dzoan/credit-appraisal-agent-poc/.venv/lib/python3.10/site-packages/streamlit/static
+2025-11-01 17:07:45.484 Server started on port 8502
+2025-11-01 17:07:45.485 Runtime state: RuntimeState.INITIAL -> RuntimeState.NO_SESSIONS_CONNECTED
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8502
+
+2025-11-01 17:07:45.486 Setting up signal handler
+2025-11-01 17:07:46.491 AppSession initialized (id=f8af609e-2d94-4032-90ac-626f0284a155)
+2025-11-01 17:07:46.491 Created new session for client 128223870101792. Session ID: f8af609e-2d94-4032-90ac-626f0284a155
+2025-11-01 17:07:46.492 Runtime state: RuntimeState.NO_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 17:07:46.524 AppSession initialized (id=cac8264f-67e2-4f8e-840d-70e3cc19cf7d)
+2025-11-01 17:07:46.524 Created new session for client 128223870104192. Session ID: cac8264f-67e2-4f8e-840d-70e3cc19cf7d
+2025-11-01 17:07:46.524 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 17:07:46.553 AppSession initialized (id=8ba4e2f2-a97e-4e6e-883a-3c630e13b4ff)
+2025-11-01 17:07:46.553 Created new session for client 128223870106496. Session ID: 8ba4e2f2-a97e-4e6e-883a-3c630e13b4ff
+2025-11-01 17:07:46.553 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 17:07:46.572 AppSession initialized (id=bbf36f13-13c3-4787-a5e6-96411d56d95c)
+2025-11-01 17:07:46.572 Created new session for client 128223868503232. Session ID: bbf36f13-13c3-4787-a5e6-96411d56d95c
+2025-11-01 17:07:46.572 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 17:07:46.603 AppSession initialized (id=b4d5aced-d021-490f-848e-113eb9432698)
+2025-11-01 17:07:46.603 Created new session for client 128223868505536. Session ID: b4d5aced-d021-490f-848e-113eb9432698
+2025-11-01 17:07:46.603 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 17:07:46.620 AppSession initialized (id=c7f46d10-be2d-4b27-aa06-c87aef13d449)
+2025-11-01 17:07:46.620 Created new session for client 128223868507840. Session ID: c7f46d10-be2d-4b27-aa06-c87aef13d449
+2025-11-01 17:07:46.620 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 17:07:46.639 AppSession initialized (id=4646bcff-e2d9-4544-8f95-e4b79c22c505)
+2025-11-01 17:07:46.639 Created new session for client 128223868510144. Session ID: 4646bcff-e2d9-4544-8f95-e4b79c22c505
+2025-11-01 17:07:46.639 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 17:07:46.655 AppSession initialized (id=7648e333-ad30-45c2-af4f-4a9a0df4b8ac)
+2025-11-01 17:07:46.655 Created new session for client 128223868512448. Session ID: 7648e333-ad30-45c2-af4f-4a9a0df4b8ac
+2025-11-01 17:07:46.655 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 17:07:46.674 AppSession initialized (id=5c1db7e7-9541-44cc-a5e6-4d977ad9cfb3)
+2025-11-01 17:07:46.674 Created new session for client 128223868514752. Session ID: 5c1db7e7-9541-44cc-a5e6-4d977ad9cfb3
+2025-11-01 17:07:46.674 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 17:07:46.705 AppSession initialized (id=7307da02-0ea9-4fd3-9732-9fc0b64e12f3)
+2025-11-01 17:07:46.706 Created new session for client 128223868517056. Session ID: 7307da02-0ea9-4fd3-9732-9fc0b64e12f3
+2025-11-01 17:07:46.706 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 17:07:46.781 AppSession initialized (id=f150d621-170f-45ff-af12-7f48fff5c499)
+2025-11-01 17:07:46.782 Created new session for client 128223868666880. Session ID: f150d621-170f-45ff-af12-7f48fff5c499
+2025-11-01 17:07:46.782 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 17:07:46.801 AppSession initialized (id=49abadbf-6dde-468a-96ef-a2023b100ebf)
+2025-11-01 17:07:46.801 Created new session for client 128223868669184. Session ID: 49abadbf-6dde-468a-96ef-a2023b100ebf
+2025-11-01 17:07:46.801 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 17:07:49.384 Received the following back message:
+rerun_script {
+  widget_states {
+    widgets {
+      id: "$$ID-7e24f1ea7748b816f945be419050d8a6-btn_home_agents"
+      trigger_value: true
+    }
+  }
+  page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+  cached_message_hashes: "27d2e897be5ce95d9e50eced825033d7"
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 17:07:49.385 Beginning script thread
+2025-11-01 17:07:49.386 Running script RerunData(widget_states=widgets {
+  id: "$$ID-7e24f1ea7748b816f945be419050d8a6-btn_home_agents"
+  trigger_value: true
+}
+, page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', cached_message_hashes={'27d2e897be5ce95d9e50eced825033d7'}, context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 17:07:49.386 Disconnecting files for session with ID bbf36f13-13c3-4787-a5e6-96411d56d95c
+2025-11-01 17:07:49.386 Sessions still active: dict_keys([])
+2025-11-01 17:07:49.386 Files: 0; Sessions with files: 0
+2025-11-01 17:07:50.131 Sending cached message ref (hash=27d2e897be5ce95d9e50eced825033d7)
+2025-11-01 17:07:50.195 Removing orphaned files...
+2025-11-01 17:07:52.253 Received the following back message:
+rerun_script {
+  widget_states {
+    widgets {
+      id: "$$ID-ddc0270cbc3cd2468b6293e097bf75f7-upload_logo_hidden"
+      file_uploader_state_value {
+      }
+    }
+    widgets {
+      id: "$$ID-163960d6a02d16629fcb6a17e7682c68-btn_start_build_now"
+      trigger_value: true
+    }
+  }
+  page_script_hash: "d2a57dc1d883fd21fb9951699df71cc7"
+  cached_message_hashes: "27d2e897be5ce95d9e50eced825033d7"
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 17:07:52.254 Beginning script thread
+2025-11-01 17:07:52.254 Running script RerunData(widget_states=widgets {
+  id: "$$ID-ddc0270cbc3cd2468b6293e097bf75f7-upload_logo_hidden"
+  file_uploader_state_value {
+  }
+}
+widgets {
+  id: "$$ID-163960d6a02d16629fcb6a17e7682c68-btn_start_build_now"
+  trigger_value: true
+}
+, page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', cached_message_hashes={'27d2e897be5ce95d9e50eced825033d7'}, context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 17:07:52.254 Disconnecting files for session with ID bbf36f13-13c3-4787-a5e6-96411d56d95c
+2025-11-01 17:07:52.254 Sessions still active: dict_keys([])
+2025-11-01 17:07:52.254 Files: 0; Sessions with files: 0
+2025-11-01 17:07:52.344 Sending cached message ref (hash=27d2e897be5ce95d9e50eced825033d7)
+2025-11-01 17:07:52.349 Removing orphaned files...
+2025-11-01 17:07:52.406 Running script RerunData(page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', cached_message_hashes={'27d2e897be5ce95d9e50eced825033d7'}, context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 17:07:52.407 Disconnecting files for session with ID bbf36f13-13c3-4787-a5e6-96411d56d95c
+2025-11-01 17:07:52.408 Sessions still active: dict_keys([])
+2025-11-01 17:07:52.408 Files: 0; Sessions with files: 0
+2025-11-01 17:07:52.421 Removing orphaned files...
+2025-11-01 17:07:56.100 AppSession initialized (id=d283c439-3e43-499f-9ad6-2a8c55557054)
+2025-11-01 17:07:56.100 Created new session for client 128223054288144. Session ID: d283c439-3e43-499f-9ad6-2a8c55557054
+2025-11-01 17:07:56.100 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED
+2025-11-01 17:07:56.114 Received the following back message:
+rerun_script {
+  query_string: "agent=asset&stage=asset_agent"
+  widget_states {
+  }
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 17:07:56.114 Beginning script thread
+2025-11-01 17:07:56.115 Running script RerunData(query_string='agent=asset&stage=asset_agent', widget_states=, context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 17:07:56.115 Disconnecting files for session with ID d283c439-3e43-499f-9ad6-2a8c55557054
+2025-11-01 17:07:56.115 Sessions still active: dict_keys([])
+2025-11-01 17:07:56.115 Files: 0; Sessions with files: 0
+2025-11-01 17:07:56.120 Removing orphaned files...
+2025-11-01 17:07:56.168 Running script RerunData(page_script_hash='d2a57dc1d883fd21fb9951699df71cc7', context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 17:07:56.168 Disconnecting files for session with ID d283c439-3e43-499f-9ad6-2a8c55557054
+2025-11-01 17:07:56.169 Sessions still active: dict_keys([])
+2025-11-01 17:07:56.169 Files: 0; Sessions with files: 0
+2025-11-01 17:07:56.314 Removing orphaned files...
+2025-11-01 17:07:56.376 Running script RerunData(page_script_hash='b72db28f188acedfd30ff7d8fe0a9099', context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 17:07:56.377 Disconnecting files for session with ID d283c439-3e43-499f-9ad6-2a8c55557054
+2025-11-01 17:07:56.377 Sessions still active: dict_keys([])
+2025-11-01 17:07:56.377 Files: 0; Sessions with files: 0
+2025-11-01 17:07:56.487 Removing orphaned files...
+2025-11-01 17:08:00.915 Received the following back message:
+rerun_script {
+  widget_states {
+    widgets {
+      id: "$$ID-50f54bb30cb58413a4b86487f851620e-None"
+      string_value: "X"
+    }
+    widgets {
+      id: "$$ID-046c23c3598f9036386f171bccd48b3e-None"
+      string_value: ""
+    }
+    widgets {
+      id: "$$ID-92835b8a5b2910f78b59f1154be00b8c-None"
+      string_value: ""
+    }
+  }
+  page_script_hash: "b72db28f188acedfd30ff7d8fe0a9099"
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/asset_appraisal"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 17:08:00.916 Beginning script thread
+2025-11-01 17:08:00.916 Running script RerunData(widget_states=widgets {
+  id: "$$ID-50f54bb30cb58413a4b86487f851620e-None"
+  string_value: "X"
+}
+widgets {
+  id: "$$ID-046c23c3598f9036386f171bccd48b3e-None"
+  string_value: ""
+}
+widgets {
+  id: "$$ID-92835b8a5b2910f78b59f1154be00b8c-None"
+  string_value: ""
+}
+, page_script_hash='b72db28f188acedfd30ff7d8fe0a9099', context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/asset_appraisal"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 17:08:00.916 Disconnecting files for session with ID d283c439-3e43-499f-9ad6-2a8c55557054
+2025-11-01 17:08:00.916 Sessions still active: dict_keys([])
+2025-11-01 17:08:00.916 Files: 0; Sessions with files: 0
+2025-11-01 17:08:00.924 Removing orphaned files...
+2025-11-01 17:08:01.046 Received the following back message:
+rerun_script {
+  widget_states {
+    widgets {
+      id: "$$ID-50f54bb30cb58413a4b86487f851620e-None"
+      string_value: "X"
+    }
+    widgets {
+      id: "$$ID-046c23c3598f9036386f171bccd48b3e-None"
+      string_value: ""
+    }
+    widgets {
+      id: "$$ID-92835b8a5b2910f78b59f1154be00b8c-None"
+      string_value: ""
+    }
+    widgets {
+      id: "$$ID-16c28e6970a07dedbf8caac191b1945d-btn_home_asset_nav"
+      trigger_value: true
+    }
+  }
+  page_script_hash: "b72db28f188acedfd30ff7d8fe0a9099"
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/asset_appraisal"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 17:08:01.047 Beginning script thread
+2025-11-01 17:08:01.047 Running script RerunData(widget_states=widgets {
+  id: "$$ID-50f54bb30cb58413a4b86487f851620e-None"
+  string_value: "X"
+}
+widgets {
+  id: "$$ID-046c23c3598f9036386f171bccd48b3e-None"
+  string_value: ""
+}
+widgets {
+  id: "$$ID-92835b8a5b2910f78b59f1154be00b8c-None"
+  string_value: ""
+}
+widgets {
+  id: "$$ID-16c28e6970a07dedbf8caac191b1945d-btn_home_asset_nav"
+  trigger_value: true
+}
+, page_script_hash='b72db28f188acedfd30ff7d8fe0a9099', context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/asset_appraisal"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 17:08:01.047 Disconnecting files for session with ID d283c439-3e43-499f-9ad6-2a8c55557054
+2025-11-01 17:08:01.047 Sessions still active: dict_keys([])
+2025-11-01 17:08:01.047 Files: 0; Sessions with files: 0
+2025-11-01 17:08:01.052 Please replace `st.experimental_set_query_params` with `st.query_params`.
+
+`st.experimental_set_query_params` will be removed after 2024-04-11.
+
+Refer to our [docs page](https://docs.streamlit.io/develop/api-reference/caching-and-state/st.query_params) for more information.
+2025-11-01 17:08:01.054 Removing orphaned files...
+2025-11-01 17:08:02.106 Received the following back message:
+rerun_script {
+  query_string: "stage=landing"
+  widget_states {
+    widgets {
+      id: "$$ID-16c28e6970a07dedbf8caac191b1945d-btn_home_asset_nav"
+      trigger_value: true
+    }
+  }
+  page_script_hash: "b72db28f188acedfd30ff7d8fe0a9099"
+  context_info {
+    timezone: "Asia/Bangkok"
+    timezone_offset: -420
+    locale: "en-US"
+    url: "http://localhost:8502/asset_appraisal"
+    is_embedded: false
+    color_scheme: "light"
+  }
+}
+
+2025-11-01 17:08:02.107 Beginning script thread
+2025-11-01 17:08:02.107 Running script RerunData(query_string='stage=landing', widget_states=widgets {
+  id: "$$ID-16c28e6970a07dedbf8caac191b1945d-btn_home_asset_nav"
+  trigger_value: true
+}
+, page_script_hash='b72db28f188acedfd30ff7d8fe0a9099', context_info=timezone: "Asia/Bangkok"
+timezone_offset: -420
+locale: "en-US"
+url: "http://localhost:8502/asset_appraisal"
+is_embedded: false
+color_scheme: "light"
+)
+2025-11-01 17:08:02.107 Disconnecting files for session with ID d283c439-3e43-499f-9ad6-2a8c55557054
+2025-11-01 17:08:02.107 Sessions still active: dict_keys([])
+2025-11-01 17:08:02.107 Files: 0; Sessions with files: 0
+2025-11-01 17:08:02.113 Please replace `st.experimental_set_query_params` with `st.query_params`.
+
+`st.experimental_set_query_params` will be removed after 2024-04-11.
+
+Refer to our [docs page](https://docs.streamlit.io/develop/api-reference/caching-and-state/st.query_params) for more information.
+2025-11-01 17:08:02.115 Removing orphaned files...
+  Stopping...
+2025-11-01 17:09:20.749 Runtime stopping...
+2025-11-01 17:09:20.749 Runtime state: RuntimeState.ONE_OR_MORE_SESSIONS_CONNECTED -> RuntimeState.STOPPING
+2025-11-01 17:09:20.749 Shutting down (id=f8af609e-2d94-4032-90ac-626f0284a155)
+2025-11-01 17:09:20.749 Disconnecting files for session with ID f8af609e-2d94-4032-90ac-626f0284a155
+2025-11-01 17:09:20.750 Sessions still active: dict_keys([])
+2025-11-01 17:09:20.750 Files: 0; Sessions with files: 0
+2025-11-01 17:09:20.750 Removing orphaned files...
+2025-11-01 17:09:20.750 Shutting down (id=cac8264f-67e2-4f8e-840d-70e3cc19cf7d)
+2025-11-01 17:09:20.750 Disconnecting files for session with ID cac8264f-67e2-4f8e-840d-70e3cc19cf7d
+2025-11-01 17:09:20.750 Sessions still active: dict_keys([])
+2025-11-01 17:09:20.750 Files: 0; Sessions with files: 0
+2025-11-01 17:09:20.750 Removing orphaned files...
+2025-11-01 17:09:20.750 Shutting down (id=8ba4e2f2-a97e-4e6e-883a-3c630e13b4ff)
+2025-11-01 17:09:20.750 Disconnecting files for session with ID 8ba4e2f2-a97e-4e6e-883a-3c630e13b4ff
+2025-11-01 17:09:20.750 Sessions still active: dict_keys([])
+2025-11-01 17:09:20.750 Files: 0; Sessions with files: 0
+2025-11-01 17:09:20.750 Removing orphaned files...
+2025-11-01 17:09:20.750 Shutting down (id=bbf36f13-13c3-4787-a5e6-96411d56d95c)
+2025-11-01 17:09:20.750 Disconnecting files for session with ID bbf36f13-13c3-4787-a5e6-96411d56d95c
+2025-11-01 17:09:20.750 Sessions still active: dict_keys([])
+2025-11-01 17:09:20.750 Files: 0; Sessions with files: 0
+2025-11-01 17:09:20.750 Removing orphaned files...
+2025-11-01 17:09:20.750 Shutting down (id=b4d5aced-d021-490f-848e-113eb9432698)
+2025-11-01 17:09:20.750 Disconnecting files for session with ID b4d5aced-d021-490f-848e-113eb9432698
+2025-11-01 17:09:20.750 Sessions still active: dict_keys([])
+2025-11-01 17:09:20.750 Files: 0; Sessions with files: 0
+2025-11-01 17:09:20.750 Removing orphaned files...
+2025-11-01 17:09:20.750 Shutting down (id=c7f46d10-be2d-4b27-aa06-c87aef13d449)
+2025-11-01 17:09:20.750 Disconnecting files for session with ID c7f46d10-be2d-4b27-aa06-c87aef13d449
+2025-11-01 17:09:20.750 Sessions still active: dict_keys([])
+2025-11-01 17:09:20.751 Files: 0; Sessions with files: 0
+2025-11-01 17:09:20.751 Removing orphaned files...
+2025-11-01 17:09:20.751 Shutting down (id=4646bcff-e2d9-4544-8f95-e4b79c22c505)
+2025-11-01 17:09:20.751 Disconnecting files for session with ID 4646bcff-e2d9-4544-8f95-e4b79c22c505
+2025-11-01 17:09:20.751 Sessions still active: dict_keys([])
+2025-11-01 17:09:20.751 Files: 0; Sessions with files: 0
+2025-11-01 17:09:20.751 Removing orphaned files...
+2025-11-01 17:09:20.751 Shutting down (id=7648e333-ad30-45c2-af4f-4a9a0df4b8ac)
+2025-11-01 17:09:20.751 Disconnecting files for session with ID 7648e333-ad30-45c2-af4f-4a9a0df4b8ac
+2025-11-01 17:09:20.751 Sessions still active: dict_keys([])
+2025-11-01 17:09:20.751 Files: 0; Sessions with files: 0
+2025-11-01 17:09:20.751 Removing orphaned files...
+2025-11-01 17:09:20.751 Shutting down (id=5c1db7e7-9541-44cc-a5e6-4d977ad9cfb3)
+2025-11-01 17:09:20.751 Disconnecting files for session with ID 5c1db7e7-9541-44cc-a5e6-4d977ad9cfb3
+2025-11-01 17:09:20.751 Sessions still active: dict_keys([])
+2025-11-01 17:09:20.751 Files: 0; Sessions with files: 0
+2025-11-01 17:09:20.751 Removing orphaned files...
+2025-11-01 17:09:20.751 Shutting down (id=7307da02-0ea9-4fd3-9732-9fc0b64e12f3)
+2025-11-01 17:09:20.751 Disconnecting files for session with ID 7307da02-0ea9-4fd3-9732-9fc0b64e12f3
+2025-11-01 17:09:20.751 Sessions still active: dict_keys([])
+2025-11-01 17:09:20.751 Files: 0; Sessions with files: 0
+2025-11-01 17:09:20.751 Removing orphaned files...
+2025-11-01 17:09:20.751 Shutting down (id=f150d621-170f-45ff-af12-7f48fff5c499)
+2025-11-01 17:09:20.751 Disconnecting files for session with ID f150d621-170f-45ff-af12-7f48fff5c499
+2025-11-01 17:09:20.751 Sessions still active: dict_keys([])
+2025-11-01 17:09:20.751 Files: 0; Sessions with files: 0
+2025-11-01 17:09:20.751 Removing orphaned files...
+2025-11-01 17:09:20.751 Shutting down (id=49abadbf-6dde-468a-96ef-a2023b100ebf)
+2025-11-01 17:09:20.751 Disconnecting files for session with ID 49abadbf-6dde-468a-96ef-a2023b100ebf
+2025-11-01 17:09:20.752 Sessions still active: dict_keys([])
+2025-11-01 17:09:20.752 Files: 0; Sessions with files: 0
+2025-11-01 17:09:20.752 Removing orphaned files...
+2025-11-01 17:09:20.752 Shutting down (id=d283c439-3e43-499f-9ad6-2a8c55557054)
+2025-11-01 17:09:20.752 Disconnecting files for session with ID d283c439-3e43-499f-9ad6-2a8c55557054
+2025-11-01 17:09:20.752 Sessions still active: dict_keys([])
+2025-11-01 17:09:20.752 Files: 0; Sessions with files: 0
+2025-11-01 17:09:20.752 Removing orphaned files...
+2025-11-01 17:09:20.752 Runtime state: RuntimeState.STOPPING -> RuntimeState.STOPPED

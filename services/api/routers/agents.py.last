@@ -1,0 +1,237 @@
+# services/api/routers/agents.py
+from __future__ import annotations
+
+import os
+import io
+import sys
+from uuid import uuid4
+from pathlib import Path
+from datetime import datetime, timezone
+from typing import Dict, Any, Optional
+
+import pandas as pd
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Request
+from fastapi.responses import JSONResponse
+
+# ─────────────────────────────────────────────────────────────
+# Ensure repo root is on sys.path (so agents.* imports work)
+# This file lives at: <repo>/services/api/routers/agents.py
+# repo_root = parents[2] of this file path.
+# ─────────────────────────────────────────────────────────────
+_THIS = Path(__file__).resolve()
+_REPO_ROOT = _THIS.parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+router = APIRouter(prefix="/v1/agents", tags=["agents"])
+
+# ─────────────────────────────────────────────────────────────
+# Storage for run artifacts (CSV/JSON) + in-memory index
+# ─────────────────────────────────────────────────────────────
+RUNS_DIR = os.path.expanduser(
+    "~/credit-appraisal-agent-poc/services/api/.runs"
+)
+os.makedirs(RUNS_DIR, exist_ok=True)
+
+RUN_INDEX: Dict[str, Dict[str, Any]] = {}
+
+def _ts() -> str:
+    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+
+def _save_run_df(run_id: str, df: pd.DataFrame) -> Dict[str, str]:
+    """
+    Persist outputs and return keys that the UI expects.
+    """
+    csv_path = os.path.join(RUNS_DIR, f"{run_id}.merged.csv")
+    json_path = os.path.join(RUNS_DIR, f"{run_id}.json")
+    df.to_csv(csv_path, index=False)
+    df.to_json(json_path, orient="records")
+    return {"merged_csv": csv_path, "merged_json": json_path}
+
+def _read_csv_bytes(raw: bytes) -> pd.DataFrame:
+    try:
+        return pd.read_csv(io.BytesIO(raw))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"CSV parse error: {e}") from e
+
+# ─────────────────────────────────────────────────────────────
+# Import real runners only (no stubs)
+# ─────────────────────────────────────────────────────────────
+try:
+    from agents.asset_appraisal.runner import run as asset_runner  # type: ignore
+except Exception as e:
+    asset_runner = None
+    _asset_import_error = e
+
+try:
+    from agents.credit_appraisal.runner import run as credit_runner  # type: ignore
+except Exception as e:
+    credit_runner = None
+    _credit_import_error = e
+
+AGENT_REGISTRY: Dict[str, Dict[str, Any]] = {
+    "asset_appraisal": {
+        "id": "asset_appraisal",
+        "display_name": "Asset Appraisal Agent",
+        "aliases": ["asset"],
+        "runner": asset_runner,
+    },
+    "credit_appraisal": {
+        "id": "credit_appraisal",
+        "display_name": "Credit Appraisal Agent",
+        "aliases": ["credit"],
+        "runner": credit_runner,
+    },
+}
+
+# alias -> canonical
+_ALIAS_TO_CANON: Dict[str, str] = {}
+for canon, meta in AGENT_REGISTRY.items():
+    _ALIAS_TO_CANON[canon] = canon
+    for al in meta.get("aliases", []):
+        _ALIAS_TO_CANON[al] = canon
+
+def _canonicalize(agent_id: str) -> str:
+    cid = _ALIAS_TO_CANON.get(agent_id)
+    if not cid:
+        raise HTTPException(status_code=404, detail=f"Unknown agent '{agent_id}'")
+    return cid
+
+# ─────────────────────────────────────────────────────────────
+# Public helper for other routers (reports)
+# ─────────────────────────────────────────────────────────────
+def get_run_record(run_id: str) -> Dict[str, Any]:
+    rec = RUN_INDEX.get(run_id)
+    if not rec:
+        raise HTTPException(status_code=404, detail=f"Unknown run_id '{run_id}'")
+    return rec
+
+# ─────────────────────────────────────────────────────────────
+# Endpoints
+# ─────────────────────────────────────────────────────────────
+@router.get("")
+def list_agents():
+    items = []
+    for meta in AGENT_REGISTRY.values():
+        items.append(
+            {
+                "id": meta["id"],
+                "display_name": meta.get("display_name", meta["id"]),
+                "aliases": meta.get("aliases", []),
+                "available": bool(meta.get("runner") is not None),
+            }
+        )
+    return {"agents": items}
+
+@router.get("/list")
+def list_agents_alt():
+    return list_agents()
+
+@router.post("/{agent_id}/run")
+async def run_agent(
+    request: Request,
+    agent_id: str,
+    file: UploadFile = File(..., description="CSV file for the agent to process"),
+    # Back-compat and new knobs (pass-through to runners)
+    use_llm: Optional[str] = Form(None),
+    llm: Optional[str] = Form(None),
+    llm_model: Optional[str] = Form(None),
+    flavor: Optional[str] = Form(None),
+    hardware_flavor: Optional[str] = Form(None),
+    threshold: Optional[str] = Form(None),
+    target_approval_rate: Optional[str] = Form(None),
+    random_band: Optional[str] = Form(None),
+    random_approval_band: Optional[str] = Form(None),
+    rule_mode: Optional[str] = Form(None),
+    currency_code: Optional[str] = Form(None),
+    currency_symbol: Optional[str] = Form(None),
+    # classic rule fields
+    max_dti: Optional[str] = Form(None),
+    min_emp: Optional[str] = Form(None),
+    min_hist: Optional[str] = Form(None),
+    max_delin: Optional[str] = Form(None),
+    req_min: Optional[str] = Form(None),
+    req_max: Optional[str] = Form(None),
+):
+    canon = _canonicalize(agent_id)
+    runner = AGENT_REGISTRY[canon]["runner"]
+    if runner is None:
+        # Tell exactly which import failed
+        if canon == "asset_appraisal":
+            raise HTTPException(status_code=500, detail=f"Missing runner: agents.asset_appraisal.runner.run - {_asset_import_error}")
+        if canon == "credit_appraisal":
+            raise HTTPException(status_code=500, detail=f"Missing runner: agents.credit_appraisal.runner.run - {_credit_import_error}")
+        raise HTTPException(status_code=500, detail="Runner not available")
+
+    raw = await file.read()
+    df = _read_csv_bytes(raw)
+
+    # Collect every form field generically (future-proof)
+    try:
+        form = await request.form()
+        params = {k: (form.get(k)) for k in form.keys()}
+    except Exception:
+        params = {}
+
+    # Normalize a few common synonyms the UI might send
+    params.update(
+        {
+            "use_llm": params.get("use_llm") or use_llm,
+            "llm": params.get("llm") or llm or llm_model,
+            "flavor": params.get("flavor") or flavor or hardware_flavor,
+            "threshold": params.get("threshold") or threshold,
+            "target_approval_rate": params.get("target_approval_rate") or target_approval_rate,
+            "random_band": params.get("random_band") or random_band or random_approval_band,
+            "rule_mode": params.get("rule_mode") or rule_mode,
+            "currency_code": params.get("currency_code") or currency_code,
+            "currency_symbol": params.get("currency_symbol") or currency_symbol,
+            "max_dti": params.get("max_dti") or max_dti,
+            "min_emp": params.get("min_emp") or min_emp,
+            "min_hist": params.get("min_hist") or min_hist,
+            "max_delin": params.get("max_delin") or max_delin,
+            "req_min": params.get("req_min") or req_min,
+            "req_max": params.get("req_max") or req_max,
+            "agent_id": canon,
+        }
+    )
+
+    # Run agent
+    out_df = runner(df, params)
+    if not isinstance(out_df, pd.DataFrame):
+        raise HTTPException(status_code=500, detail="Runner did not return a pandas DataFrame")
+
+    # Build run_id + persist artifacts
+    run_id = f"{canon}_{_ts()}_{uuid4().hex[:8]}"
+    artifacts = _save_run_df(run_id, out_df)
+
+    # Runner identity for debugging
+    runner_name = f"{runner.__module__}.{getattr(runner, '__name__', 'run')}"
+
+    # Index for reports
+    RUN_INDEX[run_id] = {
+        "agent_id": canon,
+        "created_at": _ts(),
+        "artifacts": artifacts,
+        "rows": int(out_df.shape[0]),
+        "cols": int(out_df.shape[1]),
+        "meta": {
+            "currency_code": params.get("currency_code"),
+            "currency_symbol": params.get("currency_symbol"),
+            "runner_used": runner_name,
+        },
+    }
+
+    # PREVIEW for UI: strictly a list of dicts (no chunk labels)
+    preview = out_df.head(200).to_dict(orient="records")
+
+    payload = {
+        "run_id": run_id,
+        "agent_id": canon,
+        "result": preview,  # list[dict]
+        "meta": RUN_INDEX[run_id]["meta"] | {
+            "rows": RUN_INDEX[run_id]["rows"],
+            "cols": RUN_INDEX[run_id]["cols"],
+        },
+        "artifacts": artifacts,  # keys: merged_csv, merged_json
+    }
+    return JSONResponse(content=payload, media_type="application/json")
