@@ -1,7 +1,6 @@
 # 🏦 Banking Agent Liberty
 
 > **AI agents for regulated banking workflows — fast • explainable • production‑ready.**
-> **Thư viện tác nhân AI cho ngân hàng — nhanh • minh bạch • sẵn sàng triển khai.**
 
 <p align="center">
   <img src="docs/hero-banner.png" alt="Banking Agent Liberty – Hero" width="1000"/>
@@ -17,7 +16,7 @@
 
 ---
 
-## 🔎 Table of Contents / Mục lục
+## 🔎 Table of Contents
 
 * [What](#-what) • [So What](#-so-what) • [For Who](#-for-who) • [Where](#-where) • [What Now](#-what-now)
 * [Key Features](#-key-features) • [KPIs](#-kpis) • [Architecture](#-architecture) • [Screenshots](#-screenshots)
@@ -28,23 +27,20 @@
 
 ## ❓ What
 
-**EN:** Banking Agent Liberty is a modular **AI agent library** for retail‑bank workflows. It provides plug‑and‑play agents—**Credit Appraisal**, **Asset Appraisal**, **Data Anonymization**, KYC/AML helpers—plus a shared **Streamlit UI** and **FastAPI** layer. Deploy on on‑prem **OpenStack** or cloud GPUs with identical configs.
+**Banking Agent Liberty** is a modular **AI agent library** for retail‑bank workflows. It ships with plug‑and‑play agents—**Credit Appraisal**, **Asset Appraisal**, **Data Anonymization**, KYC/AML helpers—plus a shared **Streamlit UI** and **FastAPI** layer. Deploy on on‑prem **OpenStack** or cloud GPUs with identical configs.
 
-**VI:** Banking Agent Liberty là thư viện **tác nhân AI** mô‑đun cho nghiệp vụ ngân hàng bán lẻ: **Thẩm định tín dụng**, **Định giá tài sản**, **Ẩn danh dữ liệu**, KYC/AML. Dự án có **UI Streamlit**, **API FastAPI** và cấu hình triển khai đồng nhất trên **OpenStack** hoặc cloud GPU.
-
-**Agent Contract / Giao ước thiết kế:** `POST /run` • `GET /explain` • `POST /train` • `GET /health`.
+**Agent Contract:** `POST /run` • `GET /explain` • `POST /train` • `GET /health`.
 
 ---
 
 ## 💡 So What
 
-* **Speed / Nhanh:** Synthetic seeding, one‑click anonymization, batch runs, cached explainability → **days ➜ minutes**.
-* **Quality / Chất lượng:** Feature store hygiene, SHAP‑style explanations, policy guards reduce bias & drift.
-* **Compliance / Tuân thủ:** Data localization defaults, immutable logs, human‑in‑the‑loop audit trails.
-* **Extensibility / Mở rộng:** Swap models (HF/LightGBM/scikit‑learn) & vector DBs without UI changes.
+* **Speed:** Synthetic seeding, one‑click anonymization, batch runs, cached explainability → **days ➜ minutes**.
+* **Quality:** Feature store hygiene, SHAP‑style explanations, policy guards reduce bias & drift.
+* **Compliance:** Data localization defaults, immutable logs, human‑in‑the‑loop audit trails.
+* **Extensibility:** Swap models (HF/LightGBM/scikit‑learn) and vector DBs without UI changes.
 
 **Outcome:** faster approvals, lower risk, clearer audits.
-**Kết quả:** phê duyệt nhanh hơn, rủi ro thấp hơn, kiểm toán minh bạch hơn.
 
 ---
 
@@ -68,7 +64,7 @@
 
 1. **Clone & configure** (SSH)
 2. **Launch Agent Hub UI** (try credit/asset flows)
-3. **Connect data**: CSV/parquet or synthetic generator
+3. **Connect data:** CSV/parquet or synthetic generator
 4. **Enable policies + SSO**
 5. **Measure KPIs** & iterate
 
@@ -78,14 +74,12 @@
 
 ## ✨ Key Features
 
-* **Credit Appraisal Agent** — decision + SHAP explanations, scorecards, policy checks.
+* **Credit Appraisal Agent** — decisions + SHAP explanations, scorecards, policy checks.
 * **Asset Appraisal Agent** — market comps, inspector intake, geo‑tag heatmaps, uncertainty bands.
 * **Data Anonymizer** — PII masking/tokenization; reversible under custody keys.
 * **Feedback → Retrain** — capture human outcomes, re‑train safely, version models.
 * **Observability** — run IDs, artifacts, audit logs, exportable reports.
 * **Modular Backends** — Hugging Face, scikit‑learn/LightGBM, pluggable vector DBs (FAISS/pgvector/Qdrant).
-
-> **Compliance lenses / Ống kính tuân thủ:** data residency, least‑privilege keys, immutable logs, lineage.
 
 ---
 
@@ -106,12 +100,12 @@
 
 ```mermaid
 flowchart LR
-  UI["Streamlit UI<br/>(Landing · Agents · Runs)"] --> API[FastAPI]
+  UI["Streamlit UI (Landing/Agents/Runs)"] --> API[FastAPI]
 
   subgraph Agents
-    CA["Credit Appraisal<br/>/run · /explain · /train"]
-    AA["Asset Appraisal<br/>/run · /explain · /train"]
-    DA["Data Anonymizer<br/>/sanitize"]
+    CA["Credit Appraisal (/run, /explain, /train)"]
+    AA["Asset Appraisal (/run, /explain, /train)"]
+    DA["Data Anonymizer (/sanitize)"]
   end
 
   API --> CA
@@ -120,12 +114,12 @@ flowchart LR
 
   CA --- FS[(Feature Store)]
   AA --- FS
-  CA --> MLOps[(Models & Versioning)]
+  CA --> MLOps[(Models and Versioning)]
   AA --> MLOps
-  API --> Logs[(Audit & Metrics)]
+  API --> Logs[(Audit and Metrics)]
 ```
 
-**Tenets / Nguyên tắc**: HTTP/JSON contracts • Deterministic run IDs • Replaceable models/backends • Edge anonymization by default.
+**Tenets:** HTTP/JSON contracts • Deterministic run IDs • Replaceable models/backends • Edge anonymization by default.
 
 ---
 
