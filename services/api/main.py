@@ -10,6 +10,8 @@ from fastapi.responses import RedirectResponse, JSONResponse
 APP_NAME = "Demo Agent API"
 APP_VERSION = "1.4.2"  # bump: adds credit-training router include
 
+
+
 # ── Ensure repo root is importable (so 'agents.*' works even if CWD varies) ──
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if ROOT not in sys.path:

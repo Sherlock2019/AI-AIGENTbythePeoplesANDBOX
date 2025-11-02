@@ -1,6 +1,0 @@
-application_id,age,income,employment_years,debt_to_income,credit_history_length,num_delinquencies,current_loans,requested_amount,loan_term_months,__income_debt_ratio
-a001,34,72000.0,5,0.18,60,0,1,15000.0,36,28.799999999999997
-a002,41,95000.0,9,0.22,84,1,2,30000.0,48,25.333333333333336
-a003,29,54000.0,3,0.27,24,0,0,12000.0,24,18.0
-a004,52,120000.0,15,0.12,180,0,1,50000.0,60,24.0
-a005,38,80000.0,7,0.3,72,2,3,25000.0,36,19.2

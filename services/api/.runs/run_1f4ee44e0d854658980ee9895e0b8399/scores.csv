@@ -1,6 +1,0 @@
-application_id,score,decision,proposed_loan_option,proposed_consolidation_loan
-a001,0.3333333333333333,deny,,"Consolidation: 60 months @ 7.5% APR, covers existing+requested=$15,000, Ratio→ 8.00 (≥ 0.45)"
-a002,0.3333333333333333,deny,,"Consolidation: 60 months @ 7.5% APR, covers existing+requested=$30,000, Ratio→ 5.28 (≥ 0.45)"
-a003,0.3333333333333333,deny,,"Consolidation: 60 months @ 7.5% APR, covers existing+requested=$12,000, Ratio→ 7.50 (≥ 0.45)"
-a004,0.3333333333333333,deny,,"Consolidation: 60 months @ 7.5% APR, covers existing+requested=$50,000, Ratio→ 4.00 (≥ 0.45)"
-a005,0.3333333333333333,deny,,"Consolidation: 60 months @ 7.5% APR, covers existing+requested=$25,000, Ratio→ 5.33 (≥ 0.45)"

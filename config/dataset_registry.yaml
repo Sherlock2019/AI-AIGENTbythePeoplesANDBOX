@@ -1,0 +1,18 @@
+defaults:
+  cache_dir: ${AIGENT_CACHE}/datasets
+
+datasets:
+  - id: "loan:synthetic"
+    source: "hf"
+    repo: "Sherlock2019/loan-synthetic"
+    subset: null
+    split: "train"
+    task: "credit_appraisal"
+    format: "parquet|csv"
+
+  - id: "kaggle:credit_risk"
+    source: "kaggle"
+    repo: "mlg-ulb/creditcardfraud"
+    task: "risk_detection"
+    format: "csv"
+    files: ["creditcard.csv"]

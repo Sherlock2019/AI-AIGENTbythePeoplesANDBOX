@@ -1,6 +1,0 @@
-application_id,age,income,employment_years,debt_to_income,credit_history_length,num_delinquencies,current_loans,requested_amount,loan_term_months,score,decision,top_feature,explanation,proposed_loan_option,proposed_consolidation_loan,rule_reasons
-a001,34,72000,5,0.18,60,0,1,15000,36,0.0,denied,DTI,Decision driven mainly by DTI.,,,
-a002,41,95000,9,0.22,84,1,2,30000,48,0.0032049957001882056,denied,DTI,Decision driven mainly by DTI.,,,
-a003,29,54000,3,0.27,24,0,0,12000,24,0.0370445647938363,denied,DTI,Decision driven mainly by DTI.,,,
-a004,52,120000,15,0.12,180,0,1,50000,60,0.007630959678282654,denied,DTI,Decision driven mainly by DTI.,,,
-a005,38,80000,7,0.3,72,2,3,25000,36,0.0431871945661666,denied,DTI,Decision driven mainly by DTI.,,,

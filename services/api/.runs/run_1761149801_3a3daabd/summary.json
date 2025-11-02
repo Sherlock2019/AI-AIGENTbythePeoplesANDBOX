@@ -1,8 +1,0 @@
-{
-  "n_rows": 200,
-  "approved": 143,
-  "denied": 57,
-  "threshold": 0.45,
-  "rule_mode": "ndi",
-  "currency_code": "USD"
-}

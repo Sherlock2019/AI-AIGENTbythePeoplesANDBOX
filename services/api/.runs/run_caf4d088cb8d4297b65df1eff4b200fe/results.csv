@@ -1,6 +1,0 @@
-application_id,score,decision,timestamp_utc,model_version_at_score,source_run_id,dataset_hash_at_score
-a001,0.3333333333333333,deny,2025-10-20T12:24:29.386670,current,run_caf4d088cb8d4297b65df1eff4b200fe,n/a
-a002,0.3333333333333333,deny,2025-10-20T12:24:29.386670,current,run_caf4d088cb8d4297b65df1eff4b200fe,n/a
-a003,0.3333333333333333,deny,2025-10-20T12:24:29.386670,current,run_caf4d088cb8d4297b65df1eff4b200fe,n/a
-a004,0.3333333333333333,deny,2025-10-20T12:24:29.386670,current,run_caf4d088cb8d4297b65df1eff4b200fe,n/a
-a005,0.3333333333333333,deny,2025-10-20T12:24:29.386670,current,run_caf4d088cb8d4297b65df1eff4b200fe,n/a

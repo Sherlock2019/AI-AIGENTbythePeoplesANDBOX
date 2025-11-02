@@ -1,6 +1,0 @@
-application_id,score,decision,top_feature,shap,explanation,proposed_loan_option,proposed_consolidation_loan
-a001,0.3333333333333333,approve,age,0.0,age decreased approval likelihood most,"36 months @ 8.33% APR, requested=$15,000",
-a002,0.3333333333333333,approve,age,0.0,age decreased approval likelihood most,"36 months @ 8.26% APR, requested=$30,000",
-a003,0.3333333333333333,approve,age,0.0,age decreased approval likelihood most,"36 months @ 9.5% APR, requested=$12,000",
-a004,0.3333333333333333,approve,age,0.0,age decreased approval likelihood most,"36 months @ 9.25% APR, requested=$50,000",
-a005,0.3333333333333333,approve,age,0.0,age decreased approval likelihood most,"72 months @ 9.27% APR, requested=$25,000",

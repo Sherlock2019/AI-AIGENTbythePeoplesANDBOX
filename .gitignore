@@ -1,35 +1,56 @@
-# Virtual env & cache
+# Envs & caches
 .venv/
+venv/
 __pycache__/
 *.pyc
-
-# Models and datasets
-models/
-data/raw/
-data/*.csv
-*.pkl
-*.bin
+.cache/
+tmp/
+*.tmp
+*.swp
+*.swo
 
 # Logs & backups
-logs/
-backups/
-
-# Hugging Face caches
-~/.cache/
-~/.huggingface/
-
-# Local config overrides
-.env
-
-# Backup artifacts
-**/*.bak
+*.log
 *.bak
 *.ok.*.bak
+*~ 
+*-backup*.csv
 
-# Logs
-**/*.log
-*.log
-.logs/
-logs/
-services/ui/.logs/
-services/api/.logs/
+# Run artifacts (UI & API)
+services/ui/.tmp_runs/
+services/ui/.runs/
+services/api/.runs/
+
+# Local state / PIDs
+.pids/
+services/**/.state/
+
+# Large data outside samples
+data/
+data/** 
+*.csv
+*.parquet
+*.feather
+*.orc
+*.arrow
+
+# Allow samples data
+!samples/**
+!agents/credit_appraisal/sample_data/**
+
+# Models
+agents/*/models/trained/**
+# keep production meta (and optionally small model)
+!agents/*/models/production/meta.json
+# if you want to keep a small baseline artifact:
+!agents/*/models/production/*.joblib
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Secrets
+.env
+.env.*

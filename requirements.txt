@@ -1,0 +1,8 @@
+huggingface_hub>=0.24
+datasets>=2.19
+kaggle>=1.6
+fastapi>=0.111
+uvicorn>=0.30
+pydantic>=2
+tqdm
+python-dotenv

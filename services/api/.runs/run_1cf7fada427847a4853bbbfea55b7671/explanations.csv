@@ -1,6 +1,0 @@
-application_id,score,decision,top_feature,shap,explanation,proposed_loan_option,proposed_consolidation_loan
-APP_0001,0.8,approve,age,0.0,age decreased approval likelihood most,"{'term_months': 36, 'apr_pct': 12.0, 'note': 'Standard offer'}",
-APP_0002,0.8,approve,age,0.0,age decreased approval likelihood most,"{'term_months': 48, 'apr_pct': 12.0, 'note': 'Standard offer'}",
-APP_0003,0.8,approve,age,0.0,age decreased approval likelihood most,"{'term_months': 24, 'apr_pct': 12.0, 'note': 'Standard offer'}",
-APP_0004,0.8,approve,age,0.0,age decreased approval likelihood most,"{'term_months': 60, 'apr_pct': 12.0, 'note': 'Standard offer'}",
-APP_0005,0.8,approve,age,0.0,age decreased approval likelihood most,"{'term_months': 36, 'apr_pct': 12.0, 'note': 'Standard offer'}",

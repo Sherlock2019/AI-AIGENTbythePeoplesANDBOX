@@ -1,6 +1,0 @@
-application_id,score,decision,top_feature,shap,explanation,rule_reasons
-a001,0.3333333333333333,deny,age,0.0,age decreased approval likelihood most,credit_score;CCR
-a002,0.3333333333333333,deny,age,0.0,age decreased approval likelihood most,credit_score;CCR
-a003,0.3333333333333333,deny,age,0.0,age decreased approval likelihood most,credit_score;CCR
-a004,0.3333333333333333,deny,age,0.0,age decreased approval likelihood most,credit_score;CCR
-a005,0.3333333333333333,deny,age,0.0,age decreased approval likelihood most,credit_score;CCR;num_delinquencies

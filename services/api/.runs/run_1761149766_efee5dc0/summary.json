@@ -1,8 +1,0 @@
-{
-  "n_rows": 200,
-  "approved": 70,
-  "denied": 130,
-  "threshold": 0.45,
-  "rule_mode": "classic",
-  "currency_code": "USD"
-}

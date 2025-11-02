@@ -1,6 +1,0 @@
-application_id,score,decision,top_feature,shap,explanation
-app_0001,0.4,deny,age,0.0,age decreased approval likelihood most
-app_0002,0.4,deny,age,0.0,age decreased approval likelihood most
-app_0003,0.4,deny,age,0.0,age decreased approval likelihood most
-app_0004,0.4,deny,age,0.0,age decreased approval likelihood most
-app_0005,0.4,deny,age,0.0,age decreased approval likelihood most

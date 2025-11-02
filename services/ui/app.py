@@ -113,56 +113,7 @@ def _extract_run_fields(raw_json):  # ADD
             payload = {"result": raw_json}
     return run_id, payload
 
-# Streamlit uses 'streamlit' logger internally; bump it to DEBUG explicitly
-# Example: whenever you click Run Agent button, call:
-# log_ui_event("RUN_AGENT_CLICKED", stage=st.session_state.get("stage"))
 
-# # ---- UI Logging Bootstrap (place at top of app.py) ----
-
-# # (Optional) UI logging bootstrap
-# _root = logging.getLogger()
-# if not _root.handlers:
-#     h = logging.StreamHandler(sys.stdout)
-#     h.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s] %(message)s',
-#                                      datefmt='%Y-%m-%d %H:%M:%S'))
-#     _root.addHandler(h)
-# _root.setLevel(logging.DEBUG)
-# logging.getLogger("streamlit").setLevel(logging.DEBUG)
-# ui_logger = logging.getLogger("ui")
-
-# # Safe session init for user_info
-# if "user_info" not in st.session_state or not isinstance(st.session_state.user_info, dict):
-#     st.session_state.user_info = {}
-
-# st.session_state.user_info["timestamp"] = datetime.now(timezone.utc).isoformat()
-
-# # Root logger to stdout, once
-# _root = logging.getLogger()
-# if not _root.handlers:
-#     _h = logging.StreamHandler(sys.stdout)
-#     _h.setFormatter(logging.Formatter(
-#         '%(asctime)s %(levelname)s [%(name)s] %(message)s',
-#         datefmt='%Y-%m-%d %H:%M:%S'
-#     ))
-#     _root.addHandler(_h)
-# _root.setLevel(logging.DEBUG)
-
-# # Streamlit internal logs at DEBUG as well (optional)
-# logging.getLogger("streamlit").setLevel(logging.DEBUG)
-
-# # App-scoped logger
-# ui_logger = logging.getLogger("ui")
-# ui_logger.setLevel(logging.DEBUG)
-
-# def log_ui_event(event: str, **kwargs):
-#     kv = " ".join(f"{k}={v!r}" for k, v in kwargs.items())
-#     ui_logger.info("%s %s", event, kv)
-
-# # Ensure unhandled UI exceptions are captured in logs
-# def _excepthook(etype, value, tb):
-#     ui_logger.exception("UNHANDLED_UI_EXCEPTION", exc_info=(etype, value, tb))
-# sys.excepthook = _excepthook
-# # ---- end bootstrap ----
 
 
 

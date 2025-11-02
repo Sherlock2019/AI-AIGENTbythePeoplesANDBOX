@@ -2,6 +2,6 @@
   "version": "1.x",
   "source": "trained",
   "promoted_from": "/home/dzoan/credit-appraisal-agent-poc/services/agents/asset_appraisal/models/trained/model-20251101-175031.joblib",
-  "promoted_at": "20251101-175058",
+  "promoted_at": "20251102-041643",
   "model_path": "/home/dzoan/credit-appraisal-agent-poc/services/agents/asset_appraisal/models/production/model.joblib"
 }

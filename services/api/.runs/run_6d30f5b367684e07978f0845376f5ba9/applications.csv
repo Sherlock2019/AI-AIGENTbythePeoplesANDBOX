@@ -1,6 +1,0 @@
-application_id,age,income,employment_length,loan_amount,loan_duration_months,collateral_value,collateral_type,co_loaners,credit_score,existing_debt,assets_owned,DTI,LTV,CCR,ITI,CWI,employment_years,loan_term_months,debt_to_income
-APP_0001,35,75000,5,25000,36,30000,car,0,710,10000,50000,0.133,0.833,1.2,0.009,0.695,5,36,0.133
-APP_0002,42,60000,8,30000,48,28000,house,1,680,15000,80000,0.25,1.071,0.933,0.01,0.523,8,48,0.25
-APP_0003,29,52000,3,15000,24,18000,car,0,650,8000,30000,0.154,0.833,1.2,0.012,0.654,3,24,0.154
-APP_0004,50,90000,15,40000,60,60000,house,0,720,12000,120000,0.133,0.667,1.5,0.007,0.742,15,60,0.133
-APP_0005,31,45000,2,20000,36,15000,equipment,0,610,20000,25000,0.444,1.333,0.75,0.012,0.321,2,36,0.444

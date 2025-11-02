@@ -1,0 +1,65 @@
+defaults:
+  cache_dir: ${AIGENT_CACHE}/models
+models:
+- id: phi3:3.8b
+  repo: microsoft/Phi-3-mini-4k-instruct
+  revision: main
+  role: instruct_llm
+  framework: transformers
+  files:
+  - config.json
+  - model.safetensors
+  - tokenizer.json
+  - tokenizer_config.json
+- id: mistral:7b-instruct
+  repo: mistralai/Mistral-7B-Instruct-v0.3
+  revision: main
+  role: instruct_llm
+  framework: transformers
+  files:
+  - config.json
+  - model.safetensors
+  - tokenizer.json
+  - tokenizer_config.json
+- id: credit:lr-baseline
+  repo: Sherlock2019/credit-lr-baseline
+  revision: main
+  role: tabular_model
+  framework: joblib
+  files:
+  - model.joblib
+  - meta.json
+recommendations:
+  credit_appraisal:
+    scoring_tabular:
+      models:
+      - credit:lr-baseline
+      datasets:
+      - loan:synthetic
+      - kaggle:credit_risk
+    narratives_llm:
+      models:
+      - phi3:3.8b
+      - mistral:7b-instruct
+      datasets: []
+    explain_rerank:
+      models:
+      - mistral:7b-instruct
+      datasets: []
+  asset_appraisal:
+    valuation_tabular:
+      models:
+      - credit:lr-baseline
+      datasets:
+      - loan:synthetic
+    evidence_ocr:
+      models: []
+      datasets: []
+    vision_compare:
+      models: []
+      datasets: []
+    narratives_llm:
+      models:
+      - phi3:3.8b
+      - mistral:7b-instruct
+      datasets: []

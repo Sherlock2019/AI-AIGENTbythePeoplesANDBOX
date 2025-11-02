@@ -1,6 +1,0 @@
-application_id,decision,top_feature,explanation,proposed_loan_option,proposed_consolidation_loan,rule_reasons
-a001,denied,DTI,Decision driven mainly by DTI.,,,
-a002,denied,DTI,Decision driven mainly by DTI.,,,
-a003,denied,DTI,Decision driven mainly by DTI.,,,
-a004,denied,DTI,Decision driven mainly by DTI.,,,
-a005,denied,DTI,Decision driven mainly by DTI.,,,
