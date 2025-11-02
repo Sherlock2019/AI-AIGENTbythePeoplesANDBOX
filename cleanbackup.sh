@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="${1:-/home/dzoan/credit-appraisal-agent-poc}"
-KEEP_COUNT=3
+KEEP_COUNT=10
 
 echo "🧹 Cleaning old backups under: $ROOT"
 echo "   (keeping $KEEP_COUNT most recent per file/directory)"

@@ -22,38 +22,141 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 # ─────────────────────────────────────────────
-# PAGE CONFIG + SIDEBAR HIDE
+# PAGE CONFIG
 # ─────────────────────────────────────────────
 st.set_page_config(page_title="Asset Appraisal Agent", layout="wide")
+
+
+# ─────────────────────────────────────────────
+# THEME INJECTION (Dark + Sidebar hide, with MutationObserver)
+# Run immediately on every script execution to avoid flicker on rerun
+# ─────────────────────────────────────────────
+import streamlit.components.v1 as components # <--- IMPORT IS HERE
+# 1) CSS (global, persistent)
+# Note: Removed the inject_dark_theme_once() function and session state check
 st.markdown("""
-<style>
-[data-testid="stSidebar"], section[data-testid="stSidebar"], nav[data-testid="stSidebarNav"] { display:none !important; }
-[data-testid="stAppViewContainer"] { margin-left:0 !important; padding-left:0 !important; }
-div[data-testid="stMetricValue"] { color:#38bdf8 !important; }
-</style>
-""", unsafe_allow_html=True)
+    <style>
+      :root { color-scheme: dark; } /* Hint built-ins */
+      html, body, .stApp {
+        background-color:#0f172a !important;
+        color:#e5e7eb !important;
+        font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      }
+      /* Sidebar off + container padding */
+      [data-testid="stSidebar"], section[data-testid="stSidebar"], nav[data-testid="stSidebarNav"] { display:none !important; }
+      [data-testid="stAppViewContainer"] { margin-left:0 !important; padding-left:0 !important; }
+      /* Headings */
+      h1, h2, h3, h4, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 { color:#e5e7eb !important; }
+      /* Tabs */
+      .stTabs [data-baseweb="tab-list"] { gap:6px; border-bottom:1px solid #1f2937; }
+      .stTabs [data-baseweb="tab"] {
+        background:#0b1222; border:1px solid #1f2937; border-bottom:none;
+        padding:10px 14px; border-top-left-radius:10px; border-top-right-radius:10px; color:#cbd5e1;
+      }
+      .stTabs [aria-selected="true"] { background:#111827 !important; color:#e5e7eb !important; }
+      /* Inputs */
+      .stTextInput input, .stNumberInput input, .stSelectbox [data-baseweb="select"] > div {
+        background:#0b1222 !important; color:#e5e7eb !important; border:1px solid #1f2937 !important;
+      }
+      /* Buttons */
+      .stButton button {
+        background:linear-gradient(180deg,#1f3b57 0%,#0e1f33 100%) !important;
+        color:#e6f3ff !important; border:1px solid #1d2b3a !important; border-radius:10px !important;
+        box-shadow:0 0 10px rgba(56,189,248,.15);
+      }
+      .stButton button:hover { filter:brightness(1.05); box-shadow:0 0 16px rgba(56,189,248,.25); }
+      /* Metrics */
+      div[data-testid="stMetric"] { background:#0b1222; border:1px solid #1f2937; border-radius:12px; padding:10px 12px; }
+      div[data-testid="stMetricValue"] { color:#38bdf8 !important; }
+      /* Tables */
+      .stDataFrame, .stTable { background:#0b1222 !important; border:1px solid #1f2937 !important; border-radius:10px !important; }
+      /* Expanders */
+      details { background:#0b1222 !important; border:1px solid #1f2937 !important; border-radius:10px !important; padding:6px 10px !important; }
+      /* Plotly */
+      .js-plotly-plot .plotly .main-svg { background-color:transparent !important; }
+    </style>
+    """, unsafe_allow_html=True)
+
+# 2) JS observer to re-assert dark after Streamlit mutates
+components.html("""
+    <script>
+      (function() {
+        const apply = () => {
+          try {
+            const root = parent.document.documentElement;
+            const app = parent.document.querySelector('.stApp');
+            if (root) root.style.setProperty('color-scheme','dark');
+            if (app) app.classList.add('dark-hold');
+          } catch(e) {}
+        };
+        apply();
+        const mo = new MutationObserver(apply);
+        mo.observe(parent.document.documentElement, {childList:true, subtree:true});
+      })();
+    </script>
+    """, height=0)
+
+# ─────────────────────────────────────────────
+# API CONFIG
+# ─────────────────────────────────────────────
 
 API_URL = os.getenv("API_URL", "http://localhost:8090")
 
 # Default fallbacks (will be superseded by discovery)
+
 ASSET_AGENT_IDS = [a.strip() for a in os.getenv("ASSET_AGENT_IDS", "asset_appraisal,asset").split(",") if a.strip()]
 
 # ─────────────────────────────────────────────
-# NAV
+# NAV (reliable jump to Home / Agents from a page)
 # ─────────────────────────────────────────────
+def _set_query_params_safe(**kwargs):
+    # New API (Streamlit ≥1.40)
+    try:
+        for k, v in kwargs.items():
+            st.query_params[k] = v
+        return True
+    except Exception:
+        pass
+    # Older versions
+    try:
+        st.experimental_set_query_params(**kwargs)
+        return True
+    except Exception:
+        return False
+
+def _go_stage(target_stage: str):
+    # 1) let app.py’s router know what to show
+    st.session_state["stage"] = target_stage
+
+    # 2) preferred: jump to main app file
+    try:
+        # path is relative to the run root when you launch:
+        #   streamlit run services/ui/app.py
+        st.switch_page("app.py")
+        return
+    except Exception:
+        pass
+
+    # 3) fallback: set query param and rerun so app.py picks it up
+    _set_query_params_safe(stage=target_stage)
+    st.rerun()
+
 def render_nav_bar_app():
-    stage = st.session_state.get("asset_stage", "login")
-    show_home   = stage in ("agents", "credit_agent", "asset_agent", "login", "asset_flow")
-    show_agents = stage not in ("landing", "agents")
-    if not (show_home or show_agents): return
-    c1, c2, _ = st.columns([1,1,6])
+    # read the global stage (default to ‘landing’)
+    stage = st.session_state.get("stage", "landing")
+
+    # show both buttons on this page
+    c1, c2, _ = st.columns([1, 1, 6])
     with c1:
-        if show_home and st.button("🏠 Back to Home", key=f"btn_home_asset_{stage}"):
-            st.session_state["asset_stage"] = "landing"; st.rerun()
+        if st.button("🏠 Back to Home", key=f"btn_home_{stage}"):
+            _go_stage("landing")
+            st.stop()
     with c2:
-        if show_agents and st.button("🤖 Back to Agents", key=f"btn_agents_asset_{stage}"):
-            st.session_state["asset_stage"] = "agents"; st.rerun()
+        if st.button("🤖 Back to Agents", key=f"btn_agents_{stage}"):
+            _go_stage("agents")
+            st.stop()
     st.markdown("---")
+
 
 # ─────────────────────────────────────────────
 # SESSION
@@ -455,53 +558,140 @@ if ss["asset_logged_in"]:
         
         
         
-        # # 🧩 Model Selection (asset trained models) — sort by raw ctime (numeric)
+        
+        # # ─────────────────────────────────────────────
+        # # 🧩 Model Selection (asset trained + production)
+        # # ─────────────────────────────────────────────
         # trained_dir = os.path.expanduser(
         #     "~/credit-appraisal-agent-poc/agents/asset_appraisal/models/trained"
         # )
-        
+        # production_default_fp = os.path.expanduser(
+        #     "~/credit-appraisal-agent-poc/agents/asset_appraisal/models/production/model.joblib"
+        # )
+
+        # # Try to fetch production meta (compatible with your asset training router)
+        # production_fp = None
+        # try:
+        #     r = requests.get(
+        #         f"{API_URL}/v1/training/production_meta",
+        #         params={"agent_id": "asset_appraisal"},
+        #         timeout=5
+        #     )
+        #     if r.ok:
+        #         j = r.json() or {}
+        #         if j.get("has_production"):
+        #             meta = j.get("meta") or {}
+        #             production_fp = (
+        #                 meta.get("model_path")
+        #                 or meta.get("promoted_to")
+        #                 or production_default_fp
+        #             )
+        # except Exception:
+        #     production_fp = None
+
+        # if not production_fp:
+        #     production_fp = production_default_fp
+
+        # # Build models list: (label, path, ctime, created_str, is_production)
         # models = []
+
+        # # 1) Add PRODUCTION if present
+        # if os.path.exists(production_fp):
+        #     try:
+        #         p_ctime = os.path.getctime(production_fp)
+        #         p_created = datetime.datetime.fromtimestamp(p_ctime).strftime("%b %d, %Y %H:%M")
+        #     except Exception:
+        #         p_ctime, p_created = 0.0, "production"
+        #     models.append(("⭐ Production", production_fp, p_ctime, p_created, True))
+
+        # # 2) Add TRAINED models
         # if os.path.exists(trained_dir):
         #     for f in os.listdir(trained_dir):
-        #         if f.endswith(".joblib"):
-        #             fpath = os.path.join(trained_dir, f)
+        #         if not f.endswith(".joblib"):
+        #             continue
+        #         fpath = os.path.join(trained_dir, f)
+        #         try:
         #             ctime = os.path.getctime(fpath)
         #             created_str = datetime.datetime.fromtimestamp(ctime).strftime("%b %d, %Y %H:%M")
-        #             models.append((f, fpath, ctime, created_str))
+        #         except Exception:
+        #             ctime, created_str = 0.0, ""
+        #         # skip if literally same file as production
+        #         try:
+        #             if os.path.exists(production_fp) and os.path.samefile(fpath, production_fp):
+        #                 continue
+        #         except Exception:
+        #             pass
+        #         models.append((f, fpath, ctime, created_str, False))
+
+        # # Sort: production first, then newest trained
+        # models = sorted(models, key=lambda x: (0 if x[4] else 1, -x[2]))
 
         # if models:
-        #     models.sort(key=lambda x: x[2], reverse=True)  # newest by ctime
-        #     display_names = [f"{m[0]} — {m[3]}" for m in models]
-        #     selected_display = st.selectbox("📦 Select trained model to use", display_names, key="asset_model_select")
-        #     selected_model = models[display_names.index(selected_display)][1]
-        #     st.success(f"✅ Using model: {os.path.basename(selected_model)}")
+        #     display_names = [
+        #         f"{label} — {created}" if created else f"{label}"
+        #         for (label, _, _, created, _) in models
+        #     ]
+
+        #     # keep previous selection if present
+        #     default_idx = 0
+        #     prev_selected = st.session_state.get("asset_selected_model")
+        #     if prev_selected:
+        #         for i, (_, path, _, _, _) in enumerate(models):
+        #             if path == prev_selected:
+        #                 default_idx = i
+        #                 break
+
+        #     selected_display = st.selectbox(
+        #         "📦 Select trained model to use",
+        #         display_names,
+        #         index=default_idx,
+        #         key="asset_model_select"
+        #     )
+        #     sel_idx = display_names.index(selected_display)
+        #     selected_model = models[sel_idx][1]
+        #     is_prod = models[sel_idx][4]
+
         #     st.session_state["asset_selected_model"] = selected_model
 
-        #     if st.button("🚀 Promote this model to Production", key="asset_promote_model"):
+        #     if is_prod:
+        #         st.success(f"🟢 Using PRODUCTION model: {os.path.basename(selected_model)}")
+        #     else:
+        #         st.success(f"✅ Using model: {os.path.basename(selected_model)}")
+
+        #     # Promote only when a non-production model is selected
+        #     if not is_prod and st.button("🚀 Promote this model to Production", key="asset_promote_model"):
         #         try:
-        #             prod_path = os.path.expanduser(
-        #                 "~/credit-appraisal-agent-poc/agents/asset_appraisal/models/production/model.joblib"
+        #             # backend promotes newest trained; aligns with your training router
+        #             r = requests.post(
+        #                 f"{API_URL}/v1/agents/asset_appraisal/training/promote_last", timeout=60
         #             )
-        #             os.makedirs(os.path.dirname(prod_path), exist_ok=True)
-        #             import shutil
-        #             shutil.copy2(selected_model, prod_path)
-        #             st.success(f"✅ Model promoted to production: {os.path.basename(prod_path)}")
+        #             if r.ok:
+        #                 st.success("✅ Model promoted to PRODUCTION.")
+        #                 st.rerun()  # refresh so ⭐ Production appears and becomes selected
+        #             else:
+        #                 try:
+        #                     st.error(f"❌ Promotion failed: {r.status_code} {r.reason}")
+        #                     st.code(r.json())
+        #                 except Exception:
+        #                     st.code(r.text[:2000])
         #         except Exception as e:
-        #             st.error(f"❌ Promotion failed: {e}")
+        #             st.error(f"❌ Promotion error: {e}")
         # else:
         #     st.warning("⚠️ No trained models found — train one in Step 5 first.")
+        # ─────────────────────────────────────────────
+        # 🧩 Model Selection (asset trained + production) — dual dir, dedupe, refresh
+        # ─────────────────────────────────────────────
+        from time import time as _now
 
-        # ─────────────────────────────────────────────
-        # 🧩 Model Selection (asset trained + production)
-        # ─────────────────────────────────────────────
-        trained_dir = os.path.expanduser(
-            "~/credit-appraisal-agent-poc/agents/asset_appraisal/models/trained"
-        )
+        trained_dirs = [
+            os.path.expanduser("~/credit-appraisal-agent-poc/agents/asset_appraisal/models/trained"),            # canonical
+            os.path.expanduser("~/credit-appraisal-agent-poc/services/agents/asset_appraisal/models/trained"),   # legacy
+        ]
         production_default_fp = os.path.expanduser(
             "~/credit-appraisal-agent-poc/agents/asset_appraisal/models/production/model.joblib"
         )
 
-        # Try to fetch production meta (compatible with your asset training router)
+        # Try to fetch production meta (compatible with your training router)
         production_fp = None
         try:
             r = requests.get(
@@ -513,21 +703,24 @@ if ss["asset_logged_in"]:
                 j = r.json() or {}
                 if j.get("has_production"):
                     meta = j.get("meta") or {}
-                    production_fp = (
-                        meta.get("model_path")
-                        or meta.get("promoted_to")
-                        or production_default_fp
-                    )
+                    production_fp = (meta.get("model_path") or meta.get("promoted_to") or production_default_fp)
         except Exception:
             production_fp = None
-
         if not production_fp:
             production_fp = production_default_fp
 
-        # Build models list: (label, path, ctime, created_str, is_production)
+        # Manual refresh (cache-bust the selectbox key)
+        c_ref, _ = st.columns([1, 6])
+        with c_ref:
+            if st.button("↻ Refresh models", key="asset_models_refresh"):
+                st.session_state.pop("asset_model_select", None)
+                st.session_state["_asset_models_bump"] = _now()
+                st.rerun()
+
+        # Build list (label, path, ctime, created_str, is_production)
         models = []
 
-        # 1) Add PRODUCTION if present
+        # 1) Production entry
         if os.path.exists(production_fp):
             try:
                 p_ctime = os.path.getctime(production_fp)
@@ -536,24 +729,33 @@ if ss["asset_logged_in"]:
                 p_ctime, p_created = 0.0, "production"
             models.append(("⭐ Production", production_fp, p_ctime, p_created, True))
 
-        # 2) Add TRAINED models
-        if os.path.exists(trained_dir):
-            for f in os.listdir(trained_dir):
-                if not f.endswith(".joblib"):
+        # 2) Trained entries from both dirs
+        raw = []
+        for d in trained_dirs:
+            if os.path.isdir(d):
+                for f in os.listdir(d):
+                    if f.endswith(".joblib"):
+                        fpath = os.path.join(d, f)
+                        try:
+                            ctime = os.path.getctime(fpath)
+                            created = datetime.datetime.fromtimestamp(ctime).strftime("%b %d, %Y %H:%M")
+                        except Exception:
+                            ctime, created = 0.0, ""
+                        raw.append((f, fpath, ctime, created, False))
+
+        # 3) De-dupe by filename (keep newest) and skip if identical to production
+        newest_by_name = {}
+        for name, path, ctime, created, is_prod in raw:
+            # skip literal same file as production
+            try:
+                if os.path.exists(production_fp) and os.path.samefile(path, production_fp):
                     continue
-                fpath = os.path.join(trained_dir, f)
-                try:
-                    ctime = os.path.getctime(fpath)
-                    created_str = datetime.datetime.fromtimestamp(ctime).strftime("%b %d, %Y %H:%M")
-                except Exception:
-                    ctime, created_str = 0.0, ""
-                # skip if literally same file as production
-                try:
-                    if os.path.exists(production_fp) and os.path.samefile(fpath, production_fp):
-                        continue
-                except Exception:
-                    pass
-                models.append((f, fpath, ctime, created_str, False))
+            except Exception:
+                pass
+            if (name not in newest_by_name) or (ctime > newest_by_name[name][2]):
+                newest_by_name[name] = (name, path, ctime, created, is_prod)
+
+        models.extend(newest_by_name.values())
 
         # Sort: production first, then newest trained
         models = sorted(models, key=lambda x: (0 if x[4] else 1, -x[2]))
@@ -564,7 +766,7 @@ if ss["asset_logged_in"]:
                 for (label, _, _, created, _) in models
             ]
 
-            # keep previous selection if present
+            # keep previous selection if possible
             default_idx = 0
             prev_selected = st.session_state.get("asset_selected_model")
             if prev_selected:
@@ -573,11 +775,12 @@ if ss["asset_logged_in"]:
                         default_idx = i
                         break
 
+            select_key = f"asset_model_select::{st.session_state.get('_asset_models_bump','')}"
             selected_display = st.selectbox(
                 "📦 Select trained model to use",
                 display_names,
                 index=default_idx,
-                key="asset_model_select"
+                key=select_key
             )
             sel_idx = display_names.index(selected_display)
             selected_model = models[sel_idx][1]
@@ -591,15 +794,15 @@ if ss["asset_logged_in"]:
                 st.success(f"✅ Using model: {os.path.basename(selected_model)}")
 
             # Promote only when a non-production model is selected
-            if not is_prod and st.button("🚀 Promote this model to Production", key="asset_promote_model"):
+            if (not is_prod) and st.button("🚀 Promote this model to PRODUCTION", key="asset_promote_model"):
                 try:
-                    # backend promotes newest trained; aligns with your training router
-                    r = requests.post(
-                        f"{API_URL}/v1/agents/asset_appraisal/training/promote_last", timeout=60
-                    )
+                    # Backend promotes newest trained; if you prefer exact file, copy locally instead.
+                    r = requests.post(f"{API_URL}/v1/agents/asset_appraisal/training/promote_last", timeout=60)
                     if r.ok:
                         st.success("✅ Model promoted to PRODUCTION.")
-                        st.rerun()  # refresh so ⭐ Production appears and becomes selected
+                        # cache-bust & refresh so ⭐ Production appears immediately
+                        st.session_state["_asset_models_bump"] = _now()
+                        st.rerun()
                     else:
                         try:
                             st.error(f"❌ Promotion failed: {r.status_code} {r.reason}")
