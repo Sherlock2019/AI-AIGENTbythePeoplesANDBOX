@@ -636,295 +636,893 @@ if ss["asset_stage"] == "login" and not ss["asset_logged_in"]:
             st.error("⚠️ Please fill all fields before continuing.")
     st.stop()
 
+
 # ─────────────────────────────────────────────
-# WORKFLOW (A→F)
+# WORKFLOW (A→G)
 # ─────────────────────────────────────────────
-if ss["asset_logged_in"] and ss["asset_stage"] in ("asset_flow", "asset_agent"):
+if ss.get("asset_logged_in") and ss.get("asset_stage") in ("asset_flow", "asset_agent"):
     render_nav_bar_app()
     st.title("🏛️ Asset Appraisal Agent")
     st.caption(
-        "A→F pipeline — Intake→Privacy→Valuation→Policy→Review→Reporting "
+        "A→G pipeline — Intake → Privacy → Valuation → Policy → Human Review → Model Training → Reporting "
         f"| 👋 {ss['asset_user']['name']}"
     )
 
-    # # ─────────────────────────────────────────
-    # # TABS (A..F) — Commented blueprint (keep this above live tabs)
-    # # ─────────────────────────────────────────
-    # tabA, tabB, tabC, tabD, tabE, tabF = st.tabs([
+    # ─────────────────────────────────────────
+    # TABS (A..G) — Commented blueprint (keep this above live tabs)
+    # ─────────────────────────────────────────
+    # tabA, tabB, tabC, tabD, tabE, tabF, tabG = st.tabs([
     #     "🟦 A) Intake & Evidence",
     #     "🟩 B) Privacy & Features",
     #     "🟨 C) Valuation & Verification",
     #     "🟧 D) Policy & Decision",
-    #     "🟪 E) Human Review & Training",
-    #     "⬜ F) Reporting & Handoff"
+    #     "🟪 E) Human Review & Feedback",
+    #     "🟫 F) Model Training & Promotion",
+    #     "⬜ G) Reporting & Handoff"
     # ])
 
     # ─────────────────────────────────────────
-    # TABS (A..F) — Live tabs
+    # TABS (A..G) — Live tabs
     # ─────────────────────────────────────────
-    tabA, tabB, tabC, tabD, tabE, tabF = st.tabs([
+    tabA, tabB, tabC, tabD, tabE, tabF, tabG = st.tabs([
         "🟦 A) Intake & Evidence",
         "🟩 B) Privacy & Features",
         "🟨 C) Valuation & Verification",
         "🟧 D) Policy & Decision",
-        "🟪 E) Human Review & Training",
-        "⬜ F) Reporting & Handoff"
+        "🟪 E) Human Review & Feedback",
+        "🟫 F) Model Training & Promotion",
+        "⬜ G) Reporting & Handoff"
     ])
 
-
-# ─────────────────────────────────────────
-# A — INTAKE & EVIDENCE (0..1)
-# ─────────────────────────────────────────
-with tabA:
-    st.subheader("A. Intake & Evidence")
-    st.caption("Steps: **0) Intake & Identity**, **1) Evidence Extraction (OCR/EXIF/GPS)**")
-
-    # Local helpers (light stubs; replace with real OCR/EXIF later)
-    import hashlib, io
-    from datetime import datetime, timezone
-
-    def sha1_of_filelike(fobj) -> str:
-        pos = fobj.tell() if hasattr(fobj, "tell") else None
-        fobj.seek(0)
-        h = hashlib.sha1()
-        while True:
-            chunk = fobj.read(8192)
-            if not chunk:
-                break
-            if isinstance(chunk, str):
-                chunk = chunk.encode("utf-8")
-            h.update(chunk)
-        if pos is not None:
-            fobj.seek(pos)
-        return h.hexdigest()
-
-    def extract_fake_exif_gps() -> dict:
-        # Placeholder until your real EXIF/GPS pipeline is wired
-        return {"gps": {"lat": 10.7758, "lon": 106.7009}, "ts": datetime.now(timezone.utc).isoformat()}
-
-    def quick_synth(n: int = 150) -> pd.DataFrame:
-        t = datetime.now(timezone.utc)
-        rows = []
-        for i in range(n):
-            rows.append({
-                "application_id": f"APP_{t.strftime('%H%M%S')}_{i:04d}",
-                "asset_id": f"A{t.strftime('%M%S')}{i:04d}",
-                "asset_type": ["House","Apartment","Car","Land","Factory"][i % 5],
-                "market_value": 120000 + (i % 17) * 3500,
-                "age_years": (i % 35),
-                "loan_amount": 80000 + (i % 23) * 2500,
-                "employment_years": (i % 25),
-                "credit_history_years": (i % 20),
-                "delinquencies": (i % 3),
-                "current_loans": (i % 5),
-                "city": ["HCMC","Hanoi","Da Nang","Can Tho","Hai Phong"][i % 5],
-            })
-        return pd.DataFrame(rows)
-
-    def synth_why_table() -> pd.DataFrame:
-        return pd.DataFrame([
-            {"Metric": "PII present", "Why it matters": "Must be masked before feature engineering (privacy-by-design)."},
-            {"Metric": "Evidence linked (%)", "Why it matters": "Traceability between assets and documents/photos."},
-            {"Metric": "Rows (intake)", "Why it matters": "Sanity-check volume before downstream costs."},
-        ])
-
-    # A.0 — Intake & Identity
-    st.markdown("### **0) Intake & Identity**")
-    left, right = st.columns([1.4, 1])
-
-    with left:
-        up_csv = st.file_uploader("Upload Asset CSV", type=["csv"], key="asset_csv")
-        with st.expander("➕ Add manual asset row", expanded=False):
-            m1, m2 = st.columns(2)
-            asset_type = m1.selectbox("Asset Type", ["House","Apartment","Car","Land","Factory"])
-            market_value = m2.number_input("Market Value ($)", 0, 10_000_000, 250_000, step=1_000)
-            age_years = m1.number_input("Age (years)", 0, 100, 10)
-            loan_amount = m2.number_input("Requested Loan ($)", 0, 10_000_000, 120_000, step=1_000)
-            employment_years = m1.number_input("Employment Years", 0, 60, 5)
-            credit_hist_years = m2.number_input("Credit History (years)", 0, 50, 6)
-            delinq = m1.number_input("Delinquencies", 0, 50, 1)
-            curr_loans = m2.number_input("Current Loans", 0, 50, 2)
-            city = m1.text_input("City (optional)", "HCMC")
-            add_row = st.button("Add manual asset row", key="btn_add_manual_row")
-
-        if st.button("Build Intake Table (fallback to synthetic if empty)", key="btn_build_intake"):
-            rows = []
-
-            # CSV path
-            if up_csv is not None:
-                try:
-                    rows.append(pd.read_csv(up_csv))
-                except Exception as e:
-                    st.error(f"CSV parse error: {e}")
-
-            # Manual row path
-            if add_row:
-                rows.append(pd.DataFrame([{
-                    "application_id": f"APP_{datetime.now(timezone.utc).strftime('%H%M%S')}",
-                    "asset_id": f"A{datetime.now(timezone.utc).strftime('%M%S')}",
-                    "asset_type": asset_type, "market_value": market_value, "age_years": age_years,
-                    "loan_amount": loan_amount, "employment_years": employment_years,
-                    "credit_history_years": credit_hist_years, "delinquencies": delinq,
-                    "current_loans": curr_loans, "city": city
-                }]))
-
-            # Synthetic fallback
-            if len(rows) == 0:
-                df = quick_synth(150)
-                st.info("No inputs provided — generated a synthetic intake dataset.")
-            else:
-                df = pd.concat(rows, ignore_index=True)
-
-            ss["asset_intake_df"] = df
-            # Persist exact artifact: intake_table.csv
-            os.makedirs("./.tmp_runs", exist_ok=True)
-            intake_path = os.path.join("./.tmp_runs", f"intake_table.{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.csv")
-            ss["asset_intake_df"].to_csv(intake_path, index=False)
-            st.success(f"Saved: `{intake_path}`  •  Rows: {len(df)}")
-            st.dataframe(df.head(15), use_container_width=True)
-
-    with right:
-        st.markdown("#### Generated Metrics — What & Why")
-        st.dataframe(synth_why_table(), use_container_width=True)
-
-    st.markdown("---")
-
-    # A.1 — Evidence Extraction (OCR/EXIF/GPS, doc type detect, hash & index)
-    st.markdown("### **1) Evidence Extraction (OCR/EXIF/GPS)**")
-    evid = st.file_uploader(
-        "Attach evidence (images or PDFs, optional)",
-        type=["png", "jpg", "jpeg", "pdf"],
-        accept_multiple_files=True,
-        key="asset_evidence_files"
+    # Runtime tip
+    st.caption(
+        "📘 Tip: Move sequentially from A→G or revisit individual stages. "
+        "If a stage reports missing data, rerun the previous one or load demo data."
     )
 
-    cA1_1, cA1_2 = st.columns([1, 1])
-    with cA1_1:
-        if st.button("Extract & Index Evidence", key="btn_extract_evidence"):
-            idx_items = []
-            for i, f in enumerate(evid or []):
-                # Read into BytesIO for hashing (Streamlit gives UploadedFile)
-                bio = io.BytesIO(f.read())
-                file_hash = sha1_of_filelike(bio)
-                # Reset for any downstream use
-                bio.seek(0)
-
-                # Naive doc-type guess by extension
-                ext = (getattr(f, "name", "") or "").split(".")[-1].lower()
-                doc_type = "image" if ext in ("png", "jpg", "jpeg") else "pdf"
-
-                # Fake EXIF/GPS until wired
-                exif = extract_fake_exif_gps()
-
-                idx_items.append({
-                    "evidence_id": f"EV-{i+1:04d}",
-                    "file_name": getattr(f, "name", f"file-{i+1}"),
-                    "doc_type": doc_type,
-                    "sha1": file_hash,
-                    "exif": exif,
-                })
-
-            evidence_index = {
-                "generated_at": datetime.now(timezone.utc).isoformat(),
-                "count": len(idx_items),
-                "items": idx_items,
-            }
-            ss["asset_evidence_index"] = evidence_index
-
-            # Persist exact artifact: evidence_index.json
-            ev_path = os.path.join("./.tmp_runs", f"evidence_index.{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.json")
-            with open(ev_path, "w", encoding="utf-8") as fp:
-                json.dump(evidence_index, fp, ensure_ascii=False, indent=2)
-
-            st.success(f"Saved: `{ev_path}`  •  Items: {len(idx_items)}")
-            st.json(evidence_index)
-
-    with cA1_2:
-        if ss.get("asset_intake_df") is not None and ss.get("asset_evidence_index") is not None:
-            # Optional quick linkage KPI (count only)
-            linked_pct = 1.0 if len(ss["asset_evidence_index"]["items"]) >= 1 else 0.0
-            st.metric("Evidence Linked (≥1)", f"{linked_pct:.0%}")
-        elif ss.get("asset_intake_df") is not None:
-            st.info("Load evidence and click **Extract & Index Evidence** to compute linkage.")
-        else:
-            st.info("Build the intake table first (A.0).")
+else:
+    st.warning("Please log in first to access the Asset Appraisal workflow.")
 
 
-    # # ========== 1) DATA INPUT ==========
-    # with tab1:
-    #     st.subheader("📥 Stage 1 — Provide Asset Data (CSV, evidence files, or manual)")
-    #     left, right = st.columns([1.4, 1])
 
-    #     with left:
-    #         up_csv = st.file_uploader("Upload Asset CSV", type=["csv"], key="asset_csv")
-    #         evid = st.file_uploader("Attach evidence (images or PDFs, optional)", type=["png","jpg","jpeg","pdf"],
-    #                                 accept_multiple_files=True, key="asset_evidence")
-    #         with st.expander("➕ Add manual asset row", expanded=False):
-    #             m1, m2 = st.columns(2)
-    #             asset_type = m1.selectbox("Asset Type", ["House","Apartment","Car","Land","Factory"])
-    #             market_value = m2.number_input("Market Value ($)", 0, 10_000_000, 250_000, step=1_000)
-    #             age_years = m1.number_input("Age (years)", 0, 100, 10)
-    #             loan_amount = m2.number_input("Requested Loan ($)", 0, 10_000_000, 120_000, step=1_000)
-    #             employment_years = m1.number_input("Employment Years", 0, 60, 5)
-    #             credit_hist_years = m2.number_input("Credit History (years)", 0, 50, 6)
-    #             delinq = m1.number_input("Delinquencies", 0, 50, 1)
-    #             curr_loans = m2.number_input("Current Loans", 0, 50, 2)
-    #             city = m1.text_input("City (optional)", "HCMC")
-    #             add_row = st.button("Add manual asset row", key="btn_add_manual_row")
+# # ─────────────────────────────────────────────
+# # WORKFLOW (A→F)
+# # ─────────────────────────────────────────────
+# if ss["asset_logged_in"] and ss["asset_stage"] in ("asset_flow", "asset_agent"):
+#     render_nav_bar_app()
+#     st.title("🏛️ Asset Appraisal Agent")
+#     st.caption(
+#         "A→F pipeline — Intake→Privacy→Valuation→Policy→Review→Reporting "
+#         f"| 👋 {ss['asset_user']['name']}"
+#     )
 
-    #         if st.button("Build Stage 1 dataset (or fallback to synthetic if empty)", key="btn_build_stage1"):
-    #             rows = []
-    #             if up_csv is not None:
-    #                 try:
-    #                     rows.append(pd.read_csv(up_csv))
-    #                 except Exception as e:
-    #                     st.error(f"CSV parse error: {e}")
+#     # # ─────────────────────────────────────────
+#     # # TABS (A..F) — Commented blueprint (keep this above live tabs)
+#     # # ─────────────────────────────────────────
+#     # tabA, tabB, tabC, tabD, tabE, tabF = st.tabs([
+#     #     "🟦 A) Intake & Evidence",
+#     #     "🟩 B) Privacy & Features",
+#     #     "🟨 C) Valuation & Verification",
+#     #     "🟧 D) Policy & Decision",
+#     #     "🟪 E) Human Review & Training",
+#     #     "⬜ F) Reporting & Handoff"
+#     # ])
 
-    #             if evid:
-    #                 ss["asset_evidence"] = [f.name for f in evid]
+#     # ─────────────────────────────────────────
+#     # TABS (A..F) — Live tabs
+#     # ─────────────────────────────────────────
+#     tabA, tabB, tabC, tabD, tabE, tabF = st.tabs([
+#         "🟦 A) Intake & Evidence",
+#         "🟩 B) Privacy & Features",
+#         "🟨 C) Valuation & Verification",
+#         "🟧 D) Policy & Decision",
+#         "🟪 E) Human Review & Training",
+#         "⬜ F) Reporting & Handoff"
+#     ])
 
-    #             if add_row:
-    #                 rows.append(pd.DataFrame([{
-    #                     "application_id": f"APP_{datetime.datetime.utcnow().strftime('%H%M%S')}",
-    #                     "asset_id": f"A{datetime.datetime.utcnow().strftime('%M%S')}",
-    #                     "asset_type": asset_type, "market_value": market_value, "age_years": age_years,
-    #                     "loan_amount": loan_amount, "employment_years": employment_years,
-    #                     "credit_history_years": credit_hist_years, "delinquencies": delinq,
-    #                     "current_loans": curr_loans, "city": city
-    #                 }]))
 
-    #             if len(rows) == 0:
-    #                 df = quick_synth(150)
-    #                 st.info("No inputs provided — generated synthetic dataset.")
-    #                 st.dataframe(synth_why_table(), use_container_width=True)
-    #             else:
-    #                 df = pd.concat(rows, ignore_index=True)
 
-    #             if "evidence_files" not in df.columns:
-    #                 df["evidence_files"] = [ss.get("asset_evidence", []) for _ in range(len(df))]
+# ─────────────────────────────────────────
+# 🟦 STAGE A — INTAKE & EVIDENCE
+# ─────────────────────────────────────────
+with tabA:
+    import io, os, json, hashlib, pandas as pd
+    from datetime import datetime, timezone
 
-    #             ss["asset_raw_df"] = df
-    #             st.success(f"Stage 1 dataset ready. Rows: {len(df)}")
-    #             st.dataframe(df.head(15), use_container_width=True)
+    st.subheader("A. Intake & Evidence")
+    st.caption("Steps: (1) Upload / Import, (2) Normalize, (3) Generate unified intake CSV")
 
-    #     with right:
-    #         st.markdown("#### Generated Metrics — What & Why")
-    #         st.dataframe(synth_why_table(), use_container_width=True)
+    # ─────────────────────────────────────────
+    # 📘 Quick User Guide (updated)
+    # ─────────────────────────────────────────
+    with st.expander("📘 Quick User Guide", expanded=False):
+        st.markdown("""
+        **Goal:** Collect, normalize, and unify all asset-related data before appraisal.
 
-    # # ========== 2) ANONYMIZE ==========
-    # with tab2:
-    #     st.subheader("🧹 Stage 2 — Anonymize / Sanitize PII")
-    #     if ss["asset_raw_df"] is None:
-    #         st.warning("Build Stage 1 dataset first (tab 1).")
-    #     else:
-    #         if st.button("Run anonymization now", key="btn_run_anon"):
-    #             ss["asset_anon_df"] = anonymize_text_cols(ss["asset_raw_df"])
-    #             st.success("Anonymization complete. Saved ANON dataset.")
-    #         if ss["asset_anon_df"] is not None:
-    #             st.dataframe(ss["asset_anon_df"].head(15), use_container_width=True)
-    #             st.download_button("⬇️ Download anonymized CSV",
-    #                                data=ss["asset_anon_df"].to_csv(index=False).encode("utf-8"),
-    #                                file_name="asset_anonymized.csv", mime="text/csv")
+        **1️⃣ Upload Your Data**
+        - Upload **field agent reports**, **loan lists with collateral**, and **legal property documents**.
+        - Supported: `.csv`, `.xlsx`, `.zip` (evidence images/docs).
+
+        **2️⃣ Import Open Data**
+        - Search **Kaggle** or **Hugging Face** for relevant valuation datasets.
+        - You can mix public + internal uploads — AI will normalize columns.
+
+        **3️⃣ Normalize**
+        - After upload/import, click **"Normalize Data"** to merge and standardize features.
+        - Output: `intake_table.csv` ready for Stage B (Anonymization).
+
+        **4️⃣ Generate Synthetic Data**
+        - If no input data is available, the AI can synthesize a demo dataset representing:
+          `asset_id, asset_type, city, market_value, loan_amount, legal_source, condition_score`.
+
+        **5️⃣ Output**
+        - A unified CSV file is produced → download or proceed directly to **Stage B**.
+        """)
+
+    # ─────────────────────────────────────────
+    # (A.1) UPLOAD ZONE — Human Inputs
+    # ─────────────────────────────────────────
+    st.markdown("### 📤 Upload Data Files (Field Agents / Loans / Legal Docs)")
+    uploaded_files = st.file_uploader(
+        "Upload multiple files",
+        type=["csv", "xlsx", "zip"],
+        accept_multiple_files=True,
+        key="asset_upload_files"
+    )
+
+    uploaded_dfs = []
+    if uploaded_files:
+        for f in uploaded_files:
+            try:
+                if f.name.endswith(".csv"):
+                    df = pd.read_csv(f)
+                elif f.name.endswith(".xlsx"):
+                    df = pd.read_excel(f)
+                else:
+                    st.info(f"📦 Skipping non-tabular file: {f.name}")
+                    continue
+                st.success(f"✅ Loaded `{f.name}` ({len(df)} rows, {len(df.columns)} cols)")
+                uploaded_dfs.append(df)
+            except Exception as e:
+                st.error(f"❌ Failed to read {f.name}: {e}")
+
+    # ─────────────────────────────────────────
+    # (A.2) PUBLIC DATASETS — Kaggle / HF / OpenML
+    # ─────────────────────────────────────────
+    st.markdown("### 🌍 Import Public Datasets (Kaggle / Hugging Face / OpenML / Portals)")
+    src = st.selectbox(
+        "Select source",
+        ["Kaggle (API)", "Kaggle (Web)", "Hugging Face", "OpenML", "Public Domain Portals"],
+        key="asset_pubsrc"
+    )
+    query = st.text_input("Search keywords", "house prices Vietnam real estate valuation", key="asset_pubquery")
+
+    if st.button("🔎 Search dataset", key="btn_asset_pubsearch"):
+        with st.spinner("Searching datasets..."):
+            try:
+                if src == "Kaggle (API)":
+                    import subprocess
+                    cmd = ["kaggle", "datasets", "list", "-s", query, "-v"]
+                    try:
+                        out = subprocess.check_output(cmd, text=True)
+                        rows = out.strip().splitlines()
+                        if len(rows) > 1:
+                            header = [h.strip() for h in rows[0].split(",")]
+                            df_pub = pd.DataFrame([r.split(",") for r in rows[1:]], columns=header)
+                            st.dataframe(df_pub.head(25))
+                            st.success("✅ Kaggle API results shown.")
+                        else:
+                            st.warning("No results found.")
+                    except Exception as e:
+                        st.error(f"Kaggle CLI failed: {e}")
+                        st.info("💡 Install Kaggle CLI & configure ~/.kaggle/kaggle.json.")
+
+                elif src == "Kaggle (Web)":
+                    st.markdown(f"[🌐 Open Kaggle ↗️](https://www.kaggle.com/datasets?search={query})")
+
+                elif src == "Hugging Face":
+                    from huggingface_hub import list_datasets
+                    results = list_datasets(search=query)
+                    df_pub = pd.DataFrame([{"Dataset": r.id, "Tags": ", ".join(r.tags)} for r in results[:25]])
+                    st.dataframe(df_pub)
+                    st.success("✅ Hugging Face datasets retrieved.")
+
+                elif src == "OpenML":
+                    st.markdown(f"[📊 OpenML Search ↗️](https://www.openml.org/search?type=data&q={query})")
+
+                elif src == "Public Domain Portals":
+                    st.markdown("""
+                    - [🌎 data.gov](https://www.data.gov/)
+                    - [🇪🇺 data.europa.eu](https://data.europa.eu/)
+                    - [🇸🇬 data.gov.sg](https://data.gov.sg/)
+                    - [🇻🇳 data.gov.vn](https://data.gov.vn/)
+                    """)
+            except Exception as e:
+                st.error(f"Search failed: {e}")
+
+    st.divider()
+
+    # ─────────────────────────────────────────
+    # (A.3) NORMALIZATION — Merge + Generate CSV
+    # ─────────────────────────────────────────
+    st.markdown("### 🧮 Normalize & Combine All Inputs")
+    st.caption("Merge data from uploaded, imported, or synthetic sources into a unified format.")
+
+    def normalize_dataframes(dfs):
+        """Unify schemas and ensure consistent column names."""
+        import numpy as np
+        if not dfs:
+            st.warning("No data to normalize.")
+            return pd.DataFrame()
+        merged = pd.concat(dfs, ignore_index=True)
+        merged.columns = [c.strip().lower().replace(" ", "_") for c in merged.columns]
+        required_cols = ["asset_id", "asset_type", "market_value", "loan_amount", "city"]
+        for col in required_cols:
+            if col not in merged.columns:
+                merged[col] = np.nan
+        merged = merged[required_cols]
+        merged.drop_duplicates(inplace=True)
+        merged["normalized_at"] = datetime.now(timezone.utc).isoformat()
+        return merged
+
+    if st.button("⚙️ Normalize & Generate Unified CSV", key="btn_normalize_data"):
+        try:
+            all_dfs = uploaded_dfs.copy()
+            if not all_dfs:
+                st.info("No uploads found — using synthetic fallback.")
+                all_dfs.append(quick_synth(100))
+            df_norm = normalize_dataframes(all_dfs)
+            ss["asset_intake_df"] = df_norm
+            os.makedirs("./.tmp_runs", exist_ok=True)
+            out_path = f"./.tmp_runs/intake_table_{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.csv"
+            df_norm.to_csv(out_path, index=False)
+            st.success(f"✅ Unified dataset generated with {len(df_norm)} rows.")
+            st.dataframe(df_norm.head(20), use_container_width=True)
+            st.download_button("💾 Download CSV", df_norm.to_csv(index=False), "intake_table.csv", "text/csv")
+        except Exception as e:
+            st.error(f"Normalization failed: {e}")
+
+    st.divider()
+
+    # ─────────────────────────────────────────
+    # (A.4) SYNTHETIC DATA GENERATION
+    # ─────────────────────────────────────────
+    st.markdown("### 🤖 Generate Synthetic Data (Fallback)")
+    nrows = st.slider("Number of synthetic rows", 10, 500, 150, step=10, key="slider_synth_rows")
+    if st.button("🎲 Generate Synthetic Dataset", key="btn_generate_synth"):
+        try:
+            df_synth = quick_synth(nrows)
+            ss["asset_intake_df"] = df_synth
+            os.makedirs("./.tmp_runs", exist_ok=True)
+            synth_path = f"./.tmp_runs/intake_table_synth_{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.csv"
+            df_synth.to_csv(synth_path, index=False)
+            st.success(f"✅ Synthetic dataset created ({len(df_synth)} rows).")
+            st.dataframe(df_synth.head(20), use_container_width=True)
+            st.download_button("💾 Download Synthetic CSV", df_synth.to_csv(index=False), "synthetic_intake.csv", "text/csv")
+        except Exception as e:
+            st.error(f"Synthetic generation failed: {e}")
+
+
+
+# # ─────────────────────────────────────────
+# # A — INTAKE & EVIDENCE (0..1)
+# # ─────────────────────────────────────────
+# with tabA:
+#     import hashlib, io, json, os
+#     from datetime import datetime, timezone
+
+#     st.subheader("A. Intake & Evidence")
+#     st.caption("Steps: **0) Intake & Identity**, **1) Evidence Extraction (OCR/EXIF/GPS)**")
+
+#     # ---------- Local helpers ----------
+#     def sha1_of_filelike(fobj) -> str:
+#         """Compute SHA1 hash from file-like object without exhausting stream."""
+#         pos = fobj.tell() if hasattr(fobj, "tell") else None
+#         fobj.seek(0)
+#         h = hashlib.sha1()
+#         for chunk in iter(lambda: fobj.read(8192), b""):
+#             if isinstance(chunk, str):
+#                 chunk = chunk.encode("utf-8")
+#             h.update(chunk)
+#         if pos is not None:
+#             fobj.seek(pos)
+#         return h.hexdigest()
+
+#     def extract_fake_exif_gps() -> dict:
+#         return {
+#             "gps": {"lat": 10.7758, "lon": 106.7009},
+#             "ts": datetime.now(timezone.utc).isoformat()
+#         }
+#     def quick_synth(n: int = 150) -> pd.DataFrame:
+#         """Generate synthetic intake dataset for demonstration/testing."""
+#         import random
+#         import numpy as np
+#         from datetime import datetime, timedelta, timezone
+
+#         t = datetime.now(timezone.utc)
+#         asset_types = ["House", "Apartment", "Car", "Land", "Factory"]
+#         cities = ["HCMC", "Hanoi", "Da Nang", "Can Tho", "Hai Phong"]
+#         regions = {
+#             "HCMC": "South",
+#             "Hanoi": "North",
+#             "Da Nang": "Central",
+#             "Can Tho": "Mekong",
+#             "Hai Phong": "North"
+#         }
+
+#         rows = []
+#         for i in range(n):
+#             city = cities[i % len(cities)]
+#             region = regions[city]
+#             base_value = 120_000 + (i % 17) * 3_500
+#             noise = random.uniform(-0.1, 0.1) * base_value
+
+#             # Derived + synthetic realism
+#             market_value = base_value + noise
+#             age_years = random.randint(0, 40)
+#             condition_score = round(max(0.5, 1.0 - (age_years / 100.0) + random.uniform(-0.1, 0.1)), 2)
+#             loan_amount = round(market_value * random.uniform(0.4, 0.8))
+#             employment_years = random.randint(1, 30)
+#             credit_history_years = random.randint(1, 25)
+#             delinquencies = random.randint(0, 3)
+#             current_loans = random.randint(0, 5)
+#             registry_source = random.choice(["gov_registry", "private_registry", "unknown"])
+#             evidence_count = random.randint(1, 5)
+#             valuation_date = (t - timedelta(days=random.randint(0, 720))).strftime("%Y-%m-%d")
+
+#             rows.append({
+#                 "application_id": f"APP_{t.strftime('%H%M%S')}_{i:04d}",
+#                 "asset_id": f"A{t.strftime('%M%S')}{i:04d}",
+#                 "asset_type": random.choice(asset_types),
+#                 "market_value": round(market_value, 2),
+#                 "loan_amount": round(loan_amount, 2),
+#                 "age_years": age_years,
+#                 "condition_score": condition_score,
+#                 "employment_years": employment_years,
+#                 "credit_history_years": credit_history_years,
+#                 "delinquencies": delinquencies,
+#                 "current_loans": current_loans,
+#                 "city": city,
+#                 "region": region,
+#                 "registry_source": registry_source,
+#                 "evidence_count": evidence_count,
+#                 "valuation_date": valuation_date,
+#             })
+
+#         df = pd.DataFrame(rows)
+#         df["ltv_ratio"] = (df["loan_amount"] / df["market_value"]).round(2)
+#         df["legal_penalty_flag"] = np.where(df["registry_source"] == "unknown", 1, 0)
+#         return df
+
+
+#     # def quick_synth(n: int = 150) -> pd.DataFrame:
+#     #     t = datetime.now(timezone.utc)
+#     #     rows = [{
+#     #         "application_id": f"APP_{t.strftime('%H%M%S')}_{i:04d}",
+#     #         "asset_id": f"A{t.strftime('%M%S')}{i:04d}",
+#     #         "asset_type": ["House","Apartment","Car","Land","Factory"][i % 5],
+#     #         "market_value": 120000 + (i % 17) * 3500,
+#     #         "age_years": (i % 35),
+#     #         "loan_amount": 80000 + (i % 23) * 2500,
+#     #         "employment_years": (i % 25),
+#     #         "credit_history_years": (i % 20),
+#     #         "delinquencies": (i % 3),
+#     #         "current_loans": (i % 5),
+#     #         "city": ["HCMC","Hanoi","Da Nang","Can Tho","Hai Phong"][i % 5],
+#     #     } for i in range(n)]
+#     #     return pd.DataFrame(rows)
+
+#     # def synth_why_table() -> pd.DataFrame:
+#     #     return pd.DataFrame([
+#     #         {"Metric": "PII present", "Why it matters": "Must be masked before feature engineering (privacy-by-design)."},
+#     #         {"Metric": "Evidence linked (%)", "Why it matters": "Traceability between assets and documents/photos."},
+#     #         {"Metric": "Rows (intake)", "Why it matters": "Sanity-check volume before downstream costs."},
+#     #     ])
+
+#     # ---------- A.0 — Intake & Identity ----------
+#     st.markdown("### **0) Intake & Identity**")
+
+#     # 📘 Quick user guide
+#     with st.expander("📘 Quick User Guide", expanded=False):
+#         st.markdown("""
+#         **Goal:** Collect, normalize, and validate all asset data before appraisal.
+
+#         **1️⃣ Upload Your Data**
+#         - CSV from field agents, real-estate papers, or loan portfolios.
+#         - Include key columns: `asset_id`, `asset_type`, `market_value`, `loan_amount`, `city`.
+
+#         **2️⃣ Manual Add**
+#         - Use to simulate new asset entries for quick testing.
+
+#         **3️⃣ Attach Evidence**
+#         - Add photos or documents (JPG/PDF). GPS/EXIF auto-parsed.
+
+#         **4️⃣ Public Datasets**
+#         - Search Kaggle / Hugging Face / Open ML for open valuation benchmarks.
+#         """)
+
+#     # ─────────────────────────────────────────
+#     # 🔍 Search & Import Public Datasets
+#     # ─────────────────────────────────────────
+#     st.markdown("### 🔍 Search Public Datasets (Kaggle / Hugging Face / OpenML / Public Portals)")
+#     st.caption("Search, preview, or import datasets from open sources — useful for model benchmarking or demo generation.")
+
+#     src = st.selectbox(
+#         "Select source",
+#         ["Kaggle (API)", "Kaggle (Web)", "Hugging Face", "OpenML", "Public Domain Portals"],
+#         key="asset_pubsrc"
+#     )
+#     query = st.text_input(
+#         "Search keywords",
+#         placeholder="e.g. house prices Vietnam, real estate valuation",
+#         key="asset_pubquery"
+#     )
+
+#     if st.button("🔎 Search dataset", key="btn_asset_pubsearch"):
+#         with st.spinner("Searching public datasets…"):
+#             try:
+#                 # Kaggle API mode
+#                 if src == "Kaggle (API)":
+#                     import subprocess, pandas as pd
+#                     cmd = ["kaggle", "datasets", "list", "-s", query, "-v"]
+#                     try:
+#                         output = subprocess.check_output(cmd, text=True)
+#                         lines = output.strip().splitlines()
+#                         if len(lines) > 1:
+#                             header = [h.strip() for h in lines[0].split(",")]
+#                             data = [l.split(",") for l in lines[1:]]
+#                             df_pub = pd.DataFrame(data, columns=header)
+#                             st.dataframe(df_pub.head(25), use_container_width=True)
+#                             st.success("✅ Kaggle API search complete. Use CLI or download link to import.")
+#                         else:
+#                             st.warning("No datasets found for your query.")
+#                     except Exception as e:
+#                         st.error(f"Kaggle API search failed: {e}")
+#                         st.info("💡 Tip: Ensure your Kaggle API key (~/.kaggle/kaggle.json) is configured.")
+
+#                 # Kaggle Web mode (no API needed)
+#                 elif src == "Kaggle (Web)":
+#                     st.markdown(
+#                         f"[🌐 Open Kaggle Search ↗️](https://www.kaggle.com/datasets?search={query})"
+#                     )
+
+#                 # Hugging Face datasets
+#                 elif src == "Hugging Face":
+#                     from huggingface_hub import list_datasets
+#                     results = list_datasets(search=query)
+#                     df_pub = pd.DataFrame(
+#                         [{"Dataset": r.id, "Tags": ", ".join(r.tags)} for r in results[:25]]
+#                     )
+#                     st.dataframe(df_pub, use_container_width=True)
+#                     st.success("✅ Hugging Face datasets retrieved successfully.")
+
+#                 # OpenML
+#                 elif src == "OpenML":
+#                     st.markdown(
+#                         f"[📊 Open OpenML Search ↗️](https://www.openml.org/search?type=data&q={query})"
+#                     )
+
+#                 # Public domain portals
+#                 elif src == "Public Domain Portals":
+#                     st.markdown("""
+#                     **Global Open Data Portals**
+#                     - [🌎 data.gov (US)](https://www.data.gov/)
+#                     - [🇪🇺 data.europa.eu (EU)](https://data.europa.eu/)
+#                     - [🇸🇬 data.gov.sg (Singapore)](https://data.gov.sg/)
+#                     - [🇻🇳 data.gov.vn (Vietnam)](https://data.gov.vn/)
+#                     """)
+#             except Exception as e:
+#                 st.error(f"❌ Search failed: {e}")
+
+#     # Optional layout continuation
+#     left, right = st.columns([1.4, 1])
+
+    
+    
+#     # # 🔍 Search Public Datasets
+#     # st.markdown("#### 🔍 Search Public Datasets (Kaggle / Hugging Face / Open ML)")
+#     # src = st.selectbox("Source", ["Kaggle", "Hugging Face Datasets", "Open ML"], key="asset_pubsrc")
+#     # query = st.text_input("Search keywords", placeholder="e.g. house prices Vietnam, real estate valuation", key="asset_pubquery")
+
+#     # if st.button("Search dataset", key="btn_asset_pubsearch"):
+#     #     with st.spinner("Searching public datasets…"):
+#     #         try:
+#     #             if src == "Hugging Face Datasets":
+#     #                 from huggingface_hub import list_datasets
+#     #                 results = list_datasets(search=query)
+#     #                 df_pub = pd.DataFrame([{"Name": r.id, "Tags": ", ".join(r.tags)} for r in results[:25]])
+#     #                 st.dataframe(df_pub)
+#     #             elif src == "Kaggle":
+#     #                 st.info("Use `kaggle datasets list -s <keywords>` in terminal to explore.")
+#     #             else:
+#     #                 st.info(f"Open ML search → https://www.openml.org/search?type=data&q={query}")
+#     #         except Exception as e:
+#     #             st.error(f"Search failed: {e}")
+
+#     # left, right = st.columns([1.4, 1])
+    
+
+
+#     # ---------- A.1 — Evidence Extraction ----------
+#     st.markdown("### **1) Evidence Extraction (OCR/EXIF/GPS)**")
+#     evid = st.file_uploader("Attach evidence (images or PDFs, optional)",
+#                             type=["png", "jpg", "jpeg", "pdf"],
+#                             accept_multiple_files=True,
+#                             key="asset_evidence_files")
+
+#     cA1_1, cA1_2 = st.columns(2)
+#     with cA1_1:
+#         if st.button("Extract & Index Evidence", key="btn_extract_evidence"):
+#             idx_items = []
+#             for i, f in enumerate(evid or []):
+#                 try:
+#                     bio = io.BytesIO(f.read())
+#                     file_hash = sha1_of_filelike(bio)
+#                     bio.seek(0)
+#                     ext = (f.name or "").split(".")[-1].lower()
+#                     doc_type = "image" if ext in ("png","jpg","jpeg") else "pdf"
+#                     exif = extract_fake_exif_gps()
+#                     idx_items.append({
+#                         "evidence_id": f"EV-{i+1:04d}",
+#                         "file_name": f.name,
+#                         "doc_type": doc_type,
+#                         "sha1": file_hash,
+#                         "exif": exif,
+#                     })
+#                 except Exception as e:
+#                     st.error(f"Error processing {f.name}: {e}")
+
+#             evidence_index = {
+#                 "generated_at": datetime.now(timezone.utc).isoformat(),
+#                 "count": len(idx_items),
+#                 "items": idx_items,
+#             }
+#             ss["asset_evidence_index"] = evidence_index
+
+#             ev_path = os.path.join("./.tmp_runs", f"evidence_index.{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.json")
+#             with open(ev_path, "w", encoding="utf-8") as fp:
+#                 json.dump(evidence_index, fp, ensure_ascii=False, indent=2)
+#             st.success(f"Saved: `{ev_path}`  •  Items: {len(idx_items)}")
+#             st.json(evidence_index)
+
+#     with cA1_2:
+#         if ss.get("asset_intake_df") is not None and ss.get("asset_evidence_index") is not None:
+#             linked_pct = 1.0 if len(ss["asset_evidence_index"]["items"]) >= 1 else 0.0
+#             st.metric("Evidence Linked (≥1)", f"{linked_pct:.0%}")
+#         elif ss.get("asset_intake_df") is not None:
+#             st.info("Upload evidence and click **Extract & Index Evidence**.")
+#         else:
+#             st.warning("Build the intake table first (A.0).")
+
+
+        
+#     # ─────────────────────────────────────────
+#     # 📊 Synthetic Data Generation
+#     # ─────────────────────────────────────────
+#     st.markdown("### 📊 Generate Synthetic Data")
+#     st.caption("Quickly create a sample intake dataset for testing or demos.")
+
+#     num_rows = st.slider("Number of synthetic rows", min_value=10, max_value=500, value=150, step=10)
+#     if st.button("⚙️ Generate Synthetic Intake Dataset", key="btn_generate_synth"):
+#         try:
+#             df_synth = quick_synth(num_rows)
+#             ss["asset_intake_df"] = df_synth
+#             st.success(f"✅ Generated synthetic dataset with {len(df_synth)} rows.")
+#             st.dataframe(df_synth.head(20), use_container_width=True)
+#             # Optional: auto-save artifact
+#             out_path = f"./.tmp_runs/intake_table_synth_{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.csv"
+#             os.makedirs("./.tmp_runs", exist_ok=True)
+#             df_synth.to_csv(out_path, index=False)
+#             st.info(f"Saved to: `{out_path}`")
+#         except Exception as e:
+#             st.error(f"Synthetic data generation failed: {e}")
+
+
+#         # ---------- Intake block ----------
+#         with left:
+#             up_csv = st.file_uploader("Upload Asset CSV", type=["csv"], key="asset_csv")
+#             with st.expander("➕ Add manual asset row", expanded=False):
+#                 m1, m2 = st.columns(2)
+#                 asset_type = m1.selectbox("Asset Type", ["House","Apartment","Car","Land","Factory"])
+#                 market_value = m2.number_input("Market Value ($)", 0, 10_000_000, 250_000, step=1_000)
+#                 age_years = m1.number_input("Age (years)", 0, 100, 10)
+#                 loan_amount = m2.number_input("Requested Loan ($)", 0, 10_000_000, 120_000, step=1_000)
+#                 employment_years = m1.number_input("Employment Years", 0, 60, 5)
+#                 credit_hist_years = m2.number_input("Credit History (years)", 0, 50, 6)
+#                 delinq = m1.number_input("Delinquencies", 0, 50, 1)
+#                 curr_loans = m2.number_input("Current Loans", 0, 50, 2)
+#                 city = m1.text_input("City", "HCMC")
+#                 add_row = st.button("Add manual asset row", key="btn_add_manual_row")
+
+#             if st.button("Build Intake Table (fallback to synthetic if empty)", key="btn_build_intake"):
+#                 rows = []
+#                 # CSV
+#                 if up_csv is not None:
+#                     try:
+#                         rows.append(pd.read_csv(up_csv))
+#                     except Exception as e:
+#                         st.error(f"CSV parse error: {e}")
+#                 # Manual row
+#                 if add_row:
+#                     rows.append(pd.DataFrame([{
+#                         "application_id": f"APP_{datetime.now(timezone.utc).strftime('%H%M%S')}",
+#                         "asset_id": f"A{datetime.now(timezone.utc).strftime('%M%S')}",
+#                         "asset_type": asset_type, "market_value": market_value, "age_years": age_years,
+#                         "loan_amount": loan_amount, "employment_years": employment_years,
+#                         "credit_history_years": credit_hist_years, "delinquencies": delinq,
+#                         "current_loans": curr_loans, "city": city
+#                     }]))
+#                 # Synthetic fallback
+#                 df = pd.concat(rows, ignore_index=True) if rows else quick_synth(150)
+#                 if not rows:
+#                     st.info("No inputs provided — generated synthetic intake dataset.")
+
+#                 ss["asset_intake_df"] = df
+#                 os.makedirs("./.tmp_runs", exist_ok=True)
+#                 intake_path = os.path.join("./.tmp_runs", f"intake_table.{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.csv")
+#                 df.to_csv(intake_path, index=False)
+#                 st.success(f"Saved: `{intake_path}`  •  Rows: {len(df)}")
+#                 st.dataframe(df.head(15), use_container_width=True)
+
+#         with right:
+#             st.markdown("#### Generated Metrics — What & Why")
+#             st.dataframe(synth_why_table(), use_container_width=True)
+
+#         st.markdown("---")
+
+# # ─────────────────────────────────────────
+# # A — INTAKE & EVIDENCE (0..1)
+# # ─────────────────────────────────────────
+# with tabA:
+#     st.subheader("A. Intake & Evidence")
+#     st.caption("Steps: **0) Intake & Identity**, **1) Evidence Extraction (OCR/EXIF/GPS)**")
+
+#     # Local helpers (light stubs; replace with real OCR/EXIF later)
+#     import hashlib, io
+#     from datetime import datetime, timezone
+
+#     def sha1_of_filelike(fobj) -> str:
+#         pos = fobj.tell() if hasattr(fobj, "tell") else None
+#         fobj.seek(0)
+#         h = hashlib.sha1()
+#         while True:
+#             chunk = fobj.read(8192)
+#             if not chunk:
+#                 break
+#             if isinstance(chunk, str):
+#                 chunk = chunk.encode("utf-8")
+#             h.update(chunk)
+#         if pos is not None:
+#             fobj.seek(pos)
+#         return h.hexdigest()
+
+#     def extract_fake_exif_gps() -> dict:
+#         # Placeholder until your real EXIF/GPS pipeline is wired
+#         return {"gps": {"lat": 10.7758, "lon": 106.7009}, "ts": datetime.now(timezone.utc).isoformat()}
+
+#     def quick_synth(n: int = 150) -> pd.DataFrame:
+#         t = datetime.now(timezone.utc)
+#         rows = []
+#         for i in range(n):
+#             rows.append({
+#                 "application_id": f"APP_{t.strftime('%H%M%S')}_{i:04d}",
+#                 "asset_id": f"A{t.strftime('%M%S')}{i:04d}",
+#                 "asset_type": ["House","Apartment","Car","Land","Factory"][i % 5],
+#                 "market_value": 120000 + (i % 17) * 3500,
+#                 "age_years": (i % 35),
+#                 "loan_amount": 80000 + (i % 23) * 2500,
+#                 "employment_years": (i % 25),
+#                 "credit_history_years": (i % 20),
+#                 "delinquencies": (i % 3),
+#                 "current_loans": (i % 5),
+#                 "city": ["HCMC","Hanoi","Da Nang","Can Tho","Hai Phong"][i % 5],
+#             })
+#         return pd.DataFrame(rows)
+
+#     def synth_why_table() -> pd.DataFrame:
+#         return pd.DataFrame([
+#             {"Metric": "PII present", "Why it matters": "Must be masked before feature engineering (privacy-by-design)."},
+#             {"Metric": "Evidence linked (%)", "Why it matters": "Traceability between assets and documents/photos."},
+#             {"Metric": "Rows (intake)", "Why it matters": "Sanity-check volume before downstream costs."},
+#         ])
+
+#     # A.0 — Intake & Identity
+#     st.markdown("### **0) Intake & Identity**")
+#     left, right = st.columns([1.4, 1])
+
+#     with left:
+#         up_csv = st.file_uploader("Upload Asset CSV", type=["csv"], key="asset_csv")
+#         with st.expander("➕ Add manual asset row", expanded=False):
+#             m1, m2 = st.columns(2)
+#             asset_type = m1.selectbox("Asset Type", ["House","Apartment","Car","Land","Factory"])
+#             market_value = m2.number_input("Market Value ($)", 0, 10_000_000, 250_000, step=1_000)
+#             age_years = m1.number_input("Age (years)", 0, 100, 10)
+#             loan_amount = m2.number_input("Requested Loan ($)", 0, 10_000_000, 120_000, step=1_000)
+#             employment_years = m1.number_input("Employment Years", 0, 60, 5)
+#             credit_hist_years = m2.number_input("Credit History (years)", 0, 50, 6)
+#             delinq = m1.number_input("Delinquencies", 0, 50, 1)
+#             curr_loans = m2.number_input("Current Loans", 0, 50, 2)
+#             city = m1.text_input("City (optional)", "HCMC")
+#             add_row = st.button("Add manual asset row", key="btn_add_manual_row")
+
+#         if st.button("Build Intake Table (fallback to synthetic if empty)", key="btn_build_intake"):
+#             rows = []
+
+#             # CSV path
+#             if up_csv is not None:
+#                 try:
+#                     rows.append(pd.read_csv(up_csv))
+#                 except Exception as e:
+#                     st.error(f"CSV parse error: {e}")
+
+#             # Manual row path
+#             if add_row:
+#                 rows.append(pd.DataFrame([{
+#                     "application_id": f"APP_{datetime.now(timezone.utc).strftime('%H%M%S')}",
+#                     "asset_id": f"A{datetime.now(timezone.utc).strftime('%M%S')}",
+#                     "asset_type": asset_type, "market_value": market_value, "age_years": age_years,
+#                     "loan_amount": loan_amount, "employment_years": employment_years,
+#                     "credit_history_years": credit_hist_years, "delinquencies": delinq,
+#                     "current_loans": curr_loans, "city": city
+#                 }]))
+
+#             # Synthetic fallback
+#             if len(rows) == 0:
+#                 df = quick_synth(150)
+#                 st.info("No inputs provided — generated a synthetic intake dataset.")
+#             else:
+#                 df = pd.concat(rows, ignore_index=True)
+
+#             ss["asset_intake_df"] = df
+#             # Persist exact artifact: intake_table.csv
+#             os.makedirs("./.tmp_runs", exist_ok=True)
+#             intake_path = os.path.join("./.tmp_runs", f"intake_table.{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.csv")
+#             ss["asset_intake_df"].to_csv(intake_path, index=False)
+#             st.success(f"Saved: `{intake_path}`  •  Rows: {len(df)}")
+#             st.dataframe(df.head(15), use_container_width=True)
+
+#     with right:
+#         st.markdown("#### Generated Metrics — What & Why")
+#         st.dataframe(synth_why_table(), use_container_width=True)
+
+#     st.markdown("---")
+
+#     # A.1 — Evidence Extraction (OCR/EXIF/GPS, doc type detect, hash & index)
+#     st.markdown("### **1) Evidence Extraction (OCR/EXIF/GPS)**")
+#     evid = st.file_uploader(
+#         "Attach evidence (images or PDFs, optional)",
+#         type=["png", "jpg", "jpeg", "pdf"],
+#         accept_multiple_files=True,
+#         key="asset_evidence_files"
+#     )
+
+#     cA1_1, cA1_2 = st.columns([1, 1])
+#     with cA1_1:
+#         if st.button("Extract & Index Evidence", key="btn_extract_evidence"):
+#             idx_items = []
+#             for i, f in enumerate(evid or []):
+#                 # Read into BytesIO for hashing (Streamlit gives UploadedFile)
+#                 bio = io.BytesIO(f.read())
+#                 file_hash = sha1_of_filelike(bio)
+#                 # Reset for any downstream use
+#                 bio.seek(0)
+
+#                 # Naive doc-type guess by extension
+#                 ext = (getattr(f, "name", "") or "").split(".")[-1].lower()
+#                 doc_type = "image" if ext in ("png", "jpg", "jpeg") else "pdf"
+
+#                 # Fake EXIF/GPS until wired
+#                 exif = extract_fake_exif_gps()
+
+#                 idx_items.append({
+#                     "evidence_id": f"EV-{i+1:04d}",
+#                     "file_name": getattr(f, "name", f"file-{i+1}"),
+#                     "doc_type": doc_type,
+#                     "sha1": file_hash,
+#                     "exif": exif,
+#                 })
+
+#             evidence_index = {
+#                 "generated_at": datetime.now(timezone.utc).isoformat(),
+#                 "count": len(idx_items),
+#                 "items": idx_items,
+#             }
+#             ss["asset_evidence_index"] = evidence_index
+
+#             # Persist exact artifact: evidence_index.json
+#             ev_path = os.path.join("./.tmp_runs", f"evidence_index.{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.json")
+#             with open(ev_path, "w", encoding="utf-8") as fp:
+#                 json.dump(evidence_index, fp, ensure_ascii=False, indent=2)
+
+#             st.success(f"Saved: `{ev_path}`  •  Items: {len(idx_items)}")
+#             st.json(evidence_index)
+
+#     with cA1_2:
+#         if ss.get("asset_intake_df") is not None and ss.get("asset_evidence_index") is not None:
+#             # Optional quick linkage KPI (count only)
+#             linked_pct = 1.0 if len(ss["asset_evidence_index"]["items"]) >= 1 else 0.0
+#             st.metric("Evidence Linked (≥1)", f"{linked_pct:.0%}")
+#         elif ss.get("asset_intake_df") is not None:
+#             st.info("Load evidence and click **Extract & Index Evidence** to compute linkage.")
+#         else:
+#             st.info("Build the intake table first (A.0).")
+
+
+#     # ========== 1) DATA INPUT ==========
+#     with tab1:
+#         st.subheader("📥 Stage 1 — Provide Asset Data (CSV, evidence files, or manual)")
+#         left, right = st.columns([1.4, 1])
+
+#         with left:
+#             up_csv = st.file_uploader("Upload Asset CSV", type=["csv"], key="asset_csv")
+#             evid = st.file_uploader("Attach evidence (images or PDFs, optional)", type=["png","jpg","jpeg","pdf"],
+#                                     accept_multiple_files=True, key="asset_evidence")
+#             with st.expander("➕ Add manual asset row", expanded=False):
+#                 m1, m2 = st.columns(2)
+#                 asset_type = m1.selectbox("Asset Type", ["House","Apartment","Car","Land","Factory"])
+#                 market_value = m2.number_input("Market Value ($)", 0, 10_000_000, 250_000, step=1_000)
+#                 age_years = m1.number_input("Age (years)", 0, 100, 10)
+#                 loan_amount = m2.number_input("Requested Loan ($)", 0, 10_000_000, 120_000, step=1_000)
+#                 employment_years = m1.number_input("Employment Years", 0, 60, 5)
+#                 credit_hist_years = m2.number_input("Credit History (years)", 0, 50, 6)
+#                 delinq = m1.number_input("Delinquencies", 0, 50, 1)
+#                 curr_loans = m2.number_input("Current Loans", 0, 50, 2)
+#                 city = m1.text_input("City (optional)", "HCMC")
+#                 add_row = st.button("Add manual asset row", key="btn_add_manual_row")
+
+#             if st.button("Build Stage 1 dataset (or fallback to synthetic if empty)", key="btn_build_stage1"):
+#                 rows = []
+#                 if up_csv is not None:
+#                     try:
+#                         rows.append(pd.read_csv(up_csv))
+#                     except Exception as e:
+#                         st.error(f"CSV parse error: {e}")
+
+#                 if evid:
+#                     ss["asset_evidence"] = [f.name for f in evid]
+
+#                 if add_row:
+#                     rows.append(pd.DataFrame([{
+#                         "application_id": f"APP_{datetime.datetime.utcnow().strftime('%H%M%S')}",
+#                         "asset_id": f"A{datetime.datetime.utcnow().strftime('%M%S')}",
+#                         "asset_type": asset_type, "market_value": market_value, "age_years": age_years,
+#                         "loan_amount": loan_amount, "employment_years": employment_years,
+#                         "credit_history_years": credit_hist_years, "delinquencies": delinq,
+#                         "current_loans": curr_loans, "city": city
+#                     }]))
+
+#                 if len(rows) == 0:
+#                     df = quick_synth(150)
+#                     st.info("No inputs provided — generated synthetic dataset.")
+#                     st.dataframe(synth_why_table(), use_container_width=True)
+#                 else:
+#                     df = pd.concat(rows, ignore_index=True)
+
+#                 if "evidence_files" not in df.columns:
+#                     df["evidence_files"] = [ss.get("asset_evidence", []) for _ in range(len(df))]
+
+#                 ss["asset_raw_df"] = df
+#                 st.success(f"Stage 1 dataset ready. Rows: {len(df)}")
+#                 st.dataframe(df.head(15), use_container_width=True)
+
+#         with right:
+#             st.markdown("#### Generated Metrics — What & Why")
+#             st.dataframe(synth_why_table(), use_container_width=True)
+
+#     # ========== 2) ANONYMIZE ==========
+#     with tab2:
+#         st.subheader("🧹 Stage 2 — Anonymize / Sanitize PII")
+#         if ss["asset_raw_df"] is None:
+#             st.warning("Build Stage 1 dataset first (tab 1).")
+#         else:
+#             if st.button("Run anonymization now", key="btn_run_anon"):
+#                 ss["asset_anon_df"] = anonymize_text_cols(ss["asset_raw_df"])
+#                 st.success("Anonymization complete. Saved ANON dataset.")
+#             if ss["asset_anon_df"] is not None:
+#                 st.dataframe(ss["asset_anon_df"].head(15), use_container_width=True)
+#                 st.download_button("⬇️ Download anonymized CSV",
+#                                    data=ss["asset_anon_df"].to_csv(index=False).encode("utf-8"),
+#                                    file_name="asset_anonymized.csv", mime="text/csv")
 
 # ─────────────────────────────────────────
 # B — PRIVACY & FEATURES (2..3)
@@ -1548,11 +2146,12 @@ with tabB:
     #             except Exception:
     #                 pass
 
+
 # ========== 3) AI APPRAISAL & VALUATION ==========
 with tabC:
     st.subheader("🤖 Stage 3 — AI Appraisal & Valuation")
 
-    import os, json, numpy as np
+    import os, json, numpy as np, requests, pandas as pd, plotly.express as px
     from datetime import datetime, timezone
 
     RUNS_DIR = "./.tmp_runs"
@@ -1561,7 +2160,47 @@ with tabC:
     def _ts():
         return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
 
-    # Production model banner (asset agent)
+    # ─────────────────────────────────────────────
+    # 🧭 HOW TO USE THIS STAGE
+    # ─────────────────────────────────────────────
+    st.markdown("""
+    ### 🧭 How to Use This Stage
+    1. **Select a model** — choose between production, trained, or open-source (Hugging Face) models.  
+    2. **Check hardware** — confirm your GPU/CPU profile supports the chosen model.  
+    3. **Select dataset** — use Stage 2 outputs (Features / Anonymized) or fallback synthetic data.  
+    4. **Run appraisal** — compute AI-based valuation (`fmv`, `ai_adjusted`, `confidence`, `why`).  
+    5. **Review outputs** — compare customer vs AI results, run projections, dashboards, and reports.  
+    6. **Verify ownership** — perform Legal / Encumbrance checks (C.5).  
+    """)
+
+    # ─────────────────────────────────────────────
+    # 🧠 MODEL FAMILY TABLE
+    # ─────────────────────────────────────────────
+    st.markdown("### 🧠 Model Families & Recommended Use-Cases")
+
+    model_ref = pd.DataFrame([
+        {"Category": "Local / Trained", "Model": "LightGBM / XGBoost / CatBoost",
+         "Use Case": "Numeric → FMV prediction", "GPU": "CPU OK",
+         "Notes": "Fast, explainable baseline model"},
+        {"Category": "Production (⭐)", "Model": "asset_lgbm-v1 / credit_lr",
+         "Use Case": "Enterprise-grade deployed valuation", "GPU": "CPU OK",
+         "Notes": "Stable, low-latency predictions"},
+        {"Category": "LLM (HF)", "Model": "Mistral 7B / Gemma 2 9B",
+         "Use Case": "Text reasoning + narratives", "GPU": "≥ 8 GB",
+         "Notes": "Fast reasoning for appraisal explanations"},
+        {"Category": "LLM (HF)", "Model": "LLaMA 3 8B / Qwen 2 7B",
+         "Use Case": "Multilingual valuation reports", "GPU": "≥ 12 GB",
+         "Notes": "Strong contextual generation"},
+        {"Category": "LLM (HF)", "Model": "Mixtral 8×7B",
+         "Use Case": "High-end MoE valuation", "GPU": "≥ 24 GB",
+         "Notes": "Premium precision for portfolios"},
+    ])
+    st.dataframe(model_ref, use_container_width=True)
+    st.markdown("---")
+
+    # ─────────────────────────────────────────────
+    # 🟢 PRODUCTION MODEL BANNER
+    # ─────────────────────────────────────────────
     try:
         resp = requests.get(f"{API_URL}/v1/training/production_meta", timeout=5)
         if resp.status_code == 200:
@@ -1569,7 +2208,7 @@ with tabC:
             if meta.get("has_production"):
                 ver = (meta.get("meta") or {}).get("version", "1.x")
                 src = (meta.get("meta") or {}).get("source", "production")
-                st.success(f"🟢 Production model active — version: {ver} • source: {src}")
+                st.success(f"🟢 Production model active — version {ver} • source {src}")
             else:
                 st.warning("⚠️ No production model promoted yet — using baseline.")
         else:
@@ -1578,38 +2217,32 @@ with tabC:
         st.info("ℹ️ Production meta unavailable.")
 
     # ─────────────────────────────────────────────
-    # 🧩 Model Selection (asset trained + production) — dual dir, dedupe, refresh
-    # (KEPT AS-IS per your instruction)
+    # 📦 MODEL SELECTION (Trained + Production)
     # ─────────────────────────────────────────────
     from time import time as _now
 
     trained_dirs = [
-        os.path.expanduser("~/credit-appraisal-agent-poc/agents/asset_appraisal/models/trained"),            # canonical
-        os.path.expanduser("~/credit-appraisal-agent-poc/services/agents/asset_appraisal/models/trained"),   # legacy
+        os.path.expanduser("~/credit-appraisal-agent-poc/agents/asset_appraisal/models/trained"),
+        os.path.expanduser("~/credit-appraisal-agent-poc/services/agents/asset_appraisal/models/trained"),
     ]
     production_default_fp = os.path.expanduser(
         "~/credit-appraisal-agent-poc/agents/asset_appraisal/models/production/model.joblib"
     )
 
-    # Try to fetch production meta (compatible with your training router)
     production_fp = None
     try:
-        r = requests.get(
-            f"{API_URL}/v1/training/production_meta",
-            params={"agent_id": "asset_appraisal"},
-            timeout=5
-        )
+        r = requests.get(f"{API_URL}/v1/training/production_meta",
+                         params={"agent_id": "asset_appraisal"}, timeout=5)
         if r.ok:
             j = r.json() or {}
             if j.get("has_production"):
                 meta = j.get("meta") or {}
-                production_fp = (meta.get("model_path") or meta.get("promoted_to") or production_default_fp)
+                production_fp = meta.get("model_path") or meta.get("promoted_to") or production_default_fp
     except Exception:
         production_fp = None
     if not production_fp:
         production_fp = production_default_fp
 
-    # Manual refresh (cache-bust the selectbox key)
     c_ref, _ = st.columns([1, 6])
     with c_ref:
         if st.button("↻ Refresh models", key="asset_models_refresh"):
@@ -1617,10 +2250,7 @@ with tabC:
             st.session_state["_asset_models_bump"] = _now()
             st.rerun()
 
-    # Build list (label, path, ctime, created_str, is_production)
     models = []
-
-    # 1) Production entry
     if os.path.exists(production_fp):
         try:
             p_ctime = os.path.getctime(production_fp)
@@ -1629,7 +2259,6 @@ with tabC:
             p_ctime, p_created = 0.0, "production"
         models.append(("⭐ Production", production_fp, p_ctime, p_created, True))
 
-    # 2) Trained entries from both dirs
     raw = []
     for d in trained_dirs:
         if os.path.isdir(d):
@@ -1643,7 +2272,6 @@ with tabC:
                         ctime, created = 0.0, ""
                     raw.append((f, fpath, ctime, created, False))
 
-    # 3) De-dupe by filename (keep newest) and skip if identical to production
     newest_by_name = {}
     for name, path, ctime, created, is_prod in raw:
         try:
@@ -1653,132 +2281,373 @@ with tabC:
             pass
         if (name not in newest_by_name) or (ctime > newest_by_name[name][2]):
             newest_by_name[name] = (name, path, ctime, created, is_prod)
-
     models.extend(newest_by_name.values())
-
-    # Sort: production first, then newest trained
     models = sorted(models, key=lambda x: (0 if x[4] else 1, -x[2]))
 
     if models:
-        display_names = [
-            f"{label} — {created}" if created else f"{label}"
-            for (label, _, _, created, _) in models
-        ]
-
-        # keep previous selection if possible
+        display_names = [f"{label} — {created}" if created else label for (label, _, _, created, _) in models]
         default_idx = 0
         prev_selected = st.session_state.get("asset_selected_model")
         if prev_selected:
             for i, (_, path, _, _, _) in enumerate(models):
-                if path == prev_selected:
-                    default_idx = i
-                    break
-
+                if path == prev_selected: default_idx = i; break
         select_key = f"asset_model_select::{st.session_state.get('_asset_models_bump','')}"
-        selected_display = st.selectbox(
-            "📦 Select trained model to use",
-            display_names,
-            index=default_idx,
-            key=select_key
-        )
+        selected_display = st.selectbox("📦 Select trained model", display_names,
+                                        index=default_idx, key=select_key)
         sel_idx = display_names.index(selected_display)
         selected_model = models[sel_idx][1]
         is_prod = models[sel_idx][4]
-
         st.session_state["asset_selected_model"] = selected_model
 
-        if is_prod:
-            st.success(f"🟢 Using PRODUCTION model: {os.path.basename(selected_model)}")
-        else:
-            st.success(f"✅ Using model: {os.path.basename(selected_model)}")
-
-        # Promote only when a non-production model is selected
-        if (not is_prod) and st.button("🚀 Promote this model to PRODUCTION", key="asset_promote_model"):
+        st.success(f"{'🟢' if is_prod else '✅'} Using model: {os.path.basename(selected_model)}")
+        if (not is_prod) and st.button("🚀 Promote to PRODUCTION", key="asset_promote_model"):
             try:
                 r = requests.post(f"{API_URL}/v1/agents/asset_appraisal/training/promote_last", timeout=60)
                 if r.ok:
                     st.success("✅ Model promoted to PRODUCTION.")
-                    st.session_state["_asset_models_bump"] = _now()
-                    st.rerun()
+                    st.session_state["_asset_models_bump"] = _now(); st.rerun()
                 else:
-                    try:
-                        st.error(f"❌ Promotion failed: {r.status_code} {r.reason}")
-                        st.code(r.json())
-                    except Exception:
-                        st.code(r.text[:2000])
+                    st.error(f"❌ Promotion failed: {r.status_code} {r.reason}")
+                    st.code(r.text[:1500])
             except Exception as e:
                 st.error(f"❌ Promotion error: {e}")
     else:
-        st.warning("⚠️ No trained models found — train one in Step 5 first.")
+        st.warning("⚠️ No trained models found — train one in Stage 5.")
 
-    # 🧠 Local LLM & Hardware Profile (runtime hints) — kept
+    # ─────────────────────────────────────────────
+    # 🧠 LLM + HARDWARE PROFILE (LOCAL + HUGGING FACE)
+    # ─────────────────────────────────────────────
+    st.markdown("### 🧠 LLM & Hardware Profile (Local + Hugging Face Models)")
+
+    HF_MODELS = [
+        {"Model": "mistralai/Mistral-7B-Instruct-v0.3",
+         "Type": "Reasoning / valuation narrative",
+         "GPU": "≥ 8 GB", "Notes": "Fast multilingual contextual LLM"},
+        {"Model": "google/gemma-2-9b-it",
+         "Type": "Instruction-tuned financial reports",
+         "GPU": "≥ 12 GB", "Notes": "Great for valuation explanations"},
+        {"Model": "meta-llama/Meta-Llama-3-8B-Instruct",
+         "Type": "Valuation summarization",
+         "GPU": "≥ 12 GB", "Notes": "High accuracy + low hallucination"},
+        {"Model": "Qwen/Qwen2-7B-Instruct",
+         "Type": "Multilingual reasoning (VN + EN)",
+         "GPU": "≥ 12 GB", "Notes": "Excellent for VN asset appraisal"},
+        {"Model": "microsoft/Phi-3-mini-4k-instruct",
+         "Type": "Compact instruction LLM",
+         "GPU": "≤ 8 GB", "Notes": "Fast lightweight valuation logic"},
+        {"Model": "mistralai/Mixtral-8x7B-Instruct-v0.1",
+         "Type": "MoE premium reasoning",
+         "GPU": "≥ 24 GB", "Notes": "Top-tier valuation model"},
+        {"Model": "LightAutoML/LightGBM",
+         "Type": "Tabular regression baseline",
+         "GPU": "CPU OK", "Notes": "Numeric FMV baseline"},
+    ]
+    st.dataframe(pd.DataFrame(HF_MODELS), use_container_width=True)
+
     LLM_MODELS = [
-        ("Phi-3 Mini (3.8B) — CPU OK", "phi3:3.8b", "CPU 8GB RAM (fast)"),
-        ("Mistral 7B Instruct — CPU slow / GPU OK", "mistral:7b-instruct", "CPU 16GB (slow) or GPU ≥8GB"),
-        ("Gemma-2 7B — CPU slow / GPU OK", "gemma2:7b", "CPU 16GB (slow) or GPU ≥8GB"),
-        ("LLaMA-3 8B — GPU recommended", "llama3:8b-instruct", "GPU ≥12GB (CPU very slow)"),
-        ("Qwen2 7B — GPU recommended", "qwen2:7b-instruct", "GPU ≥12GB (CPU very slow)"),
-        ("Mixtral 8x7B — GPU only (big)", "mixtral:8x7b-instruct", "GPU 24–48GB"),
+        ("Phi-3 Mini (3.8B)", "phi3:3.8b", "CPU 8 GB RAM (fast)"),
+        ("Mistral 7B Instruct", "mistral:7b-instruct", "GPU ≥ 8 GB (fast)"),
+        ("Gemma-2 9B", "gemma2:9b", "GPU ≥ 12 GB (high accuracy)"),
+        ("LLaMA-3 8B", "llama3:8b-instruct", "GPU ≥ 12 GB (context heavy)"),
+        ("Qwen-2 7B", "qwen2:7b-instruct", "GPU ≥ 12 GB (multilingual)"),
+        ("Mixtral 8×7B", "mixtral:8x7b-instruct", "GPU 24-48 GB (batch)"),
     ]
     LLM_LABELS = [l for (l, _, _) in LLM_MODELS]
     LLM_VALUE_BY_LABEL = {l: v for (l, v, _) in LLM_MODELS}
     LLM_HINT_BY_LABEL  = {l: h for (l, _, h) in LLM_MODELS}
 
     OPENSTACK_FLAVORS = {
-        "m4.medium":  "4 vCPU / 8 GB RAM — CPU-only small",
-        "m8.large":   "8 vCPU / 16 GB RAM — CPU-only medium",
-        "g1.a10.1":   "8 vCPU / 32 GB RAM + 1×A10 24GB",
-        "g1.l40.1":   "16 vCPU / 64 GB RAM + 1×L40 48GB",
-        "g2.a100.1":  "24 vCPU / 128 GB RAM + 1×A100 80GB",
+        "m4.medium": "4 vCPU / 8 GB RAM (CPU-only small)",
+        "m8.large": "8 vCPU / 16 GB RAM (CPU-only medium)",
+        "g1.a10.1": "8 vCPU / 32 GB RAM + 1×A10 24 GB",
+        "g1.l40.1": "16 vCPU / 64 GB RAM + 1×L40 48 GB",
+        "g2.a100.1": "24 vCPU / 128 GB RAM + 1×A100 80 GB",
     }
 
-    with st.expander("🧠 Local LLM & Hardware Profile", expanded=True):
+    with st.expander("🧠 Choose Model & Hardware Profile", expanded=True):
         c1, c2 = st.columns([1.2, 1])
         with c1:
-            model_label = st.selectbox("Local LLM (used for narratives/explanations)", LLM_LABELS, index=1, key="asset_llm_label")
+            model_label = st.selectbox(
+                "Select Local or HF LLM (for narratives / explanations)",
+                LLM_LABELS, index=1, key="asset_llm_label")
             llm_value = LLM_VALUE_BY_LABEL[model_label]
-            use_llm = st.checkbox("Use LLM narrative (include explanations)", value=False, key="asset_use_llm")
+            use_llm = st.checkbox("Use LLM narrative (explanations)",
+                                  value=False, key="asset_use_llm")
             st.caption(f"Hint: {LLM_HINT_BY_LABEL[model_label]}")
         with c2:
-            flavor = st.selectbox("OpenStack flavor / host profile", list(OPENSTACK_FLAVORS.keys()), index=0, key="asset_flavor")
+            flavor = st.selectbox("OpenStack flavor / host profile",
+                                  list(OPENSTACK_FLAVORS.keys()), index=0,
+                                  key="asset_flavor")
             st.caption(OPENSTACK_FLAVORS[flavor])
-        st.caption("These are passed to the API as hints; your API can choose Ollama/Flowise backends accordingly.")
+        st.caption("These parameters are passed to backend (Ollama / Flowise / RunAI).")
 
-    # 🚀 C.4 GPU profile (C.4 ONLY, per blueprint)
+    # ─────────────────────────────────────────────
+    # GPU PROFILE AND DATASET SOURCE (keep existing logic)
+    # ─────────────────────────────────────────────
     st.markdown("### **C.4 — Valuation (AI)**")
     gpu_profile = st.selectbox(
         "GPU Profile (for valuation compute)",
-        ["CPU (slow)", "GPU: 1x A100", "GPU: 1x H100", "GPU: 2x L40S"],
-        index=1,
-        key="asset_gpu_profile_c4"
-    )
-    ss["asset_gpu_profile"] = gpu_profile  # store per the template rule
+        ["CPU (slow)", "GPU: 1×A100", "GPU: 1×H100", "GPU: 2×L40S"],
+        index=1, key="asset_gpu_profile_c4")
+    ss["asset_gpu_profile"] = gpu_profile
 
-    # Preferred data source: FEATURES (Stage B). Fallbacks preserved.
     src = st.selectbox("Data source for AI run", [
-        "Use FEATURES (from Stage 2/3)",
-        "Use ANON (from Stage 2)",
+        "Use FEATURES (Stage 2/3)",
+        "Use ANON (Stage 2)",
         "Use RAW → auto-sanitize",
         "Use synthetic (fallback)",
     ])
-
-    if src == "Use FEATURES (from Stage 2/3)":
-        df2 = ss.get("asset_features_df")
-        if df2 is None and ss.get("asset_anon_df") is not None:
-            # fallback to anon if features missing
-            df2 = ss.get("asset_anon_df")
-    elif src == "Use ANON (from Stage 2)":
+    if src == "Use FEATURES (Stage 2/3)":
+        df2 = ss.get("asset_features_df") or ss.get("asset_anon_df")
+    elif src == "Use ANON (Stage 2)":
         df2 = ss.get("asset_anon_df")
     elif src == "Use RAW → auto-sanitize":
         df2 = anonymize_text_cols(ss.get("asset_intake_df")) if ss.get("asset_intake_df") is not None else None
     else:
         df2 = quick_synth(150)
-
     if df2 is None:
-        st.warning("No dataset available. Build Stage B first.")
-        st.stop()
-
+        st.warning("No dataset available — build Stage B first."); st.stop()
     st.dataframe(df2.head(10), use_container_width=True)
+
+    # ─────────────────────────────────────────────
+    # APPRAISAL LOGIC + DASHBOARD + VERIFICATION
+    # ─────────────────────────────────────────────
+    # ⬇ keep your existing “Run AI Appraisal now” button,
+    # delta analysis, verification checks, and executive dashboard
+    # from your previous version — they plug in after this section.
+
+
+# # ========== 3) AI APPRAISAL & VALUATION ==========
+# with tabC:
+#     st.subheader("🤖 Stage 3 — AI Appraisal & Valuation")
+
+#     import os, json, numpy as np
+#     from datetime import datetime, timezone
+
+#     RUNS_DIR = "./.tmp_runs"
+#     os.makedirs(RUNS_DIR, exist_ok=True)
+
+#     def _ts():
+#         return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+
+#     # Production model banner (asset agent)
+#     try:
+#         resp = requests.get(f"{API_URL}/v1/training/production_meta", timeout=5)
+#         if resp.status_code == 200:
+#             meta = resp.json()
+#             if meta.get("has_production"):
+#                 ver = (meta.get("meta") or {}).get("version", "1.x")
+#                 src = (meta.get("meta") or {}).get("source", "production")
+#                 st.success(f"🟢 Production model active — version: {ver} • source: {src}")
+#             else:
+#                 st.warning("⚠️ No production model promoted yet — using baseline.")
+#         else:
+#             st.info("ℹ️ Could not fetch production model meta.")
+#     except Exception:
+#         st.info("ℹ️ Production meta unavailable.")
+
+#     # ─────────────────────────────────────────────
+#     # 🧩 Model Selection (asset trained + production) — dual dir, dedupe, refresh
+#     # (KEPT AS-IS per your instruction)
+#     # ─────────────────────────────────────────────
+#     from time import time as _now
+
+#     trained_dirs = [
+#         os.path.expanduser("~/credit-appraisal-agent-poc/agents/asset_appraisal/models/trained"),            # canonical
+#         os.path.expanduser("~/credit-appraisal-agent-poc/services/agents/asset_appraisal/models/trained"),   # legacy
+#     ]
+#     production_default_fp = os.path.expanduser(
+#         "~/credit-appraisal-agent-poc/agents/asset_appraisal/models/production/model.joblib"
+#     )
+
+#     # Try to fetch production meta (compatible with your training router)
+#     production_fp = None
+#     try:
+#         r = requests.get(
+#             f"{API_URL}/v1/training/production_meta",
+#             params={"agent_id": "asset_appraisal"},
+#             timeout=5
+#         )
+#         if r.ok:
+#             j = r.json() or {}
+#             if j.get("has_production"):
+#                 meta = j.get("meta") or {}
+#                 production_fp = (meta.get("model_path") or meta.get("promoted_to") or production_default_fp)
+#     except Exception:
+#         production_fp = None
+#     if not production_fp:
+#         production_fp = production_default_fp
+
+#     # Manual refresh (cache-bust the selectbox key)
+#     c_ref, _ = st.columns([1, 6])
+#     with c_ref:
+#         if st.button("↻ Refresh models", key="asset_models_refresh"):
+#             st.session_state.pop("asset_model_select", None)
+#             st.session_state["_asset_models_bump"] = _now()
+#             st.rerun()
+
+#     # Build list (label, path, ctime, created_str, is_production)
+#     models = []
+
+#     # 1) Production entry
+#     if os.path.exists(production_fp):
+#         try:
+#             p_ctime = os.path.getctime(production_fp)
+#             p_created = datetime.fromtimestamp(p_ctime).strftime("%b %d, %Y %H:%M")
+#         except Exception:
+#             p_ctime, p_created = 0.0, "production"
+#         models.append(("⭐ Production", production_fp, p_ctime, p_created, True))
+
+#     # 2) Trained entries from both dirs
+#     raw = []
+#     for d in trained_dirs:
+#         if os.path.isdir(d):
+#             for f in os.listdir(d):
+#                 if f.endswith(".joblib"):
+#                     fpath = os.path.join(d, f)
+#                     try:
+#                         ctime = os.path.getctime(fpath)
+#                         created = datetime.fromtimestamp(ctime).strftime("%b %d, %Y %H:%M")
+#                     except Exception:
+#                         ctime, created = 0.0, ""
+#                     raw.append((f, fpath, ctime, created, False))
+
+#     # 3) De-dupe by filename (keep newest) and skip if identical to production
+#     newest_by_name = {}
+#     for name, path, ctime, created, is_prod in raw:
+#         try:
+#             if os.path.exists(production_fp) and os.path.samefile(path, production_fp):
+#                 continue
+#         except Exception:
+#             pass
+#         if (name not in newest_by_name) or (ctime > newest_by_name[name][2]):
+#             newest_by_name[name] = (name, path, ctime, created, is_prod)
+
+#     models.extend(newest_by_name.values())
+
+#     # Sort: production first, then newest trained
+#     models = sorted(models, key=lambda x: (0 if x[4] else 1, -x[2]))
+
+#     if models:
+#         display_names = [
+#             f"{label} — {created}" if created else f"{label}"
+#             for (label, _, _, created, _) in models
+#         ]
+
+#         # keep previous selection if possible
+#         default_idx = 0
+#         prev_selected = st.session_state.get("asset_selected_model")
+#         if prev_selected:
+#             for i, (_, path, _, _, _) in enumerate(models):
+#                 if path == prev_selected:
+#                     default_idx = i
+#                     break
+
+#         select_key = f"asset_model_select::{st.session_state.get('_asset_models_bump','')}"
+#         selected_display = st.selectbox(
+#             "📦 Select trained model to use",
+#             display_names,
+#             index=default_idx,
+#             key=select_key
+#         )
+#         sel_idx = display_names.index(selected_display)
+#         selected_model = models[sel_idx][1]
+#         is_prod = models[sel_idx][4]
+
+#         st.session_state["asset_selected_model"] = selected_model
+
+#         if is_prod:
+#             st.success(f"🟢 Using PRODUCTION model: {os.path.basename(selected_model)}")
+#         else:
+#             st.success(f"✅ Using model: {os.path.basename(selected_model)}")
+
+#         # Promote only when a non-production model is selected
+#         if (not is_prod) and st.button("🚀 Promote this model to PRODUCTION", key="asset_promote_model"):
+#             try:
+#                 r = requests.post(f"{API_URL}/v1/agents/asset_appraisal/training/promote_last", timeout=60)
+#                 if r.ok:
+#                     st.success("✅ Model promoted to PRODUCTION.")
+#                     st.session_state["_asset_models_bump"] = _now()
+#                     st.rerun()
+#                 else:
+#                     try:
+#                         st.error(f"❌ Promotion failed: {r.status_code} {r.reason}")
+#                         st.code(r.json())
+#                     except Exception:
+#                         st.code(r.text[:2000])
+#             except Exception as e:
+#                 st.error(f"❌ Promotion error: {e}")
+#     else:
+#         st.warning("⚠️ No trained models found — train one in Step 5 first.")
+
+#     # 🧠 Local LLM & Hardware Profile (runtime hints) — kept
+#     LLM_MODELS = [
+#         ("Phi-3 Mini (3.8B) — CPU OK", "phi3:3.8b", "CPU 8GB RAM (fast)"),
+#         ("Mistral 7B Instruct — CPU slow / GPU OK", "mistral:7b-instruct", "CPU 16GB (slow) or GPU ≥8GB"),
+#         ("Gemma-2 7B — CPU slow / GPU OK", "gemma2:7b", "CPU 16GB (slow) or GPU ≥8GB"),
+#         ("LLaMA-3 8B — GPU recommended", "llama3:8b-instruct", "GPU ≥12GB (CPU very slow)"),
+#         ("Qwen2 7B — GPU recommended", "qwen2:7b-instruct", "GPU ≥12GB (CPU very slow)"),
+#         ("Mixtral 8x7B — GPU only (big)", "mixtral:8x7b-instruct", "GPU 24–48GB"),
+#     ]
+#     LLM_LABELS = [l for (l, _, _) in LLM_MODELS]
+#     LLM_VALUE_BY_LABEL = {l: v for (l, v, _) in LLM_MODELS}
+#     LLM_HINT_BY_LABEL  = {l: h for (l, _, h) in LLM_MODELS}
+
+#     OPENSTACK_FLAVORS = {
+#         "m4.medium":  "4 vCPU / 8 GB RAM — CPU-only small",
+#         "m8.large":   "8 vCPU / 16 GB RAM — CPU-only medium",
+#         "g1.a10.1":   "8 vCPU / 32 GB RAM + 1×A10 24GB",
+#         "g1.l40.1":   "16 vCPU / 64 GB RAM + 1×L40 48GB",
+#         "g2.a100.1":  "24 vCPU / 128 GB RAM + 1×A100 80GB",
+#     }
+
+#     with st.expander("🧠 Local LLM & Hardware Profile", expanded=True):
+#         c1, c2 = st.columns([1.2, 1])
+#         with c1:
+#             model_label = st.selectbox("Local LLM (used for narratives/explanations)", LLM_LABELS, index=1, key="asset_llm_label")
+#             llm_value = LLM_VALUE_BY_LABEL[model_label]
+#             use_llm = st.checkbox("Use LLM narrative (include explanations)", value=False, key="asset_use_llm")
+#             st.caption(f"Hint: {LLM_HINT_BY_LABEL[model_label]}")
+#         with c2:
+#             flavor = st.selectbox("OpenStack flavor / host profile", list(OPENSTACK_FLAVORS.keys()), index=0, key="asset_flavor")
+#             st.caption(OPENSTACK_FLAVORS[flavor])
+#         st.caption("These are passed to the API as hints; your API can choose Ollama/Flowise backends accordingly.")
+
+#     # 🚀 C.4 GPU profile (C.4 ONLY, per blueprint)
+#     st.markdown("### **C.4 — Valuation (AI)**")
+#     gpu_profile = st.selectbox(
+#         "GPU Profile (for valuation compute)",
+#         ["CPU (slow)", "GPU: 1x A100", "GPU: 1x H100", "GPU: 2x L40S"],
+#         index=1,
+#         key="asset_gpu_profile_c4"
+#     )
+#     ss["asset_gpu_profile"] = gpu_profile  # store per the template rule
+
+#     # Preferred data source: FEATURES (Stage B). Fallbacks preserved.
+#     src = st.selectbox("Data source for AI run", [
+#         "Use FEATURES (from Stage 2/3)",
+#         "Use ANON (from Stage 2)",
+#         "Use RAW → auto-sanitize",
+#         "Use synthetic (fallback)",
+#     ])
+
+#     if src == "Use FEATURES (from Stage 2/3)":
+#         df2 = ss.get("asset_features_df")
+#         if df2 is None and ss.get("asset_anon_df") is not None:
+#             # fallback to anon if features missing
+#             df2 = ss.get("asset_anon_df")
+#     elif src == "Use ANON (from Stage 2)":
+#         df2 = ss.get("asset_anon_df")
+#     elif src == "Use RAW → auto-sanitize":
+#         df2 = anonymize_text_cols(ss.get("asset_intake_df")) if ss.get("asset_intake_df") is not None else None
+#     else:
+#         df2 = quick_synth(150)
+
+#     if df2 is None:
+#         st.warning("No dataset available. Build Stage B first.")
+#         st.stop()
+
+#     st.dataframe(df2.head(10), use_container_width=True)
 
     # Probe API (health & agents)
     with st.expander("🔎 Probe API (health & agents)", expanded=False):
@@ -2298,6 +3167,11 @@ with tabC:
 #         st.stop()
 
 #     st.caption("Input: valuation + (optional) verification outputs.")
+
+
+
+
+
 # ========== 4) POLICY & DECISION (Stage D: steps 6–7) ==========
 with tabD:
     st.subheader("🧮 Stage 4 — Policy & Decision (D.6 / D.7)")
@@ -2489,7 +3363,361 @@ with tabD:
             )
 
 
+# ─────────────────────────────────────────
+# E — HUMAN REVIEW & FEEDBACK DASHBOARD
+# ─────────────────────────────────────────
+with tabE:
+    st.subheader("🧑‍⚖️ Stage E — Human Review & Feedback")
+    st.caption("Compare AI-estimated collateral values against business metrics, adjust valuations, and record justification for retraining.")
+
+    RUNS_DIR = "./.tmp_runs"
+    os.makedirs(RUNS_DIR, exist_ok=True)
+
+    ai_files = sorted([f for f in os.listdir(RUNS_DIR) if f.startswith("valuation_ai")], reverse=True)
+    if not ai_files:
+        st.warning("⚠️ No AI appraisal results found. Please complete Stage C first.")
+        st.stop()
+
+    ai_path = os.path.join(RUNS_DIR, ai_files[0])
+    df_ai = pd.read_csv(ai_path)
+
+    # ── KPI Overview
+    st.markdown("### 📊 Business Metrics Overview")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Average FMV", f"${df_ai['fmv'].mean():,.0f}")
+    c2.metric("Average Confidence", f"{df_ai['confidence'].mean():.1f}%")
+    c3.metric("Average LTV", f"{(df_ai['loan_amount']/df_ai['fmv']).mean():.2f}")
+    c4.metric("Assets", len(df_ai))
+
+    # ── Market Projections
+    st.markdown("### 📈 Market Projections")
+    horizon = st.select_slider("Projection Horizon (years)", [3, 5, 10], value=5)
+    growth = st.slider("Expected Market Growth (%)", -10, 25, 4) / 100
+    df_ai[f"fmv_proj_{horizon}y"] = (df_ai["fmv"] * ((1 + growth) ** horizon)).round(0)
+    st.line_chart(df_ai[["fmv", f"fmv_proj_{horizon}y"]])
+
+    # ── Human Adjustment Table
+    st.markdown("### ✏️ Human Adjustments & Justification")
+    if "human_value" not in df_ai.columns:
+        df_ai["human_value"] = df_ai["fmv"]
+    if "justification" not in df_ai.columns:
+        df_ai["justification"] = ""
+
+    editable_cols = ["application_id", "asset_id", "asset_type", "city", "fmv", "ai_adjusted", "confidence", "human_value", "justification"]
+    edited = st.data_editor(df_ai[editable_cols], num_rows="dynamic", use_container_width=True)
+
+    # ── Deviation Gauge
+    import numpy as np
+    deviation = abs((edited["human_value"] - edited["fmv"]) / edited["fmv"])
+    score = max(0, 100 - (deviation.mean() * 200))
+    st.markdown("### 🎯 Human vs AI Deviation")
+    st.metric("Alignment Score", f"{score:.1f} / 100")
+
+    # ── Export for Retraining
+    if st.button("💾 Save Human Feedback", key="btn_save_feedback"):
+        out = os.path.join(RUNS_DIR, f"reviewed_appraisal.{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.csv")
+        edited.to_csv(out, index=False)
+        st.success(f"✅ Saved human-reviewed data → `{out}`")
+
+# ─────────────────────────────────────────
+# F — MODEL TRAINING & PROMOTION
+# ─────────────────────────────────────────
+with tabF:
+    st.subheader("🧪 Stage F — Model Training & Promotion")
+    st.caption("Train or retrain models using human feedback, then promote them to production for Stage C evaluation.")
     
+    
+    # ─────────────────────────────────────────
+    # Stage F header diagnostics (always visible)
+    # ─────────────────────────────────────────
+    st.markdown("#### 🔎 Data availability")
+
+    def _len_df(x):
+        return (0 if not isinstance(x, pd.DataFrame) else len(x))
+
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("decision_df",  _len_df(ss.get("asset_decision_df")))
+    c2.metric("policy_df",    _len_df(ss.get("asset_policy_df")))
+    c3.metric("verified_df",  _len_df(ss.get("asset_verified_df")))
+    c4.metric("ai_df",        _len_df(ss.get("asset_ai_df")))
+
+    with st.expander("Show sample (if no data yet)"):
+        st.caption("If you haven't run earlier stages, load a small demo so this page is not empty.")
+        if st.button("Load demo portfolio (10 rows)", key="btn_demo_portfolio"):
+            try:
+                # Prefer your real synthesizer if present
+                if "quick_synth" in globals():
+                    demo = quick_synth(10)
+                else:
+                    # Minimal fallback demo
+                    import numpy as np, pandas as pd, random
+                    demo = pd.DataFrame({
+                        "application_id": [f"APP_{i:04d}" for i in range(10)],
+                        "asset_id":      [f"A{i:04d}" for i in range(10)],
+                        "asset_type":    np.random.choice(["House","Apartment","Car","Land"], size=10),
+                        "city":          np.random.choice(["HCMC","Hanoi","Da Nang","Hue"], size=10),
+                        "market_value":  np.random.randint(80_000, 800_000, size=10),
+                        "ai_adjusted":   np.random.randint(75_000, 820_000, size=10),
+                        "loan_amount":   np.random.randint(30_000, 500_000, size=10),
+                        "confidence":    np.random.randint(60, 98, size=10),
+                        "condition_score": np.random.uniform(0.6, 1.0, size=10).round(3),
+                        "legal_penalty":   np.random.uniform(0.95, 1.0, size=10).round(3),
+                    })
+                    demo["realizable_value"] = (demo["ai_adjusted"] * demo["condition_score"] * demo["legal_penalty"]).round(2)
+                    demo["ltv_ai"] = (demo["loan_amount"] / demo["ai_adjusted"]).round(3)
+                    demo["ltv_cap"] = 0.8
+                    demo["policy_breaches"] = ""
+                    demo["decision"] = np.where(demo["ltv_ai"] > demo["ltv_cap"], "review", "approved")
+                ss["asset_decision_df"] = demo
+                st.success("Demo portfolio loaded into ss['asset_decision_df']. Scroll down.")
+            except Exception as e:
+                st.error(f"Demo load failed: {e}")
+
+    st.divider()
+
+
+
+    reviewed = sorted([f for f in os.listdir("./.tmp_runs") if f.startswith("reviewed_appraisal")], reverse=True)
+    if not reviewed:
+        st.warning("⚠️ No reviewed feedback CSV found. Complete Stage E first.")
+        st.stop()
+
+    csv_path = os.path.join("./.tmp_runs", reviewed[0])
+    df = pd.read_csv(csv_path)
+    st.markdown(f"**Loaded:** `{csv_path}` ({len(df)} rows)")
+    st.dataframe(df.head(20), use_container_width=True)
+
+    model_choice = st.selectbox("Select model algorithm", ["GradientBoostingRegressor", "RandomForestRegressor", "LinearRegression"])
+    if st.button("🚀 Train Model", key="btn_train_model"):
+        from sklearn.model_selection import train_test_split
+        from sklearn.metrics import r2_score, mean_absolute_error
+        from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+        from sklearn.linear_model import LinearRegression
+        import joblib, json, shutil
+
+        y = df["human_value"]
+        X = df.select_dtypes("number").drop(columns=["human_value", "fmv", "ai_adjusted"], errors="ignore")
+
+        Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.2, random_state=42)
+        ModelCls = {"GradientBoostingRegressor": GradientBoostingRegressor,
+                    "RandomForestRegressor": RandomForestRegressor,
+                    "LinearRegression": LinearRegression}[model_choice]
+        model = ModelCls().fit(Xtr, ytr)
+
+        y_pred = model.predict(Xte)
+        metrics = {"r2": r2_score(yte, y_pred), "mae": mean_absolute_error(yte, y_pred)}
+
+        train_dir = "./agents/asset_appraisal/models/trained"
+        os.makedirs(train_dir, exist_ok=True)
+        ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        model_path = os.path.join(train_dir, f"{model_choice}_asset_{ts}.joblib")
+        joblib.dump(model, model_path)
+        st.success(f"✅ Model trained and saved → `{model_path}`")
+        st.json(metrics)
+
+        if st.button("📤 Promote to Production", key="btn_promote_prod"):
+            prod_dir = "./agents/asset_appraisal/models/production"
+            os.makedirs(prod_dir, exist_ok=True)
+            shutil.copy(model_path, os.path.join(prod_dir, "model.joblib"))
+            meta = {"model_path": model_path, "metrics": metrics, "promoted_at": datetime.now(timezone.utc).isoformat()}
+            with open(os.path.join(prod_dir, "production_meta.json"), "w") as f:
+                json.dump(meta, f, indent=2)
+            st.success("🟢 Model promoted to production. Stage C will now use this model.")
+
+
+
+# # ========== 5) HUMAN REVIEW & TRAINING (Stage E: steps 8–9) ==========
+# with tabE:
+#     st.subheader("🧑‍⚖️ Stage 5 — Human Review & Training (E.8 / E.9)")
+
+#     import os, io, json
+#     import numpy as np
+#     from datetime import datetime, timezone
+
+#     RUNS_DIR = "./.tmp_runs"
+#     os.makedirs(RUNS_DIR, exist_ok=True)
+#     def _ts(): return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+
+#     # -------- E.8 — Human Review --------
+
+#     st.markdown("### **E.8 — Human Review**")
+#     src_choice = st.radio(
+#         "Use Policy+Decision table from Stage 4, or import your own CSV:",
+#         ["Use Stage 4 output", "Import CSV"], horizontal=True, key="hr_src_choice"
+#     )
+
+#     rev_df = None
+#     if src_choice == "Use Stage 4 output":
+#         rev_df = ss.get("asset_decision_df")
+#         if rev_df is None:
+#             st.warning("No Stage 4 output found. Run Policy & Decision (D.6/D.7) first, or import a CSV.")
+#     else:
+#         up_rev = st.file_uploader("Upload reviewed_appraisal CSV", type=["csv"], key="hr_up_rev")
+#         if up_rev is not None:
+#             try:
+#                 rev_df = pd.read_csv(up_rev)
+#             except Exception as e:
+#                 st.error(f"CSV parse error: {e}")
+
+#     if rev_df is not None and len(rev_df) > 0:
+#         df_display = rev_df.copy()
+
+#         # Ensure human columns for editing
+#         if "human_decision" not in df_display.columns:
+#             df_display["human_decision"] = df_display.get("decision", "approve")
+#         if "human_reason" not in df_display.columns:
+#             df_display["human_reason"] = ""
+
+#         # Compact view with common columns first
+#         lead_cols = [c for c in [
+#             "application_id","asset_id","asset_type","city",
+#             "ai_adjusted","realizable_value",
+#             "loan_amount","ltv_ai","ltv_cap",
+#             "confidence","condition_score","legal_penalty",
+#             "policy_breaches","decision","human_decision","human_reason"
+#         ] if c in df_display.columns]
+#         tail_cols = [c for c in df_display.columns if c not in lead_cols]
+#         df_display = df_display[lead_cols + tail_cols]
+
+#         st.caption("Edit decisions/reasons below, then export as feedback for training.")
+#         edited = st.data_editor(
+#             df_display, use_container_width=True, key="hr_editor", num_rows="dynamic"
+#         )
+
+#         c_e81, c_e82, c_e83 = st.columns(3)
+#         with c_e81:
+#             if st.button("💾 Export reviewed_appraisal.csv", key="btn_export_review"):
+#                 reviewed_path = os.path.join(RUNS_DIR, f"reviewed_appraisal.{_ts()}.csv")
+#                 edited.to_csv(reviewed_path, index=False)
+#                 ss["asset_human_review_df"] = edited
+#                 ss["asset_feedback_csv"] = reviewed_path
+#                 st.success(f"Saved: `{reviewed_path}`")
+#                 st.download_button(
+#                     "⬇️ Download reviewed_appraisal.csv",
+#                     data=edited.to_csv(index=False).encode("utf-8"),
+#                     file_name="reviewed_appraisal.csv",
+#                     mime="text/csv"
+#                 )
+
+#         with c_e82:
+#             if st.button("📏 Compute Agreement Score", key="btn_agree_score"):
+#                 ai_col = "decision" if "decision" in edited.columns else None
+#                 if not ai_col:
+#                     st.warning("No AI decision column found to compare against.")
+#                 else:
+#                     ai_vals = edited[ai_col].astype(str).str.lower()
+#                     human_vals = edited["human_decision"].astype(str).str.lower()
+#                     agree = (ai_vals == human_vals)
+#                     agree_pct = float(agree.mean() * 100.0)
+#                     st.metric("AI ↔ Human Agreement", f"{agree_pct:.2f}%")
+#                     # Save lightweight summary for E.9
+#                     ss["asset_agreement_score"] = agree_pct
+#                     # Show disagreements
+#                     dis = edited.loc[~agree, [c for c in edited.columns
+#                                               if c in ["application_id","asset_id",ai_col,"human_decision","policy_breaches","human_reason"]]]
+#                     if len(dis):
+#                         st.markdown(f"❌ **{len(dis)}** rows disagreed out of **{len(edited)}**")
+#                         st.dataframe(dis, use_container_width=True)
+
+#         with c_e83:
+#             st.caption("Tip: Export reviewed CSV before training.")
+
+#     else:
+#         st.info("Awaiting input for review (Stage 4 table or an imported CSV).")
+
+#     st.markdown("---")
+
+#     # -------- E.9 — Feedback → Train --------
+#     st.markdown("### **E.9 — Feedback → Train**")
+
+#     fb_path = ss.get("asset_feedback_csv")
+#     if not fb_path or not os.path.exists(fb_path):
+#         st.info("Export a reviewed_appraisal CSV in E.8 to enable training.")
+#     else:
+#         st.write(f"Using feedback file: `{os.path.basename(fb_path)}`")
+
+#         c_t1, c_t2, c_t3 = st.columns([1,1,1])
+#         with c_t1:
+#             train_timeout = st.number_input("Train timeout (sec)", min_value=30, value=180, step=10, key="train_timeout")
+#         with c_t2:
+#             eval_metric = st.selectbox("Eval metric", ["agreement_score", "RMSE", "MAE"], index=0, key="train_metric")
+#         with c_t3:
+#             promote_after = st.checkbox("Promote to PRODUCTION after training", value=False, key="train_promote")
+
+#         # Backend-aware training (preferred), with a local fallback
+#         if st.button("🧠 Train Candidate Model", key="btn_train_candidate"):
+#             model_path = None
+#             meta = {}
+#             try:
+#                 # Try backend training endpoint if present
+#                 with open(fb_path, "rb") as fobj:
+#                     files = {"feedback_csv": (os.path.basename(fb_path), fobj, "text/csv")}
+#                     data = {"agent_id": "asset_appraisal", "metric": eval_metric}
+#                     r = requests.post(f"{API_URL}/v1/agents/asset_appraisal/training/train_from_feedback",
+#                                       files=files, data=data, timeout=int(train_timeout))
+#                 if r.ok:
+#                     j = r.json() or {}
+#                     model_path = j.get("model_path")
+#                     meta = j.get("meta", {})
+#                 else:
+#                     # Fall back to local stub artifact
+#                     raise RuntimeError(f"Backend returned {r.status_code}: {r.text[:200]}")
+#             except Exception as e:
+#                 # Local stub: create a timestamped model file and meta
+#                 model_path = os.path.join(RUNS_DIR, f"model-{_ts()}.joblib")
+#                 # create a tiny placeholder so the path exists
+#                 with open(model_path, "wb") as fp:
+#                     fp.write(b"")  # placeholder joblib
+#                 meta = {
+#                     "trained_on": os.path.basename(fb_path),
+#                     "metric": eval_metric,
+#                     "score": float(ss.get("asset_agreement_score", 0.0)),
+#                     "algo": "stub_linear",
+#                     "created_at": datetime.now(timezone.utc).isoformat(),
+#                 }
+
+#             # Persist production_meta.json (not yet promoted)
+#             prod_meta = {
+#                 "has_production": False,
+#                 "model_path": model_path,
+#                 "meta": meta
+#             }
+#             meta_path = os.path.join(RUNS_DIR, "production_meta.json")
+#             with open(meta_path, "w", encoding="utf-8") as fp:
+#                 json.dump(prod_meta, fp, ensure_ascii=False, indent=2)
+
+#             ss["asset_trained_model_meta"] = prod_meta
+#             st.success(f"Candidate trained. Model: `{os.path.basename(model_path)}`")
+#             st.caption(f"Metadata saved → `{meta_path}`")
+
+#         # Optional promotion
+#         if st.button("🚀 Promote Last Trained to PRODUCTION", key="btn_promote_after_train") or (promote_after and st.session_state.get("asset_trained_model_meta")):
+#             try:
+#                 r = requests.post(f"{API_URL}/v1/agents/asset_appraisal/training/promote_last", timeout=90)
+#                 if r.ok:
+#                     st.success("✅ Model promoted to PRODUCTION.")
+#                     # Update local production_meta.json to reflect promotion
+#                     j = r.json() if r.text else {}
+#                     promoted_path = (j.get("meta") or {}).get("model_path") or (ss.get("asset_trained_model_meta") or {}).get("model_path")
+#                     prod_meta = {
+#                         "has_production": True,
+#                         "model_path": promoted_path,
+#                         "meta": j.get("meta") or (ss.get("asset_trained_model_meta") or {}).get("meta") or {}
+#                     }
+#                     meta_path = os.path.join(RUNS_DIR, "production_meta.json")
+#                     with open(meta_path, "w", encoding="utf-8") as fp:
+#                         json.dump(prod_meta, fp, ensure_ascii=False, indent=2)
+#                     ss["asset_trained_model_meta"] = prod_meta
+#                 else:
+#                     try:
+#                         st.error(f"❌ Promotion failed: {r.status_code} {r.reason}")
+#                         st.code(r.json())
+#                     except Exception:
+#                         st.code(r.text[:2000])
+#             except Exception as e:
+#                 st.error(f"❌ Promotion error: {e}")
+    
+
     # # ========== 5) TRAINING (Feedback → Retrain) ==========
     # with tab5:
     #     st.subheader("🧪 Stage 5 — Train from Feedback & Promote to PRODUCTION")
@@ -2558,244 +3786,6 @@ with tabD:
     #     else:
     #         st.info("Drop at least one feedback CSV here or generate from Stage 4.")
 
-    # ========== 5) HUMAN REVIEW & TRAINING (Stage E: steps 8–9) ==========
-with tabE:
-    st.subheader("🧑‍⚖️ Stage 5 — Human Review & Training (E.8 / E.9)")
-
-    import os, io, json
-    import numpy as np
-    from datetime import datetime, timezone
-
-    RUNS_DIR = "./.tmp_runs"
-    os.makedirs(RUNS_DIR, exist_ok=True)
-    def _ts(): return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-
-    # -------- E.8 — Human Review --------
-
-    st.markdown("### **E.8 — Human Review**")
-    src_choice = st.radio(
-        "Use Policy+Decision table from Stage 4, or import your own CSV:",
-        ["Use Stage 4 output", "Import CSV"], horizontal=True, key="hr_src_choice"
-    )
-
-    rev_df = None
-    if src_choice == "Use Stage 4 output":
-        rev_df = ss.get("asset_decision_df")
-        if rev_df is None:
-            st.warning("No Stage 4 output found. Run Policy & Decision (D.6/D.7) first, or import a CSV.")
-    else:
-        up_rev = st.file_uploader("Upload reviewed_appraisal CSV", type=["csv"], key="hr_up_rev")
-        if up_rev is not None:
-            try:
-                rev_df = pd.read_csv(up_rev)
-            except Exception as e:
-                st.error(f"CSV parse error: {e}")
-
-    if rev_df is not None and len(rev_df) > 0:
-        df_display = rev_df.copy()
-
-        # Ensure human columns for editing
-        if "human_decision" not in df_display.columns:
-            df_display["human_decision"] = df_display.get("decision", "approve")
-        if "human_reason" not in df_display.columns:
-            df_display["human_reason"] = ""
-
-        # Compact view with common columns first
-        lead_cols = [c for c in [
-            "application_id","asset_id","asset_type","city",
-            "ai_adjusted","realizable_value",
-            "loan_amount","ltv_ai","ltv_cap",
-            "confidence","condition_score","legal_penalty",
-            "policy_breaches","decision","human_decision","human_reason"
-        ] if c in df_display.columns]
-        tail_cols = [c for c in df_display.columns if c not in lead_cols]
-        df_display = df_display[lead_cols + tail_cols]
-
-        st.caption("Edit decisions/reasons below, then export as feedback for training.")
-        edited = st.data_editor(
-            df_display, use_container_width=True, key="hr_editor", num_rows="dynamic"
-        )
-
-        c_e81, c_e82, c_e83 = st.columns(3)
-        with c_e81:
-            if st.button("💾 Export reviewed_appraisal.csv", key="btn_export_review"):
-                reviewed_path = os.path.join(RUNS_DIR, f"reviewed_appraisal.{_ts()}.csv")
-                edited.to_csv(reviewed_path, index=False)
-                ss["asset_human_review_df"] = edited
-                ss["asset_feedback_csv"] = reviewed_path
-                st.success(f"Saved: `{reviewed_path}`")
-                st.download_button(
-                    "⬇️ Download reviewed_appraisal.csv",
-                    data=edited.to_csv(index=False).encode("utf-8"),
-                    file_name="reviewed_appraisal.csv",
-                    mime="text/csv"
-                )
-
-        with c_e82:
-            if st.button("📏 Compute Agreement Score", key="btn_agree_score"):
-                ai_col = "decision" if "decision" in edited.columns else None
-                if not ai_col:
-                    st.warning("No AI decision column found to compare against.")
-                else:
-                    ai_vals = edited[ai_col].astype(str).str.lower()
-                    human_vals = edited["human_decision"].astype(str).str.lower()
-                    agree = (ai_vals == human_vals)
-                    agree_pct = float(agree.mean() * 100.0)
-                    st.metric("AI ↔ Human Agreement", f"{agree_pct:.2f}%")
-                    # Save lightweight summary for E.9
-                    ss["asset_agreement_score"] = agree_pct
-                    # Show disagreements
-                    dis = edited.loc[~agree, [c for c in edited.columns
-                                              if c in ["application_id","asset_id",ai_col,"human_decision","policy_breaches","human_reason"]]]
-                    if len(dis):
-                        st.markdown(f"❌ **{len(dis)}** rows disagreed out of **{len(edited)}**")
-                        st.dataframe(dis, use_container_width=True)
-
-        with c_e83:
-            st.caption("Tip: Export reviewed CSV before training.")
-
-    else:
-        st.info("Awaiting input for review (Stage 4 table or an imported CSV).")
-
-    st.markdown("---")
-
-    # -------- E.9 — Feedback → Train --------
-    st.markdown("### **E.9 — Feedback → Train**")
-
-    fb_path = ss.get("asset_feedback_csv")
-    if not fb_path or not os.path.exists(fb_path):
-        st.info("Export a reviewed_appraisal CSV in E.8 to enable training.")
-    else:
-        st.write(f"Using feedback file: `{os.path.basename(fb_path)}`")
-
-        c_t1, c_t2, c_t3 = st.columns([1,1,1])
-        with c_t1:
-            train_timeout = st.number_input("Train timeout (sec)", min_value=30, value=180, step=10, key="train_timeout")
-        with c_t2:
-            eval_metric = st.selectbox("Eval metric", ["agreement_score", "RMSE", "MAE"], index=0, key="train_metric")
-        with c_t3:
-            promote_after = st.checkbox("Promote to PRODUCTION after training", value=False, key="train_promote")
-
-        # Backend-aware training (preferred), with a local fallback
-        if st.button("🧠 Train Candidate Model", key="btn_train_candidate"):
-            model_path = None
-            meta = {}
-            try:
-                # Try backend training endpoint if present
-                with open(fb_path, "rb") as fobj:
-                    files = {"feedback_csv": (os.path.basename(fb_path), fobj, "text/csv")}
-                    data = {"agent_id": "asset_appraisal", "metric": eval_metric}
-                    r = requests.post(f"{API_URL}/v1/agents/asset_appraisal/training/train_from_feedback",
-                                      files=files, data=data, timeout=int(train_timeout))
-                if r.ok:
-                    j = r.json() or {}
-                    model_path = j.get("model_path")
-                    meta = j.get("meta", {})
-                else:
-                    # Fall back to local stub artifact
-                    raise RuntimeError(f"Backend returned {r.status_code}: {r.text[:200]}")
-            except Exception as e:
-                # Local stub: create a timestamped model file and meta
-                model_path = os.path.join(RUNS_DIR, f"model-{_ts()}.joblib")
-                # create a tiny placeholder so the path exists
-                with open(model_path, "wb") as fp:
-                    fp.write(b"")  # placeholder joblib
-                meta = {
-                    "trained_on": os.path.basename(fb_path),
-                    "metric": eval_metric,
-                    "score": float(ss.get("asset_agreement_score", 0.0)),
-                    "algo": "stub_linear",
-                    "created_at": datetime.now(timezone.utc).isoformat(),
-                }
-
-            # Persist production_meta.json (not yet promoted)
-            prod_meta = {
-                "has_production": False,
-                "model_path": model_path,
-                "meta": meta
-            }
-            meta_path = os.path.join(RUNS_DIR, "production_meta.json")
-            with open(meta_path, "w", encoding="utf-8") as fp:
-                json.dump(prod_meta, fp, ensure_ascii=False, indent=2)
-
-            ss["asset_trained_model_meta"] = prod_meta
-            st.success(f"Candidate trained. Model: `{os.path.basename(model_path)}`")
-            st.caption(f"Metadata saved → `{meta_path}`")
-
-        # Optional promotion
-        if st.button("🚀 Promote Last Trained to PRODUCTION", key="btn_promote_after_train") or (promote_after and st.session_state.get("asset_trained_model_meta")):
-            try:
-                r = requests.post(f"{API_URL}/v1/agents/asset_appraisal/training/promote_last", timeout=90)
-                if r.ok:
-                    st.success("✅ Model promoted to PRODUCTION.")
-                    # Update local production_meta.json to reflect promotion
-                    j = r.json() if r.text else {}
-                    promoted_path = (j.get("meta") or {}).get("model_path") or (ss.get("asset_trained_model_meta") or {}).get("model_path")
-                    prod_meta = {
-                        "has_production": True,
-                        "model_path": promoted_path,
-                        "meta": j.get("meta") or (ss.get("asset_trained_model_meta") or {}).get("meta") or {}
-                    }
-                    meta_path = os.path.join(RUNS_DIR, "production_meta.json")
-                    with open(meta_path, "w", encoding="utf-8") as fp:
-                        json.dump(prod_meta, fp, ensure_ascii=False, indent=2)
-                    ss["asset_trained_model_meta"] = prod_meta
-                else:
-                    try:
-                        st.error(f"❌ Promotion failed: {r.status_code} {r.reason}")
-                        st.code(r.json())
-                    except Exception:
-                        st.code(r.text[:2000])
-            except Exception as e:
-                st.error(f"❌ Promotion error: {e}")
-    
-# ─────────────────────────────────────────
-# Stage F header diagnostics (always visible)
-# ─────────────────────────────────────────
-st.markdown("#### 🔎 Data availability")
-
-def _len_df(x):
-    return (0 if not isinstance(x, pd.DataFrame) else len(x))
-
-c1, c2, c3, c4 = st.columns(4)
-c1.metric("decision_df",  _len_df(ss.get("asset_decision_df")))
-c2.metric("policy_df",    _len_df(ss.get("asset_policy_df")))
-c3.metric("verified_df",  _len_df(ss.get("asset_verified_df")))
-c4.metric("ai_df",        _len_df(ss.get("asset_ai_df")))
-
-with st.expander("Show sample (if no data yet)"):
-    st.caption("If you haven't run earlier stages, load a small demo so this page is not empty.")
-    if st.button("Load demo portfolio (10 rows)", key="btn_demo_portfolio"):
-        try:
-            # Prefer your real synthesizer if present
-            if "quick_synth" in globals():
-                demo = quick_synth(10)
-            else:
-                # Minimal fallback demo
-                import numpy as np, pandas as pd, random
-                demo = pd.DataFrame({
-                    "application_id": [f"APP_{i:04d}" for i in range(10)],
-                    "asset_id":      [f"A{i:04d}" for i in range(10)],
-                    "asset_type":    np.random.choice(["House","Apartment","Car","Land"], size=10),
-                    "city":          np.random.choice(["HCMC","Hanoi","Da Nang","Hue"], size=10),
-                    "market_value":  np.random.randint(80_000, 800_000, size=10),
-                    "ai_adjusted":   np.random.randint(75_000, 820_000, size=10),
-                    "loan_amount":   np.random.randint(30_000, 500_000, size=10),
-                    "confidence":    np.random.randint(60, 98, size=10),
-                    "condition_score": np.random.uniform(0.6, 1.0, size=10).round(3),
-                    "legal_penalty":   np.random.uniform(0.95, 1.0, size=10).round(3),
-                })
-                demo["realizable_value"] = (demo["ai_adjusted"] * demo["condition_score"] * demo["legal_penalty"]).round(2)
-                demo["ltv_ai"] = (demo["loan_amount"] / demo["ai_adjusted"]).round(3)
-                demo["ltv_cap"] = 0.8
-                demo["policy_breaches"] = ""
-                demo["decision"] = np.where(demo["ltv_ai"] > demo["ltv_cap"], "review", "approved")
-            ss["asset_decision_df"] = demo
-            st.success("Demo portfolio loaded into ss['asset_decision_df']. Scroll down.")
-        except Exception as e:
-            st.error(f"Demo load failed: {e}")
-
-st.divider()
 
 
     
