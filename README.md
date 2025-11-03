@@ -1,242 +1,167 @@
-# 🏦 Banking Agent Liberty
+# 🌌 AI Agent Sandbox — *AI by the People, for the People*
 
-> **AI agents for regulated banking workflows — fast • explainable • production‑ready.**
-
-<p align="center">
-  <img src="docs/hero-banner.png" alt="Banking Agent Liberty – Hero" width="1000"/>
-</p>
-
-<p align="center">
-  <a href="#">![Status](https://img.shields.io/badge/status-active-brightgreen)</a>
-  <a href="#">![Python](https://img.shields.io/badge/Python-3.10%2B-blue)</a>
-  <a href="#">![Streamlit](https://img.shields.io/badge/Streamlit-UI-red)</a>
-  <a href="#">![FastAPI](https://img.shields.io/badge/API-FastAPI-teal)</a>
-  <a href="#">![License](https://img.shields.io/badge/License-MIT-black)</a>
-</p>
+> **From the kitchen to the customer, from the sandbox to the furnace —  
+> every agent here is forged in transparency, tested in truth, and served with trust.**
 
 ---
 
-## 🔎 Table of Contents
+## 🧭 WHAT — The Mission
 
-* [What](#-what) • [So What](#-so-what) • [For Who](#-for-who) • [Where](#-where) • [What Now](#-what-now)
-* [Key Features](#-key-features) • [KPIs](#-kpis) • [Architecture](#-architecture) • [Screenshots](#-screenshots)
-* [Quickstart](#-quickstart) • [Docker](#-docker) • [Configuration](#-configuration)
-* [Security & Compliance](#-security--compliance) • [Roadmap](#-roadmap) • [Contributing](#-contributing) • [License](#-license)
+The **AI Agent Sandbox** is a next-generation workspace to **build, test, and deploy AI agents** with clarity, fairness, and speed.
 
----
+It empowers innovators, banks, and builders to create explainable, production-ready AI systems —  
+from **Credit Appraisal** to **Asset Valuation**, **KYC**, and beyond.
 
-## ❓ What
-
-**Banking Agent Liberty** is a modular **AI agent library** for retail‑bank workflows. It ships with plug‑and‑play agents—**Credit Appraisal**, **Asset Appraisal**, **Data Anonymization**, KYC/AML helpers—plus a shared **Streamlit UI** and **FastAPI** layer. Deploy on on‑prem **OpenStack** or cloud GPUs with identical configs.
-
-**Agent Contract:** `POST /run` • `GET /explain` • `POST /train` • `GET /health`.
+> 🧠 “Think of it as your personal *AI factory* — where every model becomes a measurable, auditable, and human-centered agent.”
 
 ---
 
-## 💡 So What
+## ⚡ SO WHAT — Why It Matters
 
-* **Speed:** Synthetic seeding, one‑click anonymization, batch runs, cached explainability → **days ➜ minutes**.
-* **Quality:** Feature store hygiene, SHAP‑style explanations, policy guards reduce bias & drift.
-* **Compliance:** Data localization defaults, immutable logs, human‑in‑the‑loop audit trails.
-* **Extensibility:** Swap models (HF/LightGBM/scikit‑learn) and vector DBs without UI changes.
+- AI regulation is here — **trust and transparency** are no longer optional.  
+- Enterprises struggle to bridge **data, governance, and explainability**.  
+- AI teams need a single canvas to **experiment, iterate, and ship responsibly**.
 
-**Outcome:** faster approvals, lower risk, clearer audits.
+The Sandbox solves these with:
 
----
-
-## 👥 For Who
-
-* **Banks & Fintechs** needing faster, auditable credit/collateral flows.
-* **AI/Data Teams** wanting reproducible, explainable agents with clean APIs.
-* **Solution Architects** targeting hybrid OpenStack ↔ Cloud.
-* **Ops & Risk** requiring clear logs, approvals, and rollback paths.
+- 🧩 **Modular AI agent templates** (credit, asset, policy)
+- 🧠 **Explainable outputs** with reasoning trails
+- 🔒 **Human-in-the-loop validation**
+- 🪶 **Lightweight UI** (Streamlit + FastAPI)
+- ⚙️ **Run-anywhere portability** — from OpenStack to AWS
 
 ---
 
-## 📍 Where
+## 👥 FOR WHO — The Builders and Believers
 
-* **Runs Anywhere:** laptop, on‑prem OpenStack, or cloud GPUs.
-* **Data Sovereignty:** anonymize at the edge before training/inference.
-
----
-
-## 🚀 What Now
-
-1. **Clone & configure** (SSH)
-2. **Launch Agent Hub UI** (try credit/asset flows)
-3. **Connect data:** CSV/parquet or synthetic generator
-4. **Enable policies + SSO**
-5. **Measure KPIs** & iterate
-
-> ⏩ Jump to [Quickstart](#-quickstart).
+| Role | What You Get |
+|------|---------------|
+| 🏦 **Banks & Fintechs** | RegTech-ready AI for appraisal and decisioning |
+| 🧑‍💻 **Developers** | Ready-to-run agent templates for instant prototyping |
+| 🧮 **Data Scientists** | Built-in MLOps workflow for retraining and feedback loops |
+| ⚖️ **Regulators / Auditors** | Transparent audit logs and policy explainability |
+| 🌱 **Students & Creators** | An open AI playground to learn, test, and innovate |
 
 ---
 
-## ✨ Key Features
+## 🗺️ WHERE — Run It Anywhere
 
-* **Credit Appraisal Agent** — decisions + SHAP explanations, scorecards, policy checks.
-* **Asset Appraisal Agent** — market comps, inspector intake, geo‑tag heatmaps, uncertainty bands.
-* **Data Anonymizer** — PII masking/tokenization; reversible under custody keys.
-* **Feedback → Retrain** — capture human outcomes, re‑train safely, version models.
-* **Observability** — run IDs, artifacts, audit logs, exportable reports.
-* **Modular Backends** — Hugging Face, scikit‑learn/LightGBM, pluggable vector DBs (FAISS/pgvector/Qdrant).
+- 🧩 **Private Cloud:** OpenStack, VMware, or Bare Metal  
+- ☁️ **Public Cloud:** AWS / GCP / Azure  
+- 💻 **Local Dev:** WSL2, Docker Compose, or VS Code  
+- 🔐 **Regulated Zones:** Vietnam, EU, APAC, GovCloud
 
----
-
-## 📊 KPIs
-
-| Domain     | KPI                              | Why it matters               | How Liberty helps                                     |
-| ---------- | -------------------------------- | ---------------------------- | ----------------------------------------------------- |
-| Credit     | **TAT (Time‑to‑Approve)**        | Faster decisions ➜ better CX | Synthetic seeding, batch scoring, cached explanations |
-| Credit     | **Approval Quality / Default Δ** | Reduce risk                  | Feature hygiene, policy guards, bias checks           |
-| Asset      | **Valuation Variance**           | Pricing confidence           | Market comps + uncertainty bands                      |
-| Asset      | **Inspector SLA**                | Field ops efficiency         | Mobile/CSV intake, geotag reminders                   |
-| Ops        | **Model Drift / Fairness**       | Reliability & fairness       | Drift alerts, re‑train loop                           |
-| Compliance | **Audit Completeness**           | Regulator trust              | Run IDs, artifacts, reproducible reports              |
+> “From laptop to datacenter — same agent, same truth.”
 
 ---
 
-## 🏗️ Architecture
+## 🧠 HOW — Under the Hood
 
-```mermaid
-flowchart LR
-  UI["Streamlit UI (Landing/Agents/Runs)"] --> API[FastAPI]
+### 🧩 Architecture
+AI-AIGENTbythePeoplesANDBOX/
+├── agents/
+│ ├── credit_appraisal/
+│ ├── asset_appraisal/
+│ └── ...
+├── services/
+│ ├── api/
+│ └── ui/
+├── .logs/ .pids/ backups/ .venv/
+└── newstart.sh / pushonly.sh / backupokallagents.sh
 
-  subgraph Agents
-    CA["Credit Appraisal (/run, /explain, /train)"]
-    AA["Asset Appraisal (/run, /explain, /train)"]
-    DA["Data Anonymizer (/sanitize)"]
-  end
 
-  API --> CA
-  API --> AA
-  API --> DA
+### 🧭 Core Principles
+- **Explainability First:** Every prediction explains *why*.  
+- **Transparency by Design:** Every step, dataset, and model version is logged.  
+- **Human Oversight:** Each workflow allows review before action.  
+- **Deploy Anywhere:** GPU-for-Rent, FAIR Stack, or OpenStack hybrid.
 
-  CA --- FS[(Feature Store)]
-  AA --- FS
-  CA --> MLOps[(Models and Versioning)]
-  AA --> MLOps
-  API --> Logs[(Audit and Metrics)]
-```
-
-**Tenets:** HTTP/JSON contracts • Deterministic run IDs • Replaceable models/backends • Edge anonymization by default.
-
----
-
-## 🖼️ Screenshots
-
-> Replace placeholders under `docs/` with your real captures.
-
-* **Agent Hub UI:** `docs/ui-overview.png`
-* **Credit Appraisal:** `docs/ui-credit.png`
-* **Asset Appraisal (map):** `docs/ui-asset-map.png`
-* **Audit & Explainability:** `docs/ui-explain.png`
-
-```html
-<p align="center">
-  <img src="docs/ui-overview.png" alt="Agent Hub" width="1000"/>
-</p>
-```
+### ⚙️ Example Agent Flow (A→F)
+1. **A — Intake & Evidence:** Parse, OCR, GPS, index inputs  
+2. **B — Privacy & Features:** Mask PII, engineer features  
+3. **C — Valuation & Verification:** Predict FMV, verify ownership  
+4. **D — Policy & Decision:** Apply haircut, compute LTV, risk flag  
+5. **E — Human Review & Training:** Adjust + feedback loops  
+6. **F — Reporting & Handoff:** Generate audit, export to CRM/credit
 
 ---
 
-## ⚡ Quickstart
+## 🍳 FROM SANDBOX TO FURNACE — *Build AI Like a Master Chef*
 
-> Requirements: Python 3.10+, Git; optional: Docker, GPU drivers.
+Each agent template is a **recipe**, crafted for both speed and soul.
 
+### 🥣 Step 1 — Experiment Freely in the Sandbox Kitchen
+
+Spin up your agent with one command:
 ```bash
-# 1) Clone (SSH)
-git clone git@github.com:Sherlock2019/banking-agent-liberty.git
-cd banking-agent-liberty
+bash newstart.sh
+Load your data, tweak the flavor, and watch results unfold.
+Change one ingredient — dataset, rule, or model — and taste the new outcome.
 
-# 2) Create venv & install
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -U pip
-pip install -r services/ui/requirements.txt
-pip install -r services/api/requirements.txt
+🔥 Step 2 — Refine in the Furnace of Experimentation
+Tinker, compare, validate.
+Every change is logged; every insight is traceable.
+You don’t just build models — you forge intelligence with intent.
 
-# 3) Run UI & API (two terminals)
-# Terminal A (UI)
-cd services/ui
-streamlit run app.py
+🍽️ Step 3 — Serve Production-Ready Intelligence
+When ready, deploy your agent — locally, in OpenStack, or AWS FAIR.
+Same code, same transparency, but now at scale.
 
-# Terminal B (API)
-cd services/api
-uvicorn main:app --reload --port 8000
+AI creation becomes as natural as cooking —
+art guided by science, human intuition guided by truth.
 
-# 4) Open the Hub
-# http://localhost:8501
-```
 
----
+🧰 READY-TO-USE AGENT TEMPLATES
+Agent	Purpose	Customize
+💳 Credit Appraisal	Loan scoring & eligibility	Rules, thresholds, model weights
+🏦 Asset Appraisal	Collateral valuation & FMV	Comps, policy haircut, confidence range
+🧾 KYC / AML (Beta)	Risk & identity validation	Entity rules, regex, risk weighting
 
-## 🐳 Docker
+Each template includes:
 
-```bash
-docker compose up -d --build
-# Logs
-docker compose logs -f ui api
-```
+🪶 Streamlit UI for instant experimentation
 
----
+🧩 Configurable 6-stage workflow (A→F)
 
-## 🛠️ Configuration
+🔍 Explainable results (FMV, rationale, confidence)
 
-```
-.env
-├─ AGENT__CREDIT__MODEL_DIR=agents/credit_appraisal/models/trained
-├─ AGENT__ASSET__MODEL_DIR=agents/asset_appraisal/models/trained
-├─ DATA__RUNS_DIR=services/ui/.runs
-├─ SECURITY__ANON_KEYRING=.keys/anon
-├─ GPU__PROFILE=auto   # cpu|cuda|mps|auto
-```
+🧠 Retraining loop via feedback CSV
 
-* Put trained models under `agents/<agent>/models/trained/`
-* Or start with **synthetic → anonymize → train** directly in the UI
-* Vector DB backends are pluggable (FAISS/pgvector/Qdrant)
+🛫 Deploy-ready artifacts (.joblib, .csv, .json)
 
----
+🧭 PLAN — The Road Ahead
+Phase	Focus	Status
+✅ Phase 1	Credit + Asset Appraisal Agents	Complete
+🧩 Phase 2	KYC, AML, and Regulatory Agents	In Dev
+⚙️ Phase 3	GPU-for-Rent + FAIR AI Integration	2025
+🌐 Phase 4	Open Federation & AI Marketplace	2026
+🚀 WHAT NOW — Get Started
+git clone git@github.com:Sherlock2019/Hugmesandbox.git
+cd Hugmesandbox
+bash newstart.sh
+./runwebui.sh
 
-## 🔐 Security & Compliance
 
-* **Data Sovereignty by Default:** anonymize/pseudonymize at the edge.
-* **Immutable Audit Trails:** run IDs, model/version lineage, signed artifacts.
-* **Least‑Privilege Keys & Secrets:** scoped tokens; rotate regularly.
-* **Human‑in‑the‑Loop Controls:** approvals and overrides are logged and exportable.
+Login → Load sample data → See the AI think, explain, and evolve.
+Your sandbox becomes your studio. Your model becomes your message.
 
----
+🌈 THE PHILOSOPHY
 
-## 🧭 Roadmap
+The AI Agent Sandbox isn’t just technology — it’s a declaration.
 
-* [ ] Agent marketplace cards + per‑agent KPIs
-* [ ] GPU profile selector & benchmarks
-* [ ] Fairness & drift dashboards
-* [ ] Pluggable vector DB (FAISS/pgvector/Qdrant)
-* [ ] Multi‑tenant RBAC & SSO
-* [ ] Mobile inspector intake app (offline‑first)
+That AI should serve humanity, not the other way around.
+That every creator should be able to see why an AI decides.
+That innovation should be open, explainable, and inclusive.
 
----
+From the first keystroke to the final deployment,
+from the sandbox to the furnace — this is AI by the People, for the People.
 
-## 🤝 Contributing
+🧩 CONNECT
 
-* Open an issue with context (use case, data shape, compliance needs)
-* Follow conventional commits
-* Run tests before pushing
+💡 GitHub → Sherlock2019/Hugmesandbox
 
-```bash
-pytest -q
-```
+🏢 Rackspace FAIR | AI Foundry Sandbox
 
----
+📧 Contact → DoanStevenTran@gmail.com
 
-## 📄 License
 
-MIT — see `LICENSE`.
-
----
-
-### 📝 Notes
-
-* Images in `docs/` are placeholders — replace with your branding.
-* For regulated deployments, enable anonymization by default and review data residency.
