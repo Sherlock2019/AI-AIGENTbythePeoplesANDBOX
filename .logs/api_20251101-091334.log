@@ -1,6 +1,0 @@
-2025-11-01 09:13:34 [API:8090] INFO:     Will watch for changes in these directories: ['/home/dzoan/credit-appraisal-agent-poc']
-2025-11-01 09:13:34 [API:8090] INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
-2025-11-01 09:13:34 [API:8090] INFO:     Started reloader process [536766] using WatchFiles
-2025-11-01 09:13:35 [API:8090] INFO:     Started server process [536775]
-2025-11-01 09:13:35 [API:8090] INFO:     Waiting for application startup.
-2025-11-01 09:13:35 [API:8090] INFO:     Application startup complete.
