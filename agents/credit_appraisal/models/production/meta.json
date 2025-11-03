@@ -1,10 +1,10 @@
 {
   "version": "1.0",
-  "created_at": "20251101-175237",
+  "created_at": "20251103-172919",
   "created_by": "dzoan",
   "agent_name": "credit_appraisal",
   "algo_name": "credit_lr",
-  "model_name": "credit_lr-dzoan-credit-appraisal-20251101-175237.joblib",
+  "model_name": "credit_lr-dzoan-credit-appraisal-20251103-172919.joblib",
   "feature_names": [
     "CWI",
     "employment_years",
@@ -20,9 +20,9 @@
   },
   "source": {
     "feedback_csvs": [
-      "/home/dzoan/credit-appraisal-agent-poc/services/ui/.tmp_feedback/creditappraisal.dzoan.production.20251101-105223.csv"
+      "/home/dzoan/credit-appraisal-agent-poc/services/ui/.tmp_feedback/creditappraisal.dzoan.production.20251103-102901.csv"
     ]
   },
-  "promoted_at": "20251101-175239",
-  "source_model": "credit_lr-dzoan-credit-appraisal-20251101-175237.joblib"
+  "promoted_at": "20251103-172921",
+  "source_model": "credit_lr-dzoan-credit-appraisal-20251103-172919.joblib"
 }
