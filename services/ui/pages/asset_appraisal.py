@@ -2330,625 +2330,7 @@ with tabB:
         st.json(ss["asset_comps_used"])
 
     
-    # # ----------------------------
-    # # B.3 — Feature Engineering & Comps
-    # # ----------------------------
-    # st.markdown("### **3) Feature Engineering & Comps**")
-
-    # def _geohash_stub(city: str | None) -> str:
-    #     # Minimal placeholder; swap in real geohash later
-    #     if not city: return "w21z9"
-    #     city_l = str(city).strip().lower()
-    #     return {
-    #         "hcmc": "w21z9", "ho chi minh": "w21z9", "ho-chi-minh": "w21z9",
-    #         "hanoi": "w27z0", "ha noi": "w27z0",
-    #         "da nang": "w23ye", "danang": "w23ye",
-    #         "can tho": "w21ng", "hai phong": "w2cg1",
-    #     }.get(city_l, "w21z9")
-
     
-    # def feature_engineer(df: pd.DataFrame, evidence_index=None) -> pd.DataFrame:
-    #     """
-    #     Light feature engineering:
-    #     - Ensure city/lat/lon exist
-    #     - Coerce lat/lon robustly
-    #     - Create stable 'geohash' (lat,lon preferred; fallback short city hash)
-    #     - Derive safe condition_score if inputs exist; otherwise heuristic fallback
-    #     """
-    #     if not isinstance(df, pd.DataFrame) or df.empty:
-    #         return pd.DataFrame()
-
-    #     out = df.copy()
-
-    #     # Ensure columns exist
-    #     for c in ("city", "lat", "lon", "age_years", "delinquencies", "current_loans"):
-    #         if c not in out.columns:
-    #             out[c] = pd.NA
-
-    #     # Coerce lat/lon
-    #     for c in ("lat", "lon"):
-    #         if out[c].dtype == "object":
-    #             out[c] = out[c].astype(str).str.replace(",", ".", regex=False)
-    #         out[c] = pd.to_numeric(out[c], errors="coerce")
-
-    #     # Build geohash (row-wise safe)
-    #     import hashlib
-    #     def _row_geokey(row) -> str:
-    #         lat = row.get("lat")
-    #         lon = row.get("lon")
-    #         if pd.notna(lat) and pd.notna(lon):
-    #             return f"{float(lat):.3f},{float(lon):.3f}"
-    #         city_val = row.get("city")
-    #         city_txt = "" if pd.isna(city_val) else str(city_val)
-    #         return hashlib.md5(city_txt.encode("utf-8")).hexdigest()[:7]
-
-    #     out["geohash"] = out.apply(_row_geokey, axis=1).astype(str)
-
-    #     # Derive condition_score safely (0..1)
-    #     age = pd.to_numeric(out.get("age_years"), errors="coerce").fillna(0.0)
-    #     delinq = pd.to_numeric(out.get("delinquencies"), errors="coerce").fillna(0.0)
-    #     curr_loans = pd.to_numeric(out.get("current_loans"), errors="coerce").fillna(0.0)
-    #     cond = 1.0 - (0.02 * age) - (0.05 * delinq) - (0.03 * curr_loans)
-    #     out["condition_score"] = pd.Series(cond, index=out.index).clip(0.10, 0.98)
-
-    #     # legal_penalty placeholder
-    #     if "legal_penalty" not in out.columns:
-    #         out["legal_penalty"] = 0.0
-    #     else:
-    #         out["legal_penalty"] = pd.to_numeric(out["legal_penalty"], errors="coerce").fillna(0.0)
-
-    #     # Keep join keys at front if present
-    #     front_cols = [c for c in ["loan_id", "application_id", "asset_id"] if c in out.columns]
-    #     other_cols = [c for c in out.columns if c not in front_cols]
-    #     out = out[front_cols + other_cols]
-
-    #     return out
-
-
-    #     # condition_score heuristic from delinquency/age/current_loans (0..1)
-    #     delinq = out["delinquencies"] if "delinquencies" in out.columns else 0
-    #     curr_loans = out["current_loans"] if "current_loans" in out.columns else 0
-    #     age = out["age_years"]
-    #     out["condition_score"] = 1.0 - (0.02*age) - (0.05*delinq) - (0.03*curr_loans)
-    #     out["condition_score"] = out["condition_score"].clip(0.1, 0.98)
-
-    #     # legal_penalty placeholder (real value will come from C.5 verification later)
-    #     out["legal_penalty"] = 0.0
-
-    #     # geohash from 'city'
-    #     out["geohash"] = out.get("city", "").apply(_geohash_stub)
-
-    #     # Keep join keys at front if present
-    #     front_cols = [c for c in ["loan_id","application_id","asset_id"] if c in out.columns]
-    #     other_cols = [c for c in out.columns if c not in front_cols]
-    #     out = out[front_cols + other_cols]
-    #     return out
-
-    # def fetch_and_clean_comps(df_feats: pd.DataFrame) -> dict:
-    #     """Simple, deterministic comps list stub; replace with real feed."""
-    #     comps = []
-    #     base = float(df_feats.get("market_value", pd.Series([100000])).median())
-    #     for i in range(5):
-    #         comps.append({"comp_id": f"C-{i+1:03d}", "price": round(base * (0.95 + 0.02*i), 2)})
-    #     return {"used": comps, "count": len(comps), "median_baseline": base}
-
-    # if ss.get("asset_anon_df") is None:
-    #     st.info("Run Anonymization (B.2) first.")
-    # else:
-    #     c3a, c3b = st.columns([1.2, 0.8])
-    #     with c3a:
-    #         if st.button("Build Features & Fetch Comps", key="btn_build_features"):
-    #             feats = feature_engineer(ss["asset_anon_df"], ss.get("asset_evidence_index"))
-    #             ss["asset_features_df"] = feats
-                
-    #             # === C.4 / Dashboard metrics (safe) ===
-    #         df_feats = ss.get("asset_features_df")
-
-    #         def _fmt_mean(df, col, fmt="{:.2f}"):
-    #             if isinstance(df, pd.DataFrame) and col in df.columns:
-    #                 v = pd.to_numeric(df[col], errors="coerce").mean()
-    #                 if pd.notna(v):
-    #                     return fmt.format(v)
-    #             return "—"
-
-    #         m1, m2, m3 = st.columns(3)
-    #         with m1:
-    #             st.metric("Avg condition_score", _fmt_mean(df_feats, "condition_score"))
-    #         with m2:
-    #             st.metric("Avg market_value", _fmt_mean(df_feats, "market_value", "{:,.0f}"))
-    #         with m3:
-    #             st.metric("Avg loan_amount", _fmt_mean(df_feats, "loan_amount", "{:,.0f}"))
-
-
-    #             # Persist features.parquet
-    #             features_path = os.path.join(RUNS_DIR, f"features.{_ts()}.parquet")
-    #             feats.to_parquet(features_path, index=False)
-    #             st.success(f"Saved features → `{features_path}`")
-
-    #             comps = fetch_and_clean_comps(feats)
-    #             ss["asset_comps_used"] = comps
-
-    #             # Persist comps_used.json
-    #             comps_path = os.path.join(RUNS_DIR, f"comps_used.{_ts()}.json")
-    #             with open(comps_path, "w", encoding="utf-8") as fp:
-    #                 json.dump(comps, fp, ensure_ascii=False, indent=2)
-    #             st.success(f"Saved comps → `{comps_path}`")
-
-    #     with c3b:
-    #         if ss.get("asset_features_df") is not None:
-    #             st.download_button(
-    #                 "⬇️ Download features.parquet",
-    #                 data=ss["asset_features_df"].to_parquet(index=False),
-    #                 file_name="features.parquet",
-    #                 mime="application/octet-stream",
-    #             )
-
-    #     if ss.get("asset_features_df") is not None:
-    #         k1, k2, k3 = st.columns(3)
-    #         with k1:
-    #             st.metric("Rows (features)", len(ss["asset_features_df"]))
-    #         with k2:
-    #             st.metric("Avg condition_score", f"{ss['asset_features_df']['condition_score'].mean():.2f}")
-    #         with k3:
-    #             st.metric("Evidence count (stub)", int(ss["asset_features_df"].get("evidence_count", 0).mean() if "evidence_count" in ss["asset_features_df"].columns else 0))
-    #         st.dataframe(ss["asset_features_df"].head(30), use_container_width=True)
-
-    #     if ss.get("asset_comps_used") is not None:
-    #         st.caption("Comps used (stub)")
-    #         st.json(ss["asset_comps_used"])
-
-
-    # # ========== 3) AI APPRAISAL & VALUATION ==========
-    # with tab3:
-    #     st.subheader("🤖 Stage 3 — AI Appraisal & Valuation")
-
-    #     # Production model banner (asset agent)
-    #     try:
-    #         resp = requests.get(f"{API_URL}/v1/training/production_meta", timeout=5)
-    #         if resp.status_code == 200:
-    #             meta = resp.json()
-    #             if meta.get("has_production"):
-    #                 ver = (meta.get("meta") or {}).get("version", "1.x")
-    #                 src = (meta.get("meta") or {}).get("source", "production")
-    #                 st.success(f"🟢 Production model active — version: {ver} • source: {src}")
-    #             else:
-    #                 st.warning("⚠️ No production model promoted yet — using baseline.")
-    #         else:
-    #             st.info("ℹ️ Could not fetch production model meta.")
-    #     except Exception:
-    #         st.info("ℹ️ Production meta unavailable.")
-
-        
-        
-    #     # ─────────────────────────────────────────────
-    #     # 🧩 Model Selection (asset trained + production) — dual dir, dedupe, refresh
-    #     # ─────────────────────────────────────────────
-    #     from time import time as _now
-
-    #     trained_dirs = [
-    #         os.path.expanduser("~/credit-appraisal-agent-poc/agents/asset_appraisal/models/trained"),            # canonical
-    #         os.path.expanduser("~/credit-appraisal-agent-poc/services/agents/asset_appraisal/models/trained"),   # legacy
-    #     ]
-    #     production_default_fp = os.path.expanduser(
-    #         "~/credit-appraisal-agent-poc/agents/asset_appraisal/models/production/model.joblib"
-    #     )
-
-    #     # Try to fetch production meta (compatible with your training router)
-    #     production_fp = None
-    #     try:
-    #         r = requests.get(
-    #             f"{API_URL}/v1/training/production_meta",
-    #             params={"agent_id": "asset_appraisal"},
-    #             timeout=5
-    #         )
-    #         if r.ok:
-    #             j = r.json() or {}
-    #             if j.get("has_production"):
-    #                 meta = j.get("meta") or {}
-    #                 production_fp = (meta.get("model_path") or meta.get("promoted_to") or production_default_fp)
-    #     except Exception:
-    #         production_fp = None
-    #     if not production_fp:
-    #         production_fp = production_default_fp
-
-    #     # Manual refresh (cache-bust the selectbox key)
-    #     c_ref, _ = st.columns([1, 6])
-    #     with c_ref:
-    #         if st.button("↻ Refresh models", key="asset_models_refresh"):
-    #             st.session_state.pop("asset_model_select", None)
-    #             st.session_state["_asset_models_bump"] = _now()
-    #             st.rerun()
-
-    #     # Build list (label, path, ctime, created_str, is_production)
-    #     models = []
-
-    #     # 1) Production entry
-    #     if os.path.exists(production_fp):
-    #         try:
-    #             p_ctime = os.path.getctime(production_fp)
-    #             p_created = datetime.datetime.fromtimestamp(p_ctime).strftime("%b %d, %Y %H:%M")
-    #         except Exception:
-    #             p_ctime, p_created = 0.0, "production"
-    #         models.append(("⭐ Production", production_fp, p_ctime, p_created, True))
-
-    #     # 2) Trained entries from both dirs
-    #     raw = []
-    #     for d in trained_dirs:
-    #         if os.path.isdir(d):
-    #             for f in os.listdir(d):
-    #                 if f.endswith(".joblib"):
-    #                     fpath = os.path.join(d, f)
-    #                     try:
-    #                         ctime = os.path.getctime(fpath)
-    #                         created = datetime.datetime.fromtimestamp(ctime).strftime("%b %d, %Y %H:%M")
-    #                     except Exception:
-    #                         ctime, created = 0.0, ""
-    #                     raw.append((f, fpath, ctime, created, False))
-
-    #     # 3) De-dupe by filename (keep newest) and skip if identical to production
-    #     newest_by_name = {}
-    #     for name, path, ctime, created, is_prod in raw:
-    #         # skip literal same file as production
-    #         try:
-    #             if os.path.exists(production_fp) and os.path.samefile(path, production_fp):
-    #                 continue
-    #         except Exception:
-    #             pass
-    #         if (name not in newest_by_name) or (ctime > newest_by_name[name][2]):
-    #             newest_by_name[name] = (name, path, ctime, created, is_prod)
-
-    #     models.extend(newest_by_name.values())
-
-    #     # Sort: production first, then newest trained
-    #     models = sorted(models, key=lambda x: (0 if x[4] else 1, -x[2]))
-
-    #     if models:
-    #         display_names = [
-    #             f"{label} — {created}" if created else f"{label}"
-    #             for (label, _, _, created, _) in models
-    #         ]
-
-    #         # keep previous selection if possible
-    #         default_idx = 0
-    #         prev_selected = st.session_state.get("asset_selected_model")
-    #         if prev_selected:
-    #             for i, (_, path, _, _, _) in enumerate(models):
-    #                 if path == prev_selected:
-    #                     default_idx = i
-    #                     break
-
-    #         select_key = f"asset_model_select::{st.session_state.get('_asset_models_bump','')}"
-    #         selected_display = st.selectbox(
-    #             "📦 Select trained model to use",
-    #             display_names,
-    #             index=default_idx,
-    #             key=select_key
-    #         )
-    #         sel_idx = display_names.index(selected_display)
-    #         selected_model = models[sel_idx][1]
-    #         is_prod = models[sel_idx][4]
-
-    #         st.session_state["asset_selected_model"] = selected_model
-
-    #         if is_prod:
-    #             st.success(f"🟢 Using PRODUCTION model: {os.path.basename(selected_model)}")
-    #         else:
-    #             st.success(f"✅ Using model: {os.path.basename(selected_model)}")
-
-    #         # Promote only when a non-production model is selected
-    #         if (not is_prod) and st.button("🚀 Promote this model to PRODUCTION", key="asset_promote_model"):
-    #             try:
-    #                 # Backend promotes newest trained; if you prefer exact file, copy locally instead.
-    #                 r = requests.post(f"{API_URL}/v1/agents/asset_appraisal/training/promote_last", timeout=60)
-    #                 if r.ok:
-    #                     st.success("✅ Model promoted to PRODUCTION.")
-    #                     # cache-bust & refresh so ⭐ Production appears immediately
-    #                     st.session_state["_asset_models_bump"] = _now()
-    #                     st.rerun()
-    #                 else:
-    #                     try:
-    #                         st.error(f"❌ Promotion failed: {r.status_code} {r.reason}")
-    #                         st.code(r.json())
-    #                     except Exception:
-    #                         st.code(r.text[:2000])
-    #             except Exception as e:
-    #                 st.error(f"❌ Promotion error: {e}")
-    #     else:
-    #         st.warning("⚠️ No trained models found — train one in Step 5 first.")
-
-
-    #     # 🧠 Local LLM & Hardware Profile (runtime hints)
-    #     LLM_MODELS = [
-    #         ("Phi-3 Mini (3.8B) — CPU OK", "phi3:3.8b", "CPU 8GB RAM (fast)"),
-    #         ("Mistral 7B Instruct — CPU slow / GPU OK", "mistral:7b-instruct", "CPU 16GB (slow) or GPU ≥8GB"),
-    #         ("Gemma-2 7B — CPU slow / GPU OK", "gemma2:7b", "CPU 16GB (slow) or GPU ≥8GB"),
-    #         ("LLaMA-3 8B — GPU recommended", "llama3:8b-instruct", "GPU ≥12GB (CPU very slow)"),
-    #         ("Qwen2 7B — GPU recommended", "qwen2:7b-instruct", "GPU ≥12GB (CPU very slow)"),
-    #         ("Mixtral 8x7B — GPU only (big)", "mixtral:8x7b-instruct", "GPU 24–48GB"),
-    #     ]
-    #     LLM_LABELS = [l for (l, _, _) in LLM_MODELS]
-    #     LLM_VALUE_BY_LABEL = {l: v for (l, v, _) in LLM_MODELS}
-    #     LLM_HINT_BY_LABEL  = {l: h for (l, _, h) in LLM_MODELS}
-
-    #     OPENSTACK_FLAVORS = {
-    #         "m4.medium":  "4 vCPU / 8 GB RAM — CPU-only small",
-    #         "m8.large":   "8 vCPU / 16 GB RAM — CPU-only medium",
-    #         "g1.a10.1":   "8 vCPU / 32 GB RAM + 1×A10 24GB",
-    #         "g1.l40.1":   "16 vCPU / 64 GB RAM + 1×L40 48GB",
-    #         "g2.a100.1":  "24 vCPU / 128 GB RAM + 1×A100 80GB",
-    #     }
-
-    #     with st.expander("🧠 Local LLM & Hardware Profile", expanded=True):
-    #         c1, c2 = st.columns([1.2, 1])
-    #         with c1:
-    #             model_label = st.selectbox("Local LLM (used for narratives/explanations)", LLM_LABELS, index=1, key="asset_llm_label")
-    #             llm_value = LLM_VALUE_BY_LABEL[model_label]
-    #             use_llm = st.checkbox("Use LLM narrative (include explanations)", value=False, key="asset_use_llm")
-    #             st.caption(f"Hint: {LLM_HINT_BY_LABEL[model_label]}")
-    #         with c2:
-    #             flavor = st.selectbox("OpenStack flavor / host profile", list(OPENSTACK_FLAVORS.keys()), index=0, key="asset_flavor")
-    #             st.caption(OPENSTACK_FLAVORS[flavor])
-    #         st.caption("These are passed to the API as hints; your API can choose Ollama/Flowise backends accordingly.")
-
-    #     # Choose data source for run
-    #     src = st.selectbox("Data source for AI run", [
-    #         "Use ANON (from Stage 2)",
-    #         "Use RAW → auto-sanitize",
-    #         "Use synthetic (fallback)",
-    #     ])
-
-    #     if src == "Use ANON (from Stage 2)":
-    #         df2 = ss.get("asset_anon_df")
-    #     elif src == "Use RAW → auto-sanitize":
-    #         df2 = anonymize_text_cols(ss.get("asset_raw_df")) if ss.get("asset_raw_df") is not None else None
-    #     else:
-    #         df2 = quick_synth(150)
-
-    #     if df2 is None:
-    #         st.warning("No dataset available. Build Stage 1 & run anonymization first.")
-    #         st.stop()
-
-    #     st.dataframe(df2.head(10), use_container_width=True)
-
-    #     # 🔧 Policy & Haircut Controls (asset-centric)
-    #     st.markdown("### ⚙️ Policy & Haircut Controls")
-    #     p1, p2, p3 = st.columns([1, 1, 1])
-
-    #     with p1:
-    #         min_confidence = st.slider("Min confidence to auto-approve (%)", 0, 100, 70, 1)
-    #         base_haircut   = st.slider("Base haircut (all assets, %)", 0, 50, 5, 1)
-    #     with p2:
-    #         legal_floor    = st.slider("Legal quality floor (min legal_penalty)", 0.90, 1.00, 0.97, 0.01)
-    #         condition_floor= st.slider("Condition floor (min condition_score)", 0.60, 1.00, 0.75, 0.01)
-    #     with p3:
-    #         ltv_cap_mode   = st.selectbox("LTV cap mode", ["Fixed cap", "Per asset_type"], index=0)
-    #         fixed_ltv_cap  = st.slider("Fixed LTV cap (×)", 0.10, 2.00, 0.80, 0.05)
-
-    #     # Per-type caps if requested
-    #     type_caps = {}
-    #     if ltv_cap_mode == "Per asset_type":
-    #         types = sorted(list(map(str, (df2.get("asset_type") or pd.Series(["Asset"])).dropna().unique())))[0:8]
-    #         st.caption("Tune LTV caps per asset_type")
-    #         grid_cols = st.columns(4 if len(types) > 3 else max(1, len(types)))
-    #         for idx, t in enumerate(types):
-    #             with grid_cols[idx % len(grid_cols)]:
-    #                 type_caps[t] = st.number_input(f"{t} LTV cap ×", 0.10, 2.00, 0.80, 0.05, key=f"cap_{t}")
-
-    #     # Probe API (health & agents)
-    #     with st.expander("🔎 Probe API (health & agents)", expanded=False):
-    #         if st.button("Run probe now", key="btn_probe_api"):
-    #             diag = probe_api()
-    #             st.json(diag)
-
-    #     # Run model button (runtime flavor included)
-    #     if st.button("🚀 Run AI Appraisal now", key="btn_run_ai"):
-    #         csv_bytes = df2.to_csv(index=False).encode("utf-8")
-
-    #         form_fields = {
-    #             "use_llm": str(use_llm).lower(),
-    #             "llm": llm_value,
-    #             "flavor": flavor,
-    #             "selected_model": ss.get("asset_selected_model", ""),
-    #             "agent_name": "asset_appraisal",
-    #             # Policy hints (backend may ignore; UI still enforces locally)
-    #             "min_confidence": str(min_confidence),
-    #             "legal_floor": str(legal_floor),
-    #             "condition_floor": str(condition_floor),
-    #             "ltv_cap_mode": ltv_cap_mode,
-    #             "fixed_ltv_cap": str(fixed_ltv_cap),
-    #             "type_caps": json.dumps(type_caps),
-    #             "base_haircut": str(base_haircut),
-    #         }
-
-    #         with st.spinner("Calling asset agent…"):
-    #             ok, result = try_run_asset_agent(csv_bytes, form_fields=form_fields, timeout_sec=180)
-
-    #         if not ok:
-    #             st.error("❌ Model API error.")
-    #             st.info("Tip: open '🔎 Probe API' above to see health and discovered agent ids.")
-    #             st.code(str(result)[:8000])
-    #             st.stop()
-
-    #         df_app = result.copy()
-
-    #         # Ensure core columns
-    #         if "ai_adjusted" not in df_app.columns and "market_value" in df_app.columns:
-    #             df_app["ai_adjusted"] = df_app["market_value"]
-    #         if "confidence" not in df_app.columns:
-    #             df_app["confidence"] = 80.0
-    #         if "legal_penalty" not in df_app.columns:
-    #             df_app["legal_penalty"] = 1.0
-    #         if "condition_score" not in df_app.columns:
-    #             df_app["condition_score"] = 0.9
-    #         if "loan_amount" not in df_app.columns:
-    #             df_app["loan_amount"] = 0.0
-
-    #         # Compute realizable value after haircuts
-    #         df_app["realizable_value"] = (
-    #             pd.to_numeric(df_app["ai_adjusted"], errors="coerce") *
-    #             pd.to_numeric(df_app["legal_penalty"], errors="coerce") *
-    #             pd.to_numeric(df_app["condition_score"], errors="coerce") *
-    #             (1.0 - float(base_haircut) / 100.0)
-    #         )
-
-    #         # LTV (AI) and valuation gap %
-    #         mv = pd.to_numeric(df_app.get("market_value", np.nan), errors="coerce")
-    #         ai = pd.to_numeric(df_app.get("ai_adjusted", np.nan), errors="coerce")
-    #         la = pd.to_numeric(df_app.get("loan_amount", np.nan), errors="coerce")
-
-    #         df_app["valuation_gap_pct"] = (ai - mv) / mv.replace(0, np.nan) * 100.0
-    #         df_app["ltv_ai"] = la / ai.replace(0, np.nan)
-
-    #         # Determine LTV caps row-by-row
-    #         if ltv_cap_mode == "Fixed cap":
-    #             df_app["ltv_cap"] = float(fixed_ltv_cap)
-    #         else:
-    #             atypes = df_app.get("asset_type").astype(str) if "asset_type" in df_app.columns else pd.Series(["Asset"] * len(df_app))
-    #             df_app["ltv_cap"] = atypes.map(lambda t: float(type_caps.get(t, fixed_ltv_cap)))
-
-    #         # Policy breaches & decision
-    #         breaches = []
-    #         conf = pd.to_numeric(df_app["confidence"], errors="coerce")
-    #         legal = pd.to_numeric(df_app["legal_penalty"], errors="coerce")
-    #         cond  = pd.to_numeric(df_app["condition_score"], errors="coerce")
-    #         ltv   = pd.to_numeric(df_app["ltv_ai"], errors="coerce")
-    #         lcap  = pd.to_numeric(df_app["ltv_cap"], errors="coerce")
-
-    #         for i in range(len(df_app)):
-    #             b = []
-    #             if pd.notna(conf.iat[i]) and conf.iat[i] < min_confidence:
-    #                 b.append(f"confidence<{min_confidence}%")
-    #             if pd.notna(legal.iat[i]) and legal.iat[i] < legal_floor:
-    #                 b.append(f"legal<{legal_floor:.2f}")
-    #             if pd.notna(cond.iat[i]) and cond.iat[i] < condition_floor:
-    #                 b.append(f"condition<{condition_floor:.2f}")
-    #             if pd.notna(ltv.iat[i]) and pd.notna(lcap.iat[i]) and ltv.iat[i] > lcap.iat[i]:
-    #                 b.append("ltv>cap")
-    #             breaches.append(", ".join(b))
-
-    #         df_app["policy_breaches"] = breaches
-    #         df_app["decision"] = np.where(df_app["policy_breaches"].str.len().gt(0), "review", "approved")
-
-    #         # First Table (loan-centric validation)
-    #         cols_first = [c for c in [
-    #             "application_id","asset_id","asset_type","city",
-    #             "market_value","ai_adjusted","realizable_value",
-    #             "loan_amount","ltv_ai","ltv_cap",
-    #             "confidence","legal_penalty","condition_score",
-    #             "valuation_gap_pct","policy_breaches","decision"
-    #         ] if c in df_app.columns]
-    #         first_table = df_app[cols_first].copy()
-
-    #         ss["asset_ai_df"] = df_app
-    #         ss["asset_first_table"] = first_table
-
-    #         st.success("✅ AI appraisal completed.")
-    #         st.markdown("### 🧾 Loan & Asset Validation — First Table")
-    #         st.dataframe(first_table, use_container_width=True)
-    #         st.download_button(
-    #             "⬇️ Export First Table (CSV)",
-    #             data=first_table.to_csv(index=False).encode("utf-8"),
-    #             file_name="asset_appraisal_first_table.csv",
-    #             mime="text/csv"
-    #         )
-
-
-    #     # 📊 Portfolio Insights Dashboard
-    #     st.divider()
-    #     st.subheader("📊 Portfolio Insights Dashboard")
-
-    #     ft = ss.get("asset_first_table")
-    #     if ft is None or (hasattr(ft, "empty") and ft.empty):
-    #         st.info("Run appraisal to populate the dashboard.")
-    #     else:
-    #         # Safe numerics & copy
-    #         ft = ft.copy()
-    #         def _num(s): return pd.to_numeric(s, errors="coerce")
-    #         for c in ["ai_adjusted","realizable_value","loan_amount",
-    #                   "valuation_gap_pct","ltv_ai","ltv_cap","confidence"]:
-    #             if c in ft.columns:
-    #                 ft[c] = _num(ft[c])
-
-    #         # KPI strip
-    #         k1, k2, k3, k4 = st.columns(4)
-    #         if {"ltv_ai","ltv_cap"}.issubset(ft.columns):
-    #             breach = (ft["ltv_ai"] > ft["ltv_cap"])
-    #             breach_rate = float(breach.mean() * 100)
-    #         else:
-    #             breach_rate = 0.0
-    #         total_ai        = float(_num(ft.get("ai_adjusted", pd.Series(dtype=float))).sum())
-    #         total_realiz    = float(_num(ft.get("realizable_value", pd.Series(dtype=float))).sum())
-    #         avg_gap         = float(_num(ft.get("valuation_gap_pct", pd.Series(dtype=float))).mean())
-    #         avg_conf        = float(_num(ft.get("confidence", pd.Series(dtype=float))).mean())
-    #         k1.metric("Breach Rate (LTV>cap)", f"{breach_rate:.1f}%")
-    #         k2.metric("AI Gross Value",       f"${total_ai:,.0f}")
-    #         k3.metric("Realizable Value",     f"${total_realiz:,.0f}")
-    #         k4.metric("Avg Valuation Gap",    f"{avg_gap:+.2f}%")
-
-    #         # Row 1: Decision mix & Gap histogram
-    #         r1c1, r1c2 = st.columns(2)
-    #         with r1c1:
-    #             try:
-    #                 names_series = (ft["decision"].astype(str).str.title()
-    #                                 if "decision" in ft.columns
-    #                                 else np.where(ft.get("policy_breaches","").astype(str).str.len().gt(0),
-    #                                               "Has Breach","No Breach"))
-    #                 fig_mix = px.pie(ft, names=names_series, title="Decision / Breach Mix")
-    #                 fig_mix.update_layout(template="plotly_dark", height=320)
-    #                 st.plotly_chart(fig_mix, use_container_width=True)
-    #             except Exception:
-    #                 pass
-    #         with r1c2:
-    #             if "valuation_gap_pct" in ft.columns:
-    #                 try:
-    #                     fig_gap = px.histogram(ft, x="valuation_gap_pct", nbins=40, title="Valuation Gap % Distribution")
-    #                     fig_gap.update_layout(template="plotly_dark", height=320)
-    #                     st.plotly_chart(fig_gap, use_container_width=True)
-    #                 except Exception:
-    #                     pass
-
-    #         # Row 2: LTV vs Cap & City concentration
-    #         r2c1, r2c2 = st.columns(2)
-    #         with r2c1:
-    #             if {"ltv_ai","ltv_cap"}.issubset(ft.columns):
-    #                 try:
-    #                     fig_sc = px.scatter(
-    #                         ft, x="ltv_cap", y="ltv_ai",
-    #                         hover_data=[c for c in ["application_id","asset_id","asset_type","city"] if c in ft.columns],
-    #                         title="LTV (AI) vs LTV Cap"
-    #                     )
-    #                     max_cap = float((ft["ltv_cap"].max() or 1.2))
-    #                     fig_sc.add_shape(type="line", x0=0, y0=0, x1=max_cap, y1=max_cap, line=dict(dash="dash"))
-    #                     fig_sc.update_layout(template="plotly_dark", height=360,
-    #                                          xaxis_title="LTV Cap", yaxis_title="LTV (AI)")
-    #                     st.plotly_chart(fig_sc, use_container_width=True)
-    #                 except Exception:
-    #                     pass
-    #         with r2c2:
-    #             value_col = "realizable_value" if "realizable_value" in ft.columns else ("ai_adjusted" if "ai_adjusted" in ft.columns else None)
-    #             if value_col and "city" in ft.columns:
-    #                 try:
-    #                     top_geo = (ft.groupby("city")[value_col].sum()
-    #                                .sort_values(ascending=False).head(5).reset_index())
-    #                     fig_geo = px.pie(top_geo, values=value_col, names="city", title="Top-5 City Concentration")
-    #                     fig_geo.update_layout(template="plotly_dark", height=360)
-    #                     st.plotly_chart(fig_geo, use_container_width=True)
-    #                 except Exception:
-    #                     pass
-
-    #         # Row 3: Condition × Legal heatmap
-    #         if {"condition_score","legal_penalty"}.issubset(ft.columns):
-    #             try:
-    #                 cond_bins  = pd.cut(ft["condition_score"], bins=[0,0.70,0.85,1.00], labels=["<0.70","0.70–0.85",">0.85"])
-    #                 legal_bins = pd.cut(ft["legal_penalty"],  bins=[0,0.97,0.99,1.00], labels=["<0.97","0.97–0.99",">=0.99"])
-    #                 heat = (ft.assign(cond=cond_bins, legal=legal_bins)
-    #                         .groupby(["cond","legal"]).size().reset_index(name="count"))
-    #                 fig_hm = px.density_heatmap(heat, x="legal", y="cond", z="count", title="Condition vs Legal — Density")
-    #                 fig_hm.update_layout(template="plotly_dark", height=360)
-    #                 st.plotly_chart(fig_hm, use_container_width=True)
-    #             except Exception:
-    #                 pass
-
 
 # ========== 3) AI APPRAISAL & VALUATION ==========
 with tabC:
@@ -3640,108 +3022,173 @@ with tabC:
                             st.dataframe(sub, use_container_width=True)
 
 
-            # ---- Optional Map (if lat/lon present)
-            st.markdown("### 🗺️ Map (optional)")
-            st.caption("Visualize asset locations — map color and style follow the current UI theme.")
+            # ─────────────────────────────────────────────
+            # MAP VISUALIZATION — Clustered Heatmap (MapLibre Vector)
+            # ─────────────────────────────────────────────
+            st.markdown("### 🗺️ Asset Distribution Map")
+            st.caption("Visualize asset clusters and densities — auto-bright for light theme, dark for dark theme.")
 
-            map_cols = [("lat","lon"), ("latitude","longitude"), ("gps_lat","gps_lon")]
-            have_map = False
+            map_cols = [("lat", "lon"), ("latitude", "longitude"), ("gps_lat", "gps_lon")]
+            found = False
 
             for la, lo in map_cols:
                 if la in df.columns and lo in df.columns:
-                    have_map = True
+                    found = True
                     map_df = df[[la, lo] + [
-                        c for c in ["asset_id","asset_type","city","ai_adjusted","realizable_value","confidence"]
+                        c for c in ["asset_id", "asset_type", "city", "ai_adjusted",
+                                    "realizable_value", "confidence"]
                         if c in df.columns
                     ]].copy()
-                    map_df = map_df.rename(columns={la: "lat", lo: "lon"})
-                    map_df = map_df.dropna(subset=["lat", "lon"])
+                    map_df = map_df.rename(columns={la: "lat", lo: "lon"}).dropna(subset=["lat", "lon"])
 
-                    if not map_df.empty:
-                        try:
-                            # ─────────────────────────────────────────────
-                            # Prefer Plotly (bright light / dark dark)
-                            # ─────────────────────────────────────────────
-                            import plotly.express as px
-                            apply_plotly_mapbox_defaults()
-                            style_name = plotly_map_style()
+                    import pydeck as pdk
+                    theme = st.session_state.get("ui_theme", "light")
 
-                            fig = px.scatter_mapbox(
-                                map_df,
-                                lat="lat",
-                                lon="lon",
-                                hover_name="asset_id" if "asset_id" in map_df.columns else "city",
-                                hover_data={c: True for c in ["asset_type","city","ai_adjusted","realizable_value","confidence"] if c in map_df.columns},
-                                color_discrete_sequence=["#38bdf8"],
-                                zoom=8,
-                                height=420,
-                            )
+                    # Use open MapLibre base layers (free, fast, HD)
+                    MAP_STYLE_LIGHT = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+                    MAP_STYLE_DARK  = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
+                    map_style = MAP_STYLE_LIGHT if theme == "light" else MAP_STYLE_DARK
 
-                            fig.update_layout(
-                                mapbox_style=style_name,
-                                margin=dict(l=0, r=0, t=0, b=0),
-                                paper_bgcolor="rgba(0,0,0,0)",
-                                plot_bgcolor="rgba(0,0,0,0)",
-                            )
-                            st.plotly_chart(fig, use_container_width=True)
+                    # View setup (zoom on data centroid)
+                    view_state = pdk.ViewState(
+                        latitude=float(map_df["lat"].mean()),
+                        longitude=float(map_df["lon"].mean()),
+                        zoom=6,
+                        pitch=35,
+                        bearing=15,
+                    )
 
-                        except Exception as e:
-                            # ─────────────────────────────────────────────
-                            # Fallback to pydeck if Plotly unavailable
-                            # ─────────────────────────────────────────────
-                            import pydeck as pdk
-                            view_state = make_pydeck_view_state(
-                                lat=float(map_df["lat"].mean()),
-                                lon=float(map_df["lon"].mean()),
-                                zoom=8
-                            )
-                            layer = pdk.Layer(
-                                "ScatterplotLayer",
-                                data=map_df,
-                                get_position='[lon, lat]',
-                                get_color='[0, 128, 255, 200]',
-                                get_radius=120,
-                                pickable=True,
-                            )
-                            deck = pdk.Deck(
-                                map_style=pydeck_map_style(),
-                                initial_view_state=view_state,
-                                layers=[layer],
-                                tooltip={"text": "{asset_id} · {asset_type}\n{city}\nAI: {ai_adjusted}\nRealiz: {realizable_value}\nConf: {confidence}"}
-                            )
-                            st.pydeck_chart(deck)
-                    else:
-                        st.info("ℹ️ No valid coordinates found to display on the map.")
+                    # ─────────────────────────────────────────────
+                    # 1️⃣ Heatmap layer (density / value intensity)
+                    # ─────────────────────────────────────────────
+                    heat_layer = pdk.Layer(
+                        "HeatmapLayer",
+                        data=map_df,
+                        get_position='[lon, lat]',
+                        aggregation="MEAN",
+                        opacity=0.6,
+                        get_weight="ai_adjusted" if "ai_adjusted" in map_df.columns else 1,
+                    )
+
+                    # ─────────────────────────────────────────────
+                    # 2️⃣ Scatter cluster layer (individual assets)
+                    # ─────────────────────────────────────────────
+                    scatter_layer = pdk.Layer(
+                        "ScatterplotLayer",
+                        data=map_df,
+                        get_position='[lon, lat]',
+                        get_fill_color='[56, 189, 248, 220]' if theme == "light" else '[59, 130, 246, 200]',
+                        get_radius=120,
+                        pickable=True,
+                    )
+
+                    tooltip = {
+                        "html": (
+                            "<b>{asset_id}</b> — {asset_type}<br/>"
+                            "City: {city}<br/>"
+                            "AI Value: {ai_adjusted}<br/>"
+                            "Realizable: {realizable_value}<br/>"
+                            "Conf: {confidence}"
+                        ),
+                        "style": {
+                            "backgroundColor": "rgba(15,23,42,0.85)",
+                            "color": "#e2e8f0",
+                            "fontSize": "12px",
+                            "borderRadius": "8px",
+                            "padding": "6px",
+                        },
+                    }
+
+                    # Combine both layers
+                    deck = pdk.Deck(
+                        map_provider="maplibre",
+                        map_style=map_style,
+                        initial_view_state=view_state,
+                        layers=[heat_layer, scatter_layer],
+                        tooltip=tooltip,
+                    )
+
+                    st.pydeck_chart(deck, use_container_width=True)
                     break
 
-            if not have_map:
-                st.caption("No lat/lon columns found (lat/lon or latitude/longitude or gps_lat/gps_lon). Map hidden.")
+            if not found:
+                st.info("ℹ️ No lat/lon columns found (lat/lon or latitude/longitude or gps_lat/gps_lon). Map hidden.")
 
             # # ---- Optional Map (if lat/lon present)
             # st.markdown("### 🗺️ Map (optional)")
+            # st.caption("Visualize asset locations — map color and style follow the current UI theme.")
+
             # map_cols = [("lat","lon"), ("latitude","longitude"), ("gps_lat","gps_lon")]
             # have_map = False
+
             # for la, lo in map_cols:
             #     if la in df.columns and lo in df.columns:
             #         have_map = True
-            #         map_df = df[[la, lo] + [c for c in ["asset_id","asset_type","city","ai_adjusted","realizable_value","confidence"] if c in df.columns]].copy()
+            #         map_df = df[[la, lo] + [
+            #             c for c in ["asset_id","asset_type","city","ai_adjusted","realizable_value","confidence"]
+            #             if c in df.columns
+            #         ]].copy()
             #         map_df = map_df.rename(columns={la: "lat", lo: "lon"})
-            #         try:
-            #             import pydeck as pdk
-            #             layer = pdk.Layer(
-            #                 "ScatterplotLayer",
-            #                 data=map_df.dropna(subset=["lat","lon"]),
-            #                 get_position="[lon, lat]",
-            #                 get_radius=80,
-            #                 pickable=True,
-            #             )
-            #             view_state = pdk.ViewState(latitude=float(map_df["lat"].mean()), longitude=float(map_df["lon"].mean()), zoom=8)
-            #             st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state, tooltip={"text":"{asset_id} · {asset_type}\n{city}\nAI: {ai_adjusted}\nRealiz: {realizable_value}\nConf: {confidence}"}))
-            #         except Exception:
-            #             st.map(map_df.rename(columns={"lat":"latitude","lon":"longitude"}), use_container_width=True)
+            #         map_df = map_df.dropna(subset=["lat", "lon"])
+
+            #         if not map_df.empty:
+            #             try:
+            #                 # ─────────────────────────────────────────────
+            #                 # Prefer Plotly (bright light / dark dark)
+            #                 # ─────────────────────────────────────────────
+            #                 import plotly.express as px
+            #                 apply_plotly_mapbox_defaults()
+            #                 style_name = plotly_map_style()
+
+            #                 fig = px.scatter_mapbox(
+            #                     map_df,
+            #                     lat="lat",
+            #                     lon="lon",
+            #                     hover_name="asset_id" if "asset_id" in map_df.columns else "city",
+            #                     hover_data={c: True for c in ["asset_type","city","ai_adjusted","realizable_value","confidence"] if c in map_df.columns},
+            #                     color_discrete_sequence=["#38bdf8"],
+            #                     zoom=8,
+            #                     height=420,
+            #                 )
+
+            #                 fig.update_layout(
+            #                     mapbox_style=style_name,
+            #                     margin=dict(l=0, r=0, t=0, b=0),
+            #                     paper_bgcolor="rgba(0,0,0,0)",
+            #                     plot_bgcolor="rgba(0,0,0,0)",
+            #                 )
+            #                 st.plotly_chart(fig, use_container_width=True)
+
+            #             except Exception as e:
+            #                 # ─────────────────────────────────────────────
+            #                 # Fallback to pydeck if Plotly unavailable
+            #                 # ─────────────────────────────────────────────
+            #                 import pydeck as pdk
+            #                 view_state = make_pydeck_view_state(
+            #                     lat=float(map_df["lat"].mean()),
+            #                     lon=float(map_df["lon"].mean()),
+            #                     zoom=8
+            #                 )
+            #                 layer = pdk.Layer(
+            #                     "ScatterplotLayer",
+            #                     data=map_df,
+            #                     get_position='[lon, lat]',
+            #                     get_color='[0, 128, 255, 200]',
+            #                     get_radius=120,
+            #                     pickable=True,
+            #                 )
+            #                 deck = pdk.Deck(
+            #                     map_style=pydeck_map_style(),
+            #                     initial_view_state=view_state,
+            #                     layers=[layer],
+            #                     tooltip={"text": "{asset_id} · {asset_type}\n{city}\nAI: {ai_adjusted}\nRealiz: {realizable_value}\nConf: {confidence}"}
+            #                 )
+            #                 st.pydeck_chart(deck)
+            #         else:
+            #             st.info("ℹ️ No valid coordinates found to display on the map.")
             #         break
-            # if not have_map:
-            #     st.caption("No lat/lon columns found (lat/lon or latitude/longitude or gps_lat/gps_lon). Map hidden.")
+
+           
 
             # ---- Exports of aggregates
             st.markdown("#### 📤 Export dashboard aggregates")
