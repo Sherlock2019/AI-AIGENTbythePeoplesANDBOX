@@ -32,6 +32,118 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timezone
+from pathlib import Path
+import io, csv
+
+
+# Theme bootstrapping
+if "ui_theme" not in st.session_state:
+    st.session_state["ui_theme"] = "light"   # default bright
+
+
+#THEME SWITCHER
+
+def apply_theme(theme: str = "light"):
+    # Keep palette compact so it's easy to tune
+    if theme == "light":
+        bg      = "#ffffff"
+        text    = "#0f172a"
+        subtext = "#334155"
+        card    = "#f8fafc"
+        border  = "#e2e8f0"
+        accent  = "#2563eb"
+        accent2 = "#22c55e"
+        tab_bg  = "#eef2ff"
+        table_bg= "#ffffff"
+        table_head_bg = "#e2e8f0"
+        table_head_tx = "#0f172a"
+    else:  # dark
+        bg      = "#0E1117"
+        text    = "#f1f5f9"
+        subtext = "#93a4b8"
+        card    = "#0f172a"
+        border  = "#334155"
+        accent  = "#3b82f6"
+        accent2 = "#22c55e"
+        tab_bg  = "#111418"
+        table_bg= "#0f172a"
+        table_head_bg = "#1e293b"
+        table_head_tx = "#93c5fd"
+
+    st.markdown(f"""
+    <style>
+      /* App bg + text */
+      .stApp {{
+        background: {bg} !important;
+        color: {text} !important;
+      }}
+      .stCaption, .stMarkdown p, .stMarkdown li, .st-emotion-cache-16idsys {{
+        color: {subtext} !important;
+      }}
+
+      /* Buttons */
+      .stButton>button {{
+        background-color: {accent} !important;
+        color: white !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        border: 1px solid {border} !important;
+      }}
+      .stButton>button:hover {{
+        filter: brightness(0.95);
+      }}
+
+      /* Tabs */
+      .stTabs [data-baseweb="tab-list"] button {{
+        color: {text} !important;
+        background: {tab_bg} !important;
+        border-radius: 10px !important;
+        margin-right: 4px !important;
+        border: 1px solid {border} !important;
+      }}
+      .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {{
+        background-color: {accent} !important;
+        color: #ffffff !important;
+      }}
+
+      /* Dataframe/Data Editor container */
+      [data-testid="stDataFrame"] {{
+        background-color: {table_bg} !important;
+        color: {text} !important;
+        border-radius: 10px !important;
+        border: 1px solid {border} !important;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.2) !important;
+      }}
+      [data-testid="stDataFrame"] thead tr th {{
+        background: {table_head_bg} !important;
+        color: {table_head_tx} !important;
+        font-weight: 700 !important;
+        border-bottom: 2px solid {accent} !important;
+      }}
+      [data-testid="stDataFrameCell"]:not([data-testid="stDataFrameCellEditable"]) {{
+        background-color: {table_bg} !important;
+        color: {text} !important;
+        border-color: {border} !important;
+      }}
+      [data-testid="stDataFrameCellEditable"] textarea {{
+        background-color: {card} !important;
+        color: {text} !important;
+        border: 1px solid {border} !important;
+        border-radius: 6px !important;
+      }}
+      [data-testid="stDataFrameCellEditable"]:focus-within textarea,
+      [data-testid="stDataFrameCellEditable"]:hover textarea {{
+        border-color: {accent2} !important;
+        box-shadow: 0 0 0 2px rgba(34,197,94,0.35) !important;
+      }}
+
+      /* Horizontal rules */
+      hr, .stMarkdown hr {{
+        border-color: {border} !important;
+      }}
+    </style>
+    """, unsafe_allow_html=True)
+
 
 
 # ─────────────────────────────────────────────
@@ -77,76 +189,81 @@ def render_nav_bar_app():
     )
 
 
+# ---- Global runs dir (used everywhere) ----
+RUNS_DIR = os.path.abspath("./.tmp_runs")
+os.makedirs(RUNS_DIR, exist_ok=True)
 
 
-# ─────────────────────────────────────────────
-# THEME INJECTION (Dark + Sidebar hide, with MutationObserver)
-# Run immediately on every script execution to avoid flicker on rerun
-# ─────────────────────────────────────────────
-import streamlit.components.v1 as components # <--- IMPORT IS HERE
-# 1) CSS (global, persistent)
-# Note: Removed the inject_dark_theme_once() function and session state check
-st.markdown("""
-    <style>
-      :root { color-scheme: dark; } /* Hint built-ins */
-      html, body, .stApp {
-        background-color:#0f172a !important;
-        color:#e5e7eb !important;
-        font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      }
-      /* Sidebar off + container padding */
-      [data-testid="stSidebar"], section[data-testid="stSidebar"], nav[data-testid="stSidebarNav"] { display:none !important; }
-      [data-testid="stAppViewContainer"] { margin-left:0 !important; padding-left:0 !important; }
-      /* Headings */
-      h1, h2, h3, h4, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 { color:#e5e7eb !important; }
-      /* Tabs */
-      .stTabs [data-baseweb="tab-list"] { gap:6px; border-bottom:1px solid #1f2937; }
-      .stTabs [data-baseweb="tab"] {
-        background:#0b1222; border:1px solid #1f2937; border-bottom:none;
-        padding:10px 14px; border-top-left-radius:10px; border-top-right-radius:10px; color:#cbd5e1;
-      }
-      .stTabs [aria-selected="true"] { background:#111827 !important; color:#e5e7eb !important; }
-      /* Inputs */
-      .stTextInput input, .stNumberInput input, .stSelectbox [data-baseweb="select"] > div {
-        background:#0b1222 !important; color:#e5e7eb !important; border:1px solid #1f2937 !important;
-      }
-      /* Buttons */
-      .stButton button {
-        background:linear-gradient(180deg,#1f3b57 0%,#0e1f33 100%) !important;
-        color:#e6f3ff !important; border:1px solid #1d2b3a !important; border-radius:10px !important;
-        box-shadow:0 0 10px rgba(56,189,248,.15);
-      }
-      .stButton button:hover { filter:brightness(1.05); box-shadow:0 0 16px rgba(56,189,248,.25); }
-      /* Metrics */
-      div[data-testid="stMetric"] { background:#0b1222; border:1px solid #1f2937; border-radius:12px; padding:10px 12px; }
-      div[data-testid="stMetricValue"] { color:#38bdf8 !important; }
-      /* Tables */
-      .stDataFrame, .stTable { background:#0b1222 !important; border:1px solid #1f2937 !important; border-radius:10px !important; }
-      /* Expanders */
-      details { background:#0b1222 !important; border:1px solid #1f2937 !important; border-radius:10px !important; padding:6px 10px !important; }
-      /* Plotly */
-      .js-plotly-plot .plotly .main-svg { background-color:transparent !important; }
-    </style>
-    """, unsafe_allow_html=True)
 
-# 2) JS observer to re-assert dark after Streamlit mutates
-components.html("""
-    <script>
-      (function() {
-        const apply = () => {
-          try {
-            const root = parent.document.documentElement;
-            const app = parent.document.querySelector('.stApp');
-            if (root) root.style.setProperty('color-scheme','dark');
-            if (app) app.classList.add('dark-hold');
-          } catch(e) {}
-        };
-        apply();
-        const mo = new MutationObserver(apply);
-        mo.observe(parent.document.documentElement, {childList:true, subtree:true});
-      })();
-    </script>
-    """, height=0)
+
+# # ─────────────────────────────────────────────
+# # THEME INJECTION (Dark + Sidebar hide, with MutationObserver)
+# # Run immediately on every script execution to avoid flicker on rerun
+# # ─────────────────────────────────────────────
+# import streamlit.components.v1 as components # <--- IMPORT IS HERE
+# # 1) CSS (global, persistent)
+# # Note: Removed the inject_dark_theme_once() function and session state check
+# st.markdown("""
+#     <style>
+#       :root { color-scheme: dark; } /* Hint built-ins */
+#       html, body, .stApp {
+#         background-color:#0f172a !important;
+#         color:#e5e7eb !important;
+#         font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+#       }
+#       /* Sidebar off + container padding */
+#       [data-testid="stSidebar"], section[data-testid="stSidebar"], nav[data-testid="stSidebarNav"] { display:none !important; }
+#       [data-testid="stAppViewContainer"] { margin-left:0 !important; padding-left:0 !important; }
+#       /* Headings */
+#       h1, h2, h3, h4, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 { color:#e5e7eb !important; }
+#       /* Tabs */
+#       .stTabs [data-baseweb="tab-list"] { gap:6px; border-bottom:1px solid #1f2937; }
+#       .stTabs [data-baseweb="tab"] {
+#         background:#0b1222; border:1px solid #1f2937; border-bottom:none;
+#         padding:10px 14px; border-top-left-radius:10px; border-top-right-radius:10px; color:#cbd5e1;
+#       }
+#       .stTabs [aria-selected="true"] { background:#111827 !important; color:#e5e7eb !important; }
+#       /* Inputs */
+#       .stTextInput input, .stNumberInput input, .stSelectbox [data-baseweb="select"] > div {
+#         background:#0b1222 !important; color:#e5e7eb !important; border:1px solid #1f2937 !important;
+#       }
+#       /* Buttons */
+#       .stButton button {
+#         background:linear-gradient(180deg,#1f3b57 0%,#0e1f33 100%) !important;
+#         color:#e6f3ff !important; border:1px solid #1d2b3a !important; border-radius:10px !important;
+#         box-shadow:0 0 10px rgba(56,189,248,.15);
+#       }
+#       .stButton button:hover { filter:brightness(1.05); box-shadow:0 0 16px rgba(56,189,248,.25); }
+#       /* Metrics */
+#       div[data-testid="stMetric"] { background:#0b1222; border:1px solid #1f2937; border-radius:12px; padding:10px 12px; }
+#       div[data-testid="stMetricValue"] { color:#38bdf8 !important; }
+#       /* Tables */
+#       .stDataFrame, .stTable { background:#0b1222 !important; border:1px solid #1f2937 !important; border-radius:10px !important; }
+#       /* Expanders */
+#       details { background:#0b1222 !important; border:1px solid #1f2937 !important; border-radius:10px !important; padding:6px 10px !important; }
+#       /* Plotly */
+#       .js-plotly-plot .plotly .main-svg { background-color:transparent !important; }
+#     </style>
+#     """, unsafe_allow_html=True)
+
+# # 2) JS observer to re-assert dark after Streamlit mutates
+# components.html("""
+#     <script>
+#       (function() {
+#         const apply = () => {
+#           try {
+#             const root = parent.document.documentElement;
+#             const app = parent.document.querySelector('.stApp');
+#             if (root) root.style.setProperty('color-scheme','dark');
+#             if (app) app.classList.add('dark-hold');
+#           } catch(e) {}
+#         };
+#         apply();
+#         const mo = new MutationObserver(apply);
+#         mo.observe(parent.document.documentElement, {childList:true, subtree:true});
+#       })();
+#     </script>
+#     """, height=0)
 
 # ─────────────────────────────────────────────
 # API CONFIG
@@ -208,21 +325,55 @@ def is_nonempty_df(x) -> bool:
     return isinstance(x, pd.DataFrame) and not x.empty
 
 def render_nav_bar_app():
-    # read the global stage (default to ‘landing’)
     stage = st.session_state.get("stage", "landing")
 
-    # show both buttons on this page
-    c1, c2, _ = st.columns([1, 1, 6])
+    # three columns: home, agents, theme toggle
+    c1, c2, c3 = st.columns([1, 1, 2.5])
+
     with c1:
         if st.button("🏠 Back to Home", key=f"btn_home_{stage}"):
             _go_stage("landing")
             st.stop()
+
     with c2:
         if st.button("🤖 Back to Agents", key=f"btn_agents_{stage}"):
             _go_stage("agents")
             st.stop()
+
+    with c3:
+        is_dark = (ss.get("ui_theme", "dark") == "dark")
+        new_is_dark = st.toggle("🌙 Dark mode", value=is_dark, key="ui_theme_toggle", help="Switch theme")
+        new_theme = "dark" if new_is_dark else "light"
+        if new_theme != ss["ui_theme"]:
+            ss["ui_theme"] = new_theme
+            apply_theme(ss["ui_theme"])
+
     st.markdown("---")
 
+
+# def render_nav_bar_app():
+#     # read the global stage (default to ‘landing’)
+#     stage = st.session_state.get("stage", "landing")
+
+#     # show both buttons on this page
+#     c1, c2, _ = st.columns([1, 1, 6])
+#     with c1:
+#         if st.button("🏠 Back to Home", key=f"btn_home_{stage}"):
+#             _go_stage("landing")
+#             st.stop()
+#     with c2:
+#         if st.button("🤖 Back to Agents", key=f"btn_agents_{stage}"):
+#             _go_stage("agents")
+#             st.stop()
+    
+#     with c3:
+#         is_dark = (ss.get("ui_theme", "dark") == "dark")
+#         new_is_dark = st.toggle("🌙 Dark mode", value=is_dark, key="ui_theme_toggle", help="Switch theme")
+#         new_theme = "dark" if new_is_dark else "light"
+#         if new_theme != ss["ui_theme"]:
+#             ss["ui_theme"] = new_theme
+#             apply_theme(ss["ui_theme"])
+ 
 
 
 # ─────────────────────────────────────────────
@@ -309,6 +460,8 @@ def geohash_decode(s: str) -> Optional[Tuple[float, float]]:
 # SESSION
 # ─────────────────────────────────────────────
 ss = st.session_state
+# Theme default
+ss.setdefault("ui_theme", "dark")   # "dark" or "light"
 ss.setdefault("asset_stage", "login")
 ss.setdefault("asset_logged_in", False)
 ss.setdefault("asset_user", None)
@@ -379,6 +532,292 @@ def synth_why_table() -> pd.DataFrame:
         {"Metric": "delinquencies / current_loans", "Why": "Current risk pressure."},
         {"Metric": "market_segment / city / lat,lon", "Why": "Market & location effects on pricing."},
     ])
+
+# ─────────────────────────────────────────────
+# DATAFRAME SELECTION (avoid boolean ambiguity)
+# ─────────────────────────────────────────────
+def first_nonempty_df(*candidates):
+    """Return the first candidate that is a non-empty pandas DataFrame, else None."""
+    for df in candidates:
+        if isinstance(df, pd.DataFrame) and not df.empty:
+            return df
+    return None
+
+
+
+# ─────────────────────────────────────────────
+# UNIVERSAL INGEST + NORMALIZATION HELPERS
+# ─────────────────────────────────────────────
+def _slug(name: str) -> str:
+    return re.sub(r"[^a-zA-Z0-9._-]+", "_", (name or "dataset")).strip("_").lower()
+
+def _ts() -> str:
+    return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+
+def _read_any_table(uploaded_file) -> pd.DataFrame:
+    """
+    Robust reader for CSV/TSV/TXT/XLSX with encoding + delimiter fallback.
+    Accepts Streamlit UploadedFile or a file-like object.
+    """
+    name = getattr(uploaded_file, "name", "").lower()
+
+    # Excel first
+    if name.endswith((".xlsx", ".xls")):
+        return pd.read_excel(uploaded_file)
+
+    # Text (CSV/TSV/TXT): try utf-8, then latin-1; sniff delimiter.
+    raw = uploaded_file.getvalue() if hasattr(uploaded_file, "getvalue") else uploaded_file.read()
+    for enc in ("utf-8", "latin-1"):
+        try:
+            text = raw.decode(enc) if isinstance(raw, (bytes, bytearray)) else raw
+            lines = text.splitlines()
+            sample = "\n".join(lines[:5]) if lines else ""
+            try:
+                dialect = csv.Sniffer().sniff(sample) if sample else csv.excel
+                sep = getattr(dialect, "delimiter", ",")
+            except Exception:
+                sep = ","
+            return pd.read_csv(io.StringIO(text), sep=sep)
+        except Exception:
+            continue
+    # last resort
+    return pd.read_csv(io.BytesIO(raw), engine="python")
+
+def _normalize_for_agents(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Light normalization for credit/asset agents.
+    Creates a consistent thin schema if columns exist; leaves extras intact.
+    """
+    out = df.copy()
+
+    # alias map (extend freely)
+    aliases = {
+        "application_id": ["application_id", "app_id", "loan_id", "id", "request_id"],
+        "asset_id":       ["asset_id", "property_id", "house_id", "assetid"],
+        "asset_type":     ["asset_type", "type", "category"],
+        "address":        ["address", "addr", "street", "location"],
+        "city":           ["city", "town"],
+        "state":          ["state", "province", "region"],
+        "country":        ["country"],
+        "price":          ["price", "value", "market_value", "listing_price", "sale_price"],
+        "bedrooms":       ["bedrooms", "beds"],
+        "bathrooms":      ["bathrooms", "baths"],
+        "parking_space":  ["parking_space", "parking", "garage"],
+        "title":          ["title", "name"],
+    }
+
+    # rename by first matching alias
+    rename_map = {}
+    cols = set(out.columns)
+    for target, cands in aliases.items():
+        for c in cands:
+            if c in cols:
+                rename_map[c] = target
+                break
+    out = out.rename(columns=rename_map)
+
+    # ensure presence of common columns
+    required = ["application_id", "asset_id", "asset_type", "address", "city", "state", "price"]
+    for col in required:
+        if col not in out.columns:
+            out[col] = None
+
+    # numeric coercions
+    for col in ("price", "bedrooms", "bathrooms", "parking_space"):
+        if col in out.columns:
+            out[col] = pd.to_numeric(out[col], errors="coerce")
+
+    # provenance
+    out["source_dataset"] = st.session_state.get("asset_intake_source_name", "uploaded")
+    return out
+
+
+# ─────────────────────────────────────────────
+# THEME SYSTEM (Light/Dark CSS + map style)
+# ─────────────────────────────────────────────
+from textwrap import dedent
+
+THEME_VARS = {
+    "light": {
+        "bg": "#FFFFFF",
+        "panel": "#F8FAFC",
+        "text": "#0F172A",
+        "muted": "#475569",
+        "primary": "#2563EB",
+        "success": "#16A34A",
+        "warn": "#D97706",
+        "danger": "#DC2626",
+        "accent": "#0EA5E9",
+        "stripe": "#F1F5F9",
+        "shadow": "0 6px 24px rgba(15,23,42,0.08)",
+    },
+    "dark": {
+        "bg": "#0B1020",
+        "panel": "#101727",
+        "text": "#E5E7EB",
+        "muted": "#94A3B8",
+        "primary": "#60A5FA",
+        "success": "#22C55E",
+        "warn": "#FBBF24",
+        "danger": "#F87171",
+        "accent": "#38BDF8",
+        "stripe": "#111827",
+        "shadow": "0 8px 30px rgba(0,0,0,0.35)",
+    },
+}
+
+def _theme_css(theme: str) -> str:
+    t = THEME_VARS[theme]
+    return dedent(f"""
+    <style>
+      /* Fonts: Inter + JetBrains Mono */
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+      :root {{
+        --bg: {t['bg']};
+        --panel: {t['panel']};
+        --text: {t['text']};
+        --muted: {t['muted']};
+        --primary: {t['primary']};
+        --success: {t['success']};
+        --warn: {t['warn']};
+        --danger: {t['danger']};
+        --accent: {t['accent']};
+        --stripe: {t['stripe']};
+        --shadow: {t['shadow']};
+        --radius: 14px;
+      }}
+
+      html, body, .stApp {{
+        background: var(--bg) !important;
+        color: var(--text) !important;
+        font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif !important;
+      }}
+
+      /* Panel-like boxes (use .left-box/.right-box or your custom containers) */
+      .left-box, .right-box, .stExpander, .stTabs [data-baseweb="tab-highlight"] {{
+        background: var(--panel) !important;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }}
+
+      /* Headings */
+      h1, h2, h3, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {{
+        color: var(--text) !important;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }}
+
+      /* Buttons */
+      .stButton>button, button[kind="primary"] {{
+        background: var(--primary) !important;
+        color: #fff !important;
+        border-radius: 12px !important;
+        border: none !important;
+        box-shadow: 0 3px 12px rgba(37,99,235,0.35) !important;
+      }}
+      .stDownloadButton button {{
+        background: var(--success) !important;
+        color: #fff !important;
+        border-radius: 12px !important;
+        border: none !important;
+        box-shadow: 0 3px 12px rgba(34,197,94,0.35) !important;
+      }}
+
+      /* Tables (dataframe) */
+      .stDataFrame thead tr th {{
+        background: var(--panel) !important;
+        color: var(--muted) !important;
+        font-weight: 600 !important;
+      }}
+      .stDataFrame tbody tr:nth-child(odd) {{
+        background: var(--stripe) !important;
+      }}
+
+      /* Chips / small badges */
+      .chip {{
+        display:inline-block; padding:4px 10px; border-radius:999px;
+        background: var(--panel); color: var(--muted); border:1px solid rgba(148,163,184,0.35);
+      }}
+
+      /* Code font */
+      code, pre, .stCodeBlock, .st-emotion-cache-ffhzg2 {{
+        font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+      }}
+      
+      /* NEW  Optional: hide sidebar without touching theme */
+      [data-testid="stSidebar"], section[data-testid="stSidebar"], nav[data-testid="stSidebarNav"] {{
+        display: none !important;
+      }}
+      [data-testid="stAppViewContainer"] {{
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+      }}
+      
+      
+    </style>
+    """)
+
+def apply_theme(theme: str = None):
+    """Inject CSS theme; defaults to session theme."""
+    theme = theme or st.session_state.get("ui_theme", "light")
+    if theme not in THEME_VARS:
+        theme = "light"
+    st.markdown(_theme_css(theme), unsafe_allow_html=True)
+
+# def get_map_style() -> str:
+#     """Return a mapbox/pydeck style matching the theme."""
+#     theme = st.session_state.get("ui_theme", "light")
+#     return "mapbox://styles/mapbox/light-v11" if theme == "light" else "mapbox://styles/mapbox/dark-v11"
+
+# ─────────────────────────────────────────────
+# MAP THEME HELPERS (Mapbox style + token + adapters)
+# ─────────────────────────────────────────────
+import os
+
+def get_mapbox_token() -> str | None:
+    """Find a Mapbox token from secrets or env. Return None if not set."""
+    # Prefer Streamlit secrets if present
+    tok = None
+    try:
+        tok = st.secrets.get("MAPBOX_TOKEN")  # type: ignore[attr-defined]
+    except Exception:
+        pass
+    if not tok:
+        tok = os.environ.get("MAPBOX_TOKEN") or os.environ.get("MAPBOX_ACCESS_TOKEN")
+    return tok or None
+
+def get_map_style() -> str:
+    """
+    Return a Mapbox style URL matched to current theme.
+    Light → bright, Dark → dark. Defaults to light for safety.
+    """
+    theme = st.session_state.get("ui_theme", "light")
+    return "mapbox://styles/mapbox/light-v11" if theme == "light" else "mapbox://styles/mapbox/dark-v11"
+
+# Optional: convenience adapters for Plotly + pydeck
+def apply_plotly_mapbox_defaults():
+    """
+    Set Plotly's Mapbox token globally. Call once before creating px/scatter_mapbox etc.
+    """
+    import plotly.express as px  # local import to avoid hard dependency at import time
+    token = get_mapbox_token()
+    if token:
+        px.set_mapbox_access_token(token)
+    else:
+        st.info("ℹ️ Mapbox token not set. Set MAPBOX_TOKEN in env or st.secrets to enable styled basemaps.")
+
+def make_pydeck_view_state(lat=10.7769, lon=106.7009, zoom=10, pitch=0, bearing=0):
+    import pydeck as pdk
+    return pdk.ViewState(latitude=lat, longitude=lon, zoom=zoom, pitch=pitch, bearing=bearing)
+
+def pydeck_map_style() -> str:
+    """
+    pydeck uses the same Mapbox style URLs when a token is available.
+    """
+    return get_map_style()
+
+
 
 # ─────────────────────────────────────────────
 # AGENT DISCOVERY & PROBE
@@ -568,47 +1007,6 @@ def try_run_asset_agent(csv_bytes: bytes, form_fields: dict, timeout_sec: int = 
     return False, "All agent attempts failed (discovered=" + ", ".join(agent_ids) + "):\n" + "\n\n".join(errors)
 
 
-
-# # ─────────────────────────────────────────────
-# # LOGIN
-# # ─────────────────────────────────────────────
-# if ss["asset_stage"] == "login" and not ss["asset_logged_in"]:
-#     render_nav_bar_app()
-#     st.title("🔐 Login to AI Asset Appraisal Platform")
-#     c1, c2, c3 = st.columns([1,1,1])
-#     with c1: user = st.text_input("Username", placeholder="e.g. dzoan")
-#     with c2: email = st.text_input("Email", placeholder="e.g. dzoan@demo.local")
-#     with c3: pwd = st.text_input("Password", type="password", placeholder="Enter any password")
-#     if st.button("Login", key="btn_asset_login", use_container_width=True):
-#         if user.strip() and email.strip():
-#             ss["asset_user"] = {"name": user.strip(), "email": email.strip(), "timestamp": datetime.datetime.utcnow().isoformat()}
-#             ss["asset_logged_in"] = True
-#             ss["asset_stage"] = "asset_flow"
-#             st.rerun()
-#         else:
-#             st.error("⚠️ Please fill all fields before continuing.")
-#     st.stop()
-
-# ─────────────────────────────────────────────
-# WORKFLOW
-# # ─────────────────────────────────────────────
-# if ss["asset_logged_in"]:
-#     render_nav_bar_app()
-#     st.title("🏛️ Asset Appraisal Agent")
-#     st.caption(f"E2E flow — Inputs → Anonymize → AI → Human Review → Training | 👋 {ss['asset_user']['name']}")
-
-    
-    
-    # # ─────────────────────────────────────────
-    # # TABS (1..5)
-    # # ─────────────────────────────────────────
-    # tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    #     "📥 1) Data Input",
-    #     "🧹 2) Anonymize",
-    #     "🤖 3) AI Appraisal & Valuation",
-    #     "🧑‍⚖️ 4) Human Review",
-    #     "🧪 5) Training (Feedback → Retrain)"
-    # ])
 # ─────────────────────────────────────────────
 # LOGIN
 # ─────────────────────────────────────────────
@@ -648,18 +1046,6 @@ if ss.get("asset_logged_in") and ss.get("asset_stage") in ("asset_flow", "asset_
         f"| 👋 {ss['asset_user']['name']}"
     )
 
-    # ─────────────────────────────────────────
-    # TABS (A..G) — Commented blueprint (keep this above live tabs)
-    # ─────────────────────────────────────────
-    # tabA, tabB, tabC, tabD, tabE, tabF, tabG = st.tabs([
-    #     "🟦 A) Intake & Evidence",
-    #     "🟩 B) Privacy & Features",
-    #     "🟨 C) Valuation & Verification",
-    #     "🟧 D) Policy & Decision",
-    #     "🟪 E) Human Review & Feedback",
-    #     "🟫 F) Model Training & Promotion",
-    #     "⬜ G) Reporting & Handoff"
-    # ])
 
     # ─────────────────────────────────────────
     # TABS (A..G) — Live tabs
@@ -684,51 +1070,15 @@ else:
     st.warning("Please log in first to access the Asset Appraisal workflow.")
 
 
-
-# # ─────────────────────────────────────────────
-# # WORKFLOW (A→F)
-# # ─────────────────────────────────────────────
-# if ss["asset_logged_in"] and ss["asset_stage"] in ("asset_flow", "asset_agent"):
-#     render_nav_bar_app()
-#     st.title("🏛️ Asset Appraisal Agent")
-#     st.caption(
-#         "A→F pipeline — Intake→Privacy→Valuation→Policy→Review→Reporting "
-#         f"| 👋 {ss['asset_user']['name']}"
-#     )
-
-#     # # ─────────────────────────────────────────
-#     # # TABS (A..F) — Commented blueprint (keep this above live tabs)
-#     # # ─────────────────────────────────────────
-#     # tabA, tabB, tabC, tabD, tabE, tabF = st.tabs([
-#     #     "🟦 A) Intake & Evidence",
-#     #     "🟩 B) Privacy & Features",
-#     #     "🟨 C) Valuation & Verification",
-#     #     "🟧 D) Policy & Decision",
-#     #     "🟪 E) Human Review & Training",
-#     #     "⬜ F) Reporting & Handoff"
-#     # ])
-
-#     # ─────────────────────────────────────────
-#     # TABS (A..F) — Live tabs
-#     # ─────────────────────────────────────────
-#     tabA, tabB, tabC, tabD, tabE, tabF = st.tabs([
-#         "🟦 A) Intake & Evidence",
-#         "🟩 B) Privacy & Features",
-#         "🟨 C) Valuation & Verification",
-#         "🟧 D) Policy & Decision",
-#         "🟪 E) Human Review & Training",
-#         "⬜ F) Reporting & Handoff"
-#     ])
-
-
-
 # ─────────────────────────────────────────
 # 🟦 STAGE A — INTAKE & EVIDENCE
 # ─────────────────────────────────────────
 with tabA:
     import io, os, json, hashlib, pandas as pd
     from datetime import datetime, timezone
-
+    
+    
+    ss = st.session_state  # ✅ make 'ss' available in this scope
     st.subheader("A. Intake & Evidence")
     st.caption("Steps: (1) Upload / Import, (2) Normalize, (3) Generate unified intake CSV")
 
@@ -786,50 +1136,109 @@ with tabA:
             except Exception as e:
                 st.error(f"❌ Failed to read {f.name}: {e}")
 
+
+    # ──New  global runs dir (shared across stages) ─────────────────
+    RUNS_DIR = os.path.abspath("./.tmp_runs")
+    os.makedirs(RUNS_DIR, exist_ok=True)
+    
+   
+
     # ─────────────────────────────────────────
     # (A.2) PUBLIC DATASETS — Kaggle / HF / OpenML
     # ─────────────────────────────────────────
     st.markdown("### 🌍 Import Public Datasets (Kaggle / Hugging Face / OpenML / Portals)")
+
+    # keep a place to persist search results across reruns
+    ss.setdefault("kaggle_search_df", pd.DataFrame())
+
     src = st.selectbox(
         "Select source",
-        ["Kaggle (API)", "Kaggle (Web)", "Hugging Face", "OpenML", "Public Domain Portals"],
+        ["Kaggle (API)", "Hugging Face", "OpenML", "Public Domain Portals"],
         key="asset_pubsrc"
     )
-    query = st.text_input("Search keywords", "house prices Vietnam real estate valuation", key="asset_pubquery")
+    query = st.text_input("Search keywords", "house prices real estate valuation", key="asset_pubquery")
 
+    # helpers
+    def _ts():
+        return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+
+    
+    def _safe_read_csv(fp: str) -> pd.DataFrame:
+        """
+        Robust CSV reader:
+        - Tries multiple encodings (utf-8, utf-8-sig, cp1252, latin-1)
+        - Tries common separators
+        - Skips bad rows rather than crashing
+        """
+        encodings = ["utf-8", "utf-8-sig", "cp1252", "latin-1"]
+        seps = [",", ";", "\t", "|"]
+
+        last_err = None
+        for enc in encodings:
+            for sep in seps:
+                try:
+                    df_try = pd.read_csv(
+                        fp,
+                        encoding=enc,
+                        sep=sep,
+                        engine="python",
+                        on_bad_lines="skip",   # pandas >=1.3
+                    )
+                    # Require at least 2 columns to consider it valid
+                    if df_try.shape[1] >= 2:
+                        return df_try
+                except Exception as e:
+                    last_err = e
+                    continue
+
+        # Final fallback: read bytes, decode with latin-1 replacement, then parse in-memory
+        try:
+            with open(fp, "rb") as f:
+                raw = f.read()
+            text = raw.decode("latin-1", errors="replace")
+            for sep in seps:
+                try:
+                    return pd.read_csv(
+                        io.StringIO(text),
+                        sep=sep,
+                        engine="python",
+                        on_bad_lines="skip",
+                    )
+                except Exception:
+                    pass
+        except Exception as e:
+            last_err = e
+
+        raise RuntimeError(f"Could not parse CSV with common encodings/separators. Last error: {last_err}")
+
+    
+
+
+    # Kaggle search
     if st.button("🔎 Search dataset", key="btn_asset_pubsearch"):
         with st.spinner("Searching datasets..."):
             try:
                 if src == "Kaggle (API)":
-                    import subprocess
-                    cmd = ["kaggle", "datasets", "list", "-s", query, "-v"]
-                    try:
-                        out = subprocess.check_output(cmd, text=True)
-                        rows = out.strip().splitlines()
-                        if len(rows) > 1:
-                            header = [h.strip() for h in rows[0].split(",")]
-                            df_pub = pd.DataFrame([r.split(",") for r in rows[1:]], columns=header)
-                            st.dataframe(df_pub.head(25))
-                            st.success("✅ Kaggle API results shown.")
-                        else:
-                            st.warning("No results found.")
-                    except Exception as e:
-                        st.error(f"Kaggle CLI failed: {e}")
-                        st.info("💡 Install Kaggle CLI & configure ~/.kaggle/kaggle.json.")
-
-                elif src == "Kaggle (Web)":
-                    st.markdown(f"[🌐 Open Kaggle ↗️](https://www.kaggle.com/datasets?search={query})")
-
+                    import subprocess, io
+                    cmd = ["kaggle", "datasets", "list", "-s", query, "-v"]  # -v => CSV output
+                    out = subprocess.run(cmd, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                    if out.returncode != 0:
+                        st.error(f"Kaggle CLI failed: {out.stderr.strip() or out.stdout.strip()}")
+                        st.info("💡 Ensure ~/.kaggle/kaggle.json exists and has chmod 600.")
+                        ss["kaggle_search_df"] = pd.DataFrame()
+                    else:
+                        df_pub = pd.read_csv(io.StringIO(out.stdout))
+                        keep = [c for c in ["ref","title","size","lastUpdated","downloadCount","voteCount","usabilityRating"] if c in df_pub.columns]
+                        ss["kaggle_search_df"] = df_pub[keep]
+                        st.success("✅ Kaggle API results shown.")
                 elif src == "Hugging Face":
                     from huggingface_hub import list_datasets
                     results = list_datasets(search=query)
-                    df_pub = pd.DataFrame([{"Dataset": r.id, "Tags": ", ".join(r.tags)} for r in results[:25]])
-                    st.dataframe(df_pub)
+                    df_pub = pd.DataFrame([{"Dataset": r.id, "Tags": ", ".join(r.tags)} for r in results[:50]])
+                    st.dataframe(df_pub, use_container_width=True, hide_index=True)
                     st.success("✅ Hugging Face datasets retrieved.")
-
                 elif src == "OpenML":
                     st.markdown(f"[📊 OpenML Search ↗️](https://www.openml.org/search?type=data&q={query})")
-
                 elif src == "Public Domain Portals":
                     st.markdown("""
                     - [🌎 data.gov](https://www.data.gov/)
@@ -840,50 +1249,303 @@ with tabA:
             except Exception as e:
                 st.error(f"Search failed: {e}")
 
+    # If we have Kaggle results, show table + import controls
+    if src == "Kaggle (API)" and not ss["kaggle_search_df"].empty:
+        st.dataframe(ss["kaggle_search_df"], use_container_width=True, hide_index=True)
+
+        with st.expander("⬇️ Import Selected Kaggle Dataset", expanded=True):
+            refs = ss["kaggle_search_df"]["ref"].astype(str).tolist()
+            selected_ref = st.selectbox("Choose a dataset (ref)", refs, key="asset_kaggle_ref")
+
+            kag_dir = os.path.join(RUNS_DIR, "kaggle")
+            os.makedirs(kag_dir, exist_ok=True)
+            safe_ref = re.sub(r"[^a-zA-Z0-9._/-]+", "_", selected_ref)
+            safe_ref_for_file = safe_ref.replace("/", "__")
+            dest = os.path.join(kag_dir, safe_ref_for_file)
+            os.makedirs(dest, exist_ok=True)
+
+            # Optional: let user set a server-side save folder (relative to project root)
+            st.markdown("**Optional server-side save folder (relative to project root)**")
+            default_svdir = os.path.join(RUNS_DIR, "kaggle_exports")
+            svdir = st.text_input(
+                "Save to folder (server-side)",
+                value=default_svdir,
+                key="asset_kaggle_svdir",
+                help="This saves on the server/WSL side (not your desktop). Use Download button below for local Save As."
+            )
+
+            # Main import button
+            if st.button("📥 Download & Import Selected", key="btn_asset_kaggle_dl", use_container_width=True):
+                try:
+                    import subprocess
+                    cmd = ["kaggle", "datasets", "download", "-d", selected_ref, "-p", dest, "--unzip"]
+                    r = subprocess.run(cmd, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                    if r.returncode != 0:
+                        raise RuntimeError(r.stderr.strip() or r.stdout.strip())
+
+                    csvs = [f for f in os.listdir(dest) if f.lower().endswith(".csv")]
+                    if not csvs:
+                        raise FileNotFoundError("No CSV found in the downloaded archive.")
+                    fp = os.path.join(dest, csvs[0])
+
+                    # Load & stash for downstream stages + download button
+                    df_imp = _safe_read_csv(fp)
+                    ss["asset_intake_df"] = df_imp
+
+                    # Save a unified copy with timestamp in RUNS_DIR
+                    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+                    uni_fp = os.path.join(RUNS_DIR, f"intake_table.{ts}.csv")
+                    df_imp.to_csv(uni_fp, index=False)
+
+                    st.success(f"✅ Imported {len(df_imp):,} rows from `{selected_ref}`")
+                    st.caption(f"Saved unified intake copy: `{uni_fp}`")
+                    st.dataframe(df_imp.head(100), use_container_width=True)
+
+                    # ── NEW: Local Download (browser) with dataset-name.csv ──
+                    st.markdown("#### 💾 Download")
+                    default_fname = f"{safe_ref_for_file}.csv"
+                    st.download_button(
+                        label="⬇️ Download CSV",
+                        file_name=default_fname,
+                        data=df_imp.to_csv(index=False).encode("utf-8"),
+                        mime="text/csv",
+                        key="asset_kaggle_download"
+                    )
+
+                    # ── NEW: Optional server-side save with user folder ──
+                    st.markdown("#### 🗂️ Save on Server (optional)")
+                    # sanitize: keep within project root
+                    project_root = os.path.abspath(os.path.join(RUNS_DIR, "..", ".."))
+                    svdir_abs = os.path.abspath(svdir)
+                    if not svdir_abs.startswith(project_root):
+                        st.warning("⚠️ Path is outside project root; resetting to default exports folder.")
+                        svdir_abs = os.path.abspath(default_svdir)
+
+                    os.makedirs(svdir_abs, exist_ok=True)
+                    save_name = f"{safe_ref_for_file}.csv"
+                    server_save_path = os.path.join(svdir_abs, save_name)
+
+                    if st.button("💽 Save CSV on Server", key="btn_asset_kaggle_save_server"):
+                        try:
+                            df_imp.to_csv(server_save_path, index=False)
+                            rel_path = os.path.relpath(server_save_path, start=project_root)
+                            st.success(f"✅ Saved on server: `{server_save_path}`")
+                            st.caption(f"(Relative to project root: ./{rel_path})")
+                        except Exception as e:
+                            st.error(f"Server save failed: {e}")
+
+                except Exception as e:
+                    st.error(f"Import failed: {e}")
+                    st.info("Tip: check Kaggle auth and try another dataset.")
+
+    
+   
+
+    # Quick HF import (optional direct load)
+    if src == "Hugging Face":
+        st.markdown("#### Or load directly by repo id")
+        hf_repo = st.text_input("🤗 Dataset repo (e.g. uciml/real-estate-valuation)", value="uciml/real-estate-valuation", key="asset_hf_repo")
+        if st.button("📥 Load from HF", key="btn_asset_hf_load", use_container_width=True):
+            try:
+                from datasets import load_dataset
+                ds = load_dataset(hf_repo)
+                split = next(iter(ds.keys()))
+                df_imp = ds[split].to_pandas()
+                ss["asset_intake_df"] = df_imp
+                uni_fp = os.path.join(RUNS_DIR, f"intake_table.{_ts()}.csv")
+                df_imp.to_csv(uni_fp, index=False)
+                st.success(f"✅ Loaded {len(df_imp):,} rows from {hf_repo} (split: {split})")
+                st.caption(f"Saved unified intake copy: `{uni_fp}`")
+                st.dataframe(df_imp.head(100), use_container_width=True)
+            except Exception as e:
+                st.error(f"HF load failed: {e}")
+
     st.divider()
-
+    
+    
     # ─────────────────────────────────────────
-    # (A.3) NORMALIZATION — Merge + Generate CSV
+    # (A.3) NORMALIZE & GENERATE UNIFIED CSV
     # ─────────────────────────────────────────
-    st.markdown("### 🧮 Normalize & Combine All Inputs")
-    st.caption("Merge data from uploaded, imported, or synthetic sources into a unified format.")
+    st.markdown("### 🧹 Normalize & Combine All Inputs")
 
-    def normalize_dataframes(dfs):
-        """Unify schemas and ensure consistent column names."""
-        import numpy as np
-        if not dfs:
-            st.warning("No data to normalize.")
-            return pd.DataFrame()
-        merged = pd.concat(dfs, ignore_index=True)
-        merged.columns = [c.strip().lower().replace(" ", "_") for c in merged.columns]
-        required_cols = ["asset_id", "asset_type", "market_value", "loan_amount", "city"]
-        for col in required_cols:
-            if col not in merged.columns:
-                merged[col] = np.nan
-        merged = merged[required_cols]
-        merged.drop_duplicates(inplace=True)
-        merged["normalized_at"] = datetime.now(timezone.utc).isoformat()
-        return merged
+    # ---------- helpers ----------
+    import io, csv, re
+    from pathlib import Path
 
-    if st.button("⚙️ Normalize & Generate Unified CSV", key="btn_normalize_data"):
+    def _slug(name: str) -> str:
+        return re.sub(r"[^a-zA-Z0-9._-]+", "_", (name or "dataset")).strip("_").lower()
+
+    def _read_any_table(uploaded_file) -> pd.DataFrame:
+        """Robust reader for CSV/TSV/TXT/XLSX with encoding + delimiter fallback."""
+        name = uploaded_file.name.lower()
+
+        # Excel
+        if name.endswith((".xlsx", ".xls")):
+            return pd.read_excel(uploaded_file)
+
+        # Text (CSV/TSV/TXT): try utf-8 then latin-1; sniff delimiter
+        raw = uploaded_file.getvalue() if hasattr(uploaded_file, "getvalue") else uploaded_file.read()
+        for enc in ("utf-8", "latin-1"):
+            try:
+                text = raw.decode(enc) if isinstance(raw, (bytes, bytearray)) else raw
+                head = "\n".join(text.splitlines()[:10]) or text
+                try:
+                    dialect = csv.Sniffer().sniff(head)
+                    sep = dialect.delimiter
+                except Exception:
+                    sep = ","
+                return pd.read_csv(io.StringIO(text), sep=sep)
+            except Exception:
+                continue
+        # last resort (python engine)
+        return pd.read_csv(io.BytesIO(raw), engine="python")
+
+    # ---------- optional upload right here ----------
+    st.markdown("#### ⬆️ Optional: Upload a CSV/TSV/TXT/XLSX to normalize")
+    uploaded = st.file_uploader(
+        "Upload a dataset file (or skip if you already imported via Kaggle/HF).",
+        type=["csv", "tsv", "txt", "xlsx"],
+        key="norm_upload_once",
+        accept_multiple_files=False
+    )
+
+    if uploaded is not None:
         try:
-            all_dfs = uploaded_dfs.copy()
-            if not all_dfs:
-                st.info("No uploads found — using synthetic fallback.")
-                all_dfs.append(quick_synth(100))
-            df_norm = normalize_dataframes(all_dfs)
-            ss["asset_intake_df"] = df_norm
-            os.makedirs("./.tmp_runs", exist_ok=True)
-            out_path = f"./.tmp_runs/intake_table_{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.csv"
-            df_norm.to_csv(out_path, index=False)
-            st.success(f"✅ Unified dataset generated with {len(df_norm)} rows.")
-            st.dataframe(df_norm.head(20), use_container_width=True)
-            st.download_button("💾 Download CSV", df_norm.to_csv(index=False), "intake_table.csv", "text/csv")
+            df_up = _read_any_table(uploaded)
+            ss["asset_intake_df"] = df_up
+            ss["last_dataset_name"] = Path(uploaded.name).stem  # remember original name
+            st.success(f"✅ Loaded {len(df_up):,} rows from **{uploaded.name}**")
+            st.dataframe(df_up.head(100), use_container_width=True, hide_index=True)
         except Exception as e:
-            st.error(f"Normalization failed: {e}")
+            st.error(f"Could not read file: {e}")
 
-    st.divider()
+    # ---------- normalization source ----------
+    df_src = ss.get("asset_intake_df")
+    # Best-effort name priority: last_dataset_name (Kaggle/HF/upload) → fallback
+    base_name = _slug(ss.get("last_dataset_name") or ss.get("asset_intake_source_name") or "dataset")
 
+    if df_src is None or len(df_src) == 0:
+        st.info("Upload/import a dataset first (Kaggle/HF/Upload), then come back to normalize.")
+    else:
+        with st.expander("⚙️ Normalization options", expanded=False):
+            drop_dupes = st.checkbox("Drop duplicate rows", value=True)
+            trim_whitespace = st.checkbox("Trim whitespace in string columns", value=True)
+            lower_columns = st.checkbox("Lowercase column names", value=True)
+
+        def _normalize(df: pd.DataFrame) -> pd.DataFrame:
+            out = df.copy()
+            # 1) basic cleanup
+            if lower_columns:
+                out.columns = [c.strip().lower() for c in out.columns]
+            if trim_whitespace:
+                for c in out.select_dtypes(include=["object"]).columns:
+                    out[c] = out[c].astype(str).str.strip()
+            if drop_dupes:
+                out = out.drop_duplicates().reset_index(drop=True)
+            # (Optional) add any schema harmonization here later
+            return out
+
+        if st.button("🧪 Normalize & Generate Unified CSV", key="btn_normalize", use_container_width=True):
+            norm_df = _normalize(df_src)
+
+            # Ensure output dir
+            norm_dir = os.path.join(RUNS_DIR, "normalized")
+            os.makedirs(norm_dir, exist_ok=True)
+
+            # Build file name: <original>-Normalized.csv   (slug-safe base_name)
+            norm_name = f"{base_name}-Normalized.csv"
+            norm_path = os.path.join(norm_dir, norm_name)
+
+            # Save to disk with utf-8-sig (friendlier for Excel)
+            norm_df.to_csv(norm_path, index=False, encoding="utf-8-sig")
+
+            # Prepare one bytes blob for both download buttons
+            _norm_bytes = norm_df.to_csv(index=False).encode("utf-8-sig")
+            _rows, _cols = len(norm_df), len(norm_df.columns)
+            _size_kb = max(1, int(len(_norm_bytes) / 1024))
+            _norm_file_only = Path(norm_path).name
+
+            # Sticky banner: filename • rows×cols • size
+            st.markdown(
+                f"""
+                <div style="
+                    position: sticky;
+                    top: 64px;
+                    z-index: 50;
+                    background: rgba(16,185,129,0.10);
+                    border: 1px solid #10b981;
+                    padding: 12px 16px;
+                    border-radius: 12px;
+                    margin: 8px 0 14px 0;
+                ">
+                <b>✅ Normalized CSV:</b> <code>{_norm_file_only}</code>
+                &nbsp;•&nbsp; {_rows:,} rows × {_cols} cols &nbsp;•&nbsp; {_size_kb} KB
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            # BIG centered primary download button (TOP)
+            cL, cM, cR = st.columns([1, 2.5, 1])
+            with cM:
+                st.download_button(
+                    "⬇️  Download Normalized CSV",
+                    data=_norm_bytes,
+                    file_name=_norm_file_only,
+                    mime="text/csv",
+                    type="primary",
+                    use_container_width=True,
+                    key="dl_norm_top"
+                )
+
+            # Copyable saved path
+            st.text_input("Saved to (server path)", norm_path, disabled=True, label_visibility="collapsed")
+
+            # Preview table
+            st.dataframe(norm_df.head(100), use_container_width=True, hide_index=True)
+
+            # BIG centered primary download button (BOTTOM)
+            cL2, cM2, cR2 = st.columns([1, 2.5, 1])
+            with cM2:
+                st.download_button(
+                    "⬇️  Download Normalized CSV",
+                    data=_norm_bytes,
+                    file_name=_norm_file_only,
+                    mime="text/csv",
+                    type="primary",
+                    use_container_width=True,
+                    key="dl_norm_bottom"
+                )
+
+    # # ─────────────────────────────────────────
+    # # (A.1b) QUICK START — Generate Synthetic Data (always visible here)
+    # # ─────────────────────────────────────────
+    # st.markdown("### 🎲 Quick Start: Generate Synthetic Data")
+    # c_syn1, c_syn2 = st.columns([2, 1])
+    # with c_syn1:
+    #     nrows = st.slider("Number of synthetic rows", 20, 1000, 150, step=10, key="slider_synth_rows_A_quick")
+    # with c_syn2:
+    #     if st.button("🚀 Generate Synthetic Dataset Now", key="btn_generate_synth_A_quick", use_container_width=True):
+    #         try:
+    #             df_synth = quick_synth(nrows)
+    #             ss["asset_intake_df"] = df_synth
+    #             os.makedirs("./.tmp_runs", exist_ok=True)
+    #             synth_path = f"./.tmp_runs/intake_table_synth_{_ts()}.csv"
+    #             df_synth.to_csv(synth_path, index=False, encoding="utf-8-sig")
+    #             st.success(f"✅ Synthetic dataset created ({len(df_synth)} rows). Saved: `{synth_path}`")
+    #             st.dataframe(df_synth.head(20), use_container_width=True, hide_index=True)
+    #             st.download_button(
+    #                 "⬇️ Download Synthetic CSV",
+    #                 df_synth.to_csv(index=False).encode("utf-8-sig"),
+    #                 file_name="synthetic_intake.csv",
+    #                 mime="text/csv",
+    #                 key="dl_synth_A_quick"
+    #             )
+    #         except Exception as e:
+    #             st.error(f"Synthetic generation failed: {e}")
+
+       
+        
     # ─────────────────────────────────────────
     # (A.4) SYNTHETIC DATA GENERATION
     # ─────────────────────────────────────────
@@ -1270,259 +1932,6 @@ with tabA:
 
 #         st.markdown("---")
 
-# # ─────────────────────────────────────────
-# # A — INTAKE & EVIDENCE (0..1)
-# # ─────────────────────────────────────────
-# with tabA:
-#     st.subheader("A. Intake & Evidence")
-#     st.caption("Steps: **0) Intake & Identity**, **1) Evidence Extraction (OCR/EXIF/GPS)**")
-
-#     # Local helpers (light stubs; replace with real OCR/EXIF later)
-#     import hashlib, io
-#     from datetime import datetime, timezone
-
-#     def sha1_of_filelike(fobj) -> str:
-#         pos = fobj.tell() if hasattr(fobj, "tell") else None
-#         fobj.seek(0)
-#         h = hashlib.sha1()
-#         while True:
-#             chunk = fobj.read(8192)
-#             if not chunk:
-#                 break
-#             if isinstance(chunk, str):
-#                 chunk = chunk.encode("utf-8")
-#             h.update(chunk)
-#         if pos is not None:
-#             fobj.seek(pos)
-#         return h.hexdigest()
-
-#     def extract_fake_exif_gps() -> dict:
-#         # Placeholder until your real EXIF/GPS pipeline is wired
-#         return {"gps": {"lat": 10.7758, "lon": 106.7009}, "ts": datetime.now(timezone.utc).isoformat()}
-
-#     def quick_synth(n: int = 150) -> pd.DataFrame:
-#         t = datetime.now(timezone.utc)
-#         rows = []
-#         for i in range(n):
-#             rows.append({
-#                 "application_id": f"APP_{t.strftime('%H%M%S')}_{i:04d}",
-#                 "asset_id": f"A{t.strftime('%M%S')}{i:04d}",
-#                 "asset_type": ["House","Apartment","Car","Land","Factory"][i % 5],
-#                 "market_value": 120000 + (i % 17) * 3500,
-#                 "age_years": (i % 35),
-#                 "loan_amount": 80000 + (i % 23) * 2500,
-#                 "employment_years": (i % 25),
-#                 "credit_history_years": (i % 20),
-#                 "delinquencies": (i % 3),
-#                 "current_loans": (i % 5),
-#                 "city": ["HCMC","Hanoi","Da Nang","Can Tho","Hai Phong"][i % 5],
-#             })
-#         return pd.DataFrame(rows)
-
-#     def synth_why_table() -> pd.DataFrame:
-#         return pd.DataFrame([
-#             {"Metric": "PII present", "Why it matters": "Must be masked before feature engineering (privacy-by-design)."},
-#             {"Metric": "Evidence linked (%)", "Why it matters": "Traceability between assets and documents/photos."},
-#             {"Metric": "Rows (intake)", "Why it matters": "Sanity-check volume before downstream costs."},
-#         ])
-
-#     # A.0 — Intake & Identity
-#     st.markdown("### **0) Intake & Identity**")
-#     left, right = st.columns([1.4, 1])
-
-#     with left:
-#         up_csv = st.file_uploader("Upload Asset CSV", type=["csv"], key="asset_csv")
-#         with st.expander("➕ Add manual asset row", expanded=False):
-#             m1, m2 = st.columns(2)
-#             asset_type = m1.selectbox("Asset Type", ["House","Apartment","Car","Land","Factory"])
-#             market_value = m2.number_input("Market Value ($)", 0, 10_000_000, 250_000, step=1_000)
-#             age_years = m1.number_input("Age (years)", 0, 100, 10)
-#             loan_amount = m2.number_input("Requested Loan ($)", 0, 10_000_000, 120_000, step=1_000)
-#             employment_years = m1.number_input("Employment Years", 0, 60, 5)
-#             credit_hist_years = m2.number_input("Credit History (years)", 0, 50, 6)
-#             delinq = m1.number_input("Delinquencies", 0, 50, 1)
-#             curr_loans = m2.number_input("Current Loans", 0, 50, 2)
-#             city = m1.text_input("City (optional)", "HCMC")
-#             add_row = st.button("Add manual asset row", key="btn_add_manual_row")
-
-#         if st.button("Build Intake Table (fallback to synthetic if empty)", key="btn_build_intake"):
-#             rows = []
-
-#             # CSV path
-#             if up_csv is not None:
-#                 try:
-#                     rows.append(pd.read_csv(up_csv))
-#                 except Exception as e:
-#                     st.error(f"CSV parse error: {e}")
-
-#             # Manual row path
-#             if add_row:
-#                 rows.append(pd.DataFrame([{
-#                     "application_id": f"APP_{datetime.now(timezone.utc).strftime('%H%M%S')}",
-#                     "asset_id": f"A{datetime.now(timezone.utc).strftime('%M%S')}",
-#                     "asset_type": asset_type, "market_value": market_value, "age_years": age_years,
-#                     "loan_amount": loan_amount, "employment_years": employment_years,
-#                     "credit_history_years": credit_hist_years, "delinquencies": delinq,
-#                     "current_loans": curr_loans, "city": city
-#                 }]))
-
-#             # Synthetic fallback
-#             if len(rows) == 0:
-#                 df = quick_synth(150)
-#                 st.info("No inputs provided — generated a synthetic intake dataset.")
-#             else:
-#                 df = pd.concat(rows, ignore_index=True)
-
-#             ss["asset_intake_df"] = df
-#             # Persist exact artifact: intake_table.csv
-#             os.makedirs("./.tmp_runs", exist_ok=True)
-#             intake_path = os.path.join("./.tmp_runs", f"intake_table.{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.csv")
-#             ss["asset_intake_df"].to_csv(intake_path, index=False)
-#             st.success(f"Saved: `{intake_path}`  •  Rows: {len(df)}")
-#             st.dataframe(df.head(15), use_container_width=True)
-
-#     with right:
-#         st.markdown("#### Generated Metrics — What & Why")
-#         st.dataframe(synth_why_table(), use_container_width=True)
-
-#     st.markdown("---")
-
-#     # A.1 — Evidence Extraction (OCR/EXIF/GPS, doc type detect, hash & index)
-#     st.markdown("### **1) Evidence Extraction (OCR/EXIF/GPS)**")
-#     evid = st.file_uploader(
-#         "Attach evidence (images or PDFs, optional)",
-#         type=["png", "jpg", "jpeg", "pdf"],
-#         accept_multiple_files=True,
-#         key="asset_evidence_files"
-#     )
-
-#     cA1_1, cA1_2 = st.columns([1, 1])
-#     with cA1_1:
-#         if st.button("Extract & Index Evidence", key="btn_extract_evidence"):
-#             idx_items = []
-#             for i, f in enumerate(evid or []):
-#                 # Read into BytesIO for hashing (Streamlit gives UploadedFile)
-#                 bio = io.BytesIO(f.read())
-#                 file_hash = sha1_of_filelike(bio)
-#                 # Reset for any downstream use
-#                 bio.seek(0)
-
-#                 # Naive doc-type guess by extension
-#                 ext = (getattr(f, "name", "") or "").split(".")[-1].lower()
-#                 doc_type = "image" if ext in ("png", "jpg", "jpeg") else "pdf"
-
-#                 # Fake EXIF/GPS until wired
-#                 exif = extract_fake_exif_gps()
-
-#                 idx_items.append({
-#                     "evidence_id": f"EV-{i+1:04d}",
-#                     "file_name": getattr(f, "name", f"file-{i+1}"),
-#                     "doc_type": doc_type,
-#                     "sha1": file_hash,
-#                     "exif": exif,
-#                 })
-
-#             evidence_index = {
-#                 "generated_at": datetime.now(timezone.utc).isoformat(),
-#                 "count": len(idx_items),
-#                 "items": idx_items,
-#             }
-#             ss["asset_evidence_index"] = evidence_index
-
-#             # Persist exact artifact: evidence_index.json
-#             ev_path = os.path.join("./.tmp_runs", f"evidence_index.{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.json")
-#             with open(ev_path, "w", encoding="utf-8") as fp:
-#                 json.dump(evidence_index, fp, ensure_ascii=False, indent=2)
-
-#             st.success(f"Saved: `{ev_path}`  •  Items: {len(idx_items)}")
-#             st.json(evidence_index)
-
-#     with cA1_2:
-#         if ss.get("asset_intake_df") is not None and ss.get("asset_evidence_index") is not None:
-#             # Optional quick linkage KPI (count only)
-#             linked_pct = 1.0 if len(ss["asset_evidence_index"]["items"]) >= 1 else 0.0
-#             st.metric("Evidence Linked (≥1)", f"{linked_pct:.0%}")
-#         elif ss.get("asset_intake_df") is not None:
-#             st.info("Load evidence and click **Extract & Index Evidence** to compute linkage.")
-#         else:
-#             st.info("Build the intake table first (A.0).")
-
-
-#     # ========== 1) DATA INPUT ==========
-#     with tab1:
-#         st.subheader("📥 Stage 1 — Provide Asset Data (CSV, evidence files, or manual)")
-#         left, right = st.columns([1.4, 1])
-
-#         with left:
-#             up_csv = st.file_uploader("Upload Asset CSV", type=["csv"], key="asset_csv")
-#             evid = st.file_uploader("Attach evidence (images or PDFs, optional)", type=["png","jpg","jpeg","pdf"],
-#                                     accept_multiple_files=True, key="asset_evidence")
-#             with st.expander("➕ Add manual asset row", expanded=False):
-#                 m1, m2 = st.columns(2)
-#                 asset_type = m1.selectbox("Asset Type", ["House","Apartment","Car","Land","Factory"])
-#                 market_value = m2.number_input("Market Value ($)", 0, 10_000_000, 250_000, step=1_000)
-#                 age_years = m1.number_input("Age (years)", 0, 100, 10)
-#                 loan_amount = m2.number_input("Requested Loan ($)", 0, 10_000_000, 120_000, step=1_000)
-#                 employment_years = m1.number_input("Employment Years", 0, 60, 5)
-#                 credit_hist_years = m2.number_input("Credit History (years)", 0, 50, 6)
-#                 delinq = m1.number_input("Delinquencies", 0, 50, 1)
-#                 curr_loans = m2.number_input("Current Loans", 0, 50, 2)
-#                 city = m1.text_input("City (optional)", "HCMC")
-#                 add_row = st.button("Add manual asset row", key="btn_add_manual_row")
-
-#             if st.button("Build Stage 1 dataset (or fallback to synthetic if empty)", key="btn_build_stage1"):
-#                 rows = []
-#                 if up_csv is not None:
-#                     try:
-#                         rows.append(pd.read_csv(up_csv))
-#                     except Exception as e:
-#                         st.error(f"CSV parse error: {e}")
-
-#                 if evid:
-#                     ss["asset_evidence"] = [f.name for f in evid]
-
-#                 if add_row:
-#                     rows.append(pd.DataFrame([{
-#                         "application_id": f"APP_{datetime.datetime.utcnow().strftime('%H%M%S')}",
-#                         "asset_id": f"A{datetime.datetime.utcnow().strftime('%M%S')}",
-#                         "asset_type": asset_type, "market_value": market_value, "age_years": age_years,
-#                         "loan_amount": loan_amount, "employment_years": employment_years,
-#                         "credit_history_years": credit_hist_years, "delinquencies": delinq,
-#                         "current_loans": curr_loans, "city": city
-#                     }]))
-
-#                 if len(rows) == 0:
-#                     df = quick_synth(150)
-#                     st.info("No inputs provided — generated synthetic dataset.")
-#                     st.dataframe(synth_why_table(), use_container_width=True)
-#                 else:
-#                     df = pd.concat(rows, ignore_index=True)
-
-#                 if "evidence_files" not in df.columns:
-#                     df["evidence_files"] = [ss.get("asset_evidence", []) for _ in range(len(df))]
-
-#                 ss["asset_raw_df"] = df
-#                 st.success(f"Stage 1 dataset ready. Rows: {len(df)}")
-#                 st.dataframe(df.head(15), use_container_width=True)
-
-#         with right:
-#             st.markdown("#### Generated Metrics — What & Why")
-#             st.dataframe(synth_why_table(), use_container_width=True)
-
-#     # ========== 2) ANONYMIZE ==========
-#     with tab2:
-#         st.subheader("🧹 Stage 2 — Anonymize / Sanitize PII")
-#         if ss["asset_raw_df"] is None:
-#             st.warning("Build Stage 1 dataset first (tab 1).")
-#         else:
-#             if st.button("Run anonymization now", key="btn_run_anon"):
-#                 ss["asset_anon_df"] = anonymize_text_cols(ss["asset_raw_df"])
-#                 st.success("Anonymization complete. Saved ANON dataset.")
-#             if ss["asset_anon_df"] is not None:
-#                 st.dataframe(ss["asset_anon_df"].head(15), use_container_width=True)
-#                 st.download_button("⬇️ Download anonymized CSV",
-#                                    data=ss["asset_anon_df"].to_csv(index=False).encode("utf-8"),
-#                                    file_name="asset_anonymized.csv", mime="text/csv")
 
 # ─────────────────────────────────────────
 # B — PRIVACY & FEATURES (2..3)
@@ -1540,159 +1949,490 @@ with tabB:
     def _ts():
         return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
 
+    
     # ----------------------------
     # B.2 — Anonymize / Sanitize PII
     # ----------------------------
     st.markdown("### **2) Anonymize / Sanitize PII**")
 
-    def anonymize_text_cols(df: pd.DataFrame) -> pd.DataFrame:
-        """Mask likely-PII columns (name/email/phone/id/address) while preserving join keys."""
+    import io, csv, re, os
+    from pathlib import Path
+
+    ss = st.session_state  # make sure this exists globally
+
+    def _slug(name: str) -> str:
+        return re.sub(r"[^a-zA-Z0-9._-]+", "_", (name or "dataset")).strip("_").lower()
+
+    def _read_any_table(uploaded_file) -> pd.DataFrame:
+        """Robust reader for CSV/TSV/TXT/XLSX with encoding + delimiter fallback."""
+        name = uploaded_file.name.lower()
+        if name.endswith((".xlsx", ".xls")):
+            return pd.read_excel(uploaded_file)
+
+        raw = uploaded_file.getvalue() if hasattr(uploaded_file, "getvalue") else uploaded_file.read()
+        for enc in ("utf-8", "latin-1"):
+            try:
+                text = raw.decode(enc) if isinstance(raw, (bytes, bytearray)) else raw
+                head = "\n".join(text.splitlines()[:10]) or text
+                try:
+                    sep = csv.Sniffer().sniff(head).delimiter
+                except Exception:
+                    sep = ","
+                return pd.read_csv(io.StringIO(text), sep=sep)
+            except Exception:
+                continue
+        return pd.read_csv(io.BytesIO(raw), engine="python")
+
+    def _anonymize(df: pd.DataFrame) -> pd.DataFrame:
+        """Mask likely-PII text while preserving common join keys."""
         if df is None or df.empty:
             return df
         out = df.copy()
         join_keys = {"loan_id", "asset_id", "application_id"}
-        pii_like = re.compile(r"(name|email|phone|addr|national|id|passport)", re.I)
+        pii_like = re.compile(r"(name|email|phone|addr|address|national|passport|id|nid)", re.I)
+
         for col in out.columns:
             if col in join_keys:
                 continue
             if out[col].dtype == "object" and pii_like.search(col):
-                # Replace alphanumerics with 'x', keep separators
-                out[col] = out[col].astype(str).str.replace(r"[A-Za-z0-9]", "x", regex=True)
-        return out
+                s = out[col].astype(str)
+                s = s.str.replace(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+", "[EMAIL]", regex=True)
+                s = s.str.replace(r"\b(\+?\d{1,3}[-.\s]?)?\d{7,}\b", "[PHONE]", regex=True)
+                s = s.str.replace(r"\b\d{9,16}\b", "[ID]", regex=True)
+                out[col] = s
+        return out.drop_duplicates().reset_index(drop=True)
 
-    if ss.get("asset_intake_df") is None:
-        st.warning("Load Intake (A.0) first.")
+    # ---------- Source picker (Stage A or Upload here) ----------
+    st.markdown("#### 🔄 Choose data source")
+    src_choice = st.radio(
+        "Pick how you want to provide data:",
+        ["Use data from Stage A", "Upload a new file here"],
+        horizontal=True,
+        key="b_src_choice"
+    )
+
+    df_src, base_name = None, "dataset"
+
+    if src_choice == "Use data from Stage A":
+        df_src = ss.get("asset_intake_df")
+        if isinstance(df_src, pd.DataFrame) and not df_src.empty:
+            base_name = _slug(ss.get("last_dataset_name") or "dataset")
+            st.success(f"Using Stage-A dataset: **{base_name}** • {len(df_src):,} rows")
+            st.dataframe(df_src.head(10), use_container_width=True, hide_index=True)
+        else:
+            st.warning("No data found from Stage A. Upload below instead.")
     else:
-        c2a, c2b = st.columns([1, 1])
-        with c2a:
-            if st.button("Run anonymization now", key="btn_run_anon"):
-                anon_df = anonymize_text_cols(ss["asset_intake_df"])
-                ss["asset_anon_df"] = anon_df
-                anon_path = os.path.join(RUNS_DIR, f"asset_anonymized.{_ts()}.csv")
-                anon_df.to_csv(anon_path, index=False)
-                st.success(f"Anonymization complete. Saved: `{anon_path}`")
-        with c2b:
-            if ss.get("asset_anon_df") is not None:
+        st.markdown(
+            """
+            <div style="border:2px dashed #22c55e;padding:14px;border-radius:12px;
+                        background:rgba(34,197,94,0.06);margin:6px 0 12px 0;">
+            <b>⬆️ Upload CSV/TSV/TXT/XLSX for anonymization</b>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        up = st.file_uploader(
+            "Upload a dataset file",
+            type=["csv","tsv","txt","xlsx"],
+            key="b_upload",
+            accept_multiple_files=False,
+        )
+        if up is not None:
+            try:
+                df_src = _read_any_table(up)
+                base_name = _slug(Path(up.name).stem)
+                ss["asset_intake_df"] = df_src
+                ss["last_dataset_name"] = base_name
+                st.success(f"✅ Loaded {len(df_src):,} rows from **{up.name}**")
+                st.dataframe(df_src.head(20), use_container_width=True, hide_index=True)
+            except Exception as e:
+                st.error(f"Could not read file: {e}")
+
+    if not (isinstance(df_src, pd.DataFrame) and not df_src.empty):
+        st.info("Provide data (via Stage A or upload here) to enable anonymization.")
+    else:
+        if st.button("🛡️ Run Anonymization & Export CSV", type="primary", use_container_width=True, key="btn_b_anon"):
+            anon_df = _anonymize(df_src)
+            out_dir = os.path.join(RUNS_DIR, "normalized")
+            os.makedirs(out_dir, exist_ok=True)
+            out_name = f"{base_name}-Anonymized.csv"
+            out_path = os.path.join(out_dir, out_name)
+            anon_df.to_csv(out_path, index=False, encoding="utf-8-sig")
+            ss["asset_anon_df"] = anon_df
+
+            _bytes = anon_df.to_csv(index=False).encode("utf-8-sig")
+
+            st.markdown(
+                f"""
+                <div style="position:sticky;top:64px;z-index:50;background:rgba(59,130,246,0.10);
+                            border:1px solid #3b82f6;padding:12px 16px;border-radius:12px;margin:8px 0 14px 0;">
+                <b>✅ Anonymized CSV:</b> <code>{out_name}</code> • {len(anon_df):,} rows × {len(anon_df.columns)} cols
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            cL, cM, cR = st.columns([1, 2.6, 1])
+            with cM:
                 st.download_button(
-                    "⬇️ Download asset_anonymized.csv",
-                    data=ss["asset_anon_df"].to_csv(index=False).encode("utf-8"),
-                    file_name="asset_anonymized.csv",
+                    "⬇️  Download Anonymized CSV",
+                    data=_bytes,
+                    file_name=out_name,
                     mime="text/csv",
+                    type="primary",
+                    use_container_width=True,
+                    key="dl_b_anon_top",
                 )
 
-        if ss.get("asset_anon_df") is not None:
-            st.dataframe(ss["asset_anon_df"].head(20), use_container_width=True)
+            st.text_input("Saved to (server path)", out_path, disabled=True, label_visibility="collapsed")
+            st.dataframe(anon_df.head(100), use_container_width=True, hide_index=True)
+
+            cL2, cM2, cR2 = st.columns([1, 2.6, 1])
+            with cM2:
+                st.download_button(
+                    "⬇️  Download Anonymized CSV",
+                    data=_bytes,
+                    file_name=out_name,
+                    mime="text/csv",
+                    type="primary",
+                    use_container_width=True,
+                    key="dl_b_anon_bottom",
+                )
 
     st.markdown("---")
 
+    
+    
+
+    
     # ----------------------------
     # B.3 — Feature Engineering & Comps
     # ----------------------------
     st.markdown("### **3) Feature Engineering & Comps**")
 
-    def _geohash_stub(city: str | None) -> str:
-        # Minimal placeholder; swap in real geohash later
-        if not city: return "w21z9"
-        city_l = str(city).strip().lower()
-        return {
-            "hcmc": "w21z9", "ho chi minh": "w21z9", "ho-chi-minh": "w21z9",
-            "hanoi": "w27z0", "ha noi": "w27z0",
-            "da nang": "w23ye", "danang": "w23ye",
-            "can tho": "w21ng", "hai phong": "w2cg1",
-        }.get(city_l, "w21z9")
+    def feature_engineer(df: pd.DataFrame, evidence_index=None) -> pd.DataFrame:
+        """
+        Light feature engineering (safe):
+        - Ensure city/lat/lon/age_years/delinquencies/current_loans
+        - Coerce lat/lon including "10,762" → 10.762
+        - Create stable 'geohash' (lat,lon preferred; fallback short city hash)
+        - Derive condition_score (0..1) heuristically if inputs exist
+        - Ensure legal_penalty numeric
+        - Keep join keys up front if present
+        """
+        if not isinstance(df, pd.DataFrame) or df.empty:
+            return pd.DataFrame()
 
-    def feature_engineer(df: pd.DataFrame, evidence_index: dict | None) -> pd.DataFrame:
         out = df.copy()
 
-        # Evidence linkage KPI (count per asset)
-        if evidence_index and "items" in evidence_index:
-            # We don't have per-asset mapping yet; expose total count as a feature stub
-            out["evidence_count"] = len(evidence_index["items"])
+        # Ensure expected columns exist
+        for c in ("city", "lat", "lon", "age_years", "delinquencies", "current_loans"):
+            if c not in out.columns:
+                out[c] = pd.NA
+
+        # Coerce lat/lon
+        for c in ("lat", "lon"):
+            if out[c].dtype == "object":
+                out[c] = out[c].astype(str).str.replace(",", ".", regex=False)
+            out[c] = pd.to_numeric(out[c], errors="coerce")
+
+        # Row-wise geokey: prefer lat/lon else short md5(city)
+        import hashlib
+        def _row_geokey(row) -> str:
+            lat = row.get("lat")
+            lon = row.get("lon")
+            if pd.notna(lat) and pd.notna(lon):
+                return f"{float(lat):.3f},{float(lon):.3f}"
+            city_val = row.get("city")
+            city_txt = "" if pd.isna(city_val) else str(city_val)
+            return hashlib.md5(city_txt.encode("utf-8")).hexdigest()[:7]
+
+        out["geohash"] = out.apply(_row_geokey, axis=1).astype(str)
+
+        # Heuristic condition_score (0..1)
+        age = pd.to_numeric(out.get("age_years"), errors="coerce").fillna(0.0)
+        delinq = pd.to_numeric(out.get("delinquencies"), errors="coerce").fillna(0.0)
+        curr_loans = pd.to_numeric(out.get("current_loans"), errors="coerce").fillna(0.0)
+        cond = 1.0 - (0.02 * age) - (0.05 * delinq) - (0.03 * curr_loans)
+        out["condition_score"] = pd.Series(cond, index=out.index).clip(0.10, 0.98)
+
+        # legal_penalty safe numeric
+        if "legal_penalty" not in out.columns:
+            out["legal_penalty"] = 0.0
         else:
-            out["evidence_count"] = 0
+            out["legal_penalty"] = pd.to_numeric(out["legal_penalty"], errors="coerce").fillna(0.0)
 
-        # Keep age_years if present; otherwise default
-        if "age_years" not in out.columns:
-            out["age_years"] = 8.0
-
-        # size_log if 'size' present
-        if "size" in out.columns:
-            out["size_log"] = out["size"].apply(lambda x: math.log1p(x) if pd.notnull(x) else 0.0)
-        else:
-            out["size_log"] = 0.0
-
-        # condition_score heuristic from delinquency/age/current_loans (0..1)
-        delinq = out["delinquencies"] if "delinquencies" in out.columns else 0
-        curr_loans = out["current_loans"] if "current_loans" in out.columns else 0
-        age = out["age_years"]
-        out["condition_score"] = 1.0 - (0.02*age) - (0.05*delinq) - (0.03*curr_loans)
-        out["condition_score"] = out["condition_score"].clip(0.1, 0.98)
-
-        # legal_penalty placeholder (real value will come from C.5 verification later)
-        out["legal_penalty"] = 0.0
-
-        # geohash from 'city'
-        out["geohash"] = out.get("city", "").apply(_geohash_stub)
-
-        # Keep join keys at front if present
-        front_cols = [c for c in ["loan_id","application_id","asset_id"] if c in out.columns]
+        # Keep join keys in front
+        front_cols = [c for c in ["loan_id", "application_id", "asset_id"] if c in out.columns]
         other_cols = [c for c in out.columns if c not in front_cols]
         out = out[front_cols + other_cols]
+
         return out
 
+
+    def _fmt_mean(df, col, fmt="{:.2f}"):
+        if isinstance(df, pd.DataFrame) and col in df.columns:
+            v = pd.to_numeric(df[col], errors="coerce").mean()
+            if pd.notna(v):
+                return fmt.format(v)
+        return "—"
+
+
     def fetch_and_clean_comps(df_feats: pd.DataFrame) -> dict:
-        """Simple, deterministic comps list stub; replace with real feed."""
-        comps = []
-        base = float(df_feats.get("market_value", pd.Series([100000])).median())
-        for i in range(5):
-            comps.append({"comp_id": f"C-{i+1:03d}", "price": round(base * (0.95 + 0.02*i), 2)})
+        """Deterministic stub; replace with real comps feed."""
+        mv = pd.to_numeric(df_feats.get("market_value", pd.Series(dtype=float)), errors="coerce")
+        base = float(mv.median()) if mv.notna().any() else 100000.0
+        comps = [{"comp_id": f"C-{i+1:03d}", "price": round(base * (0.95 + 0.02 * i), 2)} for i in range(5)]
         return {"used": comps, "count": len(comps), "median_baseline": base}
 
-    if ss.get("asset_anon_df") is None:
-        st.info("Run Anonymization (B.2) first.")
+
+    if not isinstance(ss.get("asset_anon_df"), pd.DataFrame) or ss["asset_anon_df"].empty:
+        st.info("Run **Anonymization (B.2)** first to prepare inputs for features.")
     else:
         c3a, c3b = st.columns([1.2, 0.8])
+
         with c3a:
-            if st.button("Build Features & Fetch Comps", key="btn_build_features"):
+            if st.button("Build Features & Fetch Comps", key="btn_build_features", use_container_width=True):
+                # Build features in this rerun and persist
                 feats = feature_engineer(ss["asset_anon_df"], ss.get("asset_evidence_index"))
                 ss["asset_features_df"] = feats
 
-                # Persist features.parquet
+                # Metrics (from feats)
+                m1, m2, m3 = st.columns(3)
+                with m1:
+                    st.metric("Avg condition_score", _fmt_mean(feats, "condition_score"))
+                with m2:
+                    st.metric("Avg market_value", _fmt_mean(feats, "market_value", "{:,.0f}"))
+                with m3:
+                    st.metric("Avg loan_amount", _fmt_mean(feats, "loan_amount", "{:,.0f}"))
+
+                # Persist features.parquet (BytesIO for download)
                 features_path = os.path.join(RUNS_DIR, f"features.{_ts()}.parquet")
                 feats.to_parquet(features_path, index=False)
                 st.success(f"Saved features → `{features_path}`")
 
+                import io as _io
+                _buf = _io.BytesIO()
+                feats.to_parquet(_buf, index=False)
+                st.download_button(
+                    "⬇️ Download features.parquet",
+                    data=_buf.getvalue(),
+                    file_name="features.parquet",
+                    mime="application/octet-stream",
+                    key="dl_features_parquet",
+                    use_container_width=True
+                )
+
+                # Comps (and persist)
                 comps = fetch_and_clean_comps(feats)
                 ss["asset_comps_used"] = comps
-
-                # Persist comps_used.json
                 comps_path = os.path.join(RUNS_DIR, f"comps_used.{_ts()}.json")
                 with open(comps_path, "w", encoding="utf-8") as fp:
                     json.dump(comps, fp, ensure_ascii=False, indent=2)
                 st.success(f"Saved comps → `{comps_path}`")
 
         with c3b:
-            if ss.get("asset_features_df") is not None:
+            # Show last built features (if any) and offer a second download
+            df_feats = ss.get("asset_features_df")
+            if isinstance(df_feats, pd.DataFrame) and not df_feats.empty:
+                import io as _io2
+                _buf2 = _io2.BytesIO()
+                df_feats.to_parquet(_buf2, index=False)
                 st.download_button(
-                    "⬇️ Download features.parquet",
-                    data=ss["asset_features_df"].to_parquet(index=False),
+                    "⬇️ Download last features.parquet",
+                    data=_buf2.getvalue(),
                     file_name="features.parquet",
                     mime="application/octet-stream",
+                    key="dl_features_parquet_last",
+                    use_container_width=True
                 )
 
-        if ss.get("asset_features_df") is not None:
-            k1, k2, k3 = st.columns(3)
-            with k1:
-                st.metric("Rows (features)", len(ss["asset_features_df"]))
-            with k2:
-                st.metric("Avg condition_score", f"{ss['asset_features_df']['condition_score'].mean():.2f}")
-            with k3:
-                st.metric("Evidence count (stub)", int(ss["asset_features_df"].get("evidence_count", 0).mean() if "evidence_count" in ss["asset_features_df"].columns else 0))
-            st.dataframe(ss["asset_features_df"].head(30), use_container_width=True)
+    # Outside the columns: show current features + comps if present
+    df_feats = ss.get("asset_features_df")
+    if isinstance(df_feats, pd.DataFrame) and not df_feats.empty:
+        k1, k2, k3 = st.columns(3)
+        with k1:
+            st.metric("Rows (features)", f"{len(df_feats):,}")
+        with k2:
+            st.metric("Avg condition_score", _fmt_mean(df_feats, "condition_score"))
+        with k3:
+            # evidence_count column is optional; show 0 if absent
+            ev = pd.to_numeric(df_feats.get("evidence_count", pd.Series([0]*len(df_feats))), errors="coerce").fillna(0)
+            st.metric("Evidence count (stub)", int(ev.mean()))
 
-        if ss.get("asset_comps_used") is not None:
-            st.caption("Comps used (stub)")
-            st.json(ss["asset_comps_used"])
+        st.dataframe(df_feats.head(30), use_container_width=True)
+
+    if ss.get("asset_comps_used") is not None:
+        st.caption("Comps used (stub)")
+        st.json(ss["asset_comps_used"])
+
+    
+    # # ----------------------------
+    # # B.3 — Feature Engineering & Comps
+    # # ----------------------------
+    # st.markdown("### **3) Feature Engineering & Comps**")
+
+    # def _geohash_stub(city: str | None) -> str:
+    #     # Minimal placeholder; swap in real geohash later
+    #     if not city: return "w21z9"
+    #     city_l = str(city).strip().lower()
+    #     return {
+    #         "hcmc": "w21z9", "ho chi minh": "w21z9", "ho-chi-minh": "w21z9",
+    #         "hanoi": "w27z0", "ha noi": "w27z0",
+    #         "da nang": "w23ye", "danang": "w23ye",
+    #         "can tho": "w21ng", "hai phong": "w2cg1",
+    #     }.get(city_l, "w21z9")
+
+    
+    # def feature_engineer(df: pd.DataFrame, evidence_index=None) -> pd.DataFrame:
+    #     """
+    #     Light feature engineering:
+    #     - Ensure city/lat/lon exist
+    #     - Coerce lat/lon robustly
+    #     - Create stable 'geohash' (lat,lon preferred; fallback short city hash)
+    #     - Derive safe condition_score if inputs exist; otherwise heuristic fallback
+    #     """
+    #     if not isinstance(df, pd.DataFrame) or df.empty:
+    #         return pd.DataFrame()
+
+    #     out = df.copy()
+
+    #     # Ensure columns exist
+    #     for c in ("city", "lat", "lon", "age_years", "delinquencies", "current_loans"):
+    #         if c not in out.columns:
+    #             out[c] = pd.NA
+
+    #     # Coerce lat/lon
+    #     for c in ("lat", "lon"):
+    #         if out[c].dtype == "object":
+    #             out[c] = out[c].astype(str).str.replace(",", ".", regex=False)
+    #         out[c] = pd.to_numeric(out[c], errors="coerce")
+
+    #     # Build geohash (row-wise safe)
+    #     import hashlib
+    #     def _row_geokey(row) -> str:
+    #         lat = row.get("lat")
+    #         lon = row.get("lon")
+    #         if pd.notna(lat) and pd.notna(lon):
+    #             return f"{float(lat):.3f},{float(lon):.3f}"
+    #         city_val = row.get("city")
+    #         city_txt = "" if pd.isna(city_val) else str(city_val)
+    #         return hashlib.md5(city_txt.encode("utf-8")).hexdigest()[:7]
+
+    #     out["geohash"] = out.apply(_row_geokey, axis=1).astype(str)
+
+    #     # Derive condition_score safely (0..1)
+    #     age = pd.to_numeric(out.get("age_years"), errors="coerce").fillna(0.0)
+    #     delinq = pd.to_numeric(out.get("delinquencies"), errors="coerce").fillna(0.0)
+    #     curr_loans = pd.to_numeric(out.get("current_loans"), errors="coerce").fillna(0.0)
+    #     cond = 1.0 - (0.02 * age) - (0.05 * delinq) - (0.03 * curr_loans)
+    #     out["condition_score"] = pd.Series(cond, index=out.index).clip(0.10, 0.98)
+
+    #     # legal_penalty placeholder
+    #     if "legal_penalty" not in out.columns:
+    #         out["legal_penalty"] = 0.0
+    #     else:
+    #         out["legal_penalty"] = pd.to_numeric(out["legal_penalty"], errors="coerce").fillna(0.0)
+
+    #     # Keep join keys at front if present
+    #     front_cols = [c for c in ["loan_id", "application_id", "asset_id"] if c in out.columns]
+    #     other_cols = [c for c in out.columns if c not in front_cols]
+    #     out = out[front_cols + other_cols]
+
+    #     return out
+
+
+    #     # condition_score heuristic from delinquency/age/current_loans (0..1)
+    #     delinq = out["delinquencies"] if "delinquencies" in out.columns else 0
+    #     curr_loans = out["current_loans"] if "current_loans" in out.columns else 0
+    #     age = out["age_years"]
+    #     out["condition_score"] = 1.0 - (0.02*age) - (0.05*delinq) - (0.03*curr_loans)
+    #     out["condition_score"] = out["condition_score"].clip(0.1, 0.98)
+
+    #     # legal_penalty placeholder (real value will come from C.5 verification later)
+    #     out["legal_penalty"] = 0.0
+
+    #     # geohash from 'city'
+    #     out["geohash"] = out.get("city", "").apply(_geohash_stub)
+
+    #     # Keep join keys at front if present
+    #     front_cols = [c for c in ["loan_id","application_id","asset_id"] if c in out.columns]
+    #     other_cols = [c for c in out.columns if c not in front_cols]
+    #     out = out[front_cols + other_cols]
+    #     return out
+
+    # def fetch_and_clean_comps(df_feats: pd.DataFrame) -> dict:
+    #     """Simple, deterministic comps list stub; replace with real feed."""
+    #     comps = []
+    #     base = float(df_feats.get("market_value", pd.Series([100000])).median())
+    #     for i in range(5):
+    #         comps.append({"comp_id": f"C-{i+1:03d}", "price": round(base * (0.95 + 0.02*i), 2)})
+    #     return {"used": comps, "count": len(comps), "median_baseline": base}
+
+    # if ss.get("asset_anon_df") is None:
+    #     st.info("Run Anonymization (B.2) first.")
+    # else:
+    #     c3a, c3b = st.columns([1.2, 0.8])
+    #     with c3a:
+    #         if st.button("Build Features & Fetch Comps", key="btn_build_features"):
+    #             feats = feature_engineer(ss["asset_anon_df"], ss.get("asset_evidence_index"))
+    #             ss["asset_features_df"] = feats
+                
+    #             # === C.4 / Dashboard metrics (safe) ===
+    #         df_feats = ss.get("asset_features_df")
+
+    #         def _fmt_mean(df, col, fmt="{:.2f}"):
+    #             if isinstance(df, pd.DataFrame) and col in df.columns:
+    #                 v = pd.to_numeric(df[col], errors="coerce").mean()
+    #                 if pd.notna(v):
+    #                     return fmt.format(v)
+    #             return "—"
+
+    #         m1, m2, m3 = st.columns(3)
+    #         with m1:
+    #             st.metric("Avg condition_score", _fmt_mean(df_feats, "condition_score"))
+    #         with m2:
+    #             st.metric("Avg market_value", _fmt_mean(df_feats, "market_value", "{:,.0f}"))
+    #         with m3:
+    #             st.metric("Avg loan_amount", _fmt_mean(df_feats, "loan_amount", "{:,.0f}"))
+
+
+    #             # Persist features.parquet
+    #             features_path = os.path.join(RUNS_DIR, f"features.{_ts()}.parquet")
+    #             feats.to_parquet(features_path, index=False)
+    #             st.success(f"Saved features → `{features_path}`")
+
+    #             comps = fetch_and_clean_comps(feats)
+    #             ss["asset_comps_used"] = comps
+
+    #             # Persist comps_used.json
+    #             comps_path = os.path.join(RUNS_DIR, f"comps_used.{_ts()}.json")
+    #             with open(comps_path, "w", encoding="utf-8") as fp:
+    #                 json.dump(comps, fp, ensure_ascii=False, indent=2)
+    #             st.success(f"Saved comps → `{comps_path}`")
+
+    #     with c3b:
+    #         if ss.get("asset_features_df") is not None:
+    #             st.download_button(
+    #                 "⬇️ Download features.parquet",
+    #                 data=ss["asset_features_df"].to_parquet(index=False),
+    #                 file_name="features.parquet",
+    #                 mime="application/octet-stream",
+    #             )
+
+    #     if ss.get("asset_features_df") is not None:
+    #         k1, k2, k3 = st.columns(3)
+    #         with k1:
+    #             st.metric("Rows (features)", len(ss["asset_features_df"]))
+    #         with k2:
+    #             st.metric("Avg condition_score", f"{ss['asset_features_df']['condition_score'].mean():.2f}")
+    #         with k3:
+    #             st.metric("Evidence count (stub)", int(ss["asset_features_df"].get("evidence_count", 0).mean() if "evidence_count" in ss["asset_features_df"].columns else 0))
+    #         st.dataframe(ss["asset_features_df"].head(30), use_container_width=True)
+
+    #     if ss.get("asset_comps_used") is not None:
+    #         st.caption("Comps used (stub)")
+    #         st.json(ss["asset_comps_used"])
 
 
     # # ========== 3) AI APPRAISAL & VALUATION ==========
@@ -2391,263 +3131,47 @@ with tabC:
         index=1, key="asset_gpu_profile_c4")
     ss["asset_gpu_profile"] = gpu_profile
 
-    src = st.selectbox("Data source for AI run", [
-        "Use FEATURES (Stage 2/3)",
-        "Use ANON (Stage 2)",
-        "Use RAW → auto-sanitize",
-        "Use synthetic (fallback)",
-    ])
+    # Gather candidates from prior stages (they may be None/empty)
+    cand_features = ss.get("asset_features_df")
+    cand_anon     = ss.get("asset_anon_df")
+    cand_intake   = ss.get("asset_intake_df")
+
+    src = st.selectbox(
+        "Data source for AI run",
+        [
+            "Use FEATURES (Stage 2/3)",
+            "Use ANON (Stage 2)",
+            "Use RAW → auto-sanitize",
+            "Use synthetic (fallback)",
+        ],
+        key="asset_c4_source"
+    )
+
+    # Decide df2 explicitly based on choice
+    df2 = None
     if src == "Use FEATURES (Stage 2/3)":
-        df2 = ss.get("asset_features_df") or ss.get("asset_anon_df")
+        # First non-empty among features → anon → intake
+        df2 = first_nonempty_df(cand_features, cand_anon, cand_intake)
+
     elif src == "Use ANON (Stage 2)":
-        df2 = ss.get("asset_anon_df")
+        df2 = cand_anon
+
     elif src == "Use RAW → auto-sanitize":
-        df2 = anonymize_text_cols(ss.get("asset_intake_df")) if ss.get("asset_intake_df") is not None else None
-    else:
+        # If intake exists, sanitize; else leave None
+        df2 = anonymize_text_cols(cand_intake) if isinstance(cand_intake, pd.DataFrame) and not cand_intake.empty else None
+
+    else:  # "Use synthetic (fallback)"
         df2 = quick_synth(150)
-    if df2 is None:
-        st.warning("No dataset available — build Stage B first."); st.stop()
+
+    # Final safety check
+    if not isinstance(df2, pd.DataFrame) or df2.empty:
+        st.warning("No usable dataset found. Please complete Stage A (Intake) and Stage B (Privacy/Features), or choose the synthetic fallback.")
+        st.stop()
+
+    # Preview selected data
     st.dataframe(df2.head(10), use_container_width=True)
 
-    # ─────────────────────────────────────────────
-    # APPRAISAL LOGIC + DASHBOARD + VERIFICATION
-    # ─────────────────────────────────────────────
-    # ⬇ keep your existing “Run AI Appraisal now” button,
-    # delta analysis, verification checks, and executive dashboard
-    # from your previous version — they plug in after this section.
 
-
-# # ========== 3) AI APPRAISAL & VALUATION ==========
-# with tabC:
-#     st.subheader("🤖 Stage 3 — AI Appraisal & Valuation")
-
-#     import os, json, numpy as np
-#     from datetime import datetime, timezone
-
-#     RUNS_DIR = "./.tmp_runs"
-#     os.makedirs(RUNS_DIR, exist_ok=True)
-
-#     def _ts():
-#         return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-
-#     # Production model banner (asset agent)
-#     try:
-#         resp = requests.get(f"{API_URL}/v1/training/production_meta", timeout=5)
-#         if resp.status_code == 200:
-#             meta = resp.json()
-#             if meta.get("has_production"):
-#                 ver = (meta.get("meta") or {}).get("version", "1.x")
-#                 src = (meta.get("meta") or {}).get("source", "production")
-#                 st.success(f"🟢 Production model active — version: {ver} • source: {src}")
-#             else:
-#                 st.warning("⚠️ No production model promoted yet — using baseline.")
-#         else:
-#             st.info("ℹ️ Could not fetch production model meta.")
-#     except Exception:
-#         st.info("ℹ️ Production meta unavailable.")
-
-#     # ─────────────────────────────────────────────
-#     # 🧩 Model Selection (asset trained + production) — dual dir, dedupe, refresh
-#     # (KEPT AS-IS per your instruction)
-#     # ─────────────────────────────────────────────
-#     from time import time as _now
-
-#     trained_dirs = [
-#         os.path.expanduser("~/credit-appraisal-agent-poc/agents/asset_appraisal/models/trained"),            # canonical
-#         os.path.expanduser("~/credit-appraisal-agent-poc/services/agents/asset_appraisal/models/trained"),   # legacy
-#     ]
-#     production_default_fp = os.path.expanduser(
-#         "~/credit-appraisal-agent-poc/agents/asset_appraisal/models/production/model.joblib"
-#     )
-
-#     # Try to fetch production meta (compatible with your training router)
-#     production_fp = None
-#     try:
-#         r = requests.get(
-#             f"{API_URL}/v1/training/production_meta",
-#             params={"agent_id": "asset_appraisal"},
-#             timeout=5
-#         )
-#         if r.ok:
-#             j = r.json() or {}
-#             if j.get("has_production"):
-#                 meta = j.get("meta") or {}
-#                 production_fp = (meta.get("model_path") or meta.get("promoted_to") or production_default_fp)
-#     except Exception:
-#         production_fp = None
-#     if not production_fp:
-#         production_fp = production_default_fp
-
-#     # Manual refresh (cache-bust the selectbox key)
-#     c_ref, _ = st.columns([1, 6])
-#     with c_ref:
-#         if st.button("↻ Refresh models", key="asset_models_refresh"):
-#             st.session_state.pop("asset_model_select", None)
-#             st.session_state["_asset_models_bump"] = _now()
-#             st.rerun()
-
-#     # Build list (label, path, ctime, created_str, is_production)
-#     models = []
-
-#     # 1) Production entry
-#     if os.path.exists(production_fp):
-#         try:
-#             p_ctime = os.path.getctime(production_fp)
-#             p_created = datetime.fromtimestamp(p_ctime).strftime("%b %d, %Y %H:%M")
-#         except Exception:
-#             p_ctime, p_created = 0.0, "production"
-#         models.append(("⭐ Production", production_fp, p_ctime, p_created, True))
-
-#     # 2) Trained entries from both dirs
-#     raw = []
-#     for d in trained_dirs:
-#         if os.path.isdir(d):
-#             for f in os.listdir(d):
-#                 if f.endswith(".joblib"):
-#                     fpath = os.path.join(d, f)
-#                     try:
-#                         ctime = os.path.getctime(fpath)
-#                         created = datetime.fromtimestamp(ctime).strftime("%b %d, %Y %H:%M")
-#                     except Exception:
-#                         ctime, created = 0.0, ""
-#                     raw.append((f, fpath, ctime, created, False))
-
-#     # 3) De-dupe by filename (keep newest) and skip if identical to production
-#     newest_by_name = {}
-#     for name, path, ctime, created, is_prod in raw:
-#         try:
-#             if os.path.exists(production_fp) and os.path.samefile(path, production_fp):
-#                 continue
-#         except Exception:
-#             pass
-#         if (name not in newest_by_name) or (ctime > newest_by_name[name][2]):
-#             newest_by_name[name] = (name, path, ctime, created, is_prod)
-
-#     models.extend(newest_by_name.values())
-
-#     # Sort: production first, then newest trained
-#     models = sorted(models, key=lambda x: (0 if x[4] else 1, -x[2]))
-
-#     if models:
-#         display_names = [
-#             f"{label} — {created}" if created else f"{label}"
-#             for (label, _, _, created, _) in models
-#         ]
-
-#         # keep previous selection if possible
-#         default_idx = 0
-#         prev_selected = st.session_state.get("asset_selected_model")
-#         if prev_selected:
-#             for i, (_, path, _, _, _) in enumerate(models):
-#                 if path == prev_selected:
-#                     default_idx = i
-#                     break
-
-#         select_key = f"asset_model_select::{st.session_state.get('_asset_models_bump','')}"
-#         selected_display = st.selectbox(
-#             "📦 Select trained model to use",
-#             display_names,
-#             index=default_idx,
-#             key=select_key
-#         )
-#         sel_idx = display_names.index(selected_display)
-#         selected_model = models[sel_idx][1]
-#         is_prod = models[sel_idx][4]
-
-#         st.session_state["asset_selected_model"] = selected_model
-
-#         if is_prod:
-#             st.success(f"🟢 Using PRODUCTION model: {os.path.basename(selected_model)}")
-#         else:
-#             st.success(f"✅ Using model: {os.path.basename(selected_model)}")
-
-#         # Promote only when a non-production model is selected
-#         if (not is_prod) and st.button("🚀 Promote this model to PRODUCTION", key="asset_promote_model"):
-#             try:
-#                 r = requests.post(f"{API_URL}/v1/agents/asset_appraisal/training/promote_last", timeout=60)
-#                 if r.ok:
-#                     st.success("✅ Model promoted to PRODUCTION.")
-#                     st.session_state["_asset_models_bump"] = _now()
-#                     st.rerun()
-#                 else:
-#                     try:
-#                         st.error(f"❌ Promotion failed: {r.status_code} {r.reason}")
-#                         st.code(r.json())
-#                     except Exception:
-#                         st.code(r.text[:2000])
-#             except Exception as e:
-#                 st.error(f"❌ Promotion error: {e}")
-#     else:
-#         st.warning("⚠️ No trained models found — train one in Step 5 first.")
-
-#     # 🧠 Local LLM & Hardware Profile (runtime hints) — kept
-#     LLM_MODELS = [
-#         ("Phi-3 Mini (3.8B) — CPU OK", "phi3:3.8b", "CPU 8GB RAM (fast)"),
-#         ("Mistral 7B Instruct — CPU slow / GPU OK", "mistral:7b-instruct", "CPU 16GB (slow) or GPU ≥8GB"),
-#         ("Gemma-2 7B — CPU slow / GPU OK", "gemma2:7b", "CPU 16GB (slow) or GPU ≥8GB"),
-#         ("LLaMA-3 8B — GPU recommended", "llama3:8b-instruct", "GPU ≥12GB (CPU very slow)"),
-#         ("Qwen2 7B — GPU recommended", "qwen2:7b-instruct", "GPU ≥12GB (CPU very slow)"),
-#         ("Mixtral 8x7B — GPU only (big)", "mixtral:8x7b-instruct", "GPU 24–48GB"),
-#     ]
-#     LLM_LABELS = [l for (l, _, _) in LLM_MODELS]
-#     LLM_VALUE_BY_LABEL = {l: v for (l, v, _) in LLM_MODELS}
-#     LLM_HINT_BY_LABEL  = {l: h for (l, _, h) in LLM_MODELS}
-
-#     OPENSTACK_FLAVORS = {
-#         "m4.medium":  "4 vCPU / 8 GB RAM — CPU-only small",
-#         "m8.large":   "8 vCPU / 16 GB RAM — CPU-only medium",
-#         "g1.a10.1":   "8 vCPU / 32 GB RAM + 1×A10 24GB",
-#         "g1.l40.1":   "16 vCPU / 64 GB RAM + 1×L40 48GB",
-#         "g2.a100.1":  "24 vCPU / 128 GB RAM + 1×A100 80GB",
-#     }
-
-#     with st.expander("🧠 Local LLM & Hardware Profile", expanded=True):
-#         c1, c2 = st.columns([1.2, 1])
-#         with c1:
-#             model_label = st.selectbox("Local LLM (used for narratives/explanations)", LLM_LABELS, index=1, key="asset_llm_label")
-#             llm_value = LLM_VALUE_BY_LABEL[model_label]
-#             use_llm = st.checkbox("Use LLM narrative (include explanations)", value=False, key="asset_use_llm")
-#             st.caption(f"Hint: {LLM_HINT_BY_LABEL[model_label]}")
-#         with c2:
-#             flavor = st.selectbox("OpenStack flavor / host profile", list(OPENSTACK_FLAVORS.keys()), index=0, key="asset_flavor")
-#             st.caption(OPENSTACK_FLAVORS[flavor])
-#         st.caption("These are passed to the API as hints; your API can choose Ollama/Flowise backends accordingly.")
-
-#     # 🚀 C.4 GPU profile (C.4 ONLY, per blueprint)
-#     st.markdown("### **C.4 — Valuation (AI)**")
-#     gpu_profile = st.selectbox(
-#         "GPU Profile (for valuation compute)",
-#         ["CPU (slow)", "GPU: 1x A100", "GPU: 1x H100", "GPU: 2x L40S"],
-#         index=1,
-#         key="asset_gpu_profile_c4"
-#     )
-#     ss["asset_gpu_profile"] = gpu_profile  # store per the template rule
-
-#     # Preferred data source: FEATURES (Stage B). Fallbacks preserved.
-#     src = st.selectbox("Data source for AI run", [
-#         "Use FEATURES (from Stage 2/3)",
-#         "Use ANON (from Stage 2)",
-#         "Use RAW → auto-sanitize",
-#         "Use synthetic (fallback)",
-#     ])
-
-#     if src == "Use FEATURES (from Stage 2/3)":
-#         df2 = ss.get("asset_features_df")
-#         if df2 is None and ss.get("asset_anon_df") is not None:
-#             # fallback to anon if features missing
-#             df2 = ss.get("asset_anon_df")
-#     elif src == "Use ANON (from Stage 2)":
-#         df2 = ss.get("asset_anon_df")
-#     elif src == "Use RAW → auto-sanitize":
-#         df2 = anonymize_text_cols(ss.get("asset_intake_df")) if ss.get("asset_intake_df") is not None else None
-#     else:
-#         df2 = quick_synth(150)
-
-#     if df2 is None:
-#         st.warning("No dataset available. Build Stage B first.")
-#         st.stop()
-
-#     st.dataframe(df2.head(10), use_container_width=True)
 
     # Probe API (health & agents)
     with st.expander("🔎 Probe API (health & agents)", expanded=False):
@@ -3362,429 +3886,684 @@ with tabD:
                 mime="text/csv"
             )
 
-
 # ─────────────────────────────────────────
 # E — HUMAN REVIEW & FEEDBACK DASHBOARD
 # ─────────────────────────────────────────
+from datetime import datetime, timezone  # ensure available inside this block
+import os, glob, json
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+
 with tabE:
     st.subheader("🧑‍⚖️ Stage E — Human Review & Feedback")
     st.caption("Compare AI-estimated collateral values against business metrics, adjust valuations, and record justification for retraining.")
 
+    # Workspace
     RUNS_DIR = "./.tmp_runs"
     os.makedirs(RUNS_DIR, exist_ok=True)
 
-    ai_files = sorted([f for f in os.listdir(RUNS_DIR) if f.startswith("valuation_ai")], reverse=True)
-    if not ai_files:
+    # Load latest AI valuation file safely
+    ai_paths = sorted(
+        [os.path.join(RUNS_DIR, f) for f in os.listdir(RUNS_DIR) if f.startswith("valuation_ai") and f.endswith(".csv")],
+        key=os.path.getmtime, reverse=True
+    )
+    if not ai_paths:
         st.warning("⚠️ No AI appraisal results found. Please complete Stage C first.")
         st.stop()
 
-    ai_path = os.path.join(RUNS_DIR, ai_files[0])
-    df_ai = pd.read_csv(ai_path)
+    ai_path = ai_paths[0]
+    try:
+        df_ai = pd.read_csv(ai_path)
+    except Exception as e:
+        st.error(f"Failed to read `{ai_path}`: {e}")
+        st.stop()
 
-    # ── KPI Overview
+    # Ensure join keys exist to avoid editor KeyErrors later
+    for col in ["application_id", "asset_id", "asset_type", "city"]:
+        if col not in df_ai.columns:
+            df_ai[col] = None
+
+    # ── KPI Overview (safe)
     st.markdown("### 📊 Business Metrics Overview")
+
+    def _safe_mean(df, col, fmt=None):
+        if isinstance(df, pd.DataFrame) and col in df.columns:
+            v = pd.to_numeric(df[col], errors="coerce").mean()
+            if pd.notna(v):
+                return f"{v:,.0f}" if fmt == "int" else (f"{v:.1f}" if fmt == "1f" else f"{v}")
+        return "—"
+
+    def _safe_ltv(df):
+        if all(c in df.columns for c in ("loan_amount", "fmv")):
+            la = pd.to_numeric(df["loan_amount"], errors="coerce")
+            fmv = pd.to_numeric(df["fmv"], errors="coerce").replace(0, np.nan)
+            v = (la / fmv).mean()
+            if pd.notna(v):
+                return f"{v:.2f}"
+        return "—"
+
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Average FMV", f"${df_ai['fmv'].mean():,.0f}")
-    c2.metric("Average Confidence", f"{df_ai['confidence'].mean():.1f}%")
-    c3.metric("Average LTV", f"{(df_ai['loan_amount']/df_ai['fmv']).mean():.2f}")
-    c4.metric("Assets", len(df_ai))
+    with c1: st.metric("Average FMV", _safe_mean(df_ai, "fmv", fmt="int"))
+    with c2: st.metric("Average Confidence", _safe_mean(df_ai, "confidence", fmt="1f") + ("%" if _safe_mean(df_ai, "confidence", fmt="1f") != "—" else ""))
+    with c3: st.metric("Average LTV", _safe_ltv(df_ai))
+    with c4: st.metric("Assets", f"{len(df_ai):,}")
 
-    # ── Market Projections
+    # ── Market Projections (safe)
     st.markdown("### 📈 Market Projections")
-    horizon = st.select_slider("Projection Horizon (years)", [3, 5, 10], value=5)
+    horizon = st.select_slider("Projection Horizon (years)", options=[3, 5, 10], value=5)
     growth = st.slider("Expected Market Growth (%)", -10, 25, 4) / 100
-    df_ai[f"fmv_proj_{horizon}y"] = (df_ai["fmv"] * ((1 + growth) ** horizon)).round(0)
-    st.line_chart(df_ai[["fmv", f"fmv_proj_{horizon}y"]])
 
-    # ── Human Adjustment Table
+    df_proj = df_ai.copy()
+    if "fmv" in df_proj.columns:
+        fmv_num = pd.to_numeric(df_proj["fmv"], errors="coerce")
+        df_proj[f"fmv_proj_{horizon}y"] = (fmv_num * ((1 + growth) ** horizon)).round(0)
+        st.line_chart(df_proj[["fmv", f"fmv_proj_{horizon}y"]])
+    else:
+        st.info("FMV column not found; projection chart will appear after you run Stage C.")
+
+    # ── Human Adjustment Table (safe + flexible)
     st.markdown("### ✏️ Human Adjustments & Justification")
+
+    # Ensure editable columns exist
     if "human_value" not in df_ai.columns:
-        df_ai["human_value"] = df_ai["fmv"]
+        df_ai["human_value"] = pd.to_numeric(df_ai["fmv"], errors="coerce") if "fmv" in df_ai.columns else np.nan
     if "justification" not in df_ai.columns:
         df_ai["justification"] = ""
 
-    editable_cols = ["application_id", "asset_id", "asset_type", "city", "fmv", "ai_adjusted", "confidence", "human_value", "justification"]
+    base_editable = ["application_id", "asset_id", "asset_type", "city", "fmv", "ai_adjusted", "confidence", "loan_amount", "human_value", "justification"]
+    editable_cols = [c for c in base_editable if c in df_ai.columns]  # filter to present
+    if not editable_cols:
+        editable_cols = df_ai.columns.tolist()  # last resort: allow full frame
+
     edited = st.data_editor(df_ai[editable_cols], num_rows="dynamic", use_container_width=True)
 
-    # ── Deviation Gauge
-    import numpy as np
-    deviation = abs((edited["human_value"] - edited["fmv"]) / edited["fmv"])
-    score = max(0, 100 - (deviation.mean() * 200))
-    st.markdown("### 🎯 Human vs AI Deviation")
-    st.metric("Alignment Score", f"{score:.1f} / 100")
+    # ── Agreement / Deviation Gauge + Mismatch list
+    st.markdown("### 🎯 Human vs AI Agreement / Deviation")
+
+    # Resolve decision columns if present
+    def _first_present(df, candidates):
+        return next((c for c in candidates if c in df.columns), None)
+
+    ai_dec_col = _first_present(edited, ["ai_decision", "ai_label", "ai_outcome", "decision_ai"])
+    human_dec_col = _first_present(edited, ["human_decision", "human_label", "final_decision", "decision_human"])
+
+    if ai_dec_col and human_dec_col:
+        # Agreement gauge (%)
+        a = edited[ai_dec_col].astype(str).str.strip().str.lower()
+        h = edited[human_dec_col].astype(str).str.strip().str.lower()
+        matches = (a == h)
+        agree_pct = float(matches.mean() * 100.0) if len(matches) else 0.0
+
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=round(agree_pct, 2),
+            number={'suffix': '%'},
+            gauge={
+                'axis': {'range': [0, 100]},
+                'bar': {'thickness': 0.35},
+                'steps': [
+                    {'range': [0, 50], 'color': '#fee2e2'},
+                    {'range': [50, 80], 'color': '#fef9c3'},
+                    {'range': [80, 100], 'color': '#dcfce7'},
+                ],
+                'threshold': {'line': {'color': '#2563eb', 'width': 4}, 'thickness': 0.9, 'value': round(agree_pct, 2)}
+            },
+            title={'text': "AI ↔ Human Agreement"}
+        ))
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Mismatch table (if any)
+        mis_df = edited.loc[~matches].copy()
+        key_cols = [c for c in ["application_id", "asset_id", "asset_type", "city"] if c in edited.columns]
+        value_ai = _first_present(edited, ["ai_adjusted", "fmv", "predicted_value"])
+        value_hu = _first_present(edited, ["human_value", "reviewed_value", "final_value"])
+
+        if not mis_df.empty:
+            show_cols = key_cols + [c for c in [ai_dec_col, human_dec_col, value_ai, value_hu, "justification"] if c]
+            show_cols = [c for c in show_cols if c in mis_df.columns]
+            st.markdown("#### 🔎 Mismatches — what did humans change?")
+            st.dataframe(mis_df[show_cols].head(300), use_container_width=True, hide_index=True)
+        else:
+            st.success("🎉 Perfect agreement — no mismatches.")
+    else:
+        # Fall back to deviation score if decisions are not present
+        if all(c in edited.columns for c in ("human_value", "fmv")):
+            hv = pd.to_numeric(edited["human_value"], errors="coerce")
+            fmv = pd.to_numeric(edited["fmv"], errors="coerce").replace(0, np.nan)
+            deviation = (hv - fmv).abs() / fmv
+            score = max(0.0, 100.0 - float(np.nanmean(deviation) * 200.0)) if len(deviation) else 0.0
+
+            fig = go.Figure(go.Indicator(
+                mode="gauge+number",
+                value=round(score, 1),
+                number={'suffix': ' / 100'},
+                gauge={
+                    'axis': {'range': [0, 100]},
+                    'bar': {'thickness': 0.35},
+                    'steps': [
+                        {'range': [0, 50], 'color': '#fee2e2'},
+                        {'range': [50, 80], 'color': '#fef9c3'},
+                        {'range': [80, 100], 'color': '#dcfce7'},
+                    ],
+                    'threshold': {'line': {'color': '#2563eb', 'width': 4}, 'thickness': 0.9, 'value': round(score, 1)}
+                },
+                title={'text': "Alignment Score (by value deviation)"}
+            ))
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Provide decision columns (ai_decision / human_decision) for agreement gauge, or both FMV and human_value for deviation.")
 
     # ── Export for Retraining
-    if st.button("💾 Save Human Feedback", key="btn_save_feedback"):
-        out = os.path.join(RUNS_DIR, f"reviewed_appraisal.{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.csv")
-        edited.to_csv(out, index=False)
-        st.success(f"✅ Saved human-reviewed data → `{out}`")
+    st.markdown("### 💾 Save & Export for Training")
+    # Lightweight export view for training: keep keys + AI/Human value/decisions if present
+    train_cols_base = ["application_id", "asset_id", "asset_type", "city"]
+    ai_val_col = _first_present(edited, ["ai_adjusted", "fmv", "predicted_value"])
+    hu_val_col = _first_present(edited, ["human_value", "reviewed_value", "final_value"])
+    keep_cols = [c for c in train_cols_base if c in edited.columns] + \
+                [c for c in [ai_dec_col, human_dec_col, ai_val_col, hu_val_col, "confidence", "loan_amount", "justification"] if c in edited.columns]
+    export_df = edited[keep_cols].copy() if keep_cols else edited.copy()
+
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    out_path = os.path.join(RUNS_DIR, f"reviewed_appraisal.{ts}.csv")
+
+    cE1, cE2 = st.columns([1.2, 1])
+    with cE1:
+        st.text_input("Will save to (server path)", out_path, label_visibility="collapsed")
+    with cE2:
+        st.download_button(
+            "⬇️ Download Human vs AI CSV",
+            export_df.to_csv(index=False).encode("utf-8-sig"),
+            file_name=os.path.basename(out_path),
+            mime="text/csv",
+            key="dl_reviewed_appraisal_stageE"
+        )
+
+    if st.button("💾 Save Human Feedback (server)", key="btn_save_feedback"):
+        try:
+            export_df.to_csv(out_path, index=False, encoding="utf-8-sig")
+            st.success(f"✅ Saved human-reviewed data → `{out_path}`")
+        except Exception as e:
+            st.error(f"Save failed: {e}")
+
+
+# # ─────────────────────────────────────────
+# # E — HUMAN REVIEW & FEEDBACK DASHBOARD
+# # ─────────────────────────────────────────
+# with tabE:
+#     st.subheader("🧑‍⚖️ Stage E — Human Review & Feedback")
+#     st.caption("Compare AI-estimated collateral values against business metrics, adjust valuations, and record justification for retraining.")
+
+#     RUNS_DIR = "./.tmp_runs"
+#     os.makedirs(RUNS_DIR, exist_ok=True)
+
+#     ai_files = sorted([f for f in os.listdir(RUNS_DIR) if f.startswith("valuation_ai")], reverse=True)
+#     if not ai_files:
+#         st.warning("⚠️ No AI appraisal results found. Please complete Stage C first.")
+#         st.stop()
+
+#     ai_path = os.path.join(RUNS_DIR, ai_files[0])
+#     df_ai = pd.read_csv(ai_path)
+
+#     # ── KPI Overview
+#     st.markdown("### 📊 Business Metrics Overview")
+#     c1, c2, c3, c4 = st.columns(4)
+#     c1.metric("Average FMV", f"${df_ai['fmv'].mean():,.0f}")
+#     c2.metric("Average Confidence", f"{df_ai['confidence'].mean():.1f}%")
+#     c3.metric("Average LTV", f"{(df_ai['loan_amount']/df_ai['fmv']).mean():.2f}")
+#     c4.metric("Assets", len(df_ai))
+
+#     # ── Market Projections
+#     st.markdown("### 📈 Market Projections")
+#     horizon = st.select_slider("Projection Horizon (years)", [3, 5, 10], value=5)
+#     growth = st.slider("Expected Market Growth (%)", -10, 25, 4) / 100
+#     df_ai[f"fmv_proj_{horizon}y"] = (df_ai["fmv"] * ((1 + growth) ** horizon)).round(0)
+#     st.line_chart(df_ai[["fmv", f"fmv_proj_{horizon}y"]])
+
+#     # ── Human Adjustment Table
+#     st.markdown("### ✏️ Human Adjustments & Justification")
+#     if "human_value" not in df_ai.columns:
+#         df_ai["human_value"] = df_ai["fmv"]
+#     if "justification" not in df_ai.columns:
+#         df_ai["justification"] = ""
+
+#     editable_cols = ["application_id", "asset_id", "asset_type", "city", "fmv", "ai_adjusted", "confidence", "human_value", "justification"]
+#     edited = st.data_editor(df_ai[editable_cols], num_rows="dynamic", use_container_width=True)
+
+#     # ── Deviation Gauge
+#     import numpy as np
+#     deviation = abs((edited["human_value"] - edited["fmv"]) / edited["fmv"])
+#     score = max(0, 100 - (deviation.mean() * 200))
+#     st.markdown("### 🎯 Human vs AI Deviation")
+#     st.metric("Alignment Score", f"{score:.1f} / 100")
+
+#     # ── Export for Retraining
+#     if st.button("💾 Save Human Feedback", key="btn_save_feedback"):
+#         out = os.path.join(RUNS_DIR, f"reviewed_appraisal.{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.csv")
+#         edited.to_csv(out, index=False)
+#         st.success(f"✅ Saved human-reviewed data → `{out}`")
+
 
 # ─────────────────────────────────────────
-# F — MODEL TRAINING & PROMOTION
+# F — MODEL TRAINING & PROMOTION (A/B with Prod)
 # ─────────────────────────────────────────
 with tabF:
-    st.subheader("🧪 Stage F — Model Training & Promotion")
-    st.caption("Train or retrain models using human feedback, then promote them to production for Stage C evaluation.")
-    
-    
-    # ─────────────────────────────────────────
-    # Stage F header diagnostics (always visible)
-    # ─────────────────────────────────────────
-    st.markdown("#### 🔎 Data availability")
+    import os, json, glob
+    from datetime import datetime, timezone
+    import numpy as np
+    import pandas as pd
+    import plotly.graph_objects as go
+    import plotly.express as px
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
+    from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+    from sklearn.linear_model import LinearRegression
+    import joblib
+    import shutil
 
-    def _len_df(x):
+    st.subheader("🧪 Stage F — Model Training & Promotion")
+    st.caption("Train or retrain with human feedback, compare against production (A/B), and promote if better.")
+
+    # ---------- helpers ----------
+    def _ts():
+        return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+
+    def _rmse(y_true, y_pred):
+        return float(np.sqrt(mean_squared_error(y_true, y_pred)))
+
+    def _mape(y_true, y_pred):
+        y_true = np.asarray(y_true, dtype=float)
+        y_pred = np.asarray(y_pred, dtype=float)
+        mask = (y_true != 0) & np.isfinite(y_true) & np.isfinite(y_pred)
+        if not mask.any():
+            return float("nan")
+        return float(np.mean(np.abs((y_true[mask] - y_pred[mask]) / y_true[mask])) * 100.0)
+
+    def _safe_len_df(x):
         return (0 if not isinstance(x, pd.DataFrame) else len(x))
 
+    # ---------- diagnostics (always visible) ----------
+    st.markdown("#### 🔎 Data availability (snapshots)")
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("decision_df",  _len_df(ss.get("asset_decision_df")))
-    c2.metric("policy_df",    _len_df(ss.get("asset_policy_df")))
-    c3.metric("verified_df",  _len_df(ss.get("asset_verified_df")))
-    c4.metric("ai_df",        _len_df(ss.get("asset_ai_df")))
+    c1.metric("decision_df",  _safe_len_df(ss.get("asset_decision_df")))
+    c2.metric("policy_df",    _safe_len_df(ss.get("asset_policy_df")))
+    c3.metric("verified_df",  _safe_len_df(ss.get("asset_verified_df")))
+    c4.metric("ai_df",        _safe_len_df(ss.get("asset_ai_df")))
 
-    with st.expander("Show sample (if no data yet)"):
-        st.caption("If you haven't run earlier stages, load a small demo so this page is not empty.")
+    with st.expander("Load demo portfolio (if earlier stages not run)"):
         if st.button("Load demo portfolio (10 rows)", key="btn_demo_portfolio"):
-            try:
-                # Prefer your real synthesizer if present
-                if "quick_synth" in globals():
-                    demo = quick_synth(10)
-                else:
-                    # Minimal fallback demo
-                    import numpy as np, pandas as pd, random
-                    demo = pd.DataFrame({
-                        "application_id": [f"APP_{i:04d}" for i in range(10)],
-                        "asset_id":      [f"A{i:04d}" for i in range(10)],
-                        "asset_type":    np.random.choice(["House","Apartment","Car","Land"], size=10),
-                        "city":          np.random.choice(["HCMC","Hanoi","Da Nang","Hue"], size=10),
-                        "market_value":  np.random.randint(80_000, 800_000, size=10),
-                        "ai_adjusted":   np.random.randint(75_000, 820_000, size=10),
-                        "loan_amount":   np.random.randint(30_000, 500_000, size=10),
-                        "confidence":    np.random.randint(60, 98, size=10),
-                        "condition_score": np.random.uniform(0.6, 1.0, size=10).round(3),
-                        "legal_penalty":   np.random.uniform(0.95, 1.0, size=10).round(3),
-                    })
-                    demo["realizable_value"] = (demo["ai_adjusted"] * demo["condition_score"] * demo["legal_penalty"]).round(2)
-                    demo["ltv_ai"] = (demo["loan_amount"] / demo["ai_adjusted"]).round(3)
-                    demo["ltv_cap"] = 0.8
-                    demo["policy_breaches"] = ""
-                    demo["decision"] = np.where(demo["ltv_ai"] > demo["ltv_cap"], "review", "approved")
-                ss["asset_decision_df"] = demo
-                st.success("Demo portfolio loaded into ss['asset_decision_df']. Scroll down.")
-            except Exception as e:
-                st.error(f"Demo load failed: {e}")
+            rng = np.random.default_rng(42)
+            demo = pd.DataFrame({
+                "application_id": [f"APP_{i:04d}" for i in range(10)],
+                "asset_id":      [f"A{i:04d}" for i in range(10)],
+                "asset_type":    rng.choice(["House","Apartment","Car","Land"], 10),
+                "city":          rng.choice(["HCMC","Hanoi","Da Nang","Hue"], 10),
+                "market_value":  rng.integers(80_000, 800_000, 10),
+                "ai_adjusted":   rng.integers(75_000, 820_000, 10),
+                "loan_amount":   rng.integers(30_000, 500_000, 10),
+                "confidence":    rng.integers(60, 98, 10),
+                "condition_score": rng.uniform(0.6, 1.0, 10).round(3),
+                "legal_penalty":   rng.uniform(0.95, 1.0, 10).round(3),
+                "human_value":   rng.integers(75_000, 820_000, 10),
+            })
+            ss["asset_decision_df"] = demo
+            st.success("Demo portfolio loaded into ss['asset_decision_df'].")
 
     st.divider()
 
+    # ---------- training data source ----------
+    RUNS_DIR = "./.tmp_runs"
+    os.makedirs(RUNS_DIR, exist_ok=True)
 
+    # Auto-pick latest reviewed CSV from Stage E
+    reviewed = sorted([f for f in os.listdir(RUNS_DIR)
+                       if f.startswith("reviewed_appraisal") and f.endswith(".csv")], reverse=True)
+    df_train = None
+    auto_path = None
+    if reviewed:
+        auto_path = os.path.join(RUNS_DIR, reviewed[0])
+        try:
+            df_train = pd.read_csv(auto_path)
+        except Exception as e:
+            st.warning(f"Could not read `{auto_path}`: {e}")
 
-    reviewed = sorted([f for f in os.listdir("./.tmp_runs") if f.startswith("reviewed_appraisal")], reverse=True)
-    if not reviewed:
-        st.warning("⚠️ No reviewed feedback CSV found. Complete Stage E first.")
+    st.markdown("#### 📥 Training dataset")
+    colU1, colU2 = st.columns([1.4, 1])
+    with colU1:
+        st.text_input("Auto-detected Stage E file", value=(auto_path or "—"), disabled=True)
+    with colU2:
+        up = st.file_uploader("Or upload CSV with human_value", type=["csv"], key="train_csv_upload")
+
+    if up is not None:
+        try:
+            df_train = pd.read_csv(up)
+            st.success(f"Loaded uploaded CSV ({len(df_train)} rows).")
+        except Exception as e:
+            st.error(f"Upload read failed: {e}")
+
+    if df_train is None or df_train.empty:
+        st.warning("⚠️ No training data available. Use Stage E to export `reviewed_appraisal*.csv` or upload a CSV above.")
         st.stop()
 
-    csv_path = os.path.join("./.tmp_runs", reviewed[0])
-    df = pd.read_csv(csv_path)
-    st.markdown(f"**Loaded:** `{csv_path}` ({len(df)} rows)")
-    st.dataframe(df.head(20), use_container_width=True)
+    st.markdown(f"**Using training rows:** {len(df_train):,}")
+    st.dataframe(df_train.head(20), use_container_width=True)
 
-    model_choice = st.selectbox("Select model algorithm", ["GradientBoostingRegressor", "RandomForestRegressor", "LinearRegression"])
-    if st.button("🚀 Train Model", key="btn_train_model"):
-        from sklearn.model_selection import train_test_split
-        from sklearn.metrics import r2_score, mean_absolute_error
-        from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-        from sklearn.linear_model import LinearRegression
-        import joblib, json, shutil
+    # ---------- feature building ----------
+    st.markdown("#### 🧱 Feature selection")
+    target_col = "human_value"
+    if target_col not in df_train.columns:
+        st.error("CSV must include a 'human_value' column (target).")
+        st.stop()
 
-        y = df["human_value"]
-        X = df.select_dtypes("number").drop(columns=["human_value", "fmv", "ai_adjusted"], errors="ignore")
+    # Exclude obvious leak/IDs/targets from X
+    drop_cols = {
+        target_col, "fmv", "ai_adjusted",  # avoid leakage; AI numbers used only for comparison
+        "ai_decision", "human_decision", "decision", "final_decision",
+        "justification", "reviewed_value", "final_value",
+        "application_id", "asset_id", "asset_type", "city"
+    }
+    num_cols = [c for c in df_train.columns
+                if c not in drop_cols and pd.api.types.is_numeric_dtype(df_train[c])]
 
-        Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.2, random_state=42)
-        ModelCls = {"GradientBoostingRegressor": GradientBoostingRegressor,
-                    "RandomForestRegressor": RandomForestRegressor,
-                    "LinearRegression": LinearRegression}[model_choice]
-        model = ModelCls().fit(Xtr, ytr)
+    if not num_cols:
+        st.error("No numeric features left after filtering. Please include numeric columns for training.")
+        st.stop()
 
-        y_pred = model.predict(Xte)
-        metrics = {"r2": r2_score(yte, y_pred), "mae": mean_absolute_error(yte, y_pred)}
+    X = df_train[num_cols].copy()
+    y = pd.to_numeric(df_train[target_col], errors="coerce")
 
-        train_dir = "./agents/asset_appraisal/models/trained"
-        os.makedirs(train_dir, exist_ok=True)
-        ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-        model_path = os.path.join(train_dir, f"{model_choice}_asset_{ts}.joblib")
-        joblib.dump(model, model_path)
-        st.success(f"✅ Model trained and saved → `{model_path}`")
-        st.json(metrics)
+    # Drop rows with missing target
+    mask = pd.notna(y)
+    X, y = X.loc[mask], y.loc[mask]
 
-        if st.button("📤 Promote to Production", key="btn_promote_prod"):
+    # Train/Test split
+    test_size = st.slider("Holdout size", 10, 40, 20, step=5) / 100.0
+    Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=test_size, random_state=42)
+
+    # ---------- model choice ----------
+    st.markdown("#### 🤖 Choose model")
+    model_choice = st.selectbox(
+        "Select model algorithm",
+        ["GradientBoostingRegressor", "RandomForestRegressor", "LinearRegression"],
+        index=0
+    )
+    ModelCls = {
+        "GradientBoostingRegressor": GradientBoostingRegressor,
+        "RandomForestRegressor": RandomForestRegressor,
+        "LinearRegression": LinearRegression,
+    }[model_choice]
+
+    # ---------- train & compare ----------
+    if st.button("🚀 Train & Compare (A/B vs Production)", key="btn_train_model"):
+        # Train new
+        new_model = ModelCls().fit(Xtr, ytr)
+        y_pred_new = new_model.predict(Xte)
+
+        # Load production baseline if exists
+        prod_model_path = "./agents/asset_appraisal/models/production/model.joblib"
+        prod_exists = os.path.exists(prod_model_path)
+        y_pred_prod = None
+        if prod_exists:
+            try:
+                prod_model = joblib.load(prod_model_path)
+                # guard: try only if shapes align
+                y_pred_prod = prod_model.predict(Xte)
+            except Exception as e:
+                st.warning(f"Production model failed to score holdout: {e}")
+
+        # Metrics
+        def _metrics(y_true, y_pred):
+            return {
+                "MAE": float(mean_absolute_error(y_true, y_pred)),
+                "RMSE": _rmse(y_true, y_pred),
+                "MAPE%": _mape(y_true, y_pred),
+                "R2": float(r2_score(y_true, y_pred)),
+            }
+
+        new_m = _metrics(yte, y_pred_new)
+        prod_m = _metrics(yte, y_pred_prod) if y_pred_prod is not None else None
+
+        # ===== Dashboard: KPIs & deltas =====
+        st.markdown("### 📊 A/B Metrics (Holdout)")
+        k1, k2, k3, k4, k5 = st.columns(5)
+        with k1:
+            st.metric("New MAE", f"{new_m['MAE']:,.0f}",
+                      delta=(f"{(new_m['MAE'] - prod_m['MAE']):+.0f}" if prod_m else None))
+        with k2:
+            st.metric("New RMSE", f"{new_m['RMSE']:,.0f}",
+                      delta=(f"{(new_m['RMSE'] - prod_m['RMSE']):+.0f}" if prod_m else None))
+        with k3:
+            st.metric("New MAPE", f"{new_m['MAPE%']:.2f}%",
+                      delta=(f"{(new_m['MAPE%'] - prod_m['MAPE%']):+.2f}%" if prod_m else None))
+        with k4:
+            st.metric("New R²", f"{new_m['R2']:.3f}",
+                      delta=(f"{(new_m['R2'] - prod_m['R2']):+.3f}" if prod_m else None))
+        with k5:
+            st.metric("Test rows", f"{len(yte):,}")
+
+        # ===== Plots: Actual vs Pred, Residuals =====
+        plot_df = pd.DataFrame({
+            "y_true": yte.values,
+            "y_pred_new": y_pred_new,
+            "y_pred_prod": (y_pred_prod if y_pred_prod is not None else np.full_like(y_pred_new, np.nan))
+        })
+
+        # Actual vs Pred overlay
+        fig_scatter = go.Figure()
+        fig_scatter.add_trace(go.Scatter(
+            x=plot_df["y_true"], y=plot_df["y_pred_new"],
+            mode="markers", name="New", opacity=0.7
+        ))
+        if y_pred_prod is not None:
+            fig_scatter.add_trace(go.Scatter(
+                x=plot_df["y_true"], y=plot_df["y_pred_prod"],
+                mode="markers", name="Production", opacity=0.6
+            ))
+        # diagonal reference
+        minv, maxv = np.nanmin(plot_df[["y_true","y_pred_new","y_pred_prod"]].values), np.nanmax(plot_df[["y_true","y_pred_new","y_pred_prod"]].values)
+        fig_scatter.add_trace(go.Scatter(x=[minv, maxv], y=[minv, maxv], mode="lines", name="Ideal", line=dict(dash="dash")))
+        fig_scatter.update_layout(title="Actual vs Predicted (Holdout)", xaxis_title="Actual", yaxis_title="Predicted")
+        st.plotly_chart(fig_scatter, use_container_width=True)
+
+        # Residuals hist
+        plot_df["res_new"]  = plot_df["y_true"] - plot_df["y_pred_new"]
+        if y_pred_prod is not None:
+            plot_df["res_prod"] = plot_df["y_true"] - plot_df["y_pred_prod"]
+
+        fig_res = go.Figure()
+        fig_res.add_trace(go.Histogram(x=plot_df["res_new"], name="New", opacity=0.7))
+        if y_pred_prod is not None:
+            fig_res.add_trace(go.Histogram(x=plot_df["res_prod"], name="Production", opacity=0.6))
+        fig_res.update_layout(barmode="overlay", title="Residuals Distribution (Actual - Predicted)")
+        fig_res.update_traces(nbinsx=40)
+        st.plotly_chart(fig_res, use_container_width=True)
+
+        # ===== Feature importance / coefficients =====
+        st.markdown("### 🧠 Feature Importance / Coefficients")
+        if hasattr(new_model, "feature_importances_"):
+            imp = pd.DataFrame({
+                "feature": num_cols,
+                "importance": new_model.feature_importances_
+            }).sort_values("importance", ascending=False)
+            st.bar_chart(imp.set_index("feature"))
+        elif hasattr(new_model, "coef_"):
+            coef = pd.DataFrame({
+                "feature": num_cols,
+                "coef": np.ravel(new_model.coef_)
+            }).sort_values("coef", key=np.abs, ascending=False)
+            st.bar_chart(coef.set_index("feature"))
+        else:
+            st.info("This model does not expose importances/coefficients.")
+
+        # ===== Persist artifacts =====
+        trained_dir = "./agents/asset_appraisal/models/trained"
+        os.makedirs(trained_dir, exist_ok=True)
+        ts = _ts()
+        model_path = os.path.join(trained_dir, f"{model_choice}_asset_{ts}.joblib")
+        joblib.dump(new_model, model_path)
+
+        preds_csv = os.path.join(RUNS_DIR, f"training_preds_{ts}.csv")
+        plot_df.to_csv(preds_csv, index=False)
+
+        report = {
+            "timestamp": ts,
+            "model_choice": model_choice,
+            "trained_model_path": model_path,
+            "features": num_cols,
+            "metrics_new": new_m,
+            "metrics_prod": prod_m,
+            "holdout_rows": int(len(yte)),
+            "source_file": (auto_path or "uploaded"),
+            "preds_csv": preds_csv,
+        }
+        report_path = os.path.join(RUNS_DIR, f"training_report_{ts}.json")
+        with open(report_path, "w", encoding="utf-8") as f:
+            json.dump(report, f, indent=2)
+
+        st.success(f"✅ Trained model saved → `{model_path}`")
+        st.caption(f"Report → `{report_path}` | Predictions → `{preds_csv}`")
+
+        # Download helpers
+        cdl1, cdl2 = st.columns(2)
+        with cdl1:
+            st.download_button("⬇️ Download training report (JSON)",
+                               data=json.dumps(report, indent=2).encode("utf-8"),
+                               file_name=os.path.basename(report_path),
+                               mime="application/json")
+        with cdl2:
+            st.download_button("⬇️ Download holdout predictions (CSV)",
+                               data=plot_df.to_csv(index=False).encode("utf-8-sig"),
+                               file_name=os.path.basename(preds_csv),
+                               mime="text/csv")
+
+        # ===== Promotion =====
+        st.markdown("### 🟢 Promote to Production")
+        better_hint = ""
+        if prod_m is not None and np.isfinite(prod_m["MAE"]):
+            delta_mae = new_m["MAE"] - prod_m["MAE"]
+            better_hint = "✅ New MAE is lower than production — promotion recommended." if delta_mae < 0 else "⚠️ New MAE is not lower than production."
+            st.info(better_hint)
+
+        if st.button("📤 Promote this trained model to Production", key="btn_promote_prod"):
             prod_dir = "./agents/asset_appraisal/models/production"
             os.makedirs(prod_dir, exist_ok=True)
             shutil.copy(model_path, os.path.join(prod_dir, "model.joblib"))
-            meta = {"model_path": model_path, "metrics": metrics, "promoted_at": datetime.now(timezone.utc).isoformat()}
-            with open(os.path.join(prod_dir, "production_meta.json"), "w") as f:
+            meta = {
+                "model_path": model_path,
+                "promoted_at": datetime.now(timezone.utc).isoformat(),
+                "ab_report": report,
+            }
+            with open(os.path.join(prod_dir, "production_meta.json"), "w", encoding="utf-8") as f:
                 json.dump(meta, f, indent=2)
             st.success("🟢 Model promoted to production. Stage C will now use this model.")
 
 
 
-# # ========== 5) HUMAN REVIEW & TRAINING (Stage E: steps 8–9) ==========
-# with tabE:
-#     st.subheader("🧑‍⚖️ Stage 5 — Human Review & Training (E.8 / E.9)")
 
-#     import os, io, json
-#     import numpy as np
-#     from datetime import datetime, timezone
-
-#     RUNS_DIR = "./.tmp_runs"
-#     os.makedirs(RUNS_DIR, exist_ok=True)
-#     def _ts(): return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-
-#     # -------- E.8 — Human Review --------
-
-#     st.markdown("### **E.8 — Human Review**")
-#     src_choice = st.radio(
-#         "Use Policy+Decision table from Stage 4, or import your own CSV:",
-#         ["Use Stage 4 output", "Import CSV"], horizontal=True, key="hr_src_choice"
-#     )
-
-#     rev_df = None
-#     if src_choice == "Use Stage 4 output":
-#         rev_df = ss.get("asset_decision_df")
-#         if rev_df is None:
-#             st.warning("No Stage 4 output found. Run Policy & Decision (D.6/D.7) first, or import a CSV.")
-#     else:
-#         up_rev = st.file_uploader("Upload reviewed_appraisal CSV", type=["csv"], key="hr_up_rev")
-#         if up_rev is not None:
-#             try:
-#                 rev_df = pd.read_csv(up_rev)
-#             except Exception as e:
-#                 st.error(f"CSV parse error: {e}")
-
-#     if rev_df is not None and len(rev_df) > 0:
-#         df_display = rev_df.copy()
-
-#         # Ensure human columns for editing
-#         if "human_decision" not in df_display.columns:
-#             df_display["human_decision"] = df_display.get("decision", "approve")
-#         if "human_reason" not in df_display.columns:
-#             df_display["human_reason"] = ""
-
-#         # Compact view with common columns first
-#         lead_cols = [c for c in [
-#             "application_id","asset_id","asset_type","city",
-#             "ai_adjusted","realizable_value",
-#             "loan_amount","ltv_ai","ltv_cap",
-#             "confidence","condition_score","legal_penalty",
-#             "policy_breaches","decision","human_decision","human_reason"
-#         ] if c in df_display.columns]
-#         tail_cols = [c for c in df_display.columns if c not in lead_cols]
-#         df_display = df_display[lead_cols + tail_cols]
-
-#         st.caption("Edit decisions/reasons below, then export as feedback for training.")
-#         edited = st.data_editor(
-#             df_display, use_container_width=True, key="hr_editor", num_rows="dynamic"
-#         )
-
-#         c_e81, c_e82, c_e83 = st.columns(3)
-#         with c_e81:
-#             if st.button("💾 Export reviewed_appraisal.csv", key="btn_export_review"):
-#                 reviewed_path = os.path.join(RUNS_DIR, f"reviewed_appraisal.{_ts()}.csv")
-#                 edited.to_csv(reviewed_path, index=False)
-#                 ss["asset_human_review_df"] = edited
-#                 ss["asset_feedback_csv"] = reviewed_path
-#                 st.success(f"Saved: `{reviewed_path}`")
-#                 st.download_button(
-#                     "⬇️ Download reviewed_appraisal.csv",
-#                     data=edited.to_csv(index=False).encode("utf-8"),
-#                     file_name="reviewed_appraisal.csv",
-#                     mime="text/csv"
-#                 )
-
-#         with c_e82:
-#             if st.button("📏 Compute Agreement Score", key="btn_agree_score"):
-#                 ai_col = "decision" if "decision" in edited.columns else None
-#                 if not ai_col:
-#                     st.warning("No AI decision column found to compare against.")
-#                 else:
-#                     ai_vals = edited[ai_col].astype(str).str.lower()
-#                     human_vals = edited["human_decision"].astype(str).str.lower()
-#                     agree = (ai_vals == human_vals)
-#                     agree_pct = float(agree.mean() * 100.0)
-#                     st.metric("AI ↔ Human Agreement", f"{agree_pct:.2f}%")
-#                     # Save lightweight summary for E.9
-#                     ss["asset_agreement_score"] = agree_pct
-#                     # Show disagreements
-#                     dis = edited.loc[~agree, [c for c in edited.columns
-#                                               if c in ["application_id","asset_id",ai_col,"human_decision","policy_breaches","human_reason"]]]
-#                     if len(dis):
-#                         st.markdown(f"❌ **{len(dis)}** rows disagreed out of **{len(edited)}**")
-#                         st.dataframe(dis, use_container_width=True)
-
-#         with c_e83:
-#             st.caption("Tip: Export reviewed CSV before training.")
-
-#     else:
-#         st.info("Awaiting input for review (Stage 4 table or an imported CSV).")
-
-#     st.markdown("---")
-
-#     # -------- E.9 — Feedback → Train --------
-#     st.markdown("### **E.9 — Feedback → Train**")
-
-#     fb_path = ss.get("asset_feedback_csv")
-#     if not fb_path or not os.path.exists(fb_path):
-#         st.info("Export a reviewed_appraisal CSV in E.8 to enable training.")
-#     else:
-#         st.write(f"Using feedback file: `{os.path.basename(fb_path)}`")
-
-#         c_t1, c_t2, c_t3 = st.columns([1,1,1])
-#         with c_t1:
-#             train_timeout = st.number_input("Train timeout (sec)", min_value=30, value=180, step=10, key="train_timeout")
-#         with c_t2:
-#             eval_metric = st.selectbox("Eval metric", ["agreement_score", "RMSE", "MAE"], index=0, key="train_metric")
-#         with c_t3:
-#             promote_after = st.checkbox("Promote to PRODUCTION after training", value=False, key="train_promote")
-
-#         # Backend-aware training (preferred), with a local fallback
-#         if st.button("🧠 Train Candidate Model", key="btn_train_candidate"):
-#             model_path = None
-#             meta = {}
-#             try:
-#                 # Try backend training endpoint if present
-#                 with open(fb_path, "rb") as fobj:
-#                     files = {"feedback_csv": (os.path.basename(fb_path), fobj, "text/csv")}
-#                     data = {"agent_id": "asset_appraisal", "metric": eval_metric}
-#                     r = requests.post(f"{API_URL}/v1/agents/asset_appraisal/training/train_from_feedback",
-#                                       files=files, data=data, timeout=int(train_timeout))
-#                 if r.ok:
-#                     j = r.json() or {}
-#                     model_path = j.get("model_path")
-#                     meta = j.get("meta", {})
-#                 else:
-#                     # Fall back to local stub artifact
-#                     raise RuntimeError(f"Backend returned {r.status_code}: {r.text[:200]}")
-#             except Exception as e:
-#                 # Local stub: create a timestamped model file and meta
-#                 model_path = os.path.join(RUNS_DIR, f"model-{_ts()}.joblib")
-#                 # create a tiny placeholder so the path exists
-#                 with open(model_path, "wb") as fp:
-#                     fp.write(b"")  # placeholder joblib
-#                 meta = {
-#                     "trained_on": os.path.basename(fb_path),
-#                     "metric": eval_metric,
-#                     "score": float(ss.get("asset_agreement_score", 0.0)),
-#                     "algo": "stub_linear",
-#                     "created_at": datetime.now(timezone.utc).isoformat(),
-#                 }
-
-#             # Persist production_meta.json (not yet promoted)
-#             prod_meta = {
-#                 "has_production": False,
-#                 "model_path": model_path,
-#                 "meta": meta
-#             }
-#             meta_path = os.path.join(RUNS_DIR, "production_meta.json")
-#             with open(meta_path, "w", encoding="utf-8") as fp:
-#                 json.dump(prod_meta, fp, ensure_ascii=False, indent=2)
-
-#             ss["asset_trained_model_meta"] = prod_meta
-#             st.success(f"Candidate trained. Model: `{os.path.basename(model_path)}`")
-#             st.caption(f"Metadata saved → `{meta_path}`")
-
-#         # Optional promotion
-#         if st.button("🚀 Promote Last Trained to PRODUCTION", key="btn_promote_after_train") or (promote_after and st.session_state.get("asset_trained_model_meta")):
-#             try:
-#                 r = requests.post(f"{API_URL}/v1/agents/asset_appraisal/training/promote_last", timeout=90)
-#                 if r.ok:
-#                     st.success("✅ Model promoted to PRODUCTION.")
-#                     # Update local production_meta.json to reflect promotion
-#                     j = r.json() if r.text else {}
-#                     promoted_path = (j.get("meta") or {}).get("model_path") or (ss.get("asset_trained_model_meta") or {}).get("model_path")
-#                     prod_meta = {
-#                         "has_production": True,
-#                         "model_path": promoted_path,
-#                         "meta": j.get("meta") or (ss.get("asset_trained_model_meta") or {}).get("meta") or {}
-#                     }
-#                     meta_path = os.path.join(RUNS_DIR, "production_meta.json")
-#                     with open(meta_path, "w", encoding="utf-8") as fp:
-#                         json.dump(prod_meta, fp, ensure_ascii=False, indent=2)
-#                     ss["asset_trained_model_meta"] = prod_meta
-#                 else:
-#                     try:
-#                         st.error(f"❌ Promotion failed: {r.status_code} {r.reason}")
-#                         st.code(r.json())
-#                     except Exception:
-#                         st.code(r.text[:2000])
-#             except Exception as e:
-#                 st.error(f"❌ Promotion error: {e}")
+# # ─────────────────────────────────────────
+# # F — MODEL TRAINING & PROMOTION
+# # ─────────────────────────────────────────
+# with tabF:
+#     st.subheader("🧪 Stage F — Model Training & Promotion")
+#     st.caption("Train or retrain models using human feedback, then promote them to production for Stage C evaluation.")
     
+    
+#     # ─────────────────────────────────────────
+#     # Stage F header diagnostics (always visible)
+#     # ─────────────────────────────────────────
+#     st.markdown("#### 🔎 Data availability")
 
-    # # ========== 5) TRAINING (Feedback → Retrain) ==========
-    # with tab5:
-    #     st.subheader("🧪 Stage 5 — Train from Feedback & Promote to PRODUCTION")
+#     def _len_df(x):
+#         return (0 if not isinstance(x, pd.DataFrame) else len(x))
 
-    #     staged = []
-    #     if "asset_human_feedback_df" in ss and ss["asset_human_feedback_df"] is not None:
-    #         buf = ss["asset_human_feedback_df"].to_csv(index=False).encode("utf-8")
-    #         staged.append(("from_stage4.csv", buf))
+#     c1, c2, c3, c4 = st.columns(4)
+#     c1.metric("decision_df",  _len_df(ss.get("asset_decision_df")))
+#     c2.metric("policy_df",    _len_df(ss.get("asset_policy_df")))
+#     c3.metric("verified_df",  _len_df(ss.get("asset_verified_df")))
+#     c4.metric("ai_df",        _len_df(ss.get("asset_ai_df")))
 
-    #     up_fb = st.file_uploader("Upload feedback CSV(s)", type=["csv"], accept_multiple_files=True, key="fb_csvs")
-    #     if up_fb:
-    #         for f in up_fb:
-    #             staged.append((f.name, f.getvalue()))
+#     with st.expander("Show sample (if no data yet)"):
+#         st.caption("If you haven't run earlier stages, load a small demo so this page is not empty.")
+#         if st.button("Load demo portfolio (10 rows)", key="btn_demo_portfolio"):
+#             try:
+#                 # Prefer your real synthesizer if present
+#                 if "quick_synth" in globals():
+#                     demo = quick_synth(10)
+#                 else:
+#                     # Minimal fallback demo
+#                     import numpy as np, pandas as pd, random
+#                     demo = pd.DataFrame({
+#                         "application_id": [f"APP_{i:04d}" for i in range(10)],
+#                         "asset_id":      [f"A{i:04d}" for i in range(10)],
+#                         "asset_type":    np.random.choice(["House","Apartment","Car","Land"], size=10),
+#                         "city":          np.random.choice(["HCMC","Hanoi","Da Nang","Hue"], size=10),
+#                         "market_value":  np.random.randint(80_000, 800_000, size=10),
+#                         "ai_adjusted":   np.random.randint(75_000, 820_000, size=10),
+#                         "loan_amount":   np.random.randint(30_000, 500_000, size=10),
+#                         "confidence":    np.random.randint(60, 98, size=10),
+#                         "condition_score": np.random.uniform(0.6, 1.0, size=10).round(3),
+#                         "legal_penalty":   np.random.uniform(0.95, 1.0, size=10).round(3),
+#                     })
+#                     demo["realizable_value"] = (demo["ai_adjusted"] * demo["condition_score"] * demo["legal_penalty"]).round(2)
+#                     demo["ltv_ai"] = (demo["loan_amount"] / demo["ai_adjusted"]).round(3)
+#                     demo["ltv_cap"] = 0.8
+#                     demo["policy_breaches"] = ""
+#                     demo["decision"] = np.where(demo["ltv_ai"] > demo["ltv_cap"], "review", "approved")
+#                 ss["asset_decision_df"] = demo
+#                 st.success("Demo portfolio loaded into ss['asset_decision_df']. Scroll down.")
+#             except Exception as e:
+#                 st.error(f"Demo load failed: {e}")
 
-    #     if staged:
-    #         st.success(f"Staged {len(staged)} feedback file(s) for training.")
-    #         st.json([name for name, _ in staged])
+#     st.divider()
 
-    #         meta = {
-    #             "user_name": ss["asset_user"]["name"],
-    #             "agent_name": "asset_appraisal",
-    #             "algo_name": "asset_lr"  # adjust to your actual backend algo id
-    #         }
-    #         st.markdown("**Launch Retrain — payload preview**")
-    #         st.code(json.dumps(meta, indent=2))
 
-    #         if st.button("🚀 Train candidate model", key="btn_train_candidate"):
-    #             files = [("files", (name, io.BytesIO(content), "text/csv")) for name, content in staged]
-    #             data = {"meta": json.dumps(meta)}
-    #             job = None
-    #             for agent_id in discover_asset_agents():
-    #                 try:
-    #                     resp = requests.post(f"{API_URL}/v1/agents/{agent_id}/training/train_asset",
-    #                                          files=files, data=data, timeout=180)
-    #                     if resp.ok:
-    #                         job = resp.json(); break
-    #                     else:
-    #                         st.error(f"[{agent_id}] {resp.status_code} {resp.reason}")
-    #                         try:
-    #                             st.code(resp.json())
-    #                         except Exception:
-    #                             st.code(resp.text[:2000])
 
-    #                 except Exception:
-    #                     pass
-    #             if job is None:
-    #                 st.error("Training endpoint failed on all discovered agent ids.")
-    #             else:
-    #                 st.success("Training job submitted.")
-    #                 st.json(job)
+#     reviewed = sorted([f for f in os.listdir("./.tmp_runs") if f.startswith("reviewed_appraisal")], reverse=True)
+#     if not reviewed:
+#         st.warning("⚠️ No reviewed feedback CSV found. Complete Stage E first.")
+#         st.stop()
 
-    #         if st.button("📈 Promote last candidate to PRODUCTION", key="btn_promote_prod"):
-    #             promoted = None
-    #             for agent_id in discover_asset_agents():
-    #                 try:
-    #                     r = requests.post(f"{API_URL}/v1/agents/{agent_id}/training/promote_last", timeout=60)
-    #                     if r.ok:
-    #                         promoted = r.json(); break
-    #                 except Exception:
-    #                     pass
-    #             if promoted:
-    #                 st.success("Model promoted.")
-    #                 st.json(promoted)
-    #             else:
-    #                 st.error("Promotion failed on all discovered agent ids.")
-    #     else:
-    #         st.info("Drop at least one feedback CSV here or generate from Stage 4.")
+#     csv_path = os.path.join("./.tmp_runs", reviewed[0])
+#     df = pd.read_csv(csv_path)
+#     st.markdown(f"**Loaded:** `{csv_path}` ({len(df)} rows)")
+#     st.dataframe(df.head(20), use_container_width=True)
+
+#     model_choice = st.selectbox("Select model algorithm", ["GradientBoostingRegressor", "RandomForestRegressor", "LinearRegression"])
+#     if st.button("🚀 Train Model", key="btn_train_model"):
+#         from sklearn.model_selection import train_test_split
+#         from sklearn.metrics import r2_score, mean_absolute_error
+#         from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+#         from sklearn.linear_model import LinearRegression
+#         import joblib, json, shutil
+
+#         y = df["human_value"]
+#         X = df.select_dtypes("number").drop(columns=["human_value", "fmv", "ai_adjusted"], errors="ignore")
+
+#         Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.2, random_state=42)
+#         ModelCls = {"GradientBoostingRegressor": GradientBoostingRegressor,
+#                     "RandomForestRegressor": RandomForestRegressor,
+#                     "LinearRegression": LinearRegression}[model_choice]
+#         model = ModelCls().fit(Xtr, ytr)
+
+#         y_pred = model.predict(Xte)
+#         metrics = {"r2": r2_score(yte, y_pred), "mae": mean_absolute_error(yte, y_pred)}
+
+#         train_dir = "./agents/asset_appraisal/models/trained"
+#         os.makedirs(train_dir, exist_ok=True)
+#         ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+#         model_path = os.path.join(train_dir, f"{model_choice}_asset_{ts}.joblib")
+#         joblib.dump(model, model_path)
+#         st.success(f"✅ Model trained and saved → `{model_path}`")
+#         st.json(metrics)
+
+#         if st.button("📤 Promote to Production", key="btn_promote_prod"):
+#             prod_dir = "./agents/asset_appraisal/models/production"
+#             os.makedirs(prod_dir, exist_ok=True)
+#             shutil.copy(model_path, os.path.join(prod_dir, "model.joblib"))
+#             meta = {"model_path": model_path, "metrics": metrics, "promoted_at": datetime.now(timezone.utc).isoformat()}
+#             with open(os.path.join(prod_dir, "production_meta.json"), "w") as f:
+#                 json.dump(meta, f, indent=2)
+#             st.success("🟢 Model promoted to production. Stage C will now use this model.")
 
 
 
