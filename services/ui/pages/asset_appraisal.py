@@ -770,52 +770,115 @@ def apply_theme(theme: str = None):
 #     theme = st.session_state.get("ui_theme", "light")
 #     return "mapbox://styles/mapbox/light-v11" if theme == "light" else "mapbox://styles/mapbox/dark-v11"
 
+
+
 # ─────────────────────────────────────────────
 # MAP THEME HELPERS (Mapbox style + token + adapters)
 # ─────────────────────────────────────────────
 import os
+import streamlit as st
 
 def get_mapbox_token() -> str | None:
     """Find a Mapbox token from secrets or env. Return None if not set."""
-    # Prefer Streamlit secrets if present
-    tok = None
     try:
-        tok = st.secrets.get("MAPBOX_TOKEN")  # type: ignore[attr-defined]
+        tok = st.secrets.get("MAPBOX_TOKEN")
     except Exception:
-        pass
+        tok = None
     if not tok:
         tok = os.environ.get("MAPBOX_TOKEN") or os.environ.get("MAPBOX_ACCESS_TOKEN")
     return tok or None
 
+
+def plotly_map_style() -> str:
+    """
+    Return a Plotly-compatible map style.
+    - Uses bright style in light mode even without a Mapbox token.
+    - Falls back to CARTO 'positron' if Mapbox token not set.
+    """
+    theme = st.session_state.get("ui_theme", "light")
+    token = get_mapbox_token()
+    if token:
+        return "light" if theme == "light" else "dark"
+    else:
+        # fallback to open CARTO tiles (bright)
+        return "carto-positron" if theme == "light" else "carto-darkmatter"
+
+
 def get_map_style() -> str:
     """
-    Return a Mapbox style URL matched to current theme.
+    Return a Mapbox style URL (for pydeck only).
     Light → bright, Dark → dark. Defaults to light for safety.
     """
     theme = st.session_state.get("ui_theme", "light")
     return "mapbox://styles/mapbox/light-v11" if theme == "light" else "mapbox://styles/mapbox/dark-v11"
 
-# Optional: convenience adapters for Plotly + pydeck
+
 def apply_plotly_mapbox_defaults():
-    """
-    Set Plotly's Mapbox token globally. Call once before creating px/scatter_mapbox etc.
-    """
-    import plotly.express as px  # local import to avoid hard dependency at import time
+    """Set Plotly's Mapbox token globally (if available)."""
+    import plotly.express as px
     token = get_mapbox_token()
     if token:
         px.set_mapbox_access_token(token)
     else:
-        st.info("ℹ️ Mapbox token not set. Set MAPBOX_TOKEN in env or st.secrets to enable styled basemaps.")
+        st.info("ℹ️ Mapbox token not set — using free bright map style (carto-positron).")
+
 
 def make_pydeck_view_state(lat=10.7769, lon=106.7009, zoom=10, pitch=0, bearing=0):
     import pydeck as pdk
     return pdk.ViewState(latitude=lat, longitude=lon, zoom=zoom, pitch=pitch, bearing=bearing)
 
+
 def pydeck_map_style() -> str:
-    """
-    pydeck uses the same Mapbox style URLs when a token is available.
-    """
+    """pydeck uses the same Mapbox style URLs when a token is available."""
     return get_map_style()
+
+
+# # ─────────────────────────────────────────────
+# # MAP THEME HELPERS (Mapbox style + token + adapters)
+# # ─────────────────────────────────────────────
+# import os
+
+# def get_mapbox_token() -> str | None:
+#     """Find a Mapbox token from secrets or env. Return None if not set."""
+#     # Prefer Streamlit secrets if present
+#     tok = None
+#     try:
+#         tok = st.secrets.get("MAPBOX_TOKEN")  # type: ignore[attr-defined]
+#     except Exception:
+#         pass
+#     if not tok:
+#         tok = os.environ.get("MAPBOX_TOKEN") or os.environ.get("MAPBOX_ACCESS_TOKEN")
+#     return tok or None
+
+# def get_map_style() -> str:
+#     """
+#     Return a Mapbox style URL matched to current theme.
+#     Light → bright, Dark → dark. Defaults to light for safety.
+#     """
+#     theme = st.session_state.get("ui_theme", "light")
+#     return "mapbox://styles/mapbox/light-v11" if theme == "light" else "mapbox://styles/mapbox/dark-v11"
+
+# # Optional: convenience adapters for Plotly + pydeck
+# def apply_plotly_mapbox_defaults():
+#     """
+#     Set Plotly's Mapbox token globally. Call once before creating px/scatter_mapbox etc.
+#     """
+#     import plotly.express as px  # local import to avoid hard dependency at import time
+#     token = get_mapbox_token()
+#     if token:
+#         px.set_mapbox_access_token(token)
+#     else:
+#         st.info("ℹ️ Mapbox token not set. Set MAPBOX_TOKEN in env or st.secrets to enable styled basemaps.")
+
+# def make_pydeck_view_state(lat=10.7769, lon=106.7009, zoom=10, pitch=0, bearing=0):
+#     import pydeck as pdk
+#     return pdk.ViewState(latitude=lat, longitude=lon, zoom=zoom, pitch=pitch, bearing=bearing)
+
+# def pydeck_map_style() -> str:
+#     """
+#     pydeck uses the same Mapbox style URLs when a token is available.
+#     """
+#     return get_map_style()
 
 
 
@@ -3576,31 +3639,109 @@ with tabC:
                                 .head(15))
                             st.dataframe(sub, use_container_width=True)
 
+
             # ---- Optional Map (if lat/lon present)
             st.markdown("### 🗺️ Map (optional)")
+            st.caption("Visualize asset locations — map color and style follow the current UI theme.")
+
             map_cols = [("lat","lon"), ("latitude","longitude"), ("gps_lat","gps_lon")]
             have_map = False
+
             for la, lo in map_cols:
                 if la in df.columns and lo in df.columns:
                     have_map = True
-                    map_df = df[[la, lo] + [c for c in ["asset_id","asset_type","city","ai_adjusted","realizable_value","confidence"] if c in df.columns]].copy()
+                    map_df = df[[la, lo] + [
+                        c for c in ["asset_id","asset_type","city","ai_adjusted","realizable_value","confidence"]
+                        if c in df.columns
+                    ]].copy()
                     map_df = map_df.rename(columns={la: "lat", lo: "lon"})
-                    try:
-                        import pydeck as pdk
-                        layer = pdk.Layer(
-                            "ScatterplotLayer",
-                            data=map_df.dropna(subset=["lat","lon"]),
-                            get_position="[lon, lat]",
-                            get_radius=80,
-                            pickable=True,
-                        )
-                        view_state = pdk.ViewState(latitude=float(map_df["lat"].mean()), longitude=float(map_df["lon"].mean()), zoom=8)
-                        st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state, tooltip={"text":"{asset_id} · {asset_type}\n{city}\nAI: {ai_adjusted}\nRealiz: {realizable_value}\nConf: {confidence}"}))
-                    except Exception:
-                        st.map(map_df.rename(columns={"lat":"latitude","lon":"longitude"}), use_container_width=True)
+                    map_df = map_df.dropna(subset=["lat", "lon"])
+
+                    if not map_df.empty:
+                        try:
+                            # ─────────────────────────────────────────────
+                            # Prefer Plotly (bright light / dark dark)
+                            # ─────────────────────────────────────────────
+                            import plotly.express as px
+                            apply_plotly_mapbox_defaults()
+                            style_name = plotly_map_style()
+
+                            fig = px.scatter_mapbox(
+                                map_df,
+                                lat="lat",
+                                lon="lon",
+                                hover_name="asset_id" if "asset_id" in map_df.columns else "city",
+                                hover_data={c: True for c in ["asset_type","city","ai_adjusted","realizable_value","confidence"] if c in map_df.columns},
+                                color_discrete_sequence=["#38bdf8"],
+                                zoom=8,
+                                height=420,
+                            )
+
+                            fig.update_layout(
+                                mapbox_style=style_name,
+                                margin=dict(l=0, r=0, t=0, b=0),
+                                paper_bgcolor="rgba(0,0,0,0)",
+                                plot_bgcolor="rgba(0,0,0,0)",
+                            )
+                            st.plotly_chart(fig, use_container_width=True)
+
+                        except Exception as e:
+                            # ─────────────────────────────────────────────
+                            # Fallback to pydeck if Plotly unavailable
+                            # ─────────────────────────────────────────────
+                            import pydeck as pdk
+                            view_state = make_pydeck_view_state(
+                                lat=float(map_df["lat"].mean()),
+                                lon=float(map_df["lon"].mean()),
+                                zoom=8
+                            )
+                            layer = pdk.Layer(
+                                "ScatterplotLayer",
+                                data=map_df,
+                                get_position='[lon, lat]',
+                                get_color='[0, 128, 255, 200]',
+                                get_radius=120,
+                                pickable=True,
+                            )
+                            deck = pdk.Deck(
+                                map_style=pydeck_map_style(),
+                                initial_view_state=view_state,
+                                layers=[layer],
+                                tooltip={"text": "{asset_id} · {asset_type}\n{city}\nAI: {ai_adjusted}\nRealiz: {realizable_value}\nConf: {confidence}"}
+                            )
+                            st.pydeck_chart(deck)
+                    else:
+                        st.info("ℹ️ No valid coordinates found to display on the map.")
                     break
+
             if not have_map:
                 st.caption("No lat/lon columns found (lat/lon or latitude/longitude or gps_lat/gps_lon). Map hidden.")
+
+            # # ---- Optional Map (if lat/lon present)
+            # st.markdown("### 🗺️ Map (optional)")
+            # map_cols = [("lat","lon"), ("latitude","longitude"), ("gps_lat","gps_lon")]
+            # have_map = False
+            # for la, lo in map_cols:
+            #     if la in df.columns and lo in df.columns:
+            #         have_map = True
+            #         map_df = df[[la, lo] + [c for c in ["asset_id","asset_type","city","ai_adjusted","realizable_value","confidence"] if c in df.columns]].copy()
+            #         map_df = map_df.rename(columns={la: "lat", lo: "lon"})
+            #         try:
+            #             import pydeck as pdk
+            #             layer = pdk.Layer(
+            #                 "ScatterplotLayer",
+            #                 data=map_df.dropna(subset=["lat","lon"]),
+            #                 get_position="[lon, lat]",
+            #                 get_radius=80,
+            #                 pickable=True,
+            #             )
+            #             view_state = pdk.ViewState(latitude=float(map_df["lat"].mean()), longitude=float(map_df["lon"].mean()), zoom=8)
+            #             st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state, tooltip={"text":"{asset_id} · {asset_type}\n{city}\nAI: {ai_adjusted}\nRealiz: {realizable_value}\nConf: {confidence}"}))
+            #         except Exception:
+            #             st.map(map_df.rename(columns={"lat":"latitude","lon":"longitude"}), use_container_width=True)
+            #         break
+            # if not have_map:
+            #     st.caption("No lat/lon columns found (lat/lon or latitude/longitude or gps_lat/gps_lon). Map hidden.")
 
             # ---- Exports of aggregates
             st.markdown("#### 📤 Export dashboard aggregates")
