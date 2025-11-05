@@ -13,8 +13,13 @@ Includes:
 - Stage 4: Human Review with AI↔Human agreement gauge; export feedback CSV
 - Stage 5: Training (upload feedback) → Train candidate → Promote to PRODUCTION
 """
-import os, io, re, json
-import datetime as dt  # ← single, unambiguous datetime import
+
+import os
+import io
+import re
+import json
+from datetime import datetime, timezone  # ✅ clean, safe, supports datetime.now()
+from pathlib import Path
 from typing import Any, Dict
 
 # ── Third-party
@@ -25,16 +30,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 import plotly.express as px
 import plotly.graph_objects as go
-import os, io, re, json, datetime, requests
-import numpy as np
-import pandas as pd
-import streamlit as st
-import plotly.express as px
-import plotly.graph_objects as go
-from datetime import datetime, timezone
-from pathlib import Path
-import io, csv
-
+import csv
 
 # Theme bootstrapping
 if "ui_theme" not in st.session_state:
@@ -2330,7 +2326,7 @@ with tabB:
         st.json(ss["asset_comps_used"])
 
     
-    
+
 
 # ========== 3) AI APPRAISAL & VALUATION ==========
 with tabC:
@@ -2402,103 +2398,266 @@ with tabC:
         st.info("ℹ️ Production meta unavailable.")
 
     # ─────────────────────────────────────────────
-    # 📦 MODEL SELECTION (Trained + Production)
+    # 🧩 Model Selection (list all trained models) — HARD-CODED TEST
     # ─────────────────────────────────────────────
-    from time import time as _now
+    from datetime import datetime
+    import os, shutil, streamlit as st
 
-    trained_dirs = [
-        os.path.expanduser("~/credit-appraisal-agent-poc/agents/asset_appraisal/models/trained"),
-        os.path.expanduser("~/credit-appraisal-agent-poc/services/agents/asset_appraisal/models/trained"),
-    ]
-    production_default_fp = os.path.expanduser(
-        "~/credit-appraisal-agent-poc/agents/asset_appraisal/models/production/model.joblib"
-    )
+    # Hardcoded absolute paths for your environment
+    trained_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/trained"
+    production_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/production"
 
-    production_fp = None
-    try:
-        r = requests.get(f"{API_URL}/v1/training/production_meta",
-                         params={"agent_id": "asset_appraisal"}, timeout=5)
-        if r.ok:
-            j = r.json() or {}
-            if j.get("has_production"):
-                meta = j.get("meta") or {}
-                production_fp = meta.get("model_path") or meta.get("promoted_to") or production_default_fp
-    except Exception:
-        production_fp = None
-    if not production_fp:
-        production_fp = production_default_fp
+    # Debug info
+    st.caption(f"📂 Trained dir: `{trained_dir}`")
+    st.caption(f"📦 Production dir: `{production_dir}`")
 
-    c_ref, _ = st.columns([1, 6])
-    with c_ref:
-        if st.button("↻ Refresh models", key="asset_models_refresh"):
-            st.session_state.pop("asset_model_select", None)
-            st.session_state["_asset_models_bump"] = _now()
-            st.rerun()
+    # Refresh button — use unique key for asset
+    if st.button("↻ Refresh models", key="asset_refresh_models"):
+        st.session_state.pop("asset_selected_model", None)
+        st.rerun()
 
     models = []
-    if os.path.exists(production_fp):
-        try:
-            p_ctime = os.path.getctime(production_fp)
-            p_created = datetime.fromtimestamp(p_ctime).strftime("%b %d, %Y %H:%M")
-        except Exception:
-            p_ctime, p_created = 0.0, "production"
-        models.append(("⭐ Production", production_fp, p_ctime, p_created, True))
-
-    raw = []
-    for d in trained_dirs:
-        if os.path.isdir(d):
-            for f in os.listdir(d):
-                if f.endswith(".joblib"):
-                    fpath = os.path.join(d, f)
-                    try:
-                        ctime = os.path.getctime(fpath)
-                        created = datetime.fromtimestamp(ctime).strftime("%b %d, %Y %H:%M")
-                    except Exception:
-                        ctime, created = 0.0, ""
-                    raw.append((f, fpath, ctime, created, False))
-
-    newest_by_name = {}
-    for name, path, ctime, created, is_prod in raw:
-        try:
-            if os.path.exists(production_fp) and os.path.samefile(path, production_fp):
-                continue
-        except Exception:
-            pass
-        if (name not in newest_by_name) or (ctime > newest_by_name[name][2]):
-            newest_by_name[name] = (name, path, ctime, created, is_prod)
-    models.extend(newest_by_name.values())
-    models = sorted(models, key=lambda x: (0 if x[4] else 1, -x[2]))
+    if os.path.isdir(trained_dir):
+        for f in os.listdir(trained_dir):
+            if f.endswith(".joblib"):
+                fpath = os.path.join(trained_dir, f)
+                ctime = os.path.getctime(fpath)
+                created = datetime.fromtimestamp(ctime).strftime("%b %d, %Y %H:%M")
+                models.append((f, fpath, created))
+    else:
+        st.error(f"❌ Trained dir not found: {trained_dir}")
 
     if models:
-        display_names = [f"{label} — {created}" if created else label for (label, _, _, created, _) in models]
-        default_idx = 0
-        prev_selected = st.session_state.get("asset_selected_model")
-        if prev_selected:
-            for i, (_, path, _, _, _) in enumerate(models):
-                if path == prev_selected: default_idx = i; break
-        select_key = f"asset_model_select::{st.session_state.get('_asset_models_bump','')}"
-        selected_display = st.selectbox("📦 Select trained model", display_names,
-                                        index=default_idx, key=select_key)
-        sel_idx = display_names.index(selected_display)
-        selected_model = models[sel_idx][1]
-        is_prod = models[sel_idx][4]
+        # Sort by creation time (latest first)
+        models.sort(key=lambda x: os.path.getctime(x[1]), reverse=True)
+        display_names = [f"{m[0]} — {m[2]}" for m in models]
+
+        selected_display = st.selectbox("📦 Select trained model to use", display_names, key="asset_model_select")
+        selected_model = models[display_names.index(selected_display)][1]
+        st.success(f"✅ Using model: {os.path.basename(selected_model)}")
+
         st.session_state["asset_selected_model"] = selected_model
 
-        st.success(f"{'🟢' if is_prod else '✅'} Using model: {os.path.basename(selected_model)}")
-        if (not is_prod) and st.button("🚀 Promote to PRODUCTION", key="asset_promote_model"):
+        # Promote to production
+        if st.button("🚀 Promote this model to Production", key="asset_promote_button"):
             try:
-                r = requests.post(f"{API_URL}/v1/agents/asset_appraisal/training/promote_last", timeout=60)
-                if r.ok:
-                    st.success("✅ Model promoted to PRODUCTION.")
-                    st.session_state["_asset_models_bump"] = _now(); st.rerun()
-                else:
-                    st.error(f"❌ Promotion failed: {r.status_code} {r.reason}")
-                    st.code(r.text[:1500])
+                os.makedirs(production_dir, exist_ok=True)
+                prod_path = os.path.join(production_dir, "model.joblib")
+                shutil.copy2(selected_model, prod_path)
+                st.success(f"✅ Model promoted to production: {prod_path}")
             except Exception as e:
-                st.error(f"❌ Promotion error: {e}")
+                st.error(f"❌ Promotion failed: {e}")
     else:
-        st.warning("⚠️ No trained models found — train one in Stage 5.")
+        st.warning("⚠️ No trained models found — train one in Stage F first.")
 
+
+    
+    # # ─────────────────────────────────────────────
+    # # 📦 MODEL SELECTION (Hardcoded Local Paths)
+    # # ─────────────────────────────────────────────
+    # from datetime import datetime
+    # import os, shutil
+
+    # trained_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/trained"
+    # production_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/production"
+
+    # st.caption(f"📦 Trained dir = `{trained_dir}`")
+    # st.caption(f"📦 Production dir = `{production_dir}`")
+
+    # # Refresh button
+    # if st.button("↻ Refresh models", key="asset_refresh_models"):
+    #     st.session_state.pop("asset_selected_model", None)
+    #     st.rerun()
+
+    # models = []
+
+    # # Include production model (if any)
+    # prod_fp = os.path.join(production_dir, "model.joblib")
+    # if os.path.exists(prod_fp):
+    #     p_ctime = os.path.getctime(prod_fp)
+    #     p_created = datetime.fromtimestamp(p_ctime).strftime("%b %d, %Y %H:%M")
+    #     models.append(("⭐ Production", prod_fp, p_created, True))
+
+    # # Include trained models
+    # if os.path.isdir(trained_dir):
+    #     for f in os.listdir(trained_dir):
+    #         if f.endswith(".joblib"):
+    #             fpath = os.path.join(trained_dir, f)
+    #             ctime = os.path.getctime(fpath)
+    #             created = datetime.fromtimestamp(ctime).strftime("%b %d, %Y %H:%M")
+    #             models.append((f, fpath, created, False))
+    # else:
+    #     st.error(f"❌ Trained dir not found: {trained_dir}")
+
+    # # Render dropdown
+    # if models:
+    #     models.sort(key=lambda x: (0 if x[3] else 1, -os.path.getctime(x[1])))  # prod first, then newest
+    #     display_names = [f"{m[0]} — {m[2]}" for m in models]
+
+    #     selected_display = st.selectbox("📦 Select trained or production model", display_names)
+    #     selected_model = models[display_names.index(selected_display)][1]
+    #     is_prod = models[display_names.index(selected_display)][3]
+    #     st.session_state["asset_selected_model"] = selected_model
+
+    #     st.success(f"{'🟢' if is_prod else '✅'} Using model: {os.path.basename(selected_model)}")
+
+    #     if (not is_prod) and st.button("🚀 Promote this model to Production"):
+    #         try:
+    #             os.makedirs(production_dir, exist_ok=True)
+    #             prod_path = os.path.join(production_dir, "model.joblib")
+    #             shutil.copy2(selected_model, prod_path)
+    #             st.success(f"✅ Model promoted to production: {prod_path}")
+    #         except Exception as e:
+    #             st.error(f"❌ Promotion failed: {e}")
+    # else:
+    #     st.warning("⚠️ No trained models found — train one in Stage F first.")
+
+    
+    
+    # # ─────────────────────────────────────────────
+    # # 🟢 PRODUCTION MODEL BANNER
+    # # ─────────────────────────────────────────────
+    # try:
+    #     resp = requests.get(f"{API_URL}/v1/training/production_meta", timeout=5)
+    #     if resp.status_code == 200:
+    #         meta = resp.json()
+    #         if meta.get("has_production"):
+    #             ver = (meta.get("meta") or {}).get("version", "1.x")
+    #             src = (meta.get("meta") or {}).get("source", "production")
+    #             st.success(f"🟢 Production model active — version {ver} • source {src}")
+    #         else:
+    #             st.warning("⚠️ No production model promoted yet — using baseline.")
+    #     else:
+    #         st.info("ℹ️ Could not fetch production model meta.")
+    # except Exception:
+    #     st.info("ℹ️ Production meta unavailable.")
+
+    # # ─────────────────────────────────────────────
+ 
+    # c_ref, _ = st.columns([1, 6])
+    # with c_ref:
+    #     if st.button("↻ Refresh models", key="asset_models_refresh"):
+    #         st.session_state.pop("asset_model_select", None)
+    #         st.session_state["_asset_models_bump"] = _now()
+    #         st.rerun()
+
+    # models = []
+    # if os.path.exists(production_fp):
+    #     try:
+    #         p_ctime = os.path.getctime(production_fp)
+    #         p_created = datetime.fromtimestamp(p_ctime).strftime("%b %d, %Y %H:%M")
+    #     except Exception:
+    #         p_ctime, p_created = 0.0, "production"
+    #     models.append(("⭐ Production", production_fp, p_ctime, p_created, True))
+
+    # raw = []
+    # for d in trained_dirs:
+    #     if os.path.isdir(d):
+    #         for f in os.listdir(d):
+    #             if f.endswith(".joblib"):
+    #                 fpath = os.path.join(d, f)
+    #                 try:
+    #                     ctime = os.path.getctime(fpath)
+    #                     created = datetime.fromtimestamp(ctime).strftime("%b %d, %Y %H:%M")
+    #                 except Exception:
+    #                     ctime, created = 0.0, ""
+    #                 raw.append((f, fpath, ctime, created, False))
+
+    # newest_by_name = {}
+    # for name, path, ctime, created, is_prod in raw:
+    #     try:
+    #         if os.path.exists(production_fp) and os.path.samefile(path, production_fp):
+    #             continue
+    #     except Exception:
+    #         pass
+    #     if (name not in newest_by_name) or (ctime > newest_by_name[name][2]):
+    #         newest_by_name[name] = (name, path, ctime, created, is_prod)
+    # models.extend(newest_by_name.values())
+    # models = sorted(models, key=lambda x: (0 if x[4] else 1, -x[2]))
+
+    # if models:
+    #     display_names = [f"{label} — {created}" if created else label for (label, _, _, created, _) in models]
+    #     default_idx = 0
+    #     prev_selected = st.session_state.get("asset_selected_model")
+    #     if prev_selected:
+    #         for i, (_, path, _, _, _) in enumerate(models):
+    #             if path == prev_selected: default_idx = i; break
+    #     select_key = f"asset_model_select::{st.session_state.get('_asset_models_bump','')}"
+    #     selected_display = st.selectbox("📦 Select trained model", display_names,
+    #                                     index=default_idx, key=select_key)
+    #     sel_idx = display_names.index(selected_display)
+    #     selected_model = models[sel_idx][1]
+    #     is_prod = models[sel_idx][4]
+    #     st.session_state["asset_selected_model"] = selected_model
+
+    #     st.success(f"{'🟢' if is_prod else '✅'} Using model: {os.path.basename(selected_model)}")
+    #     if (not is_prod) and st.button("🚀 Promote to PRODUCTION", key="asset_promote_model"):
+    #         try:
+    #             r = requests.post(f"{API_URL}/v1/agents/asset_appraisal/training/promote_last", timeout=60)
+    #             if r.ok:
+    #                 st.success("✅ Model promoted to PRODUCTION.")
+    #                 st.session_state["_asset_models_bump"] = _now(); st.rerun()
+    #             else:
+    #                 st.error(f"❌ Promotion failed: {r.status_code} {r.reason}")
+    #                 st.code(r.text[:1500])
+    #         except Exception as e:
+    #             st.error(f"❌ Promotion error: {e}")
+    # else:
+    #     st.warning("⚠️ No trained models found — train one in Stage 5.")
+
+    # # ─────────────────────────────────────────────
+    # # 📦 MODEL SELECTION (hardcoded for Asset Appraisal)
+    # # ─────────────────────────────────────────────
+    # from datetime import datetime
+    # import os, shutil
+
+    # trained_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/trained"
+    # production_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/production"
+
+    # st.caption(f"📦 Trained dir = `{trained_dir}`")
+    # st.caption(f"📦 Production dir = `{production_dir}`")
+
+    # # Refresh button
+    # if st.button("↻ Refresh models", key="asset_refresh_models"):
+    #     st.session_state.pop("asset_selected_model", None)
+    #     st.rerun()
+
+    # # Gather model list
+    # models = []
+    # if os.path.isdir(trained_dir):
+    #     for f in os.listdir(trained_dir):
+    #         if f.endswith(".joblib"):
+    #             fpath = os.path.join(trained_dir, f)
+    #             ctime = os.path.getctime(fpath)
+    #             created = datetime.fromtimestamp(ctime).strftime("%b %d, %Y %H:%M")
+    #             models.append((f, fpath, created))
+    # else:
+    #     st.error(f"❌ Trained dir not found: {trained_dir}")
+
+    # # Display dropdown
+    # if models:
+    #     models.sort(key=lambda x: os.path.getctime(x[1]), reverse=True)
+    #     display_names = [f"{m[0]} — {m[2]}" for m in models]
+
+    #     selected_display = st.selectbox("📦 Select trained or production model", display_names)
+    #     selected_model = models[display_names.index(selected_display)][1]
+    #     st.success(f"✅ Using model: {os.path.basename(selected_model)}")
+
+    #     st.session_state["asset_selected_model"] = selected_model
+
+    #     # Promote to production
+    #     if st.button("🚀 Promote this model to Production"):
+    #         try:
+    #             os.makedirs(production_dir, exist_ok=True)
+    #             prod_path = os.path.join(production_dir, "model.joblib")
+    #             shutil.copy2(selected_model, prod_path)
+    #             st.success(f"✅ Model promoted to production: {prod_path}")
+    #         except Exception as e:
+    #             st.error(f"❌ Promotion failed: {e}")
+    # else:
+    #     st.warning("⚠️ No trained models found — train one in Stage F first.")
+
+    
     # ─────────────────────────────────────────────
     # 🧠 LLM + HARDWARE PROFILE (LOCAL + HUGGING FACE)
     # ─────────────────────────────────────────────
@@ -3022,173 +3181,83 @@ with tabC:
                             st.dataframe(sub, use_container_width=True)
 
 
-            # ─────────────────────────────────────────────
-            # MAP VISUALIZATION — Clustered Heatmap (MapLibre Vector)
-            # ─────────────────────────────────────────────
-            st.markdown("### 🗺️ Asset Distribution Map")
-            st.caption("Visualize asset clusters and densities — auto-bright for light theme, dark for dark theme.")
+            # ---- Optional Map (if lat/lon present)
+            st.markdown("### 🗺️ Map (optional)")
+            st.caption("Visualize asset locations — map color and style follow the current UI theme.")
 
-            map_cols = [("lat", "lon"), ("latitude", "longitude"), ("gps_lat", "gps_lon")]
-            found = False
+            map_cols = [("lat","lon"), ("latitude","longitude"), ("gps_lat","gps_lon")]
+            have_map = False
 
             for la, lo in map_cols:
                 if la in df.columns and lo in df.columns:
-                    found = True
+                    have_map = True
                     map_df = df[[la, lo] + [
-                        c for c in ["asset_id", "asset_type", "city", "ai_adjusted",
-                                    "realizable_value", "confidence"]
+                        c for c in ["asset_id","asset_type","city","ai_adjusted","realizable_value","confidence"]
                         if c in df.columns
                     ]].copy()
-                    map_df = map_df.rename(columns={la: "lat", lo: "lon"}).dropna(subset=["lat", "lon"])
+                    map_df = map_df.rename(columns={la: "lat", lo: "lon"})
+                    map_df = map_df.dropna(subset=["lat", "lon"])
 
-                    import pydeck as pdk
-                    theme = st.session_state.get("ui_theme", "light")
+                    if not map_df.empty:
+                        try:
+                            # ─────────────────────────────────────────────
+                            # Prefer Plotly (bright light / dark dark)
+                            # ─────────────────────────────────────────────
+                            import plotly.express as px
+                            apply_plotly_mapbox_defaults()
+                            style_name = plotly_map_style()
 
-                    # Use open MapLibre base layers (free, fast, HD)
-                    MAP_STYLE_LIGHT = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-                    MAP_STYLE_DARK  = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
-                    map_style = MAP_STYLE_LIGHT if theme == "light" else MAP_STYLE_DARK
+                            fig = px.scatter_mapbox(
+                                map_df,
+                                lat="lat",
+                                lon="lon",
+                                hover_name="asset_id" if "asset_id" in map_df.columns else "city",
+                                hover_data={c: True for c in ["asset_type","city","ai_adjusted","realizable_value","confidence"] if c in map_df.columns},
+                                color_discrete_sequence=["#38bdf8"],
+                                zoom=8,
+                                height=420,
+                            )
 
-                    # View setup (zoom on data centroid)
-                    view_state = pdk.ViewState(
-                        latitude=float(map_df["lat"].mean()),
-                        longitude=float(map_df["lon"].mean()),
-                        zoom=6,
-                        pitch=35,
-                        bearing=15,
-                    )
+                            fig.update_layout(
+                                mapbox_style=style_name,
+                                margin=dict(l=0, r=0, t=0, b=0),
+                                paper_bgcolor="rgba(0,0,0,0)",
+                                plot_bgcolor="rgba(0,0,0,0)",
+                            )
+                            st.plotly_chart(fig, use_container_width=True)
 
-                    # ─────────────────────────────────────────────
-                    # 1️⃣ Heatmap layer (density / value intensity)
-                    # ─────────────────────────────────────────────
-                    heat_layer = pdk.Layer(
-                        "HeatmapLayer",
-                        data=map_df,
-                        get_position='[lon, lat]',
-                        aggregation="MEAN",
-                        opacity=0.6,
-                        get_weight="ai_adjusted" if "ai_adjusted" in map_df.columns else 1,
-                    )
-
-                    # ─────────────────────────────────────────────
-                    # 2️⃣ Scatter cluster layer (individual assets)
-                    # ─────────────────────────────────────────────
-                    scatter_layer = pdk.Layer(
-                        "ScatterplotLayer",
-                        data=map_df,
-                        get_position='[lon, lat]',
-                        get_fill_color='[56, 189, 248, 220]' if theme == "light" else '[59, 130, 246, 200]',
-                        get_radius=120,
-                        pickable=True,
-                    )
-
-                    tooltip = {
-                        "html": (
-                            "<b>{asset_id}</b> — {asset_type}<br/>"
-                            "City: {city}<br/>"
-                            "AI Value: {ai_adjusted}<br/>"
-                            "Realizable: {realizable_value}<br/>"
-                            "Conf: {confidence}"
-                        ),
-                        "style": {
-                            "backgroundColor": "rgba(15,23,42,0.85)",
-                            "color": "#e2e8f0",
-                            "fontSize": "12px",
-                            "borderRadius": "8px",
-                            "padding": "6px",
-                        },
-                    }
-
-                    # Combine both layers
-                    deck = pdk.Deck(
-                        map_provider="maplibre",
-                        map_style=map_style,
-                        initial_view_state=view_state,
-                        layers=[heat_layer, scatter_layer],
-                        tooltip=tooltip,
-                    )
-
-                    st.pydeck_chart(deck, use_container_width=True)
+                        except Exception as e:
+                            # ─────────────────────────────────────────────
+                            # Fallback to pydeck if Plotly unavailable
+                            # ─────────────────────────────────────────────
+                            import pydeck as pdk
+                            view_state = make_pydeck_view_state(
+                                lat=float(map_df["lat"].mean()),
+                                lon=float(map_df["lon"].mean()),
+                                zoom=8
+                            )
+                            layer = pdk.Layer(
+                                "ScatterplotLayer",
+                                data=map_df,
+                                get_position='[lon, lat]',
+                                get_color='[0, 128, 255, 200]',
+                                get_radius=120,
+                                pickable=True,
+                            )
+                            deck = pdk.Deck(
+                                map_style=pydeck_map_style(),
+                                initial_view_state=view_state,
+                                layers=[layer],
+                                tooltip={"text": "{asset_id} · {asset_type}\n{city}\nAI: {ai_adjusted}\nRealiz: {realizable_value}\nConf: {confidence}"}
+                            )
+                            st.pydeck_chart(deck)
+                    else:
+                        st.info("ℹ️ No valid coordinates found to display on the map.")
                     break
 
-            if not found:
-                st.info("ℹ️ No lat/lon columns found (lat/lon or latitude/longitude or gps_lat/gps_lon). Map hidden.")
+            if not have_map:
+                st.caption("No lat/lon columns found (lat/lon or latitude/longitude or gps_lat/gps_lon). Map hidden.")
 
-            # # ---- Optional Map (if lat/lon present)
-            # st.markdown("### 🗺️ Map (optional)")
-            # st.caption("Visualize asset locations — map color and style follow the current UI theme.")
-
-            # map_cols = [("lat","lon"), ("latitude","longitude"), ("gps_lat","gps_lon")]
-            # have_map = False
-
-            # for la, lo in map_cols:
-            #     if la in df.columns and lo in df.columns:
-            #         have_map = True
-            #         map_df = df[[la, lo] + [
-            #             c for c in ["asset_id","asset_type","city","ai_adjusted","realizable_value","confidence"]
-            #             if c in df.columns
-            #         ]].copy()
-            #         map_df = map_df.rename(columns={la: "lat", lo: "lon"})
-            #         map_df = map_df.dropna(subset=["lat", "lon"])
-
-            #         if not map_df.empty:
-            #             try:
-            #                 # ─────────────────────────────────────────────
-            #                 # Prefer Plotly (bright light / dark dark)
-            #                 # ─────────────────────────────────────────────
-            #                 import plotly.express as px
-            #                 apply_plotly_mapbox_defaults()
-            #                 style_name = plotly_map_style()
-
-            #                 fig = px.scatter_mapbox(
-            #                     map_df,
-            #                     lat="lat",
-            #                     lon="lon",
-            #                     hover_name="asset_id" if "asset_id" in map_df.columns else "city",
-            #                     hover_data={c: True for c in ["asset_type","city","ai_adjusted","realizable_value","confidence"] if c in map_df.columns},
-            #                     color_discrete_sequence=["#38bdf8"],
-            #                     zoom=8,
-            #                     height=420,
-            #                 )
-
-            #                 fig.update_layout(
-            #                     mapbox_style=style_name,
-            #                     margin=dict(l=0, r=0, t=0, b=0),
-            #                     paper_bgcolor="rgba(0,0,0,0)",
-            #                     plot_bgcolor="rgba(0,0,0,0)",
-            #                 )
-            #                 st.plotly_chart(fig, use_container_width=True)
-
-            #             except Exception as e:
-            #                 # ─────────────────────────────────────────────
-            #                 # Fallback to pydeck if Plotly unavailable
-            #                 # ─────────────────────────────────────────────
-            #                 import pydeck as pdk
-            #                 view_state = make_pydeck_view_state(
-            #                     lat=float(map_df["lat"].mean()),
-            #                     lon=float(map_df["lon"].mean()),
-            #                     zoom=8
-            #                 )
-            #                 layer = pdk.Layer(
-            #                     "ScatterplotLayer",
-            #                     data=map_df,
-            #                     get_position='[lon, lat]',
-            #                     get_color='[0, 128, 255, 200]',
-            #                     get_radius=120,
-            #                     pickable=True,
-            #                 )
-            #                 deck = pdk.Deck(
-            #                     map_style=pydeck_map_style(),
-            #                     initial_view_state=view_state,
-            #                     layers=[layer],
-            #                     tooltip={"text": "{asset_id} · {asset_type}\n{city}\nAI: {ai_adjusted}\nRealiz: {realizable_value}\nConf: {confidence}"}
-            #                 )
-            #                 st.pydeck_chart(deck)
-            #         else:
-            #             st.info("ℹ️ No valid coordinates found to display on the map.")
-            #         break
-
-           
 
             # ---- Exports of aggregates
             st.markdown("#### 📤 Export dashboard aggregates")
@@ -3207,79 +3276,17 @@ with tabC:
                 col = [ex1, ex2, ex3][i % 3]
                 with col:
                     st.download_button(f"⬇️ {fname}", data=data.encode("utf-8"), file_name=fname, mime="text/csv")
-
-    # # ========== 4) HUMAN REVIEW ==========
-    # with tab4:
-    #     st.subheader("🧑‍⚖️ Stage 4 — Human Review & Agreement Score")
-    #     src_choice = st.radio("Use AI output from Stage 3, or import a CSV:", ["Use Stage 3 output","Import CSV"])
-    #     df_rev = None
-    #     if src_choice == "Use Stage 3 output":
-    #         df_rev = ss.get("asset_ai_df")
-    #         if df_rev is None:
-    #             st.warning("No Stage 3 output found. Run appraisal first or import a CSV.")
-    #     else:
-    #         up_rev = st.file_uploader("Upload AI decisions CSV", type=["csv"], key="rev_csv")
-    #         if up_rev is not None:
-    #             df_rev = pd.read_csv(up_rev)
-
-    #     if df_rev is not None:
-    #         if "human_decision" not in df_rev.columns:
-    #             df_rev["human_decision"] = df_rev.get("decision", "approved")
-    #         if "human_reason" not in df_rev.columns:
-    #             df_rev["human_reason"] = ""
-
-    #         st.markdown("**1) Select rows to review and correct**")
-    #         edited = st.data_editor(df_rev, use_container_width=True, key="human_editor")
-
-    #         st.markdown("**2) Compute agreement score**")
-    #         if st.button("Compute agreement score", key="btn_agree_score"):
-    #             ai_col = "decision" if "decision" in edited.columns else "rule_decision"
-    #             ai_vals = edited[ai_col].astype(str).str.lower()
-    #             human_vals = edited["human_decision"].astype(str).str.lower()
-    #             agree = (ai_vals == human_vals)
-    #             agree_pct = float(agree.mean() * 100)
-    #             gauge = go.Figure(go.Indicator(
-    #                 mode="gauge+number", value=agree_pct,
-    #                 title={'text': "AI ↔ Human Agreement"},
-    #                 gauge={'axis': {'range': [0, 100]}, 'bar': {'color': '#22d3ee'},
-    #                        'steps': [{'range': [0, 70], 'color': '#1e293b'},
-    #                                  {'range': [70, 90], 'color': '#0ea5e9'},
-    #                                  {'range': [90, 100], 'color': '#22d3ee'}]}
-    #             ))
-    #             gauge.update_layout(template="plotly_dark", height=260)
-    #             st.plotly_chart(gauge, use_container_width=True)
-
-    #             dis = edited.loc[~agree, [c for c in edited.columns if c in ["application_id","asset_id","decision","human_decision","ai_reasons","rule_reasons","human_reason"]]]
-    #             st.markdown(f"❌ **{len(dis)}** rows disagreed out of **{len(edited)}**  ({(1-agree.mean())*100:.1f}% disagreement rate)")
-    #             st.dataframe(dis, use_container_width=True)
-
-    #             fname = f"assetappraisal.{ss['asset_user']['name']}.production.{datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')}.csv"
-    #             st.download_button("⬇️ Export review CSV (for Training tab)",
-    #                                data=edited.to_csv(index=False).encode("utf-8"),
-    #                                file_name=fname, mime="text/csv")
-
-    #             ss["asset_human_feedback_df"] = edited
-
-    # ========== 4) POLICY & DECISION (Stage D: steps 6–7) ==========
-# with tabD:
-#     st.subheader("🧮 Stage 4 — Policy & Decision (D.6 / D.7)")
-
-#     import os, json
-#     import numpy as np
-#     from datetime import datetime, timezone
-
-#     RUNS_DIR = "./.tmp_runs"
-#     os.makedirs(RUNS_DIR, exist_ok=True)
-#     def _ts(): return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-
-#     # Source data: prefer verified → else AI valuation
-#     base_df = ss.get("asset_verified_df") or ss.get("asset_ai_df")
-#     if base_df is None or len(base_df) == 0:
-#         st.warning("Run Stage C first (valuation, and optionally verification).")
-#         st.stop()
-
-#     st.caption("Input: valuation + (optional) verification outputs.")
-
+                    
+            # ========================
+            # Stage C — AI Appraisal & Valuation
+            # ========================
+            # Now send AI results to Stage E for review
+            if st.button("💬 Review in Stage E"):
+                # Store AI appraisal results in session_state for Stage E
+                st.session_state["ai_review_df"] = ai_df  # ai_df should be the AI results dataframe from the current stage
+                st.session_state["current_stage"] = "human_review"
+                st.success("AI results sent to Stage E for human review!")
+                st.rerun()  # Trigger a page refresh to go to the next stage
 
 
 
@@ -3474,6 +3481,8 @@ with tabD:
                 mime="text/csv"
             )
 
+
+
 # ─────────────────────────────────────────
 # E — HUMAN REVIEW & FEEDBACK DASHBOARD
 # ─────────────────────────────────────────
@@ -3487,22 +3496,71 @@ with tabE:
     st.subheader("🧑‍⚖️ Stage E — Human Review & Feedback")
     st.caption("Compare AI-estimated collateral values against business metrics, adjust valuations, and record justification for retraining.")
 
+    
     # Workspace
     RUNS_DIR = "./.tmp_runs"
     os.makedirs(RUNS_DIR, exist_ok=True)
 
-    # Load latest AI valuation file safely
-    ai_paths = sorted(
-        [os.path.join(RUNS_DIR, f) for f in os.listdir(RUNS_DIR) if f.startswith("valuation_ai") and f.endswith(".csv")],
-        key=os.path.getmtime, reverse=True
-    )
-    if not ai_paths:
+    # ─────────────────────────────────────────
+    # Stage C loader controls (Auto-load + picker)
+    # ─────────────────────────────────────────
+    def _find_stage_c_candidates():
+        pats = ["valuation_ai*.csv", "valuation_ai*.parquet"]
+        files = []
+        for pat in pats:
+            files.extend(glob.glob(os.path.join(RUNS_DIR, pat)))
+        return sorted(files, key=os.path.getmtime, reverse=True)
+
+    if "stage_c_selected_path" not in st.session_state:
+        st.session_state["stage_c_selected_path"] = None
+
+    ctrl1, ctrl2, ctrl3 = st.columns([1.2, 1, 2.8])
+    with ctrl1:
+        btn_autoload = st.button("🔄 Auto-load latest Stage C", use_container_width=True)
+    with ctrl2:
+        btn_refresh = st.button("🔁 Refresh list", use_container_width=True)
+    with ctrl3:
+        st.caption("Looks for `valuation_ai*.csv|.parquet` under `./.tmp_runs`")
+
+    if btn_refresh:
+        pass  # triggers rerun → list will refresh
+
+    candidates = _find_stage_c_candidates()
+    if not candidates:
         st.warning("⚠️ No AI appraisal results found. Please complete Stage C first.")
         st.stop()
 
-    ai_path = ai_paths[0]
+    # Pick newest on first load or when autoload pressed
+    if btn_autoload:
+        st.session_state["stage_c_selected_path"] = candidates[0]
+    elif not st.session_state["stage_c_selected_path"]:
+        st.session_state["stage_c_selected_path"] = candidates[0]
+    # Ensure the selected one still exists
+    if st.session_state["stage_c_selected_path"] not in candidates:
+        st.session_state["stage_c_selected_path"] = candidates[0]
+
+    # Human-friendly label
+    def _fmt(p):
+        ts = datetime.fromtimestamp(os.path.getmtime(p)).strftime("%Y-%m-%d %H:%M:%S")
+        return f"{os.path.basename(p)}  •  {ts}"
+
+    current_idx = candidates.index(st.session_state["stage_c_selected_path"])
+    picked = st.selectbox(
+        "Stage C output to review",
+        options=candidates,
+        index=current_idx,
+        format_func=_fmt,
+    )
+    st.session_state["stage_c_selected_path"] = picked
+
+    # Load the selected Stage C table → df_ai
+    ai_path = st.session_state["stage_c_selected_path"]
     try:
-        df_ai = pd.read_csv(ai_path)
+        if ai_path.lower().endswith(".parquet"):
+            df_ai = pd.read_parquet(ai_path)
+        else:
+            df_ai = pd.read_csv(ai_path)
+        st.success(f"✅ Loaded Stage C: {os.path.basename(ai_path)}  ({len(df_ai)} rows × {df_ai.shape[1]} cols)")
     except Exception as e:
         st.error(f"Failed to read `{ai_path}`: {e}")
         st.stop()
@@ -3512,30 +3570,69 @@ with tabE:
         if col not in df_ai.columns:
             df_ai[col] = None
 
-    # ── KPI Overview (safe)
-    st.markdown("### 📊 Business Metrics Overview")
+    # Ensure human_value / justification columns for adjustments
+    if "human_value" not in df_ai.columns:
+        df_ai["human_value"] = pd.to_numeric(df_ai["fmv"], errors="coerce") if "fmv" in df_ai.columns else np.nan
+    if "justification" not in df_ai.columns:
+        df_ai["justification"] = ""
 
-    def _safe_mean(df, col, fmt=None):
-        if isinstance(df, pd.DataFrame) and col in df.columns:
-            v = pd.to_numeric(df[col], errors="coerce").mean()
-            if pd.notna(v):
-                return f"{v:,.0f}" if fmt == "int" else (f"{v:.1f}" if fmt == "1f" else f"{v}")
-        return "—"
+    
+    # # Workspace
+    # RUNS_DIR = "./.tmp_runs"
+    # os.makedirs(RUNS_DIR, exist_ok=True)
 
-    def _safe_ltv(df):
-        if all(c in df.columns for c in ("loan_amount", "fmv")):
-            la = pd.to_numeric(df["loan_amount"], errors="coerce")
-            fmv = pd.to_numeric(df["fmv"], errors="coerce").replace(0, np.nan)
-            v = (la / fmv).mean()
-            if pd.notna(v):
-                return f"{v:.2f}"
-        return "—"
+    # # Load latest AI valuation file safely
+    # ai_paths = sorted(
+    #     [os.path.join(RUNS_DIR, f) for f in os.listdir(RUNS_DIR) if f.startswith("valuation_ai") and f.endswith(".csv")],
+    #     key=os.path.getmtime, reverse=True
+    # )
+    # if not ai_paths:
+    #     st.warning("⚠️ No AI appraisal results found. Please complete Stage C first.")
+    #     st.stop()
 
-    c1, c2, c3, c4 = st.columns(4)
-    with c1: st.metric("Average FMV", _safe_mean(df_ai, "fmv", fmt="int"))
-    with c2: st.metric("Average Confidence", _safe_mean(df_ai, "confidence", fmt="1f") + ("%" if _safe_mean(df_ai, "confidence", fmt="1f") != "—" else ""))
-    with c3: st.metric("Average LTV", _safe_ltv(df_ai))
-    with c4: st.metric("Assets", f"{len(df_ai):,}")
+    # ai_path = ai_paths[0]
+    # try:
+    #     df_ai = pd.read_csv(ai_path)
+    # except Exception as e:
+    #     st.error(f"Failed to read `{ai_path}`: {e}")
+    #     st.stop()
+
+    # # Ensure join keys exist to avoid editor KeyErrors later
+    # for col in ["application_id", "asset_id", "asset_type", "city"]:
+    #     if col not in df_ai.columns:
+    #         df_ai[col] = None
+    
+    # # Inject the Stage C output (AI values) into Stage E for human review
+    # # Ensure human_value column exists for adjustments
+    # if "human_value" not in df_ai.columns:
+    #     df_ai["human_value"] = pd.to_numeric(df_ai["fmv"], errors="coerce") if "fmv" in df_ai.columns else np.nan
+    # if "justification" not in df_ai.columns:
+    #     df_ai["justification"] = ""
+
+    # # ── KPI Overview (safe)
+    # st.markdown("### 📊 Business Metrics Overview")
+
+    # def _safe_mean(df, col, fmt=None):
+    #     if isinstance(df, pd.DataFrame) and col in df.columns:
+    #         v = pd.to_numeric(df[col], errors="coerce").mean()
+    #         if pd.notna(v):
+    #             return f"{v:,.0f}" if fmt == "int" else (f"{v:.1f}" if fmt == "1f" else f"{v}")
+    #     return "—"
+
+    # def _safe_ltv(df):
+    #     if all(c in df.columns for c in ("loan_amount", "fmv")):
+    #         la = pd.to_numeric(df["loan_amount"], errors="coerce")
+    #         fmv = pd.to_numeric(df["fmv"], errors="coerce").replace(0, np.nan)
+    #         v = (la / fmv).mean()
+    #         if pd.notna(v):
+    #             return f"{v:.2f}"
+    #     return "—"
+
+    # c1, c2, c3, c4 = st.columns(4)
+    # with c1: st.metric("Average FMV", _safe_mean(df_ai, "fmv", fmt="int"))
+    # with c2: st.metric("Average Confidence", _safe_mean(df_ai, "confidence", fmt="1f") + ("%" if _safe_mean(df_ai, "confidence", fmt="1f") != "—" else ""))
+    # with c3: st.metric("Average LTV", _safe_ltv(df_ai))
+    # with c4: st.metric("Assets", f"{len(df_ai):,}")
 
     # ── Market Projections (safe)
     st.markdown("### 📈 Market Projections")
@@ -3559,10 +3656,13 @@ with tabE:
     if "justification" not in df_ai.columns:
         df_ai["justification"] = ""
 
+     # Editable columns for the reviewer
     base_editable = ["application_id", "asset_id", "asset_type", "city", "fmv", "ai_adjusted", "confidence", "loan_amount", "human_value", "justification"]
     editable_cols = [c for c in base_editable if c in df_ai.columns]  # filter to present
     if not editable_cols:
         editable_cols = df_ai.columns.tolist()  # last resort: allow full frame
+    
+    # Display the editable table for human review
 
     edited = st.data_editor(df_ai[editable_cols], num_rows="dynamic", use_container_width=True)
 
@@ -3642,6 +3742,224 @@ with tabE:
         else:
             st.info("Provide decision columns (ai_decision / human_decision) for agreement gauge, or both FMV and human_value for deviation.")
 
+    
+        # ── Human Changes Only (colored)
+        st.markdown("### 🖍️ Human Changes Only (colored)")
+
+        # Reuse helper and edited df from above
+        value_ai = _first_present(edited, ["ai_adjusted", "fmv", "predicted_value"])
+        value_hu = _first_present(edited, ["human_value", "reviewed_value", "final_value"])
+        ai_dec_col = _first_present(edited, ["ai_decision", "ai_label", "ai_outcome", "decision_ai"])
+        human_dec_col = _first_present(edited, ["human_decision", "human_label", "final_decision", "decision_human"])
+
+        if value_ai and value_hu:
+            ai_vals = pd.to_numeric(edited[value_ai], errors="coerce")
+            hu_vals = pd.to_numeric(edited[value_hu], errors="coerce")
+
+            # decisions -> Series aligned to edited.index
+            if ai_dec_col and human_dec_col:
+                a = edited[ai_dec_col].astype(str).str.strip().str.lower()
+                h = edited[human_dec_col].astype(str).str.strip().str.lower()
+                dec_changed = (a != h)  # Series
+            else:
+                dec_changed = pd.Series(False, index=edited.index)
+
+            # justification -> Series aligned
+            just_present = edited.get("justification", pd.Series("", index=edited.index)) \
+                                .astype(str).str.strip().ne("")
+
+            # treat tiny diffs as equal
+            rel_tol = 1e-9
+            val_changed = (ai_vals.fillna(np.nan) - hu_vals.fillna(np.nan)).abs() > (
+                (ai_vals.abs() + hu_vals.abs()).fillna(0) * rel_tol
+            )
+
+            changed_mask = val_changed | dec_changed | just_present
+            diff_df = edited.loc[changed_mask].copy()
+
+            if diff_df.empty:
+                st.success("🎉 No human changes detected.")
+            else:
+                # compute deltas on the FILTERED subset ONLY
+                ai_sub = ai_vals.reindex(diff_df.index)
+                hu_sub = hu_vals.reindex(diff_df.index)
+
+                diff_df["Δ_value"] = (hu_sub - ai_sub)
+                base = ai_sub.replace(0, np.nan)
+                diff_df["Δ_%"] = ((diff_df["Δ_value"] / base) * 100.0).round(2)
+
+                key_cols = [c for c in ["application_id", "asset_id", "asset_type", "city"] if c in diff_df.columns]
+                show_cols = key_cols + [c for c in [value_ai, value_hu, "Δ_value", "Δ_%", ai_dec_col, human_dec_col, "justification"] if c in diff_df.columns]
+                show_df = diff_df[show_cols].copy()
+
+                def _color_row(row):
+                    styles = [""] * len(row.index)
+
+                    def _idx(colname):
+                        try:
+                            return show_df.columns.get_loc(colname)
+                        except Exception:
+                            return None
+
+                    idx_ai = _idx(value_ai)
+                    idx_hu = _idx(value_hu)
+                    idx_dv = _idx("Δ_value")
+                    idx_dp = _idx("Δ_%")
+
+                    # Value changes
+                    try:
+                        ai_v = float(row.get(value_ai, np.nan))
+                        hu_v = float(row.get(value_hu, np.nan))
+                    except Exception:
+                        ai_v, hu_v = np.nan, np.nan
+
+                    if pd.notna(ai_v) and pd.notna(hu_v):
+                        if hu_v > ai_v:  # green for up
+                            for i in [idx_hu, idx_dv, idx_dp]:
+                                if i is not None:
+                                    styles[i] = "background-color:#dcfce7; color:#065f46; font-weight:600;"
+                            if idx_ai is not None:
+                                styles[idx_ai] = "background-color:#ecfdf5; color:#064e3b;"
+                        elif hu_v < ai_v:  # red for down
+                            for i in [idx_hu, idx_dv, idx_dp]:
+                                if i is not None:
+                                    styles[i] = "background-color:#fee2e2; color:#7f1d1d; font-weight:600;"
+                            if idx_ai is not None:
+                                styles[idx_ai] = "background-color:#fef2f2; color:#7f1d1d;"
+
+                    # Decision changes → amber
+                    if ai_dec_col in show_df.columns and human_dec_col in show_df.columns:
+                        ai_d = str(row.get(ai_dec_col, "")).strip().lower()
+                        hu_d = str(row.get(human_dec_col, "")).strip().lower()
+                        if ai_d != "" and hu_d != "" and ai_d != hu_d:
+                            for colname in [ai_dec_col, human_dec_col]:
+                                j = _idx(colname)
+                                if j is not None:
+                                    styles[j] = "background-color:#fef9c3; color:#7c2d12; font-weight:600;"
+
+                    # Justification present → blue
+                    if "justification" in show_df.columns:
+                        just = str(row.get("justification", "")).strip()
+                        if just:
+                            j = _idx("justification")
+                            if j is not None:
+                                styles[j] = "background-color:#e0f2fe; color:#0c4a6e;"
+
+                    return styles
+
+                styled = show_df.style.apply(_color_row, axis=1) \
+                                    .format({value_ai: "{:,.0f}", value_hu: "{:,.0f}", "Δ_value": "{:,.0f}", "Δ_%": "{:.2f}%"})
+                st.dataframe(styled, use_container_width=True, hide_index=True)
+        else:
+            st.info("To show the colorful Human-Changes table, ensure value columns exist (e.g., ai_adjusted/fmv and human_value).")
+
+        # # ── Human Changes Only (colorful diff)
+        # st.markdown("### 🖍️ Human Changes Only (colored)")
+
+        # # Reuse helper and edited df from above
+        # value_ai = _first_present(edited, ["ai_adjusted", "fmv", "predicted_value"])
+        # value_hu = _first_present(edited, ["human_value", "reviewed_value", "final_value"])
+        # ai_dec_col = _first_present(edited, ["ai_decision", "ai_label", "ai_outcome", "decision_ai"])
+        # human_dec_col = _first_present(edited, ["human_decision", "human_label", "final_decision", "decision_human"])
+
+        # if value_ai and value_hu:
+        #     ai_vals = pd.to_numeric(edited[value_ai], errors="coerce")
+        #     hu_vals = pd.to_numeric(edited[value_hu], errors="coerce")
+
+        #     # treat tiny diffs as equal
+        #     rel_tol = 1e-9
+        #     val_changed = (ai_vals.fillna(np.nan) - hu_vals.fillna(np.nan)).abs() > (
+        #         (ai_vals.abs() + hu_vals.abs()).fillna(0) * rel_tol
+        #     )
+
+        #     dec_changed = False
+        #     if ai_dec_col and human_dec_col:
+        #         a = edited[ai_dec_col].astype(str).str.strip().str.lower()
+        #         h = edited[human_dec_col].astype(str).str.strip().str.lower()
+        #         dec_changed = (a != h)
+
+        #     just_present = edited.get("justification", pd.Series([""] * len(edited))).astype(str).str.strip().ne("")
+
+        #     changed_mask = val_changed | dec_changed | just_present
+        #     diff_df = edited.loc[changed_mask].copy()
+
+        #     if diff_df.empty:
+        #         st.success("🎉 No human changes detected.")
+        #     else:
+        #         diff_df["Δ_value"] = (hu_vals - ai_vals)
+        #         with np.errstate(divide="ignore", invalid="ignore"):
+        #             diff_df["Δ_%"] = np.where(
+        #                 ai_vals.replace(0, np.nan).notna(),
+        #                 (diff_df["Δ_value"] / ai_vals.replace(0, np.nan)) * 100.0,
+        #                 np.nan
+        #             ).round(2)
+
+        #         key_cols = [c for c in ["application_id", "asset_id", "asset_type", "city"] if c in diff_df.columns]
+        #         show_cols = key_cols + [c for c in [value_ai, value_hu, "Δ_value", "Δ_%", ai_dec_col, human_dec_col, "justification"] if c in diff_df.columns]
+        #         show_df = diff_df[show_cols].copy()
+
+        #         def _color_row(row):
+        #             styles = [""] * len(row.index)
+
+        #             def _idx(colname):
+        #                 try:
+        #                     return show_df.columns.get_loc(colname)
+        #                 except Exception:
+        #                     return None
+
+        #             idx_ai = _idx(value_ai)
+        #             idx_hu = _idx(value_hu)
+        #             idx_dv = _idx("Δ_value")
+        #             idx_dp = _idx("Δ_%")
+
+        #             # Value changes
+        #             try:
+        #                 ai_v = float(row.get(value_ai, np.nan))
+        #                 hu_v = float(row.get(value_hu, np.nan))
+        #             except Exception:
+        #                 ai_v, hu_v = np.nan, np.nan
+
+        #             if pd.notna(ai_v) and pd.notna(hu_v):
+        #                 if hu_v > ai_v:  # green for up
+        #                     for i in [idx_hu, idx_dv, idx_dp]:
+        #                         if i is not None:
+        #                             styles[i] = "background-color:#dcfce7; color:#065f46; font-weight:600;"
+        #                     if idx_ai is not None:
+        #                         styles[idx_ai] = "background-color:#ecfdf5; color:#064e3b;"
+        #                 elif hu_v < ai_v:  # red for down
+        #                     for i in [idx_hu, idx_dv, idx_dp]:
+        #                         if i is not None:
+        #                             styles[i] = "background-color:#fee2e2; color:#7f1d1d; font-weight:600;"
+        #                     if idx_ai is not None:
+        #                         styles[idx_ai] = "background-color:#fef2f2; color:#7f1d1d;"
+
+        #             # Decision changes → amber
+        #             if ai_dec_col in show_df.columns and human_dec_col in show_df.columns:
+        #                 ai_d = str(row.get(ai_dec_col, "")).strip().lower()
+        #                 hu_d = str(row.get(human_dec_col, "")).strip().lower()
+        #                 if ai_d != "" and hu_d != "" and ai_d != hu_d:
+        #                     for colname in [ai_dec_col, human_dec_col]:
+        #                         j = _idx(colname)
+        #                         if j is not None:
+        #                             styles[j] = "background-color:#fef9c3; color:#7c2d12; font-weight:600;"
+
+        #             # Justification present → blue
+        #             if "justification" in show_df.columns:
+        #                 just = str(row.get("justification", "")).strip()
+        #                 if just:
+        #                     j = _idx("justification")
+        #                     if j is not None:
+        #                         styles[j] = "background-color:#e0f2fe; color:#0c4a6e;"
+
+        #             return styles
+
+        #         styled = show_df.style.apply(_color_row, axis=1) \
+        #                             .format({value_ai: "{:,.0f}", value_hu: "{:,.0f}", "Δ_value": "{:,.0f}", "Δ_%": "{:.2f}%"})
+        #         st.dataframe(styled, use_container_width=True, hide_index=True)
+        # else:
+        #     st.info("To show the colorful Human-Changes table, ensure value columns exist (e.g., ai_adjusted/fmv and human_value).")
+
+    
     # ── Export for Retraining
     st.markdown("### 💾 Save & Export for Training")
     # Lightweight export view for training: keep keys + AI/Human value/decisions if present
@@ -3675,61 +3993,6 @@ with tabE:
             st.error(f"Save failed: {e}")
 
 
-# # ─────────────────────────────────────────
-# # E — HUMAN REVIEW & FEEDBACK DASHBOARD
-# # ─────────────────────────────────────────
-# with tabE:
-#     st.subheader("🧑‍⚖️ Stage E — Human Review & Feedback")
-#     st.caption("Compare AI-estimated collateral values against business metrics, adjust valuations, and record justification for retraining.")
-
-#     RUNS_DIR = "./.tmp_runs"
-#     os.makedirs(RUNS_DIR, exist_ok=True)
-
-#     ai_files = sorted([f for f in os.listdir(RUNS_DIR) if f.startswith("valuation_ai")], reverse=True)
-#     if not ai_files:
-#         st.warning("⚠️ No AI appraisal results found. Please complete Stage C first.")
-#         st.stop()
-
-#     ai_path = os.path.join(RUNS_DIR, ai_files[0])
-#     df_ai = pd.read_csv(ai_path)
-
-#     # ── KPI Overview
-#     st.markdown("### 📊 Business Metrics Overview")
-#     c1, c2, c3, c4 = st.columns(4)
-#     c1.metric("Average FMV", f"${df_ai['fmv'].mean():,.0f}")
-#     c2.metric("Average Confidence", f"{df_ai['confidence'].mean():.1f}%")
-#     c3.metric("Average LTV", f"{(df_ai['loan_amount']/df_ai['fmv']).mean():.2f}")
-#     c4.metric("Assets", len(df_ai))
-
-#     # ── Market Projections
-#     st.markdown("### 📈 Market Projections")
-#     horizon = st.select_slider("Projection Horizon (years)", [3, 5, 10], value=5)
-#     growth = st.slider("Expected Market Growth (%)", -10, 25, 4) / 100
-#     df_ai[f"fmv_proj_{horizon}y"] = (df_ai["fmv"] * ((1 + growth) ** horizon)).round(0)
-#     st.line_chart(df_ai[["fmv", f"fmv_proj_{horizon}y"]])
-
-#     # ── Human Adjustment Table
-#     st.markdown("### ✏️ Human Adjustments & Justification")
-#     if "human_value" not in df_ai.columns:
-#         df_ai["human_value"] = df_ai["fmv"]
-#     if "justification" not in df_ai.columns:
-#         df_ai["justification"] = ""
-
-#     editable_cols = ["application_id", "asset_id", "asset_type", "city", "fmv", "ai_adjusted", "confidence", "human_value", "justification"]
-#     edited = st.data_editor(df_ai[editable_cols], num_rows="dynamic", use_container_width=True)
-
-#     # ── Deviation Gauge
-#     import numpy as np
-#     deviation = abs((edited["human_value"] - edited["fmv"]) / edited["fmv"])
-#     score = max(0, 100 - (deviation.mean() * 200))
-#     st.markdown("### 🎯 Human vs AI Deviation")
-#     st.metric("Alignment Score", f"{score:.1f} / 100")
-
-#     # ── Export for Retraining
-#     if st.button("💾 Save Human Feedback", key="btn_save_feedback"):
-#         out = os.path.join(RUNS_DIR, f"reviewed_appraisal.{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.csv")
-#         edited.to_csv(out, index=False)
-#         st.success(f"✅ Saved human-reviewed data → `{out}`")
 
 
 # ─────────────────────────────────────────
@@ -3984,7 +4247,9 @@ with tabF:
             st.info("This model does not expose importances/coefficients.")
 
         # ===== Persist artifacts =====
-        trained_dir = "./agents/asset_appraisal/models/trained"
+        #trained_dir = "./agents/asset_appraisal/models/trained"
+        trained_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/trained"
+        
         os.makedirs(trained_dir, exist_ok=True)
         ts = _ts()
         model_path = os.path.join(trained_dir, f"{model_choice}_asset_{ts}.joblib")
@@ -4024,6 +4289,8 @@ with tabF:
                                file_name=os.path.basename(preds_csv),
                                mime="text/csv")
 
+        
+        
         # ===== Promotion =====
         st.markdown("### 🟢 Promote to Production")
         better_hint = ""
@@ -4033,17 +4300,89 @@ with tabF:
             st.info(better_hint)
 
         if st.button("📤 Promote this trained model to Production", key="btn_promote_prod"):
-            prod_dir = "./agents/asset_appraisal/models/production"
+            # Define the production directory path
+            prod_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/production"
             os.makedirs(prod_dir, exist_ok=True)
+
+            # Copy the trained model to production folder
             shutil.copy(model_path, os.path.join(prod_dir, "model.joblib"))
+
+            # Prepare meta information for the promoted model
             meta = {
                 "model_path": model_path,
                 "promoted_at": datetime.now(timezone.utc).isoformat(),
-                "ab_report": report,
+                "ab_report": report,  # Add your AB report or other relevant info
             }
-            with open(os.path.join(prod_dir, "production_meta.json"), "w", encoding="utf-8") as f:
-                json.dump(meta, f, indent=2)
-            st.success("🟢 Model promoted to production. Stage C will now use this model.")
+
+            # Define the meta path for writing
+            meta_path = os.path.join(prod_dir, "production_meta.json")
+
+            try:
+                # Write the meta data to production_meta.json
+                with open(meta_path, "w", encoding="utf-8") as f:
+                    json.dump(meta, f, indent=2)
+                st.success(f"🟢 Model promoted to production: {os.path.join(prod_dir, 'model.joblib')}")
+                st.caption(f"Production metadata saved in {meta_path}")
+            except Exception as e:
+                # Catch any errors while creating the meta file
+                st.error(f"❌ Error while creating production meta file: {e}")
+                st.warning("Please check the directory permissions or try again.")
+
+        
+        
+        # ===== Promotion =====
+        # st.markdown("### 🟢 Promote to Production")
+        # better_hint = ""
+        # if prod_m is not None and np.isfinite(prod_m["MAE"]):
+        #     delta_mae = new_m["MAE"] - prod_m["MAE"]
+        #     better_hint = "✅ New MAE is lower than production — promotion recommended." if delta_mae < 0 else "⚠️ New MAE is not lower than production."
+        #     st.info(better_hint)
+
+        # if st.button("📤 Promote this trained model to Production", key="btn_promote_prod"):
+        #     # Define the production directory path
+        #     prod_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/production"
+        #     os.makedirs(prod_dir, exist_ok=True)
+
+        #     # Copy the trained model to production folder
+        #     shutil.copy(model_path, os.path.join(prod_dir, "model.joblib"))
+
+        #     # Prepare meta information for the promoted model
+        #     meta = {
+        #         "model_path": model_path,
+        #         "promoted_at": datetime.now(timezone.utc).isoformat(),
+        #         "ab_report": report,  # Add your AB report or other relevant info
+        #     }
+
+        #     # Write the meta data to production_meta.json
+        #     meta_path = os.path.join(prod_dir, "production_meta.json")
+        #     with open(meta_path, "w", encoding="utf-8") as f:
+        #         json.dump(meta, f, indent=2)
+
+        #     # Success message
+        #     st.success(f"🟢 Model promoted to production: {os.path.join(prod_dir, 'model.joblib')}")
+        #     st.caption(f"Production metadata saved in {meta_path}")
+
+        # # ===== Promotion =====
+        # st.markdown("### 🟢 Promote to Production")
+        # better_hint = ""
+        # if prod_m is not None and np.isfinite(prod_m["MAE"]):
+        #     delta_mae = new_m["MAE"] - prod_m["MAE"]
+        #     better_hint = "✅ New MAE is lower than production — promotion recommended." if delta_mae < 0 else "⚠️ New MAE is not lower than production."
+        #     st.info(better_hint)
+
+        # if st.button("📤 Promote this trained model to Production", key="btn_promote_prod"):
+        #     #prod_dir = "./agents/asset_appraisal/models/production"
+        #     prod_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/production"
+        #     os.makedirs(prod_dir, exist_ok=True)
+        #     shutil.copy(model_path, os.path.join(prod_dir, "model.joblib"))
+        #     meta = {
+        #         "model_path": model_path,
+        #         "promoted_at": datetime.now(timezone.utc).isoformat(),
+        #         "ab_report": report,
+        #     }
+        #     with open(os.path.join(prod_dir, "production_meta.json"), "w", encoding="utf-8") as f:
+        #         json.dump(meta, f, indent=2)
+        #     st.success("🟢 Model promoted to production. Stage C will now use this model.")
 
 
 

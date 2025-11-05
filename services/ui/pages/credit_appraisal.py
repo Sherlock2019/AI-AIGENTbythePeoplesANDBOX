@@ -1285,46 +1285,99 @@ with tab_run:
     except Exception:
         st.info("ℹ️ Production meta unavailable.")
 
+    
     # ─────────────────────────────────────────────
-    # 🧩 Model Selection (list all trained models)
+    # 🧩 Model Selection (list all trained models) — HARD-CODED TEST
     # ─────────────────────────────────────────────
-    trained_dir = os.path.expanduser(
-        "~/credit-appraisal-agent-poc/agents/credit_appraisal/models/trained"
-    )
+    from datetime import datetime
+    import os, shutil, streamlit as st
+
+    # Hardcoded absolute paths for your environment
+    trained_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/credit_appraisal/models/trained"
+    production_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/credit_appraisal/models/production"
+
+    # Debug info
+    st.caption(f"📂 Trained dir: `{trained_dir}`")
+    st.caption(f"📦 Production dir: `{production_dir}`")
+
+    # Refresh button
+    if st.button("↻ Refresh models", key="credit_refresh_models"):
+        st.session_state.pop("selected_trained_model", None)
+        st.rerun()
+
     models = []
-    if os.path.exists(trained_dir):
+    if os.path.isdir(trained_dir):
         for f in os.listdir(trained_dir):
             if f.endswith(".joblib"):
                 fpath = os.path.join(trained_dir, f)
                 ctime = os.path.getctime(fpath)
-                created = datetime.datetime.fromtimestamp(ctime).strftime("%b %d, %Y %H:%M")
+                created = datetime.fromtimestamp(ctime).strftime("%b %d, %Y %H:%M")
                 models.append((f, fpath, created))
+    else:
+        st.error(f"❌ Trained dir not found: {trained_dir}")
 
     if models:
-        models.sort(key=lambda x: x[2], reverse=True)
+        # Sort by creation time (latest first)
+        models.sort(key=lambda x: os.path.getctime(x[1]), reverse=True)
         display_names = [f"{m[0]} — {m[2]}" for m in models]
 
         selected_display = st.selectbox("📦 Select trained model to use", display_names)
         selected_model = models[display_names.index(selected_display)][1]
         st.success(f"✅ Using model: {os.path.basename(selected_model)}")
 
-        # Store for later use by /run API
         st.session_state["selected_trained_model"] = selected_model
 
-        # Optional promote button
         if st.button("🚀 Promote this model to Production"):
             try:
-                prod_path = os.path.expanduser(
-                    "~/credit-appraisal-agent-poc/agents/credit_appraisal/models/production/model.joblib"
-                )
-                os.makedirs(os.path.dirname(prod_path), exist_ok=True)
-                import shutil
+                os.makedirs(production_dir, exist_ok=True)
+                prod_path = os.path.join(production_dir, "model.joblib")
                 shutil.copy2(selected_model, prod_path)
-                st.success(f"✅ Model promoted to production: {os.path.basename(prod_path)}")
+                st.success(f"✅ Model promoted to production: {prod_path}")
             except Exception as e:
                 st.error(f"❌ Promotion failed: {e}")
     else:
         st.warning("⚠️ No trained models found — train one in Step 5 first.")
+
+    # # ─────────────────────────────────────────────
+    # # 🧩 Model Selection (list all trained models)
+    # # ─────────────────────────────────────────────
+    # trained_dir = os.path.expanduser(
+    #     "~/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/credit_appraisal/models/trained"
+    # )
+    # models = []
+    # if os.path.exists(trained_dir):
+    #     for f in os.listdir(trained_dir):
+    #         if f.endswith(".joblib"):
+    #             fpath = os.path.join(trained_dir, f)
+    #             ctime = os.path.getctime(fpath)
+    #             created = datetime.datetime.fromtimestamp(ctime).strftime("%b %d, %Y %H:%M")
+    #             models.append((f, fpath, created))
+
+    # if models:
+    #     models.sort(key=lambda x: x[2], reverse=True)
+    #     display_names = [f"{m[0]} — {m[2]}" for m in models]
+
+    #     selected_display = st.selectbox("📦 Select trained model to use", display_names)
+    #     selected_model = models[display_names.index(selected_display)][1]
+    #     st.success(f"✅ Using model: {os.path.basename(selected_model)}")
+
+    #     # Store for later use by /run API
+    #     st.session_state["selected_trained_model"] = selected_model
+
+    #     # Optional promote button
+    #     if st.button("🚀 Promote this model to Production"):
+    #         try:
+    #             prod_path = os.path.expanduser(
+    #                 "~/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/credit_appraisal/models/production/model.joblib"
+    #             )
+    #             os.makedirs(os.path.dirname(prod_path), exist_ok=True)
+    #             import shutil
+    #             shutil.copy2(selected_model, prod_path)
+    #             st.success(f"✅ Model promoted to production: {os.path.basename(prod_path)}")
+    #         except Exception as e:
+    #             st.error(f"❌ Promotion failed: {e}")
+    # else:
+    #     st.warning("⚠️ No trained models found — train one in Step 5 first.")
 
     # 1) Model + Hardware selection (UI hints)
     LLM_MODELS = [

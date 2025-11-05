@@ -1,0 +1,675 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# ─────────────────────────────────────────────
+# 🌐 AI Sandbox — Landing & Agent Launcher by Dzoan Nguyen
+# ─────────────────────────────────────────────
+
+from __future__ import annotations
+import os
+import io
+import json
+import time
+import re
+import base64  # ✅ required for logo encoding
+import pandas as pd
+import numpy as np
+import streamlit as st
+from datetime import datetime, timezone
+
+
+
+def extract_run_id(obj) -> str | None:  # ADD
+    """Find run_id in common places regardless of payload shape."""
+    if isinstance(obj, dict):
+        if isinstance(obj.get("run_id"), str):
+            return obj["run_id"]
+        res = obj.get("result")
+        if isinstance(res, dict) and isinstance(res.get("run_id"), str):
+            return res["run_id"]
+        for key in ("summary", "meta", "data"):
+            sub = obj.get(key)
+            if isinstance(sub, dict) and isinstance(sub.get("run_id"), str):
+                return sub["run_id"]
+    if isinstance(obj, list):
+        for it in obj:
+            if isinstance(it, dict):
+                rid = extract_run_id(it)
+                if rid:
+                    return rid
+    return None
+
+def json_to_dataframe(payload) -> pd.DataFrame | None:  # ADD
+    """
+    Convert arbitrary API JSON into a DataFrame.
+    Tries common shapes first, then falls back to json_normalize.
+    """
+    # Prefer artifacts.merged_csv if present and readable
+    if isinstance(payload, dict):
+        res = payload.get("result") or {}
+        artifacts = res.get("artifacts") or {}
+        merged_csv = artifacts.get("merged_csv")
+        if isinstance(merged_csv, str) and os.path.exists(merged_csv):
+            try:
+                return pd.read_csv(merged_csv)
+            except Exception:
+                pass
+
+        # Embedded tabular data
+        merged_df = res.get("merged_df")
+        if merged_df is not None:
+            try:
+                return pd.DataFrame(merged_df)
+            except Exception:
+                pass
+
+        # Generic result → DF
+        if isinstance(res, list):
+            try:
+                return pd.DataFrame(res)
+            except Exception:
+                try:
+                    return json_normalize(res)
+                except Exception:
+                    pass
+        if isinstance(res, dict) and res:
+            try:
+                return json_normalize(res)
+            except Exception:
+                pass
+
+        # Top-level dict
+        try:
+            return json_normalize(payload)
+        except Exception:
+            pass
+
+    # Top-level list
+    if isinstance(payload, list):
+        try:
+            return pd.DataFrame(payload)
+        except Exception:
+            try:
+                return json_normalize(payload)
+            except Exception:
+                pass
+    return None
+
+def _extract_run_fields(raw_json):  # ADD
+    """
+    Return (run_id, normalized_payload_dict).
+    Ensures downstream code always receives a dict-like 'payload'.
+    """
+    run_id = extract_run_id(raw_json)
+
+    # Normalize to dict payload so later code can access keys safely
+    payload = raw_json
+    if not isinstance(payload, dict):
+        if isinstance(payload, list):
+            first_dict = next((x for x in payload if isinstance(x, dict)), None)
+            payload = first_dict if first_dict is not None else {"result": raw_json}
+        else:
+            payload = {"result": raw_json}
+    return run_id, payload
+
+
+
+
+
+# ─────────────────────────────────────────────
+# GLOBAL PAGE CONFIG + HIDE SIDEBAR
+# ─────────────────────────────────────────────
+st.set_page_config(
+    page_title="AI Sandbox — By the People, For the People",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# 💡 Hide multipage sidebar completely
+st.markdown("""
+    <style>
+    [data-testid="stSidebar"],
+    section[data-testid="stSidebar"],
+    div[data-testid="stSidebarNav"],
+    nav[data-testid="stSidebarNav"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+    [data-testid="stAppViewContainer"] {
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# ────────────────────────────────
+# GLOBAL CONFIG (directories + API)
+# ────────────────────────────────
+BASE_DIR = os.path.expanduser("~/credit-appraisal-agent-poc/services/ui")
+LANDING_IMG_DIR = os.path.join(BASE_DIR, "landing_images")
+RUNS_DIR = os.path.join(BASE_DIR, ".runs")
+TMP_FEEDBACK_DIR = os.path.join(BASE_DIR, ".tmp_feedback")
+
+for d in (LANDING_IMG_DIR, RUNS_DIR, TMP_FEEDBACK_DIR):
+    os.makedirs(d, exist_ok=True)
+
+API_URL = os.getenv("API_URL", "http://localhost:8090")
+
+
+# ────────────────────────────────
+# UNIVERSAL TOP NAVIGATION
+# ────────────────────────────────
+if "stage" not in st.session_state:
+    st.session_state.stage = "landing"
+
+# ────────────────────────────────
+# NAVIGATION BAR
+# ────────────────────────────────
+def render_nav_bar_app():
+    stage = st.session_state.get("stage", "landing")
+
+    # visibility logic
+    show_home   = stage in ("agents", "credit_agent", "asset_agent")
+    show_agents = stage not in ("landing", "agents")
+
+    # nothing on landing
+    if not (show_home or show_agents):
+        return
+
+    c1, c2, _ = st.columns([1, 1, 6])
+    with c1:
+        if show_home and st.button("🏠 Back to Home", key=f"btn_home_{stage}"):
+            st.session_state.stage = "landing"
+            st.rerun()  # already in app.py → rerun only
+
+    with c2:
+        if show_agents and st.button("🤖 Back to Agents", key=f"btn_agents_{stage}"):
+            st.session_state.stage = "agents"
+            st.rerun()  # already in app.py → rerun only
+
+    st.markdown("---")
+
+
+
+
+# ────────────────────────────────
+# SESSION STATE INIT
+# ────────────────────────────────
+if "stage" not in st.session_state:
+    st.session_state.stage = "landing"
+if "user_info" not in st.session_state:
+    st.session_state.user_info = {"name": "", "email": "", "flagged": False}
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "flagged" not in st.session_state.user_info:
+    st.session_state.user_info["flagged"] = False
+if "timestamp" not in st.session_state.user_info:
+    st.session_state.user_info["timestamp"] = datetime.now(timezone.utc).isoformat()
+
+# ────────────────────────────────
+# RENDER UNIVERSAL NAV BAR
+# ────────────────────────────────
+render_nav_bar_app()
+
+# ────────────────────────────────
+# HELPERS
+# ────────────────────────────────
+def _extract_run_fields(res_json):
+    """
+    Return (run_id, result_dict) from API responses that may be dicts or lists.
+    """
+    run_id = None
+    result_obj = {}
+
+    if isinstance(res_json, dict):
+        run_id = (
+            res_json.get("run_id")
+            or res_json.get("id")
+            or (res_json.get("data") or {}).get("run_id")
+        )
+        result_obj = (
+            res_json.get("result")
+            or (res_json.get("data") or {}).get("result")
+            or {}
+        )
+
+    elif isinstance(res_json, list):
+        # Find first dict item that contains identifiers/results
+        for item in res_json:
+            if isinstance(item, dict):
+                if not run_id:
+                    run_id = item.get("run_id") or item.get("id")
+                if not result_obj:
+                    result_obj = item.get("result") or {}
+                if run_id and result_obj != {}:
+                    break
+        # If still nothing and list[0] is a dict, use it as best-effort
+        if not run_id and res_json and isinstance(res_json[0], dict):
+            run_id = res_json[0].get("run_id") or res_json[0].get("id")
+            result_obj = res_json[0].get("result") or {}
+
+    # Ensure result is a dict
+    if not isinstance(result_obj, dict):
+        result_obj = {"value": result_obj}
+
+    return run_id, result_obj
+
+
+def _clear_qp():
+    """Clear query params (modern Streamlit API)."""
+    try:
+        st.query_params.clear()
+    except Exception:
+        pass
+
+
+def load_image(base: str) -> Optional[str]:
+    for ext in [".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"]:
+        p = os.path.join(LANDING_IMG_DIR, f"{base}{ext}")
+        if os.path.exists(p):
+            return p
+    return None
+
+
+def save_uploaded_image(uploaded_file, base: str):
+    if not uploaded_file:
+        return None
+    ext = os.path.splitext(uploaded_file.name)[1].lower() or ".png"
+    dest = os.path.join(LANDING_IMG_DIR, f"{base}{ext}")
+    with open(dest, "wb") as f:
+        f.write(uploaded_file.getvalue())
+    return dest
+
+
+def render_image_tag(agent_id: str, industry: str, emoji_fallback: str) -> str:
+    base = agent_id.lower().replace(" ", "_")
+    img_path = load_image(base) or load_image(industry.replace(" ", "_"))
+    if img_path:
+        return (
+            f'<img src="file://{img_path}" '
+            f'style="width:48px;height:48px;border-radius:10px;object-fit:cover;">'
+        )
+    return f'<div style="font-size:32px;">{emoji_fallback}</div>'
+
+
+
+# ────────────────────────────────
+# FEEDBACK LOADING
+# ────────────────────────────────
+FEEDBACK_FILE = os.path.join(BASE_DIR, "agents_feedback.json")
+def load_feedback() -> dict:
+    try:
+        with open(FEEDBACK_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def render_stars(rating: float) -> str:
+    full = int(round(rating))
+    return "".join(
+        [f"<span style='color:gold;font-size:18px;'>★</span>" for _ in range(full)] +
+        [f"<span style='color:#334155;font-size:18px;'>★</span>" for _ in range(5 - full)]
+    )
+
+feedback_data = st.session_state.get("feedback_data") or load_feedback()
+st.session_state["feedback_data"] = feedback_data
+
+# ────────────────────────────────
+# AGENT LIST (Asset first, Credit second)
+# ────────────────────────────────
+AGENTS = [
+    ("🏦 Banking & Finance", "💰 Retail Banking", "🏦 Asset Appraisal Agent",
+     "Market-driven collateral valuation", "Available", "🏦"),
+    ("🏦 Banking & Finance", "💰 Retail Banking", "💳 Credit Appraisal Agent",
+     "Explainable AI for loan decisioning", "Available", "💳"),
+    ("⚡ Energy & Sustainability", "☀️ Solar", "☀️ Solar Yield Estimator",
+     "Estimate solar ROI and efficiency", "Coming Soon", "☀️"),
+    ("🚗 Automobile & Transport", "🚙 Automobile", "🚗 Predictive Maintenance",
+     "Prevent downtime via sensor analytics", "Coming Soon", "🚗"),
+    ("🚗 Automobile & Transport", "🔋 EV", "🔋 EV Battery Health Agent",
+     "Monitor EV battery health cycles", "Coming Soon", "🔋"),
+    ("🚗 Automobile & Transport", "🚚 Ride-hailing / Logistics", "🛻 Fleet Route Optimizer",
+     "Dynamic route optimization for fleets", "Coming Soon", "🛻"),
+    ("💻 Information Technology", "🧰 Support & Security", "🧩 IT Ticket Triage",
+     "Auto-prioritize support tickets", "Coming Soon", "🧩"),
+    ("💻 Information Technology", "🛡️ Security", "🔐 SecOps Log Triage",
+     "Detect anomalies & summarize alerts", "Coming Soon", "🔐"),
+    ("⚖️ Legal & Government", "⚖️ Law Firms", "⚖️ Contract Analyzer",
+     "Extract clauses and compliance risks", "Coming Soon", "⚖️"),
+    ("⚖️ Legal & Government", "🏛️ Public Services", "🏛️ Citizen Service Agent",
+     "Smart assistant for citizen services", "Coming Soon", "🏛️"),
+    ("🛍️ Retail / SMB / Creative", "🏬 Retail & eCommerce", "📈 Sales Forecast Agent",
+     "Predict demand & inventory trends", "Coming Soon", "📈"),
+    ("🎬 Retail / SMB / Creative", "🎨 Media & Film", "🎬 Budget Cost Assistant",
+     "Estimate, optimize, and track film & production costs using AI", "Coming Soon", "🎬"),
+]
+
+# ────────────────────────────────
+# STYLES
+# ────────────────────────────────
+st.markdown("""
+<style>
+html, body, .block-container {background-color:#0f172a!important; color:#e2e8f0!important;}
+footer {text-align:center; padding:2rem; color:#aab3c2; font-size:1.2rem; font-weight:600; margin-top:2rem;}
+.left-box {
+ background: radial-gradient(circle at top left, #0f172a, #1e293b);
+ border-radius:20px; padding:3rem 2rem; color:#f1f5f9; box-shadow:6px 0 24px rgba(0,0,0,0.4);
+}
+.right-box {
+ background:linear-gradient(180deg,#1e293b,#0f172a);
+ border-radius:20px; padding:2rem; box-shadow:-6px 0 24px rgba(0,0,0,0.35);
+}
+.stButton > button {
+ border:none!important; cursor:pointer;
+ padding:14px 28px!important; font-size:18px!important; font-weight:700!important;
+ border-radius:14px!important; color:#fff!important;
+ background:linear-gradient(180deg,#4ea3ff 0%,#2f86ff 60%,#0f6fff 100%)!important;
+ box-shadow:0 8px 24px rgba(15,111,255,0.35);
+}
+a.macbtn {
+ display:inline-block; text-decoration:none!important; color:#fff!important;
+ padding:10px 22px; font-weight:700; border-radius:12px;
+ background:linear-gradient(180deg,#4ea3ff 0%,#2f86ff 60%,#0f6fff 100%);
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ────────────────────────────────
+# LANDING STAGE
+# ────────────────────────────────
+if st.session_state.stage == "landing":
+    c1, c2 = st.columns([1.1, 1.9], gap="large")
+    with c1:
+        st.markdown("<div class='left-box'>", unsafe_allow_html=True)
+
+        # ────────────────────────────────
+        # HERO LOGO — Double-click to upload
+        # ────────────────────────────────
+        logo_dir = os.path.join(BASE_DIR, "assets")
+        os.makedirs(logo_dir, exist_ok=True)
+        saved_logo_path = os.path.join(logo_dir, "uploaded_logo.png")
+
+        st.markdown("""
+            <script>
+            function openLogoUploader() {
+                const uploader = document.querySelector('input[data-testid="stFileUploadDropzoneInput"]');
+                if (uploader) uploader.click();
+            }
+            </script>
+        """, unsafe_allow_html=True)
+
+        if os.path.exists(saved_logo_path):
+            with open(saved_logo_path, "rb") as f:
+                logo_base64 = base64.b64encode(f.read()).decode()
+            st.markdown(
+                f"""
+                <div ondblclick="openLogoUploader()" style="cursor:pointer; text-align:center;">
+                    <img src="data:image/png;base64,{logo_base64}" width="220">
+                    <p style="font-size:12px;color:#94a3b8;">Double-click logo to replace</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                """
+                <div ondblclick="openLogoUploader()" style="cursor:pointer; text-align:center;
+                     width:240px;height:100px;border:2px dashed #334155;border-radius:12px;">
+                     <p style="padding-top:36px;color:#64748b;">Double-click to upload logo</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        uploaded_logo = st.file_uploader(
+            "Upload new logo",
+            type=["png", "jpg", "jpeg", "webp"],
+            key="upload_logo_hidden",
+            label_visibility="collapsed",
+        )
+        if uploaded_logo is not None:
+            with open(saved_logo_path, "wb") as f:
+                f.write(uploaded_logo.read())
+            st.success("✅ Logo updated!")
+            st.rerun()
+
+
+
+        # ────────────────────────────────
+        # HERO + FOUNDATIONAL MESSAGE
+        # ────────────────────────────────
+        st.markdown(
+            """
+            <h1 style="font-size:38px; font-weight:800;">🚀 Together, Let’s Build an AI Foundry — by the People, for the People</h1>
+            <h3 style="font-size:28px; font-weight:700; color:#38bdf8;">⚙️ Open AI Agent Sandbox — From Idea to Production</h3>
+
+            <p style="font-size:18px; line-height:1.8;">
+            <span style="font-size:26px; font-weight:800; color:#60a5fa;">What:</span><br>
+            The <b>Open AI Agent Sandbox</b> is a <b>Foundry</b> where your AI ideas become reality —
+            turning imagination into explainable, open, and living agents.
+            </p>
+
+            <p style="font-size:18px; line-height:1.8;">
+            <span style="font-size:26px; font-weight:800; color:#60a5fa;">So What:</span><br>
+            No CAPEX. No gatekeepers. Just <b>GPU-for-Rent power</b>, <b>open-source models</b>, and <b>privacy-first design</b>.
+            Build faster, own your data, and innovate without limits.
+            </p>
+
+            <p style="font-size:18px; line-height:1.8;">
+            <span style="font-size:26px; font-weight:800; color:#60a5fa;">How:</span><br>
+            Start with a <b>ready-to-use AI Agent Template</b> — customize, test, improve,
+            and export when it’s production-ready.
+            </p>
+
+            <p style="font-size:18px; line-height:1.8;">
+            <span style="font-size:26px; font-weight:800; color:#60a5fa;">Where:</span><br>
+            All inside your <b>GPU-for-Rent Cloud Sandbox</b> —
+            a secure, sovereign forge where ideas ignite and models evolve.
+            </p>
+
+            <p style="font-size:18px; line-height:1.8;">
+            <span style="font-size:26px; font-weight:800; color:#60a5fa;">For Who:</span><br>
+            For builders, dreamers, educators, and enterprises who believe
+            AI should empower the many, not the few.
+            </p>
+
+            <p style="font-size:18px; line-height:1.8;">
+            <span style="font-size:26px; font-weight:800; color:#60a5fa;">What Now:</span><br>
+            Bring your spark. Shape your agent. Forge your legacy.<br>
+            <b>Your AI idea → Production-ready Reality.</b>
+            </p>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        # CTA
+        if st.button("🔥 Start Building Now", key="btn_start_build_now"):
+            st.session_state.stage = "agents"
+            st.rerun()
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+
+
+
+    # Right Panel
+    with c2:
+        st.markdown("<div class='right-box'>", unsafe_allow_html=True)
+        st.markdown("<h2>📊 Global AI Agent Library</h2>", unsafe_allow_html=True)
+
+        for sector, industry, agent, desc, status, emoji in AGENTS:
+            # ✅ Revert to original Available / Coming Soon logic
+            if status == "Available":
+                status_label = "Available"
+                status_color = "#22c55e"   # green
+            elif status == "Coming Soon":
+                status_label = "Coming Soon"
+                status_color = "#f59e0b"   # orange
+            else:
+                status_label = status
+                status_color = "#f1f5f9"
+
+            fb = feedback_data.get(agent, {"rating": 0, "users": 0, "comments": []})
+            rating_html = render_stars(fb.get("rating", 0))
+            users = fb.get("users", 0)
+            comments = fb.get("comments", [])
+            comment_count = len(comments)
+
+            cols = st.columns([0.5, 1.0, 1.4, 2.8, 1.0, 0.8, 0.9, 1.0])
+            with cols[0]:
+                st.markdown(render_image_tag(agent, industry, emoji), unsafe_allow_html=True)
+            with cols[1]:
+                st.markdown(f"**{industry}**")
+            with cols[2]:
+                st.markdown(f"**{agent}**")
+            with cols[3]:
+                st.markdown(desc)
+            with cols[4]:
+                st.markdown(rating_html, unsafe_allow_html=True)
+            with cols[5]:
+                st.markdown(f"👥 {users}")
+            with cols[6]:
+                if comment_count > 0:
+                    if st.button(f"💬 {comment_count}", key=f"btn_{agent}"):
+                        st.session_state[f"show_comments_{agent}"] = not st.session_state.get(
+                            f"show_comments_{agent}", False
+                        )
+                else:
+                    st.markdown("💬 0")
+            with cols[7]:
+                st.markdown(
+                    f"<span style='color:{status_color};font-weight:700;'>{status_label}</span>",
+                    unsafe_allow_html=True,
+                )
+
+            if st.session_state.get(f"show_comments_{agent}", False):
+                with st.expander(f"🗣 Comments for {agent}", expanded=True):
+                    for cmt in reversed(comments):
+                        st.markdown(f"- {cmt}")
+
+            st.markdown("---")
+
+        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>", unsafe_allow_html=True)
+    st.stop()
+
+# ────────────────────────────────
+# STAGE: AGENTS
+# ────────────────────────────────
+if st.session_state.stage == "agents":
+    top = st.columns([1, 6, 1])
+    with top[1]:
+        st.title("🤖 Available AI Agents")
+
+    df = pd.DataFrame([
+        {"Agent": "💳 Credit Appraisal Agent",
+         "Description": "Explainable AI for retail loan decisioning",
+         "Status": "✅ Available",
+         "Action": '<a class="macbtn" href="?agent=credit&stage=login">🚀 Launch</a>'},
+        {"Agent": "🏦 Asset Appraisal Agent",
+         "Description": "Market-driven collateral valuation",
+         "Status": "✅ Available",
+         "Action": '<a class="macbtn" href="?agent=asset&stage=asset_agent">🚀 Launch</a>'},
+    ])
+    st.write(df.to_html(escape=False, index=False), unsafe_allow_html=True)
+    st.markdown(
+        "<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>",
+        unsafe_allow_html=True
+    )
+    st.stop()
+
+# ────────────────────────────────
+# QUERY PARAM → SESSION STATE SYNC
+# ────────────────────────────────
+try:
+    qp = st.query_params
+    if "stage" in qp and qp["stage"]:
+        stage_value = qp["stage"][0] if isinstance(qp["stage"], list) else qp["stage"]
+        st.session_state.stage = stage_value
+        st.experimental_rerun()
+except Exception:
+    pass
+
+# ────────────────────────────────
+# PAGE REDIRECTS
+# ────────────────────────────────
+if st.session_state.stage == "asset_agent":
+    try:
+        st.switch_page("pages/asset_appraisal.py")
+    except Exception as e:
+        st.error(f"❌ Could not switch to Asset Appraisal page: {e}")
+        st.info("Ensure file exists at services/ui/pages/asset_appraisal.py")
+
+if st.session_state.stage == "credit_agent":
+    try:
+        st.switch_page("pages/credit_appraisal.py")
+    except Exception as e:
+        st.error(f"❌ Could not switch to Credit Appraisal page: {e}")
+        st.info("Ensure file exists at services/ui/pages/credit_appraisal.py")
+
+
+# # ────────────────────────────────
+# # AGENTS LIST
+# # ────────────────────────────────
+# if st.session_state.stage == "agents":
+#     st.title("🤖 Available AI Agents")
+#     df = pd.DataFrame([
+#         {"Agent": "🏦 Asset Appraisal Agent",
+#          "Description": "Market-driven collateral valuation",
+#          "Status": "✅ Available",
+#          "Action": '<a class="macbtn" href="?agent=asset&stage=asset_agent">🚀 Launch</a>'},
+#         {"Agent": "💳 Credit Appraisal Agent",
+#          "Description": "Explainable AI for retail loan decisioning",
+#          "Status": "✅ Available",
+#          "Action": '<a class="macbtn" href="?agent=credit&stage=credit_agent">🚀 Launch</a>'},
+#     ])
+#     st.write(df.to_html(escape=False, index=False), unsafe_allow_html=True)
+#     st.markdown(
+#         "<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>",
+#         unsafe_allow_html=True
+#     )
+#     st.stop()
+
+
+# # # ────────────────────────────────
+# # # PAGE REDIRECTS
+# # # ────────────────────────────────
+
+# # if st.session_state.stage == "asset_agent":
+# #     st.switch_page("pages/asset_appraisal.py")
+
+# # if st.session_state.stage == "credit_agent":
+# #     st.switch_page("pages/credit_appraisal.py")
+
+# if st.session_state.stage == "asset_agent":
+#     try:
+#         st.switch_page("pages/asset_appraisal.py")
+#     except Exception as e:
+#         st.error(f"Could not switch to asset appraisal page: {e}")
+#         st.info("Ensure file exists at services/ui/pages/asset_appraisal.py")
+
+# if st.session_state.stage == "credit_agent":
+#     try:
+#         st.switch_page("pages/credit_appraisal.py")
+#     except Exception as e:
+#         st.error(f"Could not switch to credit appraisal page: {e}")
+#         st.info("Ensure file exists at services/ui/pages/credit_appraisal.py")
+
+# ────────────────────────────────
+# STAGE: ASSET WORKFLOW (redirect to page)
+# ────────────────────────────────
+if  st.session_state.stage == "asset_agent":
+    try:
+        st.switch_page("pages/asset_appraisal.py")
+    except Exception as e:
+        st.error(f"Could not switch to asset appraisal page: {e}")
+        st.info("Ensure file exists at services/ui/pages/asset_appraisal.py")
+
+# ────────────────────────────────
+# STAGE: ASSET WORKFLOW (redirect to page)
+# ────────────────────────────────
+if  st.session_state.stage == "credit_agent":
+    try:
+        st.switch_page("pages/credit_appraisal.py")
+    except Exception as e:
+        st.error(f"Could not switch to asset appraisal page: {e}")
+        st.info("Ensure file exists at services/ui/pages/credit_appraisal.py")
