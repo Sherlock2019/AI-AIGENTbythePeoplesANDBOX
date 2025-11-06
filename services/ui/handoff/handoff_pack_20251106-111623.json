@@ -1,0 +1,10 @@
+{
+  "generated_at": "20251106-111623",
+  "files": {
+    "credit_memo": "handoff/credit_memo_20251106-111623.csv",
+    "legal_pack": "handoff/legal_pack_20251106-111623.csv",
+    "risk_memo": "handoff/risk_memo_20251106-111623.csv",
+    "portfolio_summary": "handoff/portfolio_summary_20251106-111623.csv",
+    "audit_record": "handoff/audit_20251106-111623.json"
+  }
+}

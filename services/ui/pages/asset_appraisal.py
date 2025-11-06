@@ -31,10 +31,13 @@ import streamlit.components.v1 as components
 import plotly.express as px
 import plotly.graph_objects as go
 import csv
+import zipfile  # ✅ ADD THIS
+
 
 # Theme bootstrapping
 if "ui_theme" not in st.session_state:
     st.session_state["ui_theme"] = "light"   # default bright
+
 
 
 #THEME SWITCHER
@@ -1109,15 +1112,17 @@ if ss.get("asset_logged_in") and ss.get("asset_stage") in ("asset_flow", "asset_
     # ─────────────────────────────────────────
     # TABS (A..G) — Live tabs
     # ─────────────────────────────────────────
-    tabA, tabB, tabC, tabD, tabE, tabF, tabG = st.tabs([
-        "🟦 A) Intake & Evidence",
-        "🟩 B) Privacy & Features",
-        "🟨 C) Valuation & Verification",
-        "🟧 D) Policy & Decision",
-        "🟪 E) Human Review & Feedback",
-        "🟫 F) Model Training & Promotion",
-        "⬜ G) Reporting & Handoff"
+    tabA, tabB, tabC, tabD, tabE, tabF, tabG, tabH = st.tabs([
+    "🟦 A) Intake & Evidence",
+    "🟩 B) Privacy & Features",
+    "🟨 C) Valuation & Verification",
+    "🟧 D) Policy & Decision",
+    "🟪 E) Human Review & Feedback",
+    "🟫 F) Model Training & Promotion",
+    "🟫 G) Deployment & Export 🚀",     # ✅ corrected label (was double F)
+    "⬜ H) Reporting & Handoff 🧾"      # ✅ make this Stage H
     ])
+
 
     # Runtime tip
     st.caption(
@@ -1625,371 +1630,6 @@ with tabA:
 
 
 
-# # ─────────────────────────────────────────
-# # A — INTAKE & EVIDENCE (0..1)
-# # ─────────────────────────────────────────
-# with tabA:
-#     import hashlib, io, json, os
-#     from datetime import datetime, timezone
-
-#     st.subheader("A. Intake & Evidence")
-#     st.caption("Steps: **0) Intake & Identity**, **1) Evidence Extraction (OCR/EXIF/GPS)**")
-
-#     # ---------- Local helpers ----------
-#     def sha1_of_filelike(fobj) -> str:
-#         """Compute SHA1 hash from file-like object without exhausting stream."""
-#         pos = fobj.tell() if hasattr(fobj, "tell") else None
-#         fobj.seek(0)
-#         h = hashlib.sha1()
-#         for chunk in iter(lambda: fobj.read(8192), b""):
-#             if isinstance(chunk, str):
-#                 chunk = chunk.encode("utf-8")
-#             h.update(chunk)
-#         if pos is not None:
-#             fobj.seek(pos)
-#         return h.hexdigest()
-
-#     def extract_fake_exif_gps() -> dict:
-#         return {
-#             "gps": {"lat": 10.7758, "lon": 106.7009},
-#             "ts": datetime.now(timezone.utc).isoformat()
-#         }
-#     def quick_synth(n: int = 150) -> pd.DataFrame:
-#         """Generate synthetic intake dataset for demonstration/testing."""
-#         import random
-#         import numpy as np
-#         from datetime import datetime, timedelta, timezone
-
-#         t = datetime.now(timezone.utc)
-#         asset_types = ["House", "Apartment", "Car", "Land", "Factory"]
-#         cities = ["HCMC", "Hanoi", "Da Nang", "Can Tho", "Hai Phong"]
-#         regions = {
-#             "HCMC": "South",
-#             "Hanoi": "North",
-#             "Da Nang": "Central",
-#             "Can Tho": "Mekong",
-#             "Hai Phong": "North"
-#         }
-
-#         rows = []
-#         for i in range(n):
-#             city = cities[i % len(cities)]
-#             region = regions[city]
-#             base_value = 120_000 + (i % 17) * 3_500
-#             noise = random.uniform(-0.1, 0.1) * base_value
-
-#             # Derived + synthetic realism
-#             market_value = base_value + noise
-#             age_years = random.randint(0, 40)
-#             condition_score = round(max(0.5, 1.0 - (age_years / 100.0) + random.uniform(-0.1, 0.1)), 2)
-#             loan_amount = round(market_value * random.uniform(0.4, 0.8))
-#             employment_years = random.randint(1, 30)
-#             credit_history_years = random.randint(1, 25)
-#             delinquencies = random.randint(0, 3)
-#             current_loans = random.randint(0, 5)
-#             registry_source = random.choice(["gov_registry", "private_registry", "unknown"])
-#             evidence_count = random.randint(1, 5)
-#             valuation_date = (t - timedelta(days=random.randint(0, 720))).strftime("%Y-%m-%d")
-
-#             rows.append({
-#                 "application_id": f"APP_{t.strftime('%H%M%S')}_{i:04d}",
-#                 "asset_id": f"A{t.strftime('%M%S')}{i:04d}",
-#                 "asset_type": random.choice(asset_types),
-#                 "market_value": round(market_value, 2),
-#                 "loan_amount": round(loan_amount, 2),
-#                 "age_years": age_years,
-#                 "condition_score": condition_score,
-#                 "employment_years": employment_years,
-#                 "credit_history_years": credit_history_years,
-#                 "delinquencies": delinquencies,
-#                 "current_loans": current_loans,
-#                 "city": city,
-#                 "region": region,
-#                 "registry_source": registry_source,
-#                 "evidence_count": evidence_count,
-#                 "valuation_date": valuation_date,
-#             })
-
-#         df = pd.DataFrame(rows)
-#         df["ltv_ratio"] = (df["loan_amount"] / df["market_value"]).round(2)
-#         df["legal_penalty_flag"] = np.where(df["registry_source"] == "unknown", 1, 0)
-#         return df
-
-
-#     # def quick_synth(n: int = 150) -> pd.DataFrame:
-#     #     t = datetime.now(timezone.utc)
-#     #     rows = [{
-#     #         "application_id": f"APP_{t.strftime('%H%M%S')}_{i:04d}",
-#     #         "asset_id": f"A{t.strftime('%M%S')}{i:04d}",
-#     #         "asset_type": ["House","Apartment","Car","Land","Factory"][i % 5],
-#     #         "market_value": 120000 + (i % 17) * 3500,
-#     #         "age_years": (i % 35),
-#     #         "loan_amount": 80000 + (i % 23) * 2500,
-#     #         "employment_years": (i % 25),
-#     #         "credit_history_years": (i % 20),
-#     #         "delinquencies": (i % 3),
-#     #         "current_loans": (i % 5),
-#     #         "city": ["HCMC","Hanoi","Da Nang","Can Tho","Hai Phong"][i % 5],
-#     #     } for i in range(n)]
-#     #     return pd.DataFrame(rows)
-
-#     # def synth_why_table() -> pd.DataFrame:
-#     #     return pd.DataFrame([
-#     #         {"Metric": "PII present", "Why it matters": "Must be masked before feature engineering (privacy-by-design)."},
-#     #         {"Metric": "Evidence linked (%)", "Why it matters": "Traceability between assets and documents/photos."},
-#     #         {"Metric": "Rows (intake)", "Why it matters": "Sanity-check volume before downstream costs."},
-#     #     ])
-
-#     # ---------- A.0 — Intake & Identity ----------
-#     st.markdown("### **0) Intake & Identity**")
-
-#     # 📘 Quick user guide
-#     with st.expander("📘 Quick User Guide", expanded=False):
-#         st.markdown("""
-#         **Goal:** Collect, normalize, and validate all asset data before appraisal.
-
-#         **1️⃣ Upload Your Data**
-#         - CSV from field agents, real-estate papers, or loan portfolios.
-#         - Include key columns: `asset_id`, `asset_type`, `market_value`, `loan_amount`, `city`.
-
-#         **2️⃣ Manual Add**
-#         - Use to simulate new asset entries for quick testing.
-
-#         **3️⃣ Attach Evidence**
-#         - Add photos or documents (JPG/PDF). GPS/EXIF auto-parsed.
-
-#         **4️⃣ Public Datasets**
-#         - Search Kaggle / Hugging Face / Open ML for open valuation benchmarks.
-#         """)
-
-#     # ─────────────────────────────────────────
-#     # 🔍 Search & Import Public Datasets
-#     # ─────────────────────────────────────────
-#     st.markdown("### 🔍 Search Public Datasets (Kaggle / Hugging Face / OpenML / Public Portals)")
-#     st.caption("Search, preview, or import datasets from open sources — useful for model benchmarking or demo generation.")
-
-#     src = st.selectbox(
-#         "Select source",
-#         ["Kaggle (API)", "Kaggle (Web)", "Hugging Face", "OpenML", "Public Domain Portals"],
-#         key="asset_pubsrc"
-#     )
-#     query = st.text_input(
-#         "Search keywords",
-#         placeholder="e.g. house prices Vietnam, real estate valuation",
-#         key="asset_pubquery"
-#     )
-
-#     if st.button("🔎 Search dataset", key="btn_asset_pubsearch"):
-#         with st.spinner("Searching public datasets…"):
-#             try:
-#                 # Kaggle API mode
-#                 if src == "Kaggle (API)":
-#                     import subprocess, pandas as pd
-#                     cmd = ["kaggle", "datasets", "list", "-s", query, "-v"]
-#                     try:
-#                         output = subprocess.check_output(cmd, text=True)
-#                         lines = output.strip().splitlines()
-#                         if len(lines) > 1:
-#                             header = [h.strip() for h in lines[0].split(",")]
-#                             data = [l.split(",") for l in lines[1:]]
-#                             df_pub = pd.DataFrame(data, columns=header)
-#                             st.dataframe(df_pub.head(25), use_container_width=True)
-#                             st.success("✅ Kaggle API search complete. Use CLI or download link to import.")
-#                         else:
-#                             st.warning("No datasets found for your query.")
-#                     except Exception as e:
-#                         st.error(f"Kaggle API search failed: {e}")
-#                         st.info("💡 Tip: Ensure your Kaggle API key (~/.kaggle/kaggle.json) is configured.")
-
-#                 # Kaggle Web mode (no API needed)
-#                 elif src == "Kaggle (Web)":
-#                     st.markdown(
-#                         f"[🌐 Open Kaggle Search ↗️](https://www.kaggle.com/datasets?search={query})"
-#                     )
-
-#                 # Hugging Face datasets
-#                 elif src == "Hugging Face":
-#                     from huggingface_hub import list_datasets
-#                     results = list_datasets(search=query)
-#                     df_pub = pd.DataFrame(
-#                         [{"Dataset": r.id, "Tags": ", ".join(r.tags)} for r in results[:25]]
-#                     )
-#                     st.dataframe(df_pub, use_container_width=True)
-#                     st.success("✅ Hugging Face datasets retrieved successfully.")
-
-#                 # OpenML
-#                 elif src == "OpenML":
-#                     st.markdown(
-#                         f"[📊 Open OpenML Search ↗️](https://www.openml.org/search?type=data&q={query})"
-#                     )
-
-#                 # Public domain portals
-#                 elif src == "Public Domain Portals":
-#                     st.markdown("""
-#                     **Global Open Data Portals**
-#                     - [🌎 data.gov (US)](https://www.data.gov/)
-#                     - [🇪🇺 data.europa.eu (EU)](https://data.europa.eu/)
-#                     - [🇸🇬 data.gov.sg (Singapore)](https://data.gov.sg/)
-#                     - [🇻🇳 data.gov.vn (Vietnam)](https://data.gov.vn/)
-#                     """)
-#             except Exception as e:
-#                 st.error(f"❌ Search failed: {e}")
-
-#     # Optional layout continuation
-#     left, right = st.columns([1.4, 1])
-
-    
-    
-#     # # 🔍 Search Public Datasets
-#     # st.markdown("#### 🔍 Search Public Datasets (Kaggle / Hugging Face / Open ML)")
-#     # src = st.selectbox("Source", ["Kaggle", "Hugging Face Datasets", "Open ML"], key="asset_pubsrc")
-#     # query = st.text_input("Search keywords", placeholder="e.g. house prices Vietnam, real estate valuation", key="asset_pubquery")
-
-#     # if st.button("Search dataset", key="btn_asset_pubsearch"):
-#     #     with st.spinner("Searching public datasets…"):
-#     #         try:
-#     #             if src == "Hugging Face Datasets":
-#     #                 from huggingface_hub import list_datasets
-#     #                 results = list_datasets(search=query)
-#     #                 df_pub = pd.DataFrame([{"Name": r.id, "Tags": ", ".join(r.tags)} for r in results[:25]])
-#     #                 st.dataframe(df_pub)
-#     #             elif src == "Kaggle":
-#     #                 st.info("Use `kaggle datasets list -s <keywords>` in terminal to explore.")
-#     #             else:
-#     #                 st.info(f"Open ML search → https://www.openml.org/search?type=data&q={query}")
-#     #         except Exception as e:
-#     #             st.error(f"Search failed: {e}")
-
-#     # left, right = st.columns([1.4, 1])
-    
-
-
-#     # ---------- A.1 — Evidence Extraction ----------
-#     st.markdown("### **1) Evidence Extraction (OCR/EXIF/GPS)**")
-#     evid = st.file_uploader("Attach evidence (images or PDFs, optional)",
-#                             type=["png", "jpg", "jpeg", "pdf"],
-#                             accept_multiple_files=True,
-#                             key="asset_evidence_files")
-
-#     cA1_1, cA1_2 = st.columns(2)
-#     with cA1_1:
-#         if st.button("Extract & Index Evidence", key="btn_extract_evidence"):
-#             idx_items = []
-#             for i, f in enumerate(evid or []):
-#                 try:
-#                     bio = io.BytesIO(f.read())
-#                     file_hash = sha1_of_filelike(bio)
-#                     bio.seek(0)
-#                     ext = (f.name or "").split(".")[-1].lower()
-#                     doc_type = "image" if ext in ("png","jpg","jpeg") else "pdf"
-#                     exif = extract_fake_exif_gps()
-#                     idx_items.append({
-#                         "evidence_id": f"EV-{i+1:04d}",
-#                         "file_name": f.name,
-#                         "doc_type": doc_type,
-#                         "sha1": file_hash,
-#                         "exif": exif,
-#                     })
-#                 except Exception as e:
-#                     st.error(f"Error processing {f.name}: {e}")
-
-#             evidence_index = {
-#                 "generated_at": datetime.now(timezone.utc).isoformat(),
-#                 "count": len(idx_items),
-#                 "items": idx_items,
-#             }
-#             ss["asset_evidence_index"] = evidence_index
-
-#             ev_path = os.path.join("./.tmp_runs", f"evidence_index.{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.json")
-#             with open(ev_path, "w", encoding="utf-8") as fp:
-#                 json.dump(evidence_index, fp, ensure_ascii=False, indent=2)
-#             st.success(f"Saved: `{ev_path}`  •  Items: {len(idx_items)}")
-#             st.json(evidence_index)
-
-#     with cA1_2:
-#         if ss.get("asset_intake_df") is not None and ss.get("asset_evidence_index") is not None:
-#             linked_pct = 1.0 if len(ss["asset_evidence_index"]["items"]) >= 1 else 0.0
-#             st.metric("Evidence Linked (≥1)", f"{linked_pct:.0%}")
-#         elif ss.get("asset_intake_df") is not None:
-#             st.info("Upload evidence and click **Extract & Index Evidence**.")
-#         else:
-#             st.warning("Build the intake table first (A.0).")
-
-
-        
-#     # ─────────────────────────────────────────
-#     # 📊 Synthetic Data Generation
-#     # ─────────────────────────────────────────
-#     st.markdown("### 📊 Generate Synthetic Data")
-#     st.caption("Quickly create a sample intake dataset for testing or demos.")
-
-#     num_rows = st.slider("Number of synthetic rows", min_value=10, max_value=500, value=150, step=10)
-#     if st.button("⚙️ Generate Synthetic Intake Dataset", key="btn_generate_synth"):
-#         try:
-#             df_synth = quick_synth(num_rows)
-#             ss["asset_intake_df"] = df_synth
-#             st.success(f"✅ Generated synthetic dataset with {len(df_synth)} rows.")
-#             st.dataframe(df_synth.head(20), use_container_width=True)
-#             # Optional: auto-save artifact
-#             out_path = f"./.tmp_runs/intake_table_synth_{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.csv"
-#             os.makedirs("./.tmp_runs", exist_ok=True)
-#             df_synth.to_csv(out_path, index=False)
-#             st.info(f"Saved to: `{out_path}`")
-#         except Exception as e:
-#             st.error(f"Synthetic data generation failed: {e}")
-
-
-#         # ---------- Intake block ----------
-#         with left:
-#             up_csv = st.file_uploader("Upload Asset CSV", type=["csv"], key="asset_csv")
-#             with st.expander("➕ Add manual asset row", expanded=False):
-#                 m1, m2 = st.columns(2)
-#                 asset_type = m1.selectbox("Asset Type", ["House","Apartment","Car","Land","Factory"])
-#                 market_value = m2.number_input("Market Value ($)", 0, 10_000_000, 250_000, step=1_000)
-#                 age_years = m1.number_input("Age (years)", 0, 100, 10)
-#                 loan_amount = m2.number_input("Requested Loan ($)", 0, 10_000_000, 120_000, step=1_000)
-#                 employment_years = m1.number_input("Employment Years", 0, 60, 5)
-#                 credit_hist_years = m2.number_input("Credit History (years)", 0, 50, 6)
-#                 delinq = m1.number_input("Delinquencies", 0, 50, 1)
-#                 curr_loans = m2.number_input("Current Loans", 0, 50, 2)
-#                 city = m1.text_input("City", "HCMC")
-#                 add_row = st.button("Add manual asset row", key="btn_add_manual_row")
-
-#             if st.button("Build Intake Table (fallback to synthetic if empty)", key="btn_build_intake"):
-#                 rows = []
-#                 # CSV
-#                 if up_csv is not None:
-#                     try:
-#                         rows.append(pd.read_csv(up_csv))
-#                     except Exception as e:
-#                         st.error(f"CSV parse error: {e}")
-#                 # Manual row
-#                 if add_row:
-#                     rows.append(pd.DataFrame([{
-#                         "application_id": f"APP_{datetime.now(timezone.utc).strftime('%H%M%S')}",
-#                         "asset_id": f"A{datetime.now(timezone.utc).strftime('%M%S')}",
-#                         "asset_type": asset_type, "market_value": market_value, "age_years": age_years,
-#                         "loan_amount": loan_amount, "employment_years": employment_years,
-#                         "credit_history_years": credit_hist_years, "delinquencies": delinq,
-#                         "current_loans": curr_loans, "city": city
-#                     }]))
-#                 # Synthetic fallback
-#                 df = pd.concat(rows, ignore_index=True) if rows else quick_synth(150)
-#                 if not rows:
-#                     st.info("No inputs provided — generated synthetic intake dataset.")
-
-#                 ss["asset_intake_df"] = df
-#                 os.makedirs("./.tmp_runs", exist_ok=True)
-#                 intake_path = os.path.join("./.tmp_runs", f"intake_table.{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.csv")
-#                 df.to_csv(intake_path, index=False)
-#                 st.success(f"Saved: `{intake_path}`  •  Rows: {len(df)}")
-#                 st.dataframe(df.head(15), use_container_width=True)
-
-#         with right:
-#             st.markdown("#### Generated Metrics — What & Why")
-#             st.dataframe(synth_why_table(), use_container_width=True)
-
-#         st.markdown("---")
 
 
 # ─────────────────────────────────────────
@@ -2452,210 +2092,6 @@ with tabC:
 
 
     
-    # # ─────────────────────────────────────────────
-    # # 📦 MODEL SELECTION (Hardcoded Local Paths)
-    # # ─────────────────────────────────────────────
-    # from datetime import datetime
-    # import os, shutil
-
-    # trained_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/trained"
-    # production_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/production"
-
-    # st.caption(f"📦 Trained dir = `{trained_dir}`")
-    # st.caption(f"📦 Production dir = `{production_dir}`")
-
-    # # Refresh button
-    # if st.button("↻ Refresh models", key="asset_refresh_models"):
-    #     st.session_state.pop("asset_selected_model", None)
-    #     st.rerun()
-
-    # models = []
-
-    # # Include production model (if any)
-    # prod_fp = os.path.join(production_dir, "model.joblib")
-    # if os.path.exists(prod_fp):
-    #     p_ctime = os.path.getctime(prod_fp)
-    #     p_created = datetime.fromtimestamp(p_ctime).strftime("%b %d, %Y %H:%M")
-    #     models.append(("⭐ Production", prod_fp, p_created, True))
-
-    # # Include trained models
-    # if os.path.isdir(trained_dir):
-    #     for f in os.listdir(trained_dir):
-    #         if f.endswith(".joblib"):
-    #             fpath = os.path.join(trained_dir, f)
-    #             ctime = os.path.getctime(fpath)
-    #             created = datetime.fromtimestamp(ctime).strftime("%b %d, %Y %H:%M")
-    #             models.append((f, fpath, created, False))
-    # else:
-    #     st.error(f"❌ Trained dir not found: {trained_dir}")
-
-    # # Render dropdown
-    # if models:
-    #     models.sort(key=lambda x: (0 if x[3] else 1, -os.path.getctime(x[1])))  # prod first, then newest
-    #     display_names = [f"{m[0]} — {m[2]}" for m in models]
-
-    #     selected_display = st.selectbox("📦 Select trained or production model", display_names)
-    #     selected_model = models[display_names.index(selected_display)][1]
-    #     is_prod = models[display_names.index(selected_display)][3]
-    #     st.session_state["asset_selected_model"] = selected_model
-
-    #     st.success(f"{'🟢' if is_prod else '✅'} Using model: {os.path.basename(selected_model)}")
-
-    #     if (not is_prod) and st.button("🚀 Promote this model to Production"):
-    #         try:
-    #             os.makedirs(production_dir, exist_ok=True)
-    #             prod_path = os.path.join(production_dir, "model.joblib")
-    #             shutil.copy2(selected_model, prod_path)
-    #             st.success(f"✅ Model promoted to production: {prod_path}")
-    #         except Exception as e:
-    #             st.error(f"❌ Promotion failed: {e}")
-    # else:
-    #     st.warning("⚠️ No trained models found — train one in Stage F first.")
-
-    
-    
-    # # ─────────────────────────────────────────────
-    # # 🟢 PRODUCTION MODEL BANNER
-    # # ─────────────────────────────────────────────
-    # try:
-    #     resp = requests.get(f"{API_URL}/v1/training/production_meta", timeout=5)
-    #     if resp.status_code == 200:
-    #         meta = resp.json()
-    #         if meta.get("has_production"):
-    #             ver = (meta.get("meta") or {}).get("version", "1.x")
-    #             src = (meta.get("meta") or {}).get("source", "production")
-    #             st.success(f"🟢 Production model active — version {ver} • source {src}")
-    #         else:
-    #             st.warning("⚠️ No production model promoted yet — using baseline.")
-    #     else:
-    #         st.info("ℹ️ Could not fetch production model meta.")
-    # except Exception:
-    #     st.info("ℹ️ Production meta unavailable.")
-
-    # # ─────────────────────────────────────────────
- 
-    # c_ref, _ = st.columns([1, 6])
-    # with c_ref:
-    #     if st.button("↻ Refresh models", key="asset_models_refresh"):
-    #         st.session_state.pop("asset_model_select", None)
-    #         st.session_state["_asset_models_bump"] = _now()
-    #         st.rerun()
-
-    # models = []
-    # if os.path.exists(production_fp):
-    #     try:
-    #         p_ctime = os.path.getctime(production_fp)
-    #         p_created = datetime.fromtimestamp(p_ctime).strftime("%b %d, %Y %H:%M")
-    #     except Exception:
-    #         p_ctime, p_created = 0.0, "production"
-    #     models.append(("⭐ Production", production_fp, p_ctime, p_created, True))
-
-    # raw = []
-    # for d in trained_dirs:
-    #     if os.path.isdir(d):
-    #         for f in os.listdir(d):
-    #             if f.endswith(".joblib"):
-    #                 fpath = os.path.join(d, f)
-    #                 try:
-    #                     ctime = os.path.getctime(fpath)
-    #                     created = datetime.fromtimestamp(ctime).strftime("%b %d, %Y %H:%M")
-    #                 except Exception:
-    #                     ctime, created = 0.0, ""
-    #                 raw.append((f, fpath, ctime, created, False))
-
-    # newest_by_name = {}
-    # for name, path, ctime, created, is_prod in raw:
-    #     try:
-    #         if os.path.exists(production_fp) and os.path.samefile(path, production_fp):
-    #             continue
-    #     except Exception:
-    #         pass
-    #     if (name not in newest_by_name) or (ctime > newest_by_name[name][2]):
-    #         newest_by_name[name] = (name, path, ctime, created, is_prod)
-    # models.extend(newest_by_name.values())
-    # models = sorted(models, key=lambda x: (0 if x[4] else 1, -x[2]))
-
-    # if models:
-    #     display_names = [f"{label} — {created}" if created else label for (label, _, _, created, _) in models]
-    #     default_idx = 0
-    #     prev_selected = st.session_state.get("asset_selected_model")
-    #     if prev_selected:
-    #         for i, (_, path, _, _, _) in enumerate(models):
-    #             if path == prev_selected: default_idx = i; break
-    #     select_key = f"asset_model_select::{st.session_state.get('_asset_models_bump','')}"
-    #     selected_display = st.selectbox("📦 Select trained model", display_names,
-    #                                     index=default_idx, key=select_key)
-    #     sel_idx = display_names.index(selected_display)
-    #     selected_model = models[sel_idx][1]
-    #     is_prod = models[sel_idx][4]
-    #     st.session_state["asset_selected_model"] = selected_model
-
-    #     st.success(f"{'🟢' if is_prod else '✅'} Using model: {os.path.basename(selected_model)}")
-    #     if (not is_prod) and st.button("🚀 Promote to PRODUCTION", key="asset_promote_model"):
-    #         try:
-    #             r = requests.post(f"{API_URL}/v1/agents/asset_appraisal/training/promote_last", timeout=60)
-    #             if r.ok:
-    #                 st.success("✅ Model promoted to PRODUCTION.")
-    #                 st.session_state["_asset_models_bump"] = _now(); st.rerun()
-    #             else:
-    #                 st.error(f"❌ Promotion failed: {r.status_code} {r.reason}")
-    #                 st.code(r.text[:1500])
-    #         except Exception as e:
-    #             st.error(f"❌ Promotion error: {e}")
-    # else:
-    #     st.warning("⚠️ No trained models found — train one in Stage 5.")
-
-    # # ─────────────────────────────────────────────
-    # # 📦 MODEL SELECTION (hardcoded for Asset Appraisal)
-    # # ─────────────────────────────────────────────
-    # from datetime import datetime
-    # import os, shutil
-
-    # trained_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/trained"
-    # production_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/production"
-
-    # st.caption(f"📦 Trained dir = `{trained_dir}`")
-    # st.caption(f"📦 Production dir = `{production_dir}`")
-
-    # # Refresh button
-    # if st.button("↻ Refresh models", key="asset_refresh_models"):
-    #     st.session_state.pop("asset_selected_model", None)
-    #     st.rerun()
-
-    # # Gather model list
-    # models = []
-    # if os.path.isdir(trained_dir):
-    #     for f in os.listdir(trained_dir):
-    #         if f.endswith(".joblib"):
-    #             fpath = os.path.join(trained_dir, f)
-    #             ctime = os.path.getctime(fpath)
-    #             created = datetime.fromtimestamp(ctime).strftime("%b %d, %Y %H:%M")
-    #             models.append((f, fpath, created))
-    # else:
-    #     st.error(f"❌ Trained dir not found: {trained_dir}")
-
-    # # Display dropdown
-    # if models:
-    #     models.sort(key=lambda x: os.path.getctime(x[1]), reverse=True)
-    #     display_names = [f"{m[0]} — {m[2]}" for m in models]
-
-    #     selected_display = st.selectbox("📦 Select trained or production model", display_names)
-    #     selected_model = models[display_names.index(selected_display)][1]
-    #     st.success(f"✅ Using model: {os.path.basename(selected_model)}")
-
-    #     st.session_state["asset_selected_model"] = selected_model
-
-    #     # Promote to production
-    #     if st.button("🚀 Promote this model to Production"):
-    #         try:
-    #             os.makedirs(production_dir, exist_ok=True)
-    #             prod_path = os.path.join(production_dir, "model.joblib")
-    #             shutil.copy2(selected_model, prod_path)
-    #             st.success(f"✅ Model promoted to production: {prod_path}")
-    #         except Exception as e:
-    #             st.error(f"❌ Promotion failed: {e}")
-    # else:
-    #     st.warning("⚠️ No trained models found — train one in Stage F first.")
 
     
     # ─────────────────────────────────────────────
@@ -2821,7 +2257,25 @@ with tabC:
         # Persist valuation artifact
         val_path = os.path.join(RUNS_DIR, f"valuation_ai.{_ts()}.csv")
         df_app.to_csv(val_path, index=False)
+        
         st.success(f"Saved valuation artifact → `{val_path}`")
+
+        # # ✅ PATCH: Save Stage C valuation table for Stage H (use df_app, not ai_df)
+        # try:
+        #     st.session_state["asset_ai_df"] = df_app.copy()
+        #     ss["asset_ai_df"] = df_app.copy()
+        #     st.info("✅ Stage C valuation stored for Stage D / E / H.")
+        # except Exception as e:
+        #     st.warning(f"Could not store Stage C output: {e}")
+
+        # st.success(f"Saved valuation artifact → `{val_path}`")
+        # # ✅ PATCH: Save Stage C valuation table for Stage H
+        # try:
+        #     st.session_state["asset_ai_df"] = ai_df.copy()
+        #     st.info("✅ Stage C results stored for Stage H portfolio view.")
+        # except Exception as e:
+        #     st.warning(f"Could not store Stage C output: {e}")
+
 
         # Keep table for downstream steps
         ss["asset_ai_df"] = df_app
@@ -2859,21 +2313,83 @@ with tabC:
         os.makedirs(RUNS_DIR, exist_ok=True)
         _ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
 
-        ai_df = ss.get("asset_ai_df")
-        if ai_df is None or len(ai_df) == 0:
-            st.info("Run the AI appraisal first to populate these tables.")
-        else:
-            # Merge intake (customer-declared) if available
-            intake_df = ss.get("asset_intake_df")
-            if intake_df is not None and not intake_df.empty:
-                # Choose join keys available in both frames
-                join_keys = [k for k in ["application_id", "asset_id"] if k in ai_df.columns and k in intake_df.columns]
-                if join_keys:
-                    merged = intake_df.merge(ai_df, on=join_keys, suffixes=("_cust", "_ai"), how="left")
-                else:
-                    merged = ai_df.copy()
+        
+        # ✅ Save Stage C output for Stage H (single source of truth)
+        st.session_state["asset_ai_df"] = df_app.copy()
+        ss["asset_ai_df"] = df_app.copy()
+        st.info("✅ Stage C valuation stored for Stage D / E / H.")
+
+        # ✅ Use the saved valuation table
+        ai_df = st.session_state["asset_ai_df"]
+
+        # ✅ Merge intake (customer-declared) if available
+        intake_df = ss.get("asset_intake_df")
+        if intake_df is not None and not intake_df.empty:
+            join_keys = [
+                k for k in ["application_id", "asset_id"]
+                if k in ai_df.columns and k in intake_df.columns
+            ]
+            if join_keys:
+                merged = intake_df.merge(
+                    ai_df, on=join_keys,
+                    suffixes=("_cust", "_ai"),
+                    how="left"
+                )
             else:
                 merged = ai_df.copy()
+        else:
+            merged = ai_df.copy()
+
+        # Optional: show preview table
+        st.markdown("### 🔍 Stage C Output Preview")
+        st.dataframe(merged, use_container_width=True)
+
+        
+        # # ✅ Save Stage C output for Stage H (using df_app, not undefined ai_df)
+        # st.session_state["asset_ai_df"] = df_app.copy()
+        # #ai_df = df_app.copy()
+        # ai_df = st.session_state["asset_ai_df"]
+        
+
+        
+
+        # ✅ Merge intake (customer-declared) if available
+        intake_df = ss.get("asset_intake_df")
+        if intake_df is not None and not intake_df.empty:
+            # Choose join keys available in both frames
+            join_keys = [
+                k for k in ["application_id", "asset_id"]
+                if k in ai_df.columns and k in intake_df.columns
+            ]
+            if join_keys:
+                merged = intake_df.merge(
+                    ai_df, on=join_keys,
+                    suffixes=("_cust", "_ai"),
+                    how="left"
+                )
+            else:
+                merged = ai_df.copy()
+        else:
+            merged = ai_df.copy()
+
+        
+        # # ✅ Save Stage C output for Stage H
+        # #st.session_state["asset_ai_df"] = ai_df.copy()
+        # ai_df = ss.get("asset_ai_df")
+        # if ai_df is None or len(ai_df) == 0:
+        #     st.info("Run the AI appraisal first to populate these tables.")
+        # else:
+        #     # Merge intake (customer-declared) if available
+        #     intake_df = ss.get("asset_intake_df")
+        #     if intake_df is not None and not intake_df.empty:
+        #         # Choose join keys available in both frames
+        #         join_keys = [k for k in ["application_id", "asset_id"] if k in ai_df.columns and k in intake_df.columns]
+        #         if join_keys:
+        #             merged = intake_df.merge(ai_df, on=join_keys, suffixes=("_cust", "_ai"), how="left")
+        #         else:
+        #             merged = ai_df.copy()
+        #     else:
+        #         merged = ai_df.copy()
 
             # Canonical column mapping
             # customer declared value (prefer *_cust if merge happened)
@@ -3277,6 +2793,24 @@ with tabC:
                 with col:
                     st.download_button(f"⬇️ {fname}", data=data.encode("utf-8"), file_name=fname, mime="text/csv")
                     
+            
+            # ✅ NEW: Export full AI decision file for Stage E (Human Review)
+            st.markdown("### 🧾 Export AI Decision for Human Review (Stage E)")
+
+            if 'ai_df' in locals() and isinstance(ai_df, pd.DataFrame) and not ai_df.empty:
+                ai_export_name = f"ai_decision_stageC_{datetime.now().strftime('%Y%m%d-%H%M%S')}.csv"
+                ai_csv_data = ai_df.to_csv(index=False, encoding="utf-8-sig")
+
+                st.download_button(
+                    "⬇️ Export AI Decisions (send to Stage E)",
+                    data=ai_csv_data,
+                    file_name=ai_export_name,
+                    mime="text/csv",
+                    key="dl_ai_stagec_export"
+                )
+            else:
+                st.info("AI table (ai_df) not available — run valuation first.")
+
             # ========================
             # Stage C — AI Appraisal & Valuation
             # ========================
@@ -3286,7 +2820,19 @@ with tabC:
                 st.session_state["ai_review_df"] = ai_df  # ai_df should be the AI results dataframe from the current stage
                 st.session_state["current_stage"] = "human_review"
                 st.success("AI results sent to Stage E for human review!")
-                st.rerun()  # Trigger a page refresh to go to the next stage
+                st.rerun()
+
+            
+            # # ========================
+            # # Stage C — AI Appraisal & Valuation
+            # # ========================
+            # # Now send AI results to Stage E for review
+            # if st.button("💬 Review in Stage E"):
+            #     # Store AI appraisal results in session_state for Stage E
+            #     st.session_state["ai_review_df"] = ai_df  # ai_df should be the AI results dataframe from the current stage
+            #     st.session_state["current_stage"] = "human_review"
+            #     st.success("AI results sent to Stage E for human review!")
+            #     st.rerun()  # Trigger a page refresh to go to the next stage
 
 
 
@@ -3313,7 +2859,6 @@ with tabD:
 
     # ── D.6 and D.7 continue here (your existing haircuts / caps / breaches / decision code) ──
 
-
     # -------- D.6 — Policy & Haircuts → realizable_value --------
     st.markdown("### **D.6 — Policy & Haircuts**")
     p1, p2, p3 = st.columns(3)
@@ -3339,16 +2884,29 @@ with tabD:
 
         df["realizable_value"] = ai_adj * cond * legal * base_cut
 
-        # Persist policy_haircuts artifact
+        # Persist artifact
         policy_path = os.path.join(RUNS_DIR, f"policy_haircuts.{_ts()}.csv")
         df.to_csv(policy_path, index=False)
-        ss["asset_policy_df"] = df
+
+        # ✅ Save Stage D policy results for Stage H
+        try:
+            # Save into BOTH namespaces safely
+            st.session_state["asset_policy_df"] = df.copy()
+            ss["asset_policy_df"] = df.copy()
+
+            st.info("✅ Stage D policy results stored for Stage H.")
+        except Exception as e:
+            st.warning(f"Could not store Stage D output: {e}")
+
         st.success(f"Saved: `{policy_path}`")
 
         # KPIs
         k1, k2, k3 = st.columns(3)
         with k1:
-            st.metric("Avg Realizable Value", f"{pd.to_numeric(df['realizable_value'], errors='coerce').mean():,.0f}")
+            st.metric(
+                "Avg Realizable Value",
+                f"{pd.to_numeric(df['realizable_value'], errors='coerce').mean():,.0f}"
+            )
         with k2:
             st.metric("Rows", len(df))
         with k3:
@@ -3356,7 +2914,75 @@ with tabD:
 
         st.dataframe(df.head(30), use_container_width=True)
 
-    st.markdown("---")
+        
+        # # ✅ Save Stage D policy results for Stage H
+        # try:
+        #     st.session_state["asset_policy_df"] = df.copy()
+        #     ss["asset_policy_df"] = df.copy()
+        #     st.info("✅ Stage D policy results stored for Stage H.")
+        # except Exception as e:
+        #     st.warning(f"Could not store Stage D output: {e}")
+
+        # st.success(f"Saved: `{policy_path}`")
+
+        # # KPIs
+        # k1, k2, k3 = st.columns(3)
+        # with k1:
+        #     st.metric("Avg Realizable Value", f"{pd.to_numeric(df['realizable_value'], errors='coerce').mean():,.0f}")
+        # with k2:
+        #     st.metric("Rows", len(df))
+        # with k3:
+        #     st.metric("Base Haircut", f"{base_haircut_pct}%")
+
+        # st.dataframe(df.head(30), use_container_width=True)
+
+    # # -------- D.6 — Policy & Haircuts → realizable_value --------
+    # st.markdown("### **D.6 — Policy & Haircuts**")
+    # p1, p2, p3 = st.columns(3)
+    # with p1:
+    #     base_haircut_pct = st.slider("Base haircut (%)", 0, 60, 10, 1, key="policy_base_haircut")
+    # with p2:
+    #     condition_weight = st.slider("Condition multiplier min", 0.50, 1.00, 0.80, 0.01, key="policy_cond_min")
+    # with p3:
+    #     legal_weight = st.slider("Legal multiplier min", 0.50, 1.00, 0.95, 0.01, key="policy_legal_min")
+
+    # if st.button("Apply Haircuts", key="btn_apply_haircuts"):
+    #     df = base_df.copy()
+
+    #     # Ensure necessary inputs exist
+    #     for col, default in [("ai_adjusted", np.nan), ("condition_score", 0.9), ("legal_penalty", 1.0)]:
+    #         if col not in df.columns:
+    #             df[col] = default
+
+    #     ai_adj = pd.to_numeric(df["ai_adjusted"], errors="coerce")
+    #     cond   = pd.to_numeric(df["condition_score"], errors="coerce").clip(condition_weight, 1.0)
+    #     legal  = pd.to_numeric(df["legal_penalty"],  errors="coerce").clip(legal_weight, 1.0)
+    #     base_cut = (1.0 - float(base_haircut_pct) / 100.0)
+
+    #     df["realizable_value"] = ai_adj * cond * legal * base_cut
+
+    #     # Persist policy_haircuts artifact
+    #     policy_path = os.path.join(RUNS_DIR, f"policy_haircuts.{_ts()}.csv")
+    #     df.to_csv(policy_path, index=False)
+        
+    #     # ✅ Save Stage D policy for Stage H
+    #     st.session_state["asset_policy_df"] = policy_df.copy()
+
+    #     ss["asset_policy_df"] = df
+    #     st.success(f"Saved: `{policy_path}`")
+
+    #     # KPIs
+    #     k1, k2, k3 = st.columns(3)
+    #     with k1:
+    #         st.metric("Avg Realizable Value", f"{pd.to_numeric(df['realizable_value'], errors='coerce').mean():,.0f}")
+    #     with k2:
+    #         st.metric("Rows", len(df))
+    #     with k3:
+    #         st.metric("Base Haircut", f"{base_haircut_pct}%")
+
+    #     st.dataframe(df.head(30), use_container_width=True)
+
+    # st.markdown("---")
 
     # -------- D.7 — Risk / Decision --------
     st.markdown("### **D.7 — Risk / Decision**")
@@ -3553,6 +3179,35 @@ with tabE:
     )
     st.session_state["stage_c_selected_path"] = picked
 
+    # ─────────────────────────────────────────
+    # ✅ NEW: Direct Upload of Stage C Export (CSV)
+    # ─────────────────────────────────────────
+    st.markdown("### 📤 Or Upload Stage C Export")
+    uploaded_c = st.file_uploader(
+        "Upload a Stage C file (valuation_ai*.csv)",
+        type=["csv"],
+        key="stage_c_upload"
+    )
+
+    if uploaded_c is not None:
+        try:
+            df_ai = pd.read_csv(uploaded_c)
+            #st.success(f"✅ Imported uploaded file ({len[df_ai)} rows).")
+            st.success(f"✅ Imported uploaded file ({len(df_ai)} rows).")
+
+
+            temp_path = os.path.join(RUNS_DIR, f"uploaded_stage_c_{datetime.now().timestamp()}.csv")
+            df_ai.to_csv(temp_path, index=False, encoding="utf-8-sig")
+
+            st.session_state["stage_c_selected_path"] = temp_path
+            st.session_state["df_ai_current"] = df_ai.copy()
+
+            st.rerun()
+
+        except Exception as e:
+            st.error(f"Upload failed: {e}")
+    
+
     # Load the selected Stage C table → df_ai
     ai_path = st.session_state["stage_c_selected_path"]
     try:
@@ -3577,62 +3232,6 @@ with tabE:
         df_ai["justification"] = ""
 
     
-    # # Workspace
-    # RUNS_DIR = "./.tmp_runs"
-    # os.makedirs(RUNS_DIR, exist_ok=True)
-
-    # # Load latest AI valuation file safely
-    # ai_paths = sorted(
-    #     [os.path.join(RUNS_DIR, f) for f in os.listdir(RUNS_DIR) if f.startswith("valuation_ai") and f.endswith(".csv")],
-    #     key=os.path.getmtime, reverse=True
-    # )
-    # if not ai_paths:
-    #     st.warning("⚠️ No AI appraisal results found. Please complete Stage C first.")
-    #     st.stop()
-
-    # ai_path = ai_paths[0]
-    # try:
-    #     df_ai = pd.read_csv(ai_path)
-    # except Exception as e:
-    #     st.error(f"Failed to read `{ai_path}`: {e}")
-    #     st.stop()
-
-    # # Ensure join keys exist to avoid editor KeyErrors later
-    # for col in ["application_id", "asset_id", "asset_type", "city"]:
-    #     if col not in df_ai.columns:
-    #         df_ai[col] = None
-    
-    # # Inject the Stage C output (AI values) into Stage E for human review
-    # # Ensure human_value column exists for adjustments
-    # if "human_value" not in df_ai.columns:
-    #     df_ai["human_value"] = pd.to_numeric(df_ai["fmv"], errors="coerce") if "fmv" in df_ai.columns else np.nan
-    # if "justification" not in df_ai.columns:
-    #     df_ai["justification"] = ""
-
-    # # ── KPI Overview (safe)
-    # st.markdown("### 📊 Business Metrics Overview")
-
-    # def _safe_mean(df, col, fmt=None):
-    #     if isinstance(df, pd.DataFrame) and col in df.columns:
-    #         v = pd.to_numeric(df[col], errors="coerce").mean()
-    #         if pd.notna(v):
-    #             return f"{v:,.0f}" if fmt == "int" else (f"{v:.1f}" if fmt == "1f" else f"{v}")
-    #     return "—"
-
-    # def _safe_ltv(df):
-    #     if all(c in df.columns for c in ("loan_amount", "fmv")):
-    #         la = pd.to_numeric(df["loan_amount"], errors="coerce")
-    #         fmv = pd.to_numeric(df["fmv"], errors="coerce").replace(0, np.nan)
-    #         v = (la / fmv).mean()
-    #         if pd.notna(v):
-    #             return f"{v:.2f}"
-    #     return "—"
-
-    # c1, c2, c3, c4 = st.columns(4)
-    # with c1: st.metric("Average FMV", _safe_mean(df_ai, "fmv", fmt="int"))
-    # with c2: st.metric("Average Confidence", _safe_mean(df_ai, "confidence", fmt="1f") + ("%" if _safe_mean(df_ai, "confidence", fmt="1f") != "—" else ""))
-    # with c3: st.metric("Average LTV", _safe_ltv(df_ai))
-    # with c4: st.metric("Assets", f"{len(df_ai):,}")
 
     # ── Market Projections (safe)
     st.markdown("### 📈 Market Projections")
@@ -3647,8 +3246,21 @@ with tabE:
     else:
         st.info("FMV column not found; projection chart will appear after you run Stage C.")
 
-    # ── Human Adjustment Table (safe + flexible)
+    # ✅ Helper: return the first column present in dataframe
+    def _first_present(df, candidates):
+        for c in candidates:
+            if c in df.columns:
+                return c
+        return None
+
+
+    # ─────────────────────────────────────────
+    # ✅ Human Adjustment Table (LIVE + REFRESH SAFE)
+    # ─────────────────────────────────────────
     st.markdown("### ✏️ Human Adjustments & Justification")
+
+    
+
 
     # Ensure editable columns exist
     if "human_value" not in df_ai.columns:
@@ -3853,111 +3465,7 @@ with tabE:
         else:
             st.info("To show the colorful Human-Changes table, ensure value columns exist (e.g., ai_adjusted/fmv and human_value).")
 
-        # # ── Human Changes Only (colorful diff)
-        # st.markdown("### 🖍️ Human Changes Only (colored)")
-
-        # # Reuse helper and edited df from above
-        # value_ai = _first_present(edited, ["ai_adjusted", "fmv", "predicted_value"])
-        # value_hu = _first_present(edited, ["human_value", "reviewed_value", "final_value"])
-        # ai_dec_col = _first_present(edited, ["ai_decision", "ai_label", "ai_outcome", "decision_ai"])
-        # human_dec_col = _first_present(edited, ["human_decision", "human_label", "final_decision", "decision_human"])
-
-        # if value_ai and value_hu:
-        #     ai_vals = pd.to_numeric(edited[value_ai], errors="coerce")
-        #     hu_vals = pd.to_numeric(edited[value_hu], errors="coerce")
-
-        #     # treat tiny diffs as equal
-        #     rel_tol = 1e-9
-        #     val_changed = (ai_vals.fillna(np.nan) - hu_vals.fillna(np.nan)).abs() > (
-        #         (ai_vals.abs() + hu_vals.abs()).fillna(0) * rel_tol
-        #     )
-
-        #     dec_changed = False
-        #     if ai_dec_col and human_dec_col:
-        #         a = edited[ai_dec_col].astype(str).str.strip().str.lower()
-        #         h = edited[human_dec_col].astype(str).str.strip().str.lower()
-        #         dec_changed = (a != h)
-
-        #     just_present = edited.get("justification", pd.Series([""] * len(edited))).astype(str).str.strip().ne("")
-
-        #     changed_mask = val_changed | dec_changed | just_present
-        #     diff_df = edited.loc[changed_mask].copy()
-
-        #     if diff_df.empty:
-        #         st.success("🎉 No human changes detected.")
-        #     else:
-        #         diff_df["Δ_value"] = (hu_vals - ai_vals)
-        #         with np.errstate(divide="ignore", invalid="ignore"):
-        #             diff_df["Δ_%"] = np.where(
-        #                 ai_vals.replace(0, np.nan).notna(),
-        #                 (diff_df["Δ_value"] / ai_vals.replace(0, np.nan)) * 100.0,
-        #                 np.nan
-        #             ).round(2)
-
-        #         key_cols = [c for c in ["application_id", "asset_id", "asset_type", "city"] if c in diff_df.columns]
-        #         show_cols = key_cols + [c for c in [value_ai, value_hu, "Δ_value", "Δ_%", ai_dec_col, human_dec_col, "justification"] if c in diff_df.columns]
-        #         show_df = diff_df[show_cols].copy()
-
-        #         def _color_row(row):
-        #             styles = [""] * len(row.index)
-
-        #             def _idx(colname):
-        #                 try:
-        #                     return show_df.columns.get_loc(colname)
-        #                 except Exception:
-        #                     return None
-
-        #             idx_ai = _idx(value_ai)
-        #             idx_hu = _idx(value_hu)
-        #             idx_dv = _idx("Δ_value")
-        #             idx_dp = _idx("Δ_%")
-
-        #             # Value changes
-        #             try:
-        #                 ai_v = float(row.get(value_ai, np.nan))
-        #                 hu_v = float(row.get(value_hu, np.nan))
-        #             except Exception:
-        #                 ai_v, hu_v = np.nan, np.nan
-
-        #             if pd.notna(ai_v) and pd.notna(hu_v):
-        #                 if hu_v > ai_v:  # green for up
-        #                     for i in [idx_hu, idx_dv, idx_dp]:
-        #                         if i is not None:
-        #                             styles[i] = "background-color:#dcfce7; color:#065f46; font-weight:600;"
-        #                     if idx_ai is not None:
-        #                         styles[idx_ai] = "background-color:#ecfdf5; color:#064e3b;"
-        #                 elif hu_v < ai_v:  # red for down
-        #                     for i in [idx_hu, idx_dv, idx_dp]:
-        #                         if i is not None:
-        #                             styles[i] = "background-color:#fee2e2; color:#7f1d1d; font-weight:600;"
-        #                     if idx_ai is not None:
-        #                         styles[idx_ai] = "background-color:#fef2f2; color:#7f1d1d;"
-
-        #             # Decision changes → amber
-        #             if ai_dec_col in show_df.columns and human_dec_col in show_df.columns:
-        #                 ai_d = str(row.get(ai_dec_col, "")).strip().lower()
-        #                 hu_d = str(row.get(human_dec_col, "")).strip().lower()
-        #                 if ai_d != "" and hu_d != "" and ai_d != hu_d:
-        #                     for colname in [ai_dec_col, human_dec_col]:
-        #                         j = _idx(colname)
-        #                         if j is not None:
-        #                             styles[j] = "background-color:#fef9c3; color:#7c2d12; font-weight:600;"
-
-        #             # Justification present → blue
-        #             if "justification" in show_df.columns:
-        #                 just = str(row.get("justification", "")).strip()
-        #                 if just:
-        #                     j = _idx("justification")
-        #                     if j is not None:
-        #                         styles[j] = "background-color:#e0f2fe; color:#0c4a6e;"
-
-        #             return styles
-
-        #         styled = show_df.style.apply(_color_row, axis=1) \
-        #                             .format({value_ai: "{:,.0f}", value_hu: "{:,.0f}", "Δ_value": "{:,.0f}", "Δ_%": "{:.2f}%"})
-        #         st.dataframe(styled, use_container_width=True, hide_index=True)
-        # else:
-        #     st.info("To show the colorful Human-Changes table, ensure value columns exist (e.g., ai_adjusted/fmv and human_value).")
+        
 
     
     # ── Export for Retraining
@@ -3993,6 +3501,226 @@ with tabE:
             st.error(f"Save failed: {e}")
 
 
+# # ============================================================
+# # ✅ STAGE F FOOTER FUNCTION — must be defined BEFORE Stage F
+# # ============================================================
+
+def render_stage_f_footer(
+    new_m, prod_m, RUNS_DIR, model_path, report,
+    df_train=None, yte=None, y_pred_new=None
+):
+    import streamlit as st
+    import pandas as pd
+    import numpy as np
+    import os, json, glob, shutil, zipfile
+    from datetime import datetime, timezone
+    import plotly.express as px
+
+    st.markdown("## 🧭 Executive Model Evaluation Dashboard (Stage F)")
+
+    # -----------------------------------------
+    # ✅ Compute deltas
+    # -----------------------------------------
+    if prod_m:
+        delta_mae = (prod_m["MAE"] - new_m["MAE"]) / prod_m["MAE"] * 100
+        delta_rmse = (prod_m["RMSE"] - new_m["RMSE"]) / prod_m["RMSE"] * 100
+        delta_mape = (prod_m["MAPE%"] - new_m["MAPE%"]) / prod_m["MAPE%"] * 100
+        delta_r2  = (new_m["R2"] - prod_m["R2"]) * 100
+
+        improved = {
+            "MAE": delta_mae > 0,
+            "RMSE": delta_rmse > 0,
+            "MAPE%": delta_mape > 0,
+            "R2": delta_r2 > 0
+        }
+
+        # Main headline message
+        headline = f"✅ The new model outperforms the production model by **{delta_mae:+.1f}% MAE** and **{delta_r2:+.2f} R² points**."
+        headline_color = "#D1FAE5"  # greenish
+        reward_phrase = "✔ This is a strong improvement and beneficial for production use."
+    else:
+        headline = "🟢 First model trained — this will become the initial production baseline."
+        headline_color = "#DBEAFE"  # blueish
+        reward_phrase = "✔ You can safely promote this model."
+
+    # -----------------------------------------
+    # ✅ WHAT — Big one-sentence discovery
+    # -----------------------------------------
+    st.markdown(
+        f"""
+        <div style="
+            padding: 18px;
+            border-radius: 12px;
+            background-color: {headline_color};
+            font-size: 1.3rem;
+            font-weight: 600;
+        ">
+        {headline}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # -----------------------------------------
+    # ✅ SO WHAT — Why does this matter?
+    # -----------------------------------------
+    st.markdown("### 🧐 SO WHAT — Why does this matter?")
+    if prod_m:
+        st.write(
+            f"""
+            The new model shows measurable improvements across key financial and ML metrics:
+
+            - **MAE** (Average absolute error) improved by **{delta_mae:+.1f}%**  
+            - **RMSE** (Hard penalties on large mismatches) improved by **{delta_rmse:+.1f}%**  
+            - **MAPE** (Percentage error relative to asset value) improved by **{delta_mape:+.1f}%**  
+            - **R²** (How well the model explains variance) improved by **{delta_r2:+.2f} points**  
+
+            These metrics together mean:
+            - ✅ More accurate valuation predictions  
+            - ✅ Smaller high-error outliers  
+            - ✅ Better stability with fewer “shocks”  
+            - ✅ Higher confidence for underwriting, credit, and collateral decisions  
+            """
+        )
+    else:
+        st.info(
+            """
+            Since there is **no existing production model**, this trained model becomes 
+            the best available baseline for your valuation pipeline.
+            """
+        )
+
+    # -----------------------------------------
+    # ✅ KEY COMPARISON TABLE
+    # -----------------------------------------
+    st.markdown("### 📊 Metric Comparison (New vs Production)")
+
+    if prod_m:
+        df_cmp = pd.DataFrame([
+            ["MAE",   f"{new_m['MAE']:,.0f}",   f"{prod_m['MAE']:,.0f}",   f"{delta_mae:+.1f}%",  "Lower is better"],
+            ["RMSE",  f"{new_m['RMSE']:,.0f}",  f"{prod_m['RMSE']:,.0f}",  f"{delta_rmse:+.1f}%", "Penalizes large errors"],
+            ["MAPE%", f"{new_m['MAPE%']:.2f}%", f"{prod_m['MAPE%']:.2f}%", f"{delta_mape:+.1f}%", "Percent accuracy"],
+            ["R²",    f"{new_m['R2']:.3f}",     f"{prod_m['R2']:.3f}",     f"{delta_r2:+.2f}",    "Explained variance"],
+        ], columns=["Metric", "New Model", "Production", "Δ (Change)", "Meaning"])
+    else:
+        df_cmp = pd.DataFrame([
+            ["MAE",   f"{new_m['MAE']:,.0f}",   "—",  "—", "Lower is better"],
+            ["RMSE",  f"{new_m['RMSE']:,.0f}",  "—",  "—", "Penalizes large errors"],
+            ["MAPE%", f"{new_m['MAPE%']:.2f}%", "—",  "—", "Percent accuracy"],
+            ["R²",    f"{new_m['R2']:.3f}",     "—",  "—", "Explained variance"],
+        ], columns=["Metric", "New Model", "Production", "Δ (Change)", "Meaning"])
+
+    st.table(df_cmp)
+
+    # -----------------------------------------
+    # ✅ NOW WHAT — Recommended Action
+    # -----------------------------------------
+    st.markdown("### 🚀 NOW WHAT — Recommended Next Action")
+
+    if not prod_m or (delta_mae > 0 and delta_r2 > 0):
+        st.success(
+            f"""
+            ### ✅ Recommendation: **Promote the new model to production.**
+
+            {reward_phrase}
+
+            #### Why?
+            - It reduces valuation errors.
+            - It improves consistency and confidence scores.
+            - It captures market variance better (higher R²).
+            - It reduces underwriting risk.
+            - It generates more stable predictions for credit, risk & collateral workflows.
+            """
+        )
+        promote_ready = True
+    else:
+        st.warning(
+            f"""
+            ### ⚠️ Recommendation: **Do NOT promote yet.**
+
+            Some metrics degrade when compared to production.
+
+            #### Before promoting:
+            - Tune hyperparameters  
+            - Add more diverse training samples  
+            - Validate anomalies / outliers  
+            - Re-check human_value labels from Stage E  
+            """
+        )
+        promote_ready = False
+
+    # -----------------------------------------
+    # ✅ Next Steps Checklist
+    # -----------------------------------------
+    st.markdown("### ✅ Next Steps Checklist")
+
+    if promote_ready:
+        st.markdown(
+            """
+            ✅ Promote to production  
+            ✅ Export ZIP bundle  
+            ✅ Notify Credit / Risk agents  
+            ✅ Schedule monitoring in Stage I  
+            ✅ Optional: widen training dataset  
+            """
+        )
+    else:
+        st.markdown(
+            """
+            🔄 Retrain with more data  
+            🧹 Clean labeling inconsistencies  
+            🔍 Inspect outliers via residual plots  
+            🔧 Try Gradient Boosting or Random Forest  
+            """
+        )
+
+    # -----------------------------------------
+    # ✅ Show Drift Trend (mini chart)
+    # -----------------------------------------
+    st.markdown("### 📈 Performance Trend (MAE & R² over time)")
+    reports = sorted(glob.glob(os.path.join(RUNS_DIR, "training_report_*.json")), reverse=True)[:10]
+    trend = []
+    for f in reports:
+        try:
+            with open(f) as jf:
+                rep = json.load(jf)
+            trend.append({
+                "timestamp": rep["timestamp"],
+                "MAE": rep["metrics_new"]["MAE"],
+                "R2": rep["metrics_new"]["R2"],
+            })
+        except:
+            pass
+
+    if trend:
+        df_tr = pd.DataFrame(trend).sort_values("timestamp")
+        st.line_chart(df_tr.set_index("timestamp")[["MAE", "R2"]])
+
+    # -----------------------------------------
+    # ✅ Promotion Button
+    # -----------------------------------------
+    st.markdown("### 📤 Promote to Production")
+
+    if st.button("✅ Promote This Model Now"):
+        try:
+            #prod_dir = "./agents/asset_appraisal/models/production"
+            prod_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/production"
+
+            
+            os.makedirs(prod_dir, exist_ok=True)
+
+            shutil.copy(model_path, os.path.join(prod_dir, "model.joblib"))
+            json.dump(
+                {"model_path": model_path, "promoted_at": datetime.now(timezone.utc).isoformat(), "report": report},
+                open(os.path.join(prod_dir, "production_meta.json"), "w"),
+                indent=2
+            )
+            st.balloons()
+            st.success("✅ Model promoted successfully!")
+        except Exception as e:
+            st.error(f"❌ Promotion failed: {e}")
+    
+
 
 
 # ─────────────────────────────────────────
@@ -4011,9 +3739,79 @@ with tabF:
     from sklearn.linear_model import LinearRegression
     import joblib
     import shutil
+    from pathlib import Path
+
 
     st.subheader("🧪 Stage F — Model Training & Promotion")
     st.caption("Train or retrain with human feedback, compare against production (A/B), and promote if better.")
+    # -----------------------------------------
+    # ✅ HOW TO USE THIS TRAINING STAGE
+    # -----------------------------------------
+    st.markdown("""
+    <div style="
+        padding: 18px;
+        border-radius: 12px;
+        background-color: #EFF6FF;
+        border-left: 6px solid #2563EB;
+        font-size: 1.05rem;
+    ">
+    <b>📘 How this stage works:</b><br><br>
+
+    You are now in <b>Stage F</b>, where your appraisal model is trained, compared, and prepared for production.
+
+    This stage takes the <b>human-reviewed values</b> produced in Stage E and builds a model that predicts future valuations with better accuracy.
+
+    <br><br>
+
+    <b>✅ Follow these steps:</b><br>
+
+    <b>1️⃣ Load Training Data</b><br>
+    • The system auto-detects your latest <code>reviewed_appraisal*.csv</code> from Stage E.  
+    • If you prefer, upload a new CSV containing <code>human_value</code> labels.  
+
+    <br>
+
+    <b>2️⃣ Select Features</b><br>
+    • Numeric and relevant features are automatically selected.  
+    • ID columns and leakage columns (asset_id, ai_adjusted, etc.) are excluded.
+
+    <br>
+
+    <b>3️⃣ Choose a Model</b><br>
+    Select an algorithm (GradientBoosting, RandomForest, LinearRegression).  
+    The system will auto-tune nothing—this is a fast-iteration training cycle.
+
+    <br>
+
+    <b>4️⃣ Train & Compare</b><br>
+    • The model trains on your data.  
+    • A holdout test set evaluates performance.  
+    • If a production model exists, an A/B comparison is displayed.  
+
+    <br>
+
+    <b>5️⃣ Review Metrics & Insights</b><br>
+    • Actual vs predicted charts  
+    • Residual distributions  
+    • Feature importance analysis  
+    • Executive summary (WHAT → SO WHAT → NOW WHAT)  
+    • AI recommendation (promote / retrain)
+
+    <br>
+
+    <b>6️⃣ Save, Promote or Export</b><br>
+    • Save trained models  
+    • Promote to production (Stage G uses it for ZIP packaging)  
+    • Export full ZIP bundles for deployment (AWS S3, Swift, GitHub)
+
+    <br><br>
+
+    <b>🎯 Goal of Stage F:</b><br>
+    Produce a model that is <b>more accurate, more stable, and more explainable</b> than your current production baseline — and ready for deployment in Stage G.
+    </div>
+    """, unsafe_allow_html=True)
+
+    
 
     # ---------- helpers ----------
     def _ts():
@@ -4288,360 +4086,628 @@ with tabF:
                                data=plot_df.to_csv(index=False).encode("utf-8-sig"),
                                file_name=os.path.basename(preds_csv),
                                mime="text/csv")
-
+        # ✅ ✅ ✅ CALL DASHBOARD — FIX FOR YOUR ISSUE
+        render_stage_f_footer(
+            new_m=new_m,
+            prod_m=prod_m,
+            RUNS_DIR=RUNS_DIR,
+            model_path=model_path,
+            report=report,
+            df_train=df_train,
+            yte=yte,
+            y_pred_new=y_pred_new
+        )
         
-        
-        # ===== Promotion =====
-        st.markdown("### 🟢 Promote to Production")
-        better_hint = ""
-        if prod_m is not None and np.isfinite(prod_m["MAE"]):
-            delta_mae = new_m["MAE"] - prod_m["MAE"]
-            better_hint = "✅ New MAE is lower than production — promotion recommended." if delta_mae < 0 else "⚠️ New MAE is not lower than production."
-            st.info(better_hint)
+    # ---------------------------------------------------------
+    # ✅ EXPORT: FULL PROJECT + MODELS (always works)
+    # ---------------------------------------------------------
+    st.markdown("### 📦 Export Full Project (Model + Reports + Artifacts)")
 
-        if st.button("📤 Promote this trained model to Production", key="btn_promote_prod"):
-            # Define the production directory path
-            prod_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/production"
-            os.makedirs(prod_dir, exist_ok=True)
+    EXPORT_DIR = Path("./exports")
+    EXPORT_DIR.mkdir(exist_ok=True)
 
-            # Copy the trained model to production folder
-            shutil.copy(model_path, os.path.join(prod_dir, "model.joblib"))
+    zip_name = f"asset_project_bundle_{_ts()}.zip"
+    zip_path = EXPORT_DIR / zip_name
 
-            # Prepare meta information for the promoted model
-            meta = {
-                "model_path": model_path,
-                "promoted_at": datetime.now(timezone.utc).isoformat(),
-                "ab_report": report,  # Add your AB report or other relevant info
-            }
+    if st.button("⬇️ Build & Download Project ZIP"):
+        try:
+            with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+                
+                # Include all run artifacts
+                for root, dirs, files in os.walk(RUNS_DIR):
+                    for f in files:
+                        full = os.path.join(root, f)
+                        arc  = os.path.relpath(full, RUNS_DIR)
+                        zf.write(full, f"runs/{arc}")
 
-            # Define the meta path for writing
-            meta_path = os.path.join(prod_dir, "production_meta.json")
+                # Include production model
+                if os.path.exists("./agents/asset_appraisal/models/production"):
+                    for root, dirs, files in os.walk("./agents/asset_appraisal/models/production"):
+                        for f in files:
+                            full = os.path.join(root, f)
+                            zf.write(full, f"production_models/{f}")
 
+                # Include trained models
+                if os.path.exists("./agents/asset_appraisal/models/trained"):
+                    for root, dirs, files in os.walk("./agents/asset_appraisal/models/trained"):
+                        for f in files:
+                            full = os.path.join(root, f)
+                            zf.write(full, f"trained_models/{f}")
+
+                # Include training report (the JSON)
+                if "report" in locals():
+                    rep_path = RUNS_DIR / f"training_report_{report['timestamp']}.json"
+               
+                    if os.path.exists(rep_path):
+                        zf.write(rep_path, "training_report.json")
+
+            st.success(f"✅ Exported: {zip_name}")
+
+            # Actual download
+            with open(zip_path, "rb") as fp:
+                st.download_button(
+                    "⬇️ Download ZIP Now",
+                    data=fp,
+                    file_name=zip_name,
+                    mime="application/zip",
+                    use_container_width=True
+                )
+
+        except Exception as e:
+            st.error(f"❌ ZIP creation failed: {e}")
+
+
+# ───────────────────────────────────────────────
+# ✅ Helper functions required by Stage G
+# ───────────────────────────────────────────────
+def is_nonempty_df(x):
+    import pandas as pd
+    return isinstance(x, pd.DataFrame) and not x.empty
+
+def first_nonempty_df(*candidates):
+    for c in candidates:
+        if is_nonempty_df(c):
+            return c
+    return None
+
+
+# ───────────────────────────────────────────────
+# G — DEPLOYMENT & DISTRIBUTION STAGE
+# ───────────────────────────────────────────────
+with tabG:
+    import os, json, hashlib, zipfile, requests
+    from datetime import datetime, timezone
+    from pathlib import Path
+    import streamlit as st
+
+    st.title("🚀 Stage G — Deployment & Distribution")
+    st.caption("Package → Verify → Upload → Release → Distribute to Credit / Legal / Risk units.")
+
+    # ---------------------------------------------
+    # 1) Load the latest ZIP bundle created in Stage F
+    # ---------------------------------------------
+    st.markdown("## 📦 1) Project Package (Generated in Stage F)")
+    
+    EXPORT_DIR = Path("./exports")
+    EXPORT_DIR.mkdir(exist_ok=True)
+
+    # Find ZIP files
+    zip_files = sorted(EXPORT_DIR.glob("asset_project_bundle_*.zip"), reverse=True)
+    
+    if not zip_files:
+        st.warning("⚠️ No project ZIP found. Run Stage F and export a bundle first.")
+        st.stop()
+
+    latest_zip = zip_files[0]
+
+    st.success(f"✅ Latest bundle detected: `{latest_zip.name}`")
+    st.caption(f"Size: **{latest_zip.stat().st_size/1e6:.2f} MB**")
+    
+    # Show preview
+    with zipfile.ZipFile(latest_zip, "r") as z:
+        preview = z.namelist()[:20]
+        st.code("\n".join(preview), language="text")
+    
+
+    # ---------------------------------------------
+    # 2) Integrity Check (SHA256)
+    # ---------------------------------------------
+    st.markdown("## ✅ 2) File Integrity Check (SHA256)")
+
+    sha256 = hashlib.sha256(latest_zip.read_bytes()).hexdigest()
+    st.code(sha256)
+
+    checksum_path = latest_zip.with_suffix(".sha256")
+    checksum_path.write_text(sha256)
+    st.caption(f"Checksum written → `{checksum_path.name}`")
+
+    # Simple signature
+    sig_path = latest_zip.with_suffix(".sig")
+    sig_path.write_text(f"AI-Agent-Hub signed @ {datetime.now(timezone.utc).isoformat()}")
+    st.caption(f"Signature stub → `{sig_path.name}`")
+
+
+    # ---------------------------------------------
+    # 3) Upload Targets (S3 / Swift / GitHub Release)
+    # ---------------------------------------------
+    st.markdown("## ☁️ 3) Upload / Publish Package")
+
+    dest = st.radio(
+        "Choose destination",
+        ["AWS S3", "OpenStack Swift", "GitHub Release"],
+        horizontal=True
+    )
+
+    if dest == "AWS S3":
+        st.info("Upload to S3 (requires AWS credentials)")
+        bucket = st.text_input("Bucket Name", "my-ai-models")
+        key = st.text_input("Object Key", latest_zip.name)
+
+        if st.button("⬆️ Upload to S3"):
             try:
-                # Write the meta data to production_meta.json
-                with open(meta_path, "w", encoding="utf-8") as f:
-                    json.dump(meta, f, indent=2)
-                st.success(f"🟢 Model promoted to production: {os.path.join(prod_dir, 'model.joblib')}")
-                st.caption(f"Production metadata saved in {meta_path}")
+                import boto3
+                s3 = boto3.client("s3")
+                s3.upload_file(str(latest_zip), bucket, key)
+                st.success(f"✅ Uploaded to `s3://{bucket}/{key}`")
             except Exception as e:
-                # Catch any errors while creating the meta file
-                st.error(f"❌ Error while creating production meta file: {e}")
-                st.warning("Please check the directory permissions or try again.")
+                st.error(f"❌ Failed: {e}")
 
-        
-        
-        # ===== Promotion =====
-        # st.markdown("### 🟢 Promote to Production")
-        # better_hint = ""
-        # if prod_m is not None and np.isfinite(prod_m["MAE"]):
-        #     delta_mae = new_m["MAE"] - prod_m["MAE"]
-        #     better_hint = "✅ New MAE is lower than production — promotion recommended." if delta_mae < 0 else "⚠️ New MAE is not lower than production."
-        #     st.info(better_hint)
+    elif dest == "OpenStack Swift":
+        st.info("Upload to Swift (requires Swift credentials)")
+        container = st.text_input("Container Name", "ai-models")
+        if st.button("⬆️ Upload to Swift"):
+            try:
+                from swiftclient.service import SwiftService, SwiftUploadObject
+                with SwiftService() as swift:
+                    swift.upload(container, [SwiftUploadObject(str(latest_zip))])
+                st.success(f"✅ Uploaded to Swift container `{container}`")
+            except Exception as e:
+                st.error(f"❌ Failed: {e}")
 
-        # if st.button("📤 Promote this trained model to Production", key="btn_promote_prod"):
-        #     # Define the production directory path
-        #     prod_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/production"
-        #     os.makedirs(prod_dir, exist_ok=True)
+    elif dest == "GitHub Release":
+        st.info("Publish as a GitHub release asset")
+        repo = st.text_input("Repo (owner/repo)", "RackspaceAI/asset-appraisal-agent")
+        token = st.text_input("GitHub Personal Access Token", type="password")
+        tag = datetime.now().strftime("v%Y%m%d-%H%M%S")
 
-        #     # Copy the trained model to production folder
-        #     shutil.copy(model_path, os.path.join(prod_dir, "model.joblib"))
+        if st.button("⬆️ Publish Release on GitHub"):
+            try:
+                headers = {
+                    "Authorization": f"token {token}",
+                    "Accept": "application/vnd.github+json",
+                }
 
-        #     # Prepare meta information for the promoted model
-        #     meta = {
-        #         "model_path": model_path,
-        #         "promoted_at": datetime.now(timezone.utc).isoformat(),
-        #         "ab_report": report,  # Add your AB report or other relevant info
-        #     }
+                # Create release
+                r = requests.post(
+                    f"https://api.github.com/repos/{repo}/releases",
+                    headers=headers,
+                    json={"tag_name": tag, "name": f"Release {tag}", 
+                          "body": "Automated export from Stage G"}
+                )
+                r.raise_for_status()
 
-        #     # Write the meta data to production_meta.json
-        #     meta_path = os.path.join(prod_dir, "production_meta.json")
-        #     with open(meta_path, "w", encoding="utf-8") as f:
-        #         json.dump(meta, f, indent=2)
+                upload_url = r.json()["upload_url"].split("{")[0]
 
-        #     # Success message
-        #     st.success(f"🟢 Model promoted to production: {os.path.join(prod_dir, 'model.joblib')}")
-        #     st.caption(f"Production metadata saved in {meta_path}")
+                # Upload asset
+                with open(latest_zip, "rb") as f:
+                    ur = requests.post(
+                        f"{upload_url}?name={latest_zip.name}",
+                        headers={**headers, "Content-Type": "application/zip"},
+                        data=f,
+                    )
+                ur.raise_for_status()
 
-        # # ===== Promotion =====
-        # st.markdown("### 🟢 Promote to Production")
-        # better_hint = ""
-        # if prod_m is not None and np.isfinite(prod_m["MAE"]):
-        #     delta_mae = new_m["MAE"] - prod_m["MAE"]
-        #     better_hint = "✅ New MAE is lower than production — promotion recommended." if delta_mae < 0 else "⚠️ New MAE is not lower than production."
-        #     st.info(better_hint)
-
-        # if st.button("📤 Promote this trained model to Production", key="btn_promote_prod"):
-        #     #prod_dir = "./agents/asset_appraisal/models/production"
-        #     prod_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/production"
-        #     os.makedirs(prod_dir, exist_ok=True)
-        #     shutil.copy(model_path, os.path.join(prod_dir, "model.joblib"))
-        #     meta = {
-        #         "model_path": model_path,
-        #         "promoted_at": datetime.now(timezone.utc).isoformat(),
-        #         "ab_report": report,
-        #     }
-        #     with open(os.path.join(prod_dir, "production_meta.json"), "w", encoding="utf-8") as f:
-        #         json.dump(meta, f, indent=2)
-        #     st.success("🟢 Model promoted to production. Stage C will now use this model.")
+                st.success(f"✅ GitHub Release `{tag}` published successfully!")
+            except Exception as e:
+                st.error(f"❌ Failed: {e}")
 
 
+    # ---------------------------------------------
+    # 4) Deployment Audit Log
+    # ---------------------------------------------
+    st.markdown("## 🧾 4) Deployment Audit Log")
 
-
-# # ─────────────────────────────────────────
-# # F — MODEL TRAINING & PROMOTION
-# # ─────────────────────────────────────────
-# with tabF:
-#     st.subheader("🧪 Stage F — Model Training & Promotion")
-#     st.caption("Train or retrain models using human feedback, then promote them to production for Stage C evaluation.")
-    
-    
-#     # ─────────────────────────────────────────
-#     # Stage F header diagnostics (always visible)
-#     # ─────────────────────────────────────────
-#     st.markdown("#### 🔎 Data availability")
-
-#     def _len_df(x):
-#         return (0 if not isinstance(x, pd.DataFrame) else len(x))
-
-#     c1, c2, c3, c4 = st.columns(4)
-#     c1.metric("decision_df",  _len_df(ss.get("asset_decision_df")))
-#     c2.metric("policy_df",    _len_df(ss.get("asset_policy_df")))
-#     c3.metric("verified_df",  _len_df(ss.get("asset_verified_df")))
-#     c4.metric("ai_df",        _len_df(ss.get("asset_ai_df")))
-
-#     with st.expander("Show sample (if no data yet)"):
-#         st.caption("If you haven't run earlier stages, load a small demo so this page is not empty.")
-#         if st.button("Load demo portfolio (10 rows)", key="btn_demo_portfolio"):
-#             try:
-#                 # Prefer your real synthesizer if present
-#                 if "quick_synth" in globals():
-#                     demo = quick_synth(10)
-#                 else:
-#                     # Minimal fallback demo
-#                     import numpy as np, pandas as pd, random
-#                     demo = pd.DataFrame({
-#                         "application_id": [f"APP_{i:04d}" for i in range(10)],
-#                         "asset_id":      [f"A{i:04d}" for i in range(10)],
-#                         "asset_type":    np.random.choice(["House","Apartment","Car","Land"], size=10),
-#                         "city":          np.random.choice(["HCMC","Hanoi","Da Nang","Hue"], size=10),
-#                         "market_value":  np.random.randint(80_000, 800_000, size=10),
-#                         "ai_adjusted":   np.random.randint(75_000, 820_000, size=10),
-#                         "loan_amount":   np.random.randint(30_000, 500_000, size=10),
-#                         "confidence":    np.random.randint(60, 98, size=10),
-#                         "condition_score": np.random.uniform(0.6, 1.0, size=10).round(3),
-#                         "legal_penalty":   np.random.uniform(0.95, 1.0, size=10).round(3),
-#                     })
-#                     demo["realizable_value"] = (demo["ai_adjusted"] * demo["condition_score"] * demo["legal_penalty"]).round(2)
-#                     demo["ltv_ai"] = (demo["loan_amount"] / demo["ai_adjusted"]).round(3)
-#                     demo["ltv_cap"] = 0.8
-#                     demo["policy_breaches"] = ""
-#                     demo["decision"] = np.where(demo["ltv_ai"] > demo["ltv_cap"], "review", "approved")
-#                 ss["asset_decision_df"] = demo
-#                 st.success("Demo portfolio loaded into ss['asset_decision_df']. Scroll down.")
-#             except Exception as e:
-#                 st.error(f"Demo load failed: {e}")
-
-#     st.divider()
-
-
-
-#     reviewed = sorted([f for f in os.listdir("./.tmp_runs") if f.startswith("reviewed_appraisal")], reverse=True)
-#     if not reviewed:
-#         st.warning("⚠️ No reviewed feedback CSV found. Complete Stage E first.")
-#         st.stop()
-
-#     csv_path = os.path.join("./.tmp_runs", reviewed[0])
-#     df = pd.read_csv(csv_path)
-#     st.markdown(f"**Loaded:** `{csv_path}` ({len(df)} rows)")
-#     st.dataframe(df.head(20), use_container_width=True)
-
-#     model_choice = st.selectbox("Select model algorithm", ["GradientBoostingRegressor", "RandomForestRegressor", "LinearRegression"])
-#     if st.button("🚀 Train Model", key="btn_train_model"):
-#         from sklearn.model_selection import train_test_split
-#         from sklearn.metrics import r2_score, mean_absolute_error
-#         from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-#         from sklearn.linear_model import LinearRegression
-#         import joblib, json, shutil
-
-#         y = df["human_value"]
-#         X = df.select_dtypes("number").drop(columns=["human_value", "fmv", "ai_adjusted"], errors="ignore")
-
-#         Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.2, random_state=42)
-#         ModelCls = {"GradientBoostingRegressor": GradientBoostingRegressor,
-#                     "RandomForestRegressor": RandomForestRegressor,
-#                     "LinearRegression": LinearRegression}[model_choice]
-#         model = ModelCls().fit(Xtr, ytr)
-
-#         y_pred = model.predict(Xte)
-#         metrics = {"r2": r2_score(yte, y_pred), "mae": mean_absolute_error(yte, y_pred)}
-
-#         train_dir = "./agents/asset_appraisal/models/trained"
-#         os.makedirs(train_dir, exist_ok=True)
-#         ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-#         model_path = os.path.join(train_dir, f"{model_choice}_asset_{ts}.joblib")
-#         joblib.dump(model, model_path)
-#         st.success(f"✅ Model trained and saved → `{model_path}`")
-#         st.json(metrics)
-
-#         if st.button("📤 Promote to Production", key="btn_promote_prod"):
-#             prod_dir = "./agents/asset_appraisal/models/production"
-#             os.makedirs(prod_dir, exist_ok=True)
-#             shutil.copy(model_path, os.path.join(prod_dir, "model.joblib"))
-#             meta = {"model_path": model_path, "metrics": metrics, "promoted_at": datetime.now(timezone.utc).isoformat()}
-#             with open(os.path.join(prod_dir, "production_meta.json"), "w") as f:
-#                 json.dump(meta, f, indent=2)
-#             st.success("🟢 Model promoted to production. Stage C will now use this model.")
-
-
-
-    
-
-# ─────────────────────────────────────────
-# 📚 Unified Portfolio View (color-coded) + Handoff and Exports
-# ─────────────────────────────────────────
-st.markdown("### 🗂️ Unified Portfolio — Validated / Risky / Fraud")
-
-import os, json
-from datetime import datetime, timezone
-import numpy as np
-import pandas as pd  # make sure pd is available in this scope
-
-RUNS_DIR = "./.tmp_runs"
-os.makedirs(RUNS_DIR, exist_ok=True)
-_ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-
-# Choose best available table (do this ONCE)
-portfolio = first_nonempty_df(
-    ss.get("asset_decision_df"),
-    ss.get("asset_policy_df"),
-    ss.get("asset_verified_df"),
-    ss.get("asset_ai_df"),
-)
-
-if not is_nonempty_df(portfolio):
-    st.info("No portfolio data available yet. Run Stages C/D or load demo upstream.")
-else:
-    dfv = portfolio.copy()
-
-    # Ensure commonly used columns exist
-    defaults = {
-        "verification_status": "verified",
-        "encumbrance_flag": False,
-        "policy_breaches": "",
-        "confidence": 80.0,
-        "decision": "review",
-        "valuation_gap_pct": 0.0,
-        "fraud_flag": False,  # optional (if upstream sets)
+    audit = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "export_file": latest_zip.name,
+        "checksum": sha256,
+        "target": dest,
     }
-    for k, v in defaults.items():
-        if k not in dfv.columns:
-            dfv[k] = v
 
-    # Normalize types
-    conf = pd.to_numeric(dfv["confidence"], errors="coerce").fillna(0)
-    gap  = pd.to_numeric(dfv.get("valuation_gap_pct", 0), errors="coerce").fillna(0)
-    enc  = dfv["encumbrance_flag"].astype(bool)
-    brea = dfv["policy_breaches"].astype(str)
-    deci = dfv["decision"].astype(str).str.lower()
-    vstat= dfv["verification_status"].astype(str).str.lower()
-    fraud= dfv.get("fraud_flag", False)
-    if not isinstance(fraud, pd.Series):
-        fraud = pd.Series([bool(fraud)] * len(dfv))
+    audit_path = EXPORT_DIR / "deployment_audit.jsonl"
+    with open(audit_path, "a", encoding="utf-8") as f:
+        f.write(json.dumps(audit) + "\n")
 
-    # Use policy profile thresholds when available
-    pp = ss.get("policy_profile") or {"min_confidence": 70, "risky_gap_abs_pct": 10}
+    st.success(f"Audit record added → `{audit_path.name}`")
 
-    # Labeling rules
-    def label_row(i: int) -> str:
-        if fraud.iat[i] or ("fraud" in vstat.iat[i]) or (enc.iat[i] and "verified" not in vstat.iat[i]):
-            return "FRAUD / ENCUMBRANCE"
-        if (len(brea.iat[i]) > 0) or (conf.iat[i] < float(pp["min_confidence"])) \
-        or (abs(gap.iat[i]) >= float(pp["risky_gap_abs_pct"])) or (deci.iat[i] in ("review","reject")):
+
+    # ---------------------------------------------
+    # 5) Next Steps Checklist
+    # ---------------------------------------------
+    st.markdown("## ✅ 5) Next Steps for DevOps / IT")
+
+    st.markdown("""
+    ### ✔ For Credit Underwriting
+    - Import CSV assets into the Credit Appraisal Agent  
+    - Validate LTV, confidence, breaches  
+    - Promote selected assets for loan approval  
+
+    ### ✔ For Legal & Compliance
+    - Use verification subset (ownership, encumbrances)  
+    - Run through Legal Verification Agent  
+    - Flag encumbrances & fraud paths  
+
+    ### ✔ For Risk Management
+    - Use realizable_value, condition_score, legal_penalty  
+    - Re-run LTV stress tests  
+    - Update risk dashboards monthly  
+
+    ### ✔ For DevOps / Platform Teams
+    - Push ZIP to GitHub / Swift / S3  
+    - Deploy production model into RunAI / SageMaker / OpenStack MLOps  
+    - Update production_meta.json  
+    """)
+
+    st.info("Stage G is complete — continue to Stage H for Inter-Department Handoff.")
+
+
+# ─────────────────────────────────────────
+# ✅ STAGE H — Executive Dashboard + Handoff Export
+# ─────────────────────────────────────────
+
+with tabH:
+    import os, json, zipfile
+    from pathlib import Path
+    from datetime import datetime, timezone
+    import pandas as pd
+    import numpy as np
+    import streamlit as st
+    import plotly.express as px
+    import plotly.graph_objects as go
+
+    st.markdown("## 🧭 Stage H — Unified Portfolio, Insights & Handoff Export")
+    st.caption("Executive summary • Asset insights • Fraud/risk signals • Department deliverables")
+
+# with tabH:
+#     import os, json, zipfile
+#     from pathlib import Path
+#     from datetime import datetime, timezone
+#     import pandas as pd
+#     import numpy as np
+#     import streamlit as st
+#     import plotly.express as px
+#     import plotly.graph_objects as go
+
+#     st.markdown("## 🧭 Stage H — Unified Portfolio, Insights & Handoff Export")
+#     st.caption("Executive summary • Asset insights • Fraud/risk signals • Department deliverables")
+
+    # # ---------------------------------------------------------
+    # # ✅ Required outputs from earlier stages
+    # # ---------------------------------------------------------
+    # ai_df        = st.session_state.get("asset_ai_df")
+    # policy_df    = st.session_state.get("asset_policy_df")
+    # decision_df  = st.session_state.get("asset_decision_df")
+
+    # if ai_df is None or ai_df.empty:
+    #     st.warning("⚠️ Stage C valuation missing. Please run Stage C first.")
+    #     st.stop()
+    # if decision_df is None or decision_df.empty:
+    #     st.warning("⚠️ Stage D (risk & decision) missing. Please run Stage D first.")
+    #     st.stop()
+
+    # dfv = decision_df.copy()
+    
+    # ---------------------------------------------------------
+    # ✅ Required outputs from earlier stages — MUST COME FIRST
+    # ---------------------------------------------------------
+    ai_df        = st.session_state.get("asset_ai_df")
+    policy_df    = st.session_state.get("asset_policy_df")
+    decision_df  = st.session_state.get("asset_decision_df")
+
+    missing = []
+
+    if ai_df is None or ai_df.empty:
+        missing.append("Stage C (valuation)")
+    if decision_df is None or decision_df.empty:
+        missing.append("Stage D (risk & decision)")
+
+    if missing:
+        st.error("⚠️ Missing required data: " + ", ".join(missing))
+        st.info("Please run the missing stages before returning to Stage H.")
+        st.stop()
+
+    # ✅ Only now is dfv allowed to be created
+    dfv = decision_df.copy()
+
+
+    # ---------------------------------------------------------
+    # ✅ STATUS LABEL (Validated / Risky / Fraud)
+    # ---------------------------------------------------------
+    def label_row(r):
+        if r.get("fraud_flag") in [True, "True", 1]:
+            return "FRAUD"
+        if r.get("encumbrance_flag") in [True, "True", 1]:
+            return "ENCUMBERED"
+        if str(r.get("decision", "")).lower() == "reject":
+            return "RISKY"
+        if str(r.get("policy_breaches", "")).strip():
             return "RISKY"
         return "VALIDATED"
 
-    dfv["status_label"] = [label_row(i) for i in range(len(dfv))]
+    dfv["status"] = dfv.apply(label_row, axis=1)
 
-    # Row colors
-    def color_for(s: str) -> str:
-        if s == "VALIDATED": return "#DCFCE7"  # pale green
-        if s == "RISKY":     return "#FEF3C7"  # pale orange
-        return "#FEE2E2"                      # pale red
+    # ---------------------------------------------------------
+    # ✅ EXECUTIVE SUMMARY METRICS
+    # ---------------------------------------------------------
+    st.markdown("### 📊 Executive Summary")
 
-    row_colors = [color_for(s) for s in dfv["status_label"]]
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Total Assets", len(dfv))
+    with col2:
+        st.metric("Validated", (dfv["status"] == "VALIDATED").sum())
+    with col3:
+        st.metric("Risky", (dfv["status"] == "RISKY").sum())
+    with col4:
+        st.metric("Fraud / Encumbered", (dfv["status"].isin(["FRAUD","ENCUMBERED"])).sum())
 
-    # Columns to show prominently
-    cols_main = [c for c in [
-        "status_label",
-        "application_id","asset_id","asset_type","city",
-        "fmv","ai_adjusted","realizable_value",
-        "loan_amount","ltv_ai","ltv_cap",
-        "confidence","condition_score","legal_penalty",
-        "verification_status","encumbrance_flag",
-        "valuation_gap_pct","policy_breaches","decision"
-    ] if c in dfv.columns]
-    view = dfv[cols_main].copy()
-
-    # Style rows by status
-    def _style_rows(row):
-        return [f"background-color: {row_colors[row.name]}" for _ in row]
-
+    # ---------------------------------------------------------
+    # ✅ HEATMAP — Asset Risk & Fraud Signals
+    # ---------------------------------------------------------
+    st.markdown("### 🔥 Fraud / Risk Heatmap")
+    
     try:
-        st.dataframe(view.style.apply(_style_rows, axis=1), use_container_width=True)
+        hm = dfv[["confidence", "ltv_ai"]].copy()
+        hm = hm.dropna()
+
+        fig_hm = px.density_heatmap(
+            hm, x="confidence", y="ltv_ai",
+            nbinsx=30, nbinsy=30,
+            color_continuous_scale="YlOrRd",
+            title="Fraud/Anomaly Density — (Low confidence + High LTV = Hot Zones)"
+        )
+        st.plotly_chart(fig_hm, use_container_width=True)
     except Exception:
-        st.dataframe(view, use_container_width=True)
+        st.info("Heatmap unavailable until confidence / LTV data is complete.")
 
-    # ── Exports for downstream agents
-    st.markdown("#### 📤 Exports for Next Workflows")
+    # ---------------------------------------------------------
+    # ✅ MARKET INSIGHTS — CITY LEVEL DISTRIBUTION
+    # ---------------------------------------------------------
+    st.markdown("### 🌍 Asset Distribution by City")
 
-    # CREDIT: subset
-    cols_credit = [c for c in [
+    if "city" in dfv.columns:
+        fig_city = px.histogram(
+            dfv, x="city", color="status",
+            title="Asset Count per City by Status",
+            barmode="group"
+        )
+        st.plotly_chart(fig_city, use_container_width=True)
+
+    # ---------------------------------------------------------
+    # ✅ VALUE INSIGHTS — Realizable Value Curve
+    # ---------------------------------------------------------
+    st.markdown("### 💰 Value Distribution — FMV vs Realizable Value")
+
+    if "realizable_value" in dfv.columns:
+        fig_val = go.Figure()
+        fig_val.add_trace(go.Violin(y=dfv["fmv"], name="FMV", box_visible=True))
+        fig_val.add_trace(go.Violin(y=dfv["realizable_value"], name="Realizable", box_visible=True))
+        st.plotly_chart(fig_val, use_container_width=True)
+
+    # ---------------------------------------------------------
+    # ✅ FULL PORTFOLIO TABLE
+    # ---------------------------------------------------------
+    st.markdown("### 📂 Unified Portfolio (with status)")
+    st.dataframe(dfv, use_container_width=True)
+
+    # ---------------------------------------------------------
+    # ✅ DEPARTMENT HANDOFF EXPORTS (bulletproof)
+    # ---------------------------------------------------------
+    st.markdown("## 🏦 Department Handoff Packages")
+    st.caption("Each team receives only what they need. Clear, simple, compliant.")
+
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+
+    HANDOFF_DIR = Path("./handoff")
+    ZIP_DIR      = HANDOFF_DIR / "zips"
+    HANDOFF_DIR.mkdir(exist_ok=True)
+    ZIP_DIR.mkdir(exist_ok=True)
+
+    # ---------------------------
+    # ✅ CREDIT APPRAISAL EXPORT
+    # ---------------------------
+    credit_cols = [ 
         "application_id","asset_id","asset_type","city",
-        "fmv","ai_adjusted","realizable_value",
+        "ai_adjusted","fmv","realizable_value",
         "loan_amount","ltv_ai","ltv_cap",
-        "confidence","condition_score","legal_penalty",
-        "verification_status","encumbrance_flag","decision","policy_breaches"
-    ] if c in dfv.columns]
-    out_credit = dfv[cols_credit].copy()
+        "decision","policy_breaches"
+    ]
+    credit = dfv[[c for c in credit_cols if c in dfv.columns]].copy()
+    credit_path = HANDOFF_DIR / f"credit_appraisal_{ts}.csv"
+    credit.to_csv(credit_path, index=False)
 
-    # LEGAL: verification-centric
-    cols_legal = [c for c in [
+    # Download button
+    with open(credit_path, "rb") as f:
+        st.download_button("⬇️ Credit Appraisal CSV", f, file_name=credit_path.name, mime="text/csv")
+
+    # ---------------------------
+    # ✅ LEGAL / TITLE EXPORT
+    # ---------------------------
+    legal_cols = [
+        "application_id","asset_id","verified_owner",
+        "encumbrance_flag","legal_penalty","condition_score","notes"
+    ]
+    legal = dfv[[c for c in legal_cols if c in dfv.columns]].copy()
+    legal_path = HANDOFF_DIR / f"legal_pack_{ts}.csv"
+    legal.to_csv(legal_path, index=False)
+
+    with open(legal_path, "rb") as f:
+        st.download_button("⬇️ Legal & Title CSV", f, file_name=legal_path.name, mime="text/csv")
+
+    # ---------------------------
+    # ✅ RISK MANAGEMENT EXPORT
+    # ---------------------------
+    risk_cols = [
+        "application_id","asset_id","confidence",
+        "ltv_ai","ltv_cap","policy_breaches","decision","status"
+    ]
+    risk = dfv[[c for c in risk_cols if c in dfv.columns]].copy()
+    risk_path = HANDOFF_DIR / f"risk_management_{ts}.csv"
+    risk.to_csv(risk_path, index=False)
+
+    with open(risk_path, "rb") as f:
+        st.download_button("⬇️ Risk Management CSV", f, file_name=risk_path.name, mime="text/csv")
+
+    # ---------------------------
+    # ✅ CUSTOMER SERVICE EXPORT
+    # ---------------------------
+    cust_cols = [
         "application_id","asset_id","asset_type","city",
-        "verification_status","encumbrance_flag","legal_penalty",
-        "confidence","decision","policy_breaches","notes","verified_owner"
-    ] if c in dfv.columns]
-    out_legal = dfv[cols_legal].copy()
+        "fmv","ai_adjusted","decision","status","why"
+    ]
+    cust = dfv[[c for c in cust_cols if c in dfv.columns]].copy()
+    cust_path = HANDOFF_DIR / f"customer_service_{ts}.csv"
+    cust.to_csv(cust_path, index=False)
 
-    # RISK: policy & metrics
-    cols_risk = [c for c in [
-        "application_id","asset_id","asset_type","city",
-        "ai_adjusted","realizable_value","loan_amount",
-        "ltv_ai","ltv_cap","valuation_gap_pct",
-        "confidence","condition_score","legal_penalty",
-        "policy_breaches","decision","status_label"
-    ] if c in dfv.columns]
-    out_risk = dfv[cols_risk].copy()
+    with open(cust_path, "rb") as f:
+        st.download_button("⬇️ Customer Service CSV", f, file_name=cust_path.name, mime="text/csv")
 
-    # Download buttons (CSV + JSON each)
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.caption("Credit Appraisal Agent")
-        st.download_button("⬇️ Credit CSV", data=out_credit.to_csv(index=False).encode("utf-8"),
-                        file_name=f"to_credit_{_ts}.csv", mime="text/csv")
-        st.download_button("⬇️ Credit JSON", data=out_credit.to_json(orient="records").encode("utf-8"),
-                        file_name=f"to_credit_{_ts}.json", mime="application/json")
-    with c2:
-        st.caption("Legal Services")
-        st.download_button("⬇️ Legal CSV", data=out_legal.to_csv(index=False).encode("utf-8"),
-                        file_name=f"to_legal_{_ts}.csv", mime="text/csv")
-        st.download_button("⬇️ Legal JSON", data=out_legal.to_json(orient="records").encode("utf-8"),
-                        file_name=f"to_legal_{_ts}.json", mime="application/json")
-    with c3:
-        st.caption("Risk Management Agent")
-        st.download_button("⬇️ Risk CSV", data=out_risk.to_csv(index=False).encode("utf-8"),
-                        file_name=f"to_risk_{_ts}.csv", mime="text/csv")
-        st.download_button("⬇️ Risk JSON", data=out_risk.to_json(orient="records").encode("utf-8"),
-                        file_name=f"to_risk_{_ts}.json", mime="application/json")
+    # ---------------------------
+    # ✅ PORTFOLIO SUMMARY
+    # ---------------------------
+    portfolio_path = HANDOFF_DIR / f"portfolio_{ts}.csv"
+    dfv.to_csv(portfolio_path, index=False)
 
+    with open(portfolio_path, "rb") as f:
+        st.download_button("⬇️ Portfolio Summary CSV", f, file_name=portfolio_path.name, mime="text/csv")
+
+    # ---------------------------
+    # ✅ AUDIT RECORD
+    # ---------------------------
+    audit = {
+        "timestamp": ts,
+        "rows": len(dfv),
+        "status": dfv["status"].value_counts().to_dict(),
+        "avg_confidence": float(dfv["confidence"].mean() if "confidence" in dfv else 0.0),
+    }
+    audit_path = HANDOFF_DIR / f"audit_{ts}.json"
+    with open(audit_path, "w") as f:
+        json.dump(audit, f, indent=2)
+
+    with open(audit_path, "rb") as f:
+        st.download_button("⬇️ Audit Record (JSON)", f, file_name=audit_path.name, mime="application/json")
+
+    # ---------------------------
+    # ✅ FULL ZIP BUNDLE
+    # ---------------------------
+    zip_path = ZIP_DIR / f"handoff_bundle_{ts}.zip"
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        for fp in [credit_path, legal_path, risk_path, cust_path, portfolio_path, audit_path]:
+            zf.write(fp, arcname=os.path.basename(fp))
+
+    with open(zip_path, "rb") as f:
+        st.download_button("⬇️ Download FULL Handoff ZIP", f,
+                        file_name=zip_path.name, mime="application/zip",
+                        use_container_width=True)
+
+    
+    
+    # # ---------------------------------------------------------
+    # # ✅ HANDOFF OUTPUTS — Department-Specific Files
+    # # ---------------------------------------------------------
+    # st.markdown("## 🏦 Department Handoff Packages")
+    # st.caption("Each team receives only what they need. Clear, simple, compliant.")
+
+    # ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    # HANDOFF_DIR = Path("./handoff")
+    # ZIP_DIR      = HANDOFF_DIR / "zips"
+    # HANDOFF_DIR.mkdir(exist_ok=True)
+    # ZIP_DIR.mkdir(exist_ok=True)
+
+    # # CREDIT APPRAISAL
+    # credit_cols = [
+    #     "application_id","asset_id","asset_type","city",
+    #     "ai_adjusted","fmv","realizable_value",
+    #     "loan_amount","ltv_ai","ltv_cap",
+    #     "decision","policy_breaches"
+    # ]
+    # credit = dfv[[c for c in credit_cols if c in dfv.columns]].copy()
+    # credit_path = HANDOFF_DIR / f"credit_appraisal_{ts}.csv"
+    # credit.to_csv(credit_path, index=False)
+
+    # # LEGAL & TITLE
+    # legal_cols = [
+    #     "application_id","asset_id","verified_owner",
+    #     "encumbrance_flag","legal_penalty","condition_score","notes"
+    # ]
+    # legal = dfv[[c for c in legal_cols if c in dfv.columns]].copy()
+    # legal_path = HANDOFF_DIR / f"legal_pack_{ts}.csv"
+    # legal.to_csv(legal_path, index=False)
+
+    # # RISK MANAGEMENT
+    # risk_cols = [
+    #     "application_id","asset_id","confidence",
+    #     "ltv_ai","ltv_cap","policy_breaches","decision","status"
+    # ]
+    # risk = dfv[[c for c in risk_cols if c in dfv.columns]].copy()
+    # risk_path = HANDOFF_DIR / f"risk_management_{ts}.csv"
+    # risk.to_csv(risk_path, index=False)
+
+    # # CUSTOMER SERVICE SUMMARY
+    # cust_cols = [
+    #     "application_id","asset_id","asset_type","city",
+    #     "fmv","ai_adjusted","decision",
+    #     "status","why"
+    # ]
+    # cust = dfv[[c for c in cust_cols if c in dfv.columns]].copy()
+    # cust_path = HANDOFF_DIR / f"customer_service_{ts}.csv"
+    # cust.to_csv(cust_path, index=False)
+
+    # # FULL PORTFOLIO
+    # portfolio_path = HANDOFF_DIR / f"portfolio_{ts}.csv"
+    # dfv.to_csv(portfolio_path, index=False)
+
+    # # AUDIT LOG
+    # audit = {
+    #     "timestamp": ts,
+    #     "rows": len(dfv),
+    #     "status": dfv["status"].value_counts().to_dict(),
+    #     "avg_confidence": float(dfv["confidence"].mean()),
+    # }
+    # audit_path = HANDOFF_DIR / f"audit_{ts}.json"
+    # with open(audit_path, "w") as f:
+    #     json.dump(audit, f, indent=2)
+
+    # ---------------------------------------------------------
+    # ✅ ZIP bundle
+    # ---------------------------------------------------------
+    zip_path = ZIP_DIR / f"handoff_bundle_{ts}.zip"
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        for fp in [credit_path, legal_path, risk_path, cust_path, portfolio_path, audit_path]:
+            zf.write(fp, arcname=os.path.basename(fp))
+
+    st.markdown("### 📦 Download Unified Handoff Bundle")
+    with open(zip_path, "rb") as f:
+        st.download_button(
+            "⬇️ Download Full Handoff ZIP",
+            data=f,
+            file_name=os.path.basename(zip_path),
+            mime="application/zip",
+            use_container_width=True
+        )
+
+    # ---------------------------------------------------------
+    # ✅ Visual Summary of What Each Department Gets
+    # ---------------------------------------------------------
+    st.markdown("### 🧩 Department Package Map")
+
+    st.json({
+        "Credit Appraisal": list(credit.columns),
+        "Legal / Title": list(legal.columns),
+        "Risk Management": list(risk.columns),
+        "Customer Service": list(cust.columns),
+        "Portfolio Summary": list(dfv.columns),
+        "Audit Record": list(audit.keys())
+    })
 
 

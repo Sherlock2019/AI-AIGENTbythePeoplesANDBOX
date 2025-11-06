@@ -1,0 +1,14 @@
+{
+  "timestamp": "20251106-110408",
+  "rows": 150,
+  "decision_breakdown": {
+    "review": 125,
+    "approve": 13,
+    "reject": 12
+  },
+  "avg_confidence": 67.06600000000002,
+  "status_breakdown": {
+    "RISKY": 137,
+    "VALIDATED": 13
+  }
+}
