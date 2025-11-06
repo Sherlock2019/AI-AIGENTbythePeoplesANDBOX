@@ -1295,28 +1295,36 @@ def render_credit_dashboard(df: pd.DataFrame, currency_symbol: str = ""):
         st.markdown("### 👥 Customer Mix")
         st.dataframe(mix, use_container_width=True, height=220)
 
+
+# ─────────────────────────────────────────────
+# ✅ CREDIT APPRAISAL WORKFLOW (A → G)
+# Tabs preserved exactly as requested
+# ─────────────────────────────────────────────
+tab_gen, tab_clean, tab_run, tab_review, tab_train, tab_feedback = st.tabs([
+    "🏦 Synthetic Data Generator",         # Stage A — Data Generation & Intake
+    "🧹 Anonymize & Sanitize Data",        # Stage B — Cleaning & Feature Engineering
+    "🤖 Credit appraisal by AI assistant", # Stage C — Model Inference
+    "🧑‍⚖️ Human Review",                  # Stage D — Human Override + Finalize
+    "🔁 Training (Feedback → Retrain)",    # Stage E/F — Retraining + Deployment
+    "🗣️ Feedback & Feature Requests"       # Stage G — Reporting + Handoff
+])
+
+
+
+
+
 # # ─────────────────────────────────────────────
-# # TABS
-# tab_gen, tab_clean, tab_run, tab_review, tab_train = st.tabs([
+# # ─────────────────────────────────────────────
+# # WORKFLOW TABS — full 6 steps
+# # ─────────────────────────────────────────────
+# tab_gen, tab_clean, tab_run, tab_review, tab_train, tab_feedback = st.tabs([
 #     "🏦 Synthetic Data Generator",
 #     "🧹 Anonymize & Sanitize Data",
 #     "🤖 Credit appraisal by AI assistant",
 #     "🧑‍⚖️ Human Review",
-#     "🔁 Training (Feedback → Retrain)"
+#     "🔁 Training (Feedback → Retrain)",
+#     "🗣️ Feedback & Feature Requests"
 # ])
-
-# ─────────────────────────────────────────────
-# ─────────────────────────────────────────────
-# WORKFLOW TABS — full 6 steps
-# ─────────────────────────────────────────────
-tab_gen, tab_clean, tab_run, tab_review, tab_train, tab_feedback = st.tabs([
-    "🏦 Synthetic Data Generator",
-    "🧹 Anonymize & Sanitize Data",
-    "🤖 Credit appraisal by AI assistant",
-    "🧑‍⚖️ Human Review",
-    "🔁 Training (Feedback → Retrain)",
-    "🗣️ Feedback & Feature Requests"
-])
 
 
 
@@ -2239,149 +2247,470 @@ with tab_review:
         st.caption(f"Saved file name pattern: **{review_name}**")
 
 
-# ─────────────────────────────────────────────
-# 🔁 TAB 5 — Training (Feedback → Retrain)
+
+
+# -------------------------------------------------------------
+# ✅ STAGE F — Credit Model Training (Executive Dashboard)
+# -------------------------------------------------------------
 with tab_train:
-    st.subheader("🔁 From Human Feedback CSV → Train and Promote Trained Model to Production Model ")
+    import os, json, glob, shutil, zipfile
+    from datetime import datetime, timezone
+    import pandas as pd
+    import numpy as np
+    import joblib
+    import streamlit as st
+    import plotly.express as px
+    import plotly.graph_objects as go
+    from sklearn.metrics import (
+        roc_auc_score, accuracy_score, precision_score,
+        recall_score, f1_score, confusion_matrix
+    )
 
-    st.markdown("**Drag & drop** one or more review CSVs exported from the Human Review tab.")
-    up_list = st.file_uploader("Upload feedback CSV(s)", type=["csv"], accept_multiple_files=True, key="train_feedback_uploader")
+    st.markdown("## 🧠 Stage F — Credit Model Training")
+    st.caption("Train → Compare → Evaluate → Promote credit scoring models")
 
-    staged_paths: List[str] = []
-    if up_list:
-        for up in up_list:
-            # stage to tmp_feedback dir
-            dest = os.path.join(TMP_FEEDBACK_DIR, up.name)
-            with open(dest, "wb") as f:
-                f.write(up.getvalue())
-            staged_paths.append(dest)
-        st.success(f"Staged {len(staged_paths)} feedback file(s) to {TMP_FEEDBACK_DIR}")
-        st.write(staged_paths)
+    # ---------------------------------------------------------
+    # ✅ TRAINING INPUT CHECK
+    # ---------------------------------------------------------
+    train_df = st.session_state.get("credit_train_df")
+    if train_df is None or train_df.empty:
+        st.error("⚠️ Missing training dataset. Please load data in Stage C.")
+        st.stop()
 
-    st.markdown("#### Launch Retrain")
-    payload = {
-        "feedback_csvs": staged_paths,
-        "user_name": st.session_state["user_info"]["name"],
-        "agent_name": "credit_appraisal",
-        "algo_name": "credit_lr",
-    }
-    st.code(json.dumps(payload, indent=2), language="json")
+    st.info("✅ Training dataset loaded.")
+    st.dataframe(train_df.head(), use_container_width=True)
 
-    colA, colB = st.columns([1,1])
-    with colA:
-        if st.button("🚀 Train candidate model"):
-            try:
-                r = requests.post(f"{API_URL}/v1/training/train", json=payload, timeout=90)
-                if r.ok:
-                    st.success(r.json())
-                    st.session_state["last_train_job"] = r.json().get("job_id")
-                else:
-                    st.error(r.text)
-            except Exception as e:
-                st.error(f"Train failed: {e}")
-    with colB:
-        if st.button("⬆️ Promote last candidate to PRODUCTION"):
-            try:
-                r = requests.post(f"{API_URL}/v1/training/promote", timeout=30)
-                st.write(r.json() if r.ok else r.text)
-            except Exception as e:
-                st.error(f"Promote failed: {e}")
+    # ---------------------------------------------------------
+    # ✅ CHOOSE MODEL
+    # ---------------------------------------------------------
+    model_choice = st.selectbox(
+        "Select model to train:",
+        ["LogisticRegression", "RandomForest", "LightGBM", "XGBoost"]
+    )
 
-    st.markdown("---")
-    st.markdown("#### Production Model")
-    try:
-        resp = requests.get(f"{API_URL}/v1/training/production_meta", timeout=5)
-        if resp.ok:
-            st.json(resp.json())
-        else:
-            st.info("No production model yet.")
-    except Exception as e:
-        st.warning(f"Could not load production meta: {e}")
+    # ---------------------------------------------------------
+    # ✅ Train button
+    # ---------------------------------------------------------
+    if st.button("🚀 Train Credit Model Now"):
+        with st.spinner("Training model…"):
+
+            # ---------------- TRAIN YOUR MODEL HERE ----------------
+            from sklearn.model_selection import train_test_split
+            y = train_df["label"]
+            X = train_df.drop(columns=["label"])
+
+            Xtr, Xte, ytr, yte = train_test_split(
+                X, y, test_size=0.2, random_state=42
+            )
+
+            if model_choice == "LogisticRegression":
+                from sklearn.linear_model import LogisticRegression
+                model = LogisticRegression(max_iter=2000)
+            elif model_choice == "RandomForest":
+                from sklearn.ensemble import RandomForestClassifier
+                model = RandomForestClassifier(n_estimators=300)
+            elif model_choice == "LightGBM":
+                from lightgbm import LGBMClassifier
+                model = LGBMClassifier()
+            else:
+                from xgboost import XGBClassifier
+                model = XGBClassifier()
+
+            model.fit(Xtr, ytr)
+            preds_proba = model.predict_proba(Xte)[:, 1]
+            preds = (preds_proba >= 0.5).astype(int)
+
+            # ---------------- METRICS ----------------
+            new_m = {
+                "AUC": roc_auc_score(yte, preds_proba),
+                "Accuracy": accuracy_score(yte, preds),
+                "Precision": precision_score(yte, preds),
+                "Recall": recall_score(yte, preds),
+                "F1": f1_score(yte, preds),
+            }
+
+            # -----------------------------------------------------
+            # ✅ LOAD EXISTING PRODUCTION METRICS (IF ANY)
+            # -----------------------------------------------------
+            prod_meta_path = "./agents/credit_appraisal/models/production/production_meta.json"
+            if os.path.exists(prod_meta_path):
+                prod_m = json.load(open(prod_meta_path))["metrics"]
+            else:
+                prod_m = None
+
+            # -----------------------------------------------------
+            # ✅ EXECUTIVE DASHBOARD — WHAT → SO WHAT → NOW WHAT
+            # -----------------------------------------------------
+            from math import isnan
+
+            st.markdown("### ✅ Executive Model Evaluation")
+
+            if prod_m:
+                auc_delta = (new_m["AUC"] - prod_m["AUC"]) * 100
+                acc_delta = (new_m["Accuracy"] - prod_m["Accuracy"]) * 100
+
+                st.success(
+                    f"✅ AUC improved by **{auc_delta:+.2f}%**. "
+                    f"Accuracy improved by **{acc_delta:+.2f}%**."
+                )
+            else:
+                st.info("🟢 First model trained — establishing production baseline.")
+
+            # METRICS TABLE
+            cmp = pd.DataFrame({
+                "Metric": list(new_m.keys()),
+                "New Model": [f"{v:.4f}" for v in new_m.values()],
+                "Production": [
+                    f"{prod_m[k]:.4f}" if prod_m else "—"
+                    for k in new_m.keys()
+                ],
+            })
+            st.table(cmp)
+
+            # -----------------------------------------------------
+            # ✅ CONFUSION MATRIX
+            # -----------------------------------------------------
+            cm = confusion_matrix(yte, preds)
+            fig_cm = px.imshow(
+                cm, text_auto=True,
+                title="Confusion Matrix",
+                labels=dict(x="Predicted", y="Actual")
+            )
+            st.plotly_chart(fig_cm, use_container_width=True)
+
+            # -----------------------------------------------------
+            # ✅ SAVE ARTIFACTS
+            # -----------------------------------------------------
+            RUNS_DIR = Path("./.tmp_runs")
+            RUNS_DIR.mkdir(exist_ok=True)
+
+            ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+
+            trained_dir = Path("./agents/credit_appraisal/models/trained")
+            trained_dir.mkdir(parents=True, exist_ok=True)
+
+            model_path = trained_dir / f"{model_choice}_{ts}.joblib"
+            joblib.dump(model, model_path)
+
+            rep = {
+                "timestamp": ts,
+                "model_choice": model_choice,
+                "metrics": new_m,
+            }
+            rep_path = RUNS_DIR / f"credit_training_report_{ts}.json"
+            json.dump(rep, open(rep_path, "w"), indent=2)
+
+            st.success(f"✅ Model saved: `{model_path}`")
+            st.caption(f"Training report → `{rep_path}`")
+
+            # persist to session for Stage G/H
+            st.session_state["credit_last_model_path"] = str(model_path)
+            st.session_state["credit_last_metrics"] = new_m
+            st.session_state["credit_last_report"] = rep
+
+
+# # ─────────────────────────────────────────────
+# # 🔁 TAB 5 — Training (Feedback → Retrain)
+# with tab_train:
+#     st.subheader("🔁 From Human Feedback CSV → Train and Promote Trained Model to Production Model ")
+
+#     st.markdown("**Drag & drop** one or more review CSVs exported from the Human Review tab.")
+#     up_list = st.file_uploader("Upload feedback CSV(s)", type=["csv"], accept_multiple_files=True, key="train_feedback_uploader")
+
+#     staged_paths: List[str] = []
+#     if up_list:
+#         for up in up_list:
+#             # stage to tmp_feedback dir
+#             dest = os.path.join(TMP_FEEDBACK_DIR, up.name)
+#             with open(dest, "wb") as f:
+#                 f.write(up.getvalue())
+#             staged_paths.append(dest)
+#         st.success(f"Staged {len(staged_paths)} feedback file(s) to {TMP_FEEDBACK_DIR}")
+#         st.write(staged_paths)
+
+#     st.markdown("#### Launch Retrain")
+#     payload = {
+#         "feedback_csvs": staged_paths,
+#         "user_name": st.session_state["user_info"]["name"],
+#         "agent_name": "credit_appraisal",
+#         "algo_name": "credit_lr",
+#     }
+#     st.code(json.dumps(payload, indent=2), language="json")
+
+#     colA, colB = st.columns([1,1])
+#     with colA:
+#         if st.button("🚀 Train candidate model"):
+#             try:
+#                 r = requests.post(f"{API_URL}/v1/training/train", json=payload, timeout=90)
+#                 if r.ok:
+#                     st.success(r.json())
+#                     st.session_state["last_train_job"] = r.json().get("job_id")
+#                 else:
+#                     st.error(r.text)
+#             except Exception as e:
+#                 st.error(f"Train failed: {e}")
+#     with colB:
+#         if st.button("⬆️ Promote last candidate to PRODUCTION"):
+#             try:
+#                 r = requests.post(f"{API_URL}/v1/training/promote", timeout=30)
+#                 st.write(r.json() if r.ok else r.text)
+#             except Exception as e:
+#                 st.error(f"Promote failed: {e}")
+
+#     st.markdown("---")
+#     st.markdown("#### Production Model")
+#     try:
+#         resp = requests.get(f"{API_URL}/v1/training/production_meta", timeout=5)
+#         if resp.ok:
+#             st.json(resp.json())
+#         else:
+#             st.info("No production model yet.")
+#     except Exception as e:
+#         st.warning(f"Could not load production meta: {e}")
 
 
 
 
-    # ─────────────────────────────────────────────
-    # 🔁 Loopback Section — Go back to Step 3
-    # ─────────────────────────────────────────────
-    st.markdown("---")
-    st.markdown("### 💳 Loop back to Step 3 — Credit Appraisal Agent")
-    st.caption("After retraining, return to the Credit Appraisal tab and use your new production model.")
+#     # ─────────────────────────────────────────────
+#     # 🔁 Loopback Section — Go back to Step 3
+#     # ─────────────────────────────────────────────
+#     st.markdown("---")
+#     st.markdown("### 💳 Loop back to Step 3 — Credit Appraisal Agent")
+#     st.caption("After retraining, return to the Credit Appraisal tab and use your new production model.")
 
-    st.markdown("""
-    <a href="#credit-appraisal-stage" target="_self">
-        <button style="
-            background-color:#2563eb;
-            color:white;
-            border:none;
-            border-radius:8px;
-            padding:12px 24px;
-            font-size:16px;
-            font-weight:600;
-            cursor:pointer;
-            width:100%;
-            box-shadow:0px 0px 6px rgba(37,99,235,0.5);
-        ">⬅️ Go Back to Step 3 and Use New Model</button>
-    </a>
-    """, unsafe_allow_html=True)
+#     st.markdown("""
+#     <a href="#credit-appraisal-stage" target="_self">
+#         <button style="
+#             background-color:#2563eb;
+#             color:white;
+#             border:none;
+#             border-radius:8px;
+#             padding:12px 24px;
+#             font-size:16px;
+#             font-weight:600;
+#             cursor:pointer;
+#             width:100%;
+#             box-shadow:0px 0px 6px rgba(37,99,235,0.5);
+#         ">⬅️ Go Back to Step 3 and Use New Model</button>
+#     </a>
+#     """, unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────
-# 🗣️ TAB 6 — Feedback & Feature Requests
-# ─────────────────────────────────────────────
+# # ─────────────────────────────────────────────
+# # 🗣️ TAB 6 — Feedback & Feature Requests
+# # ─────────────────────────────────────────────
+# with tab_feedback:
+#     st.subheader("🗣️ Share Your Feedback and Feature Ideas")
+
+#     FEEDBACK_FILE = os.path.join(BASE_DIR, "agents_feedback.json")
+
+#     def load_feedback() -> dict:
+#         try:
+#             with open(FEEDBACK_FILE, "r", encoding="utf-8") as f:
+#                 return json.load(f)
+#         except Exception:
+#             return {}
+
+#     def save_feedback(data: dict):
+#         try:
+#             with open(FEEDBACK_FILE, "w", encoding="utf-8") as f:
+#                 json.dump(data, f, ensure_ascii=False, indent=2)
+#         except Exception as e:
+#             st.error(f"Could not save feedback: {e}")
+
+#     feedback_data = load_feedback()
+
+#     # View all current agent feedback
+#     st.markdown("### 💬 Current Agent Reviews & Ratings")
+#     for agent, fb in feedback_data.items():
+#         with st.expander(f"⭐ {agent} — {fb.get('rating', 0)}/5  |  👥 {fb.get('users', 0)} users"):
+#             st.markdown("#### Recent Comments:")
+#             for cmt in reversed(fb.get("comments", [])):
+#                 st.markdown(f"- {cmt}")
+#             st.markdown("---")
+
+#     st.markdown("### ✍️ Submit Your Own Feedback or Feature Request")
+
+#     agent_choice = st.selectbox("Select Agent", list(feedback_data.keys()))
+#     new_comment = st.text_area("Your Comment or Feature Suggestion", placeholder="e.g. Add multi-language support for reports...")
+#     new_rating = st.slider("Your Rating", 1, 5, 5)
+
+
+#     if st.button("📨 Submit Feedback"):
+#         if new_comment.strip():
+#             fb = feedback_data.get(agent_choice, {"rating": 0, "users": 0, "comments": []})
+#             fb["comments"].append(new_comment.strip())
+#             fb["rating"] = round((fb.get("rating", 0) + new_rating) / 2, 2)
+#             fb["users"] = fb.get("users", 0) + 1
+#             feedback_data[agent_choice] = fb
+#             save_feedback(feedback_data)
+
+#             # ✅ Sync latest feedback globally
+#             st.session_state["feedback_data"] = feedback_data
+
+#             # ✅ Force full reload so Landing updates instantly
+#             st.success("✅ Feedback submitted successfully!")
+#             st.rerun()
+#         else:
+#             st.warning("Please enter a comment before submitting.")
+
+
+# -------------------------------------------------------------
+# ✅ STAGE G — Deployment of Credit Scoring Model
+# -------------------------------------------------------------
+with tabG:
+    import os, json, shutil, zipfile
+    from pathlib import Path
+    from datetime import datetime, timezone
+
+    st.markdown("## 🚀 Stage G — Model Deployment")
+    st.caption("Promote trained model → publish → export deployment bundle")
+
+    last_model = st.session_state.get("credit_last_model_path")
+    metrics = st.session_state.get("credit_last_metrics")
+    report = st.session_state.get("credit_last_report")
+
+    if not last_model:
+        st.warning("⚠️ Train a model in Stage F before deploying.")
+        st.stop()
+
+    st.success(f"✅ Latest trained model detected:\n`{last_model}`")
+    st.json(metrics)
+
+    # ---------------------------------------------------------
+    # ✅ Promote to production
+    # ---------------------------------------------------------
+    if st.button("✅ Promote This Model to Production"):
+        prod_dir = Path("./agents/credit_appraisal/models/production")
+        prod_dir.mkdir(parents=True, exist_ok=True)
+
+        shutil.copy(last_model, prod_dir / "model.joblib")
+
+        prod_meta = {
+            "model_path": last_model,
+            "promoted_at": datetime.now(timezone.utc).isoformat(),
+            "metrics": metrics,
+            "report": report,
+        }
+        json.dump(prod_meta, open(prod_dir / "production_meta.json", "w"), indent=2)
+
+        st.balloons()
+        st.success("✅ Model promoted to production successfully!")
+
+    # ---------------------------------------------------------
+    # ✅ Export deployment ZIP
+    # ---------------------------------------------------------
+    EXPORT_DIR = Path("./exports")
+    EXPORT_DIR.mkdir(exist_ok=True)
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+
+    if st.button("⬇️ Export Deployment Bundle"):
+        zip_path = EXPORT_DIR / f"credit_deployment_{ts}.zip"
+
+        with zipfile.ZipFile(zip_path, "w") as zf:
+            zf.write(last_model, arcname="trained_model.joblib")
+            zf.write("./agents/credit_appraisal/models/production/production_meta.json",
+                     arcname="production_meta.json")
+
+        with open(zip_path, "rb") as f:
+            st.download_button(
+                "⬇️ Download Deployment ZIP",
+                data=f,
+                file_name=zip_path.name,
+                mime="application/zip",
+            )
+
+        st.success("✅ Deployment bundle ready!")
+
+
+# -------------------------------------------------------------
+# ✅ STAGE H — Reporting & Handoff
+# -------------------------------------------------------------
 with tab_feedback:
-    st.subheader("🗣️ Share Your Feedback and Feature Ideas")
+    import os, json, zipfile
+    import numpy as np
+    import pandas as pd
+    from pathlib import Path
+    from datetime import datetime, timezone
+    import streamlit as st
+    import plotly.express as px
 
-    FEEDBACK_FILE = os.path.join(BASE_DIR, "agents_feedback.json")
+    st.markdown("## 📊 Stage H — Portfolio Reporting & Handoff")
 
-    def load_feedback() -> dict:
-        try:
-            with open(FEEDBACK_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return {}
+    df = st.session_state.get("credit_scored_df")
+    if df is None or df.empty:
+        st.warning("⚠️ Missing scored dataset from Stage E.")
+        st.stop()
 
-    def save_feedback(data: dict):
-        try:
-            with open(FEEDBACK_FILE, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            st.error(f"Could not save feedback: {e}")
+    st.success("✅ Portfolio loaded.")
+    st.dataframe(df.head(), use_container_width=True)
 
-    feedback_data = load_feedback()
+    # ---------------------------------------------------------
+    # ✅ Executive dashboard
+    # ---------------------------------------------------------
+    st.markdown("### 🧭 Executive Summary")
 
-    # View all current agent feedback
-    st.markdown("### 💬 Current Agent Reviews & Ratings")
-    for agent, fb in feedback_data.items():
-        with st.expander(f"⭐ {agent} — {fb.get('rating', 0)}/5  |  👥 {fb.get('users', 0)} users"):
-            st.markdown("#### Recent Comments:")
-            for cmt in reversed(fb.get("comments", [])):
-                st.markdown(f"- {cmt}")
-            st.markdown("---")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total Applications", len(df))
+    with col2:
+        st.metric("Approved", (df["decision"] == "approve").sum())
+    with col3:
+        st.metric("Rejected", (df["decision"] == "reject").sum())
 
-    st.markdown("### ✍️ Submit Your Own Feedback or Feature Request")
+    # ---------------------------------------------------------
+    # ✅ Approval distribution
+    # ---------------------------------------------------------
+    st.markdown("### 📈 Approval Distribution")
+    fig = px.histogram(df, x="decision", color="decision", title="Approval vs Rejection")
+    st.plotly_chart(fig, use_container_width=True)
 
-    agent_choice = st.selectbox("Select Agent", list(feedback_data.keys()))
-    new_comment = st.text_area("Your Comment or Feature Suggestion", placeholder="e.g. Add multi-language support for reports...")
-    new_rating = st.slider("Your Rating", 1, 5, 5)
+    # ---------------------------------------------------------
+    # ✅ Department Handoff: Credit / Risk / Compliance / CS
+    # ---------------------------------------------------------
+    st.markdown("## 🏦 Department Handoff Packages")
 
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    HANDOFF_DIR = Path("./credit_handoff")
+    ZIP_DIR = HANDOFF_DIR / "zips"
+    HANDOFF_DIR.mkdir(exist_ok=True)
+    ZIP_DIR.mkdir(exist_ok=True)
 
-    if st.button("📨 Submit Feedback"):
-        if new_comment.strip():
-            fb = feedback_data.get(agent_choice, {"rating": 0, "users": 0, "comments": []})
-            fb["comments"].append(new_comment.strip())
-            fb["rating"] = round((fb.get("rating", 0) + new_rating) / 2, 2)
-            fb["users"] = fb.get("users", 0) + 1
-            feedback_data[agent_choice] = fb
-            save_feedback(feedback_data)
+    credit = df[["application_id","score","decision","reason","income","loan_amount"]]
+    risk = df[["application_id","score","pd","ltv","dti","decision"]]
+    compliance = df[["application_id","account_age","delinquencies","fraud_flag","decision"]]
+    customer = df[["application_id","score","decision","explanation"]]
 
-            # ✅ Sync latest feedback globally
-            st.session_state["feedback_data"] = feedback_data
+    paths = {
+        "credit": HANDOFF_DIR / f"credit_{ts}.csv",
+        "risk": HANDOFF_DIR / f"risk_{ts}.csv",
+        "compliance": HANDOFF_DIR / f"compliance_{ts}.csv",
+        "customer": HANDOFF_DIR / f"customer_service_{ts}.csv",
+    }
 
-            # ✅ Force full reload so Landing updates instantly
-            st.success("✅ Feedback submitted successfully!")
-            st.rerun()
-        else:
-            st.warning("Please enter a comment before submitting.")
+    # Save all
+    credit.to_csv(paths["credit"], index=False)
+    risk.to_csv(paths["risk"], index=False)
+    compliance.to_csv(paths["compliance"], index=False)
+    customer.to_csv(paths["customer"], index=False)
+
+    # ---------------------------------------------------------
+    # ✅ ZIP bundle
+    # ---------------------------------------------------------
+    zip_path = ZIP_DIR / f"credit_handoff_{ts}.zip"
+    with zipfile.ZipFile(zip_path, "w") as zf:
+        for p in paths.values():
+            zf.write(p, arcname=os.path.basename(p))
+
+    st.download_button(
+        "⬇️ Download Full Handoff ZIP",
+        data=open(zip_path, "rb").read(),
+        file_name=os.path.basename(zip_path),
+        mime="application/zip",
+        use_container_width=True
+    )
+
+    st.markdown("### 🧩 Department Package Map")
+    st.json({k: list(df[list(credit.columns)].columns)})
 
 # ────────────────────────────────
 # STAGE: ASSET WORKFLOW (redirect to page)
