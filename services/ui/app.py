@@ -20,81 +20,241 @@ import sys
 
 from pandas import json_normalize  # ADD
 
-def extract_run_id(obj) -> str | None:  # ADD
-    """Find run_id in common places regardless of payload shape."""
-    if isinstance(obj, dict):
-        if isinstance(obj.get("run_id"), str):
-            return obj["run_id"]
-        res = obj.get("result")
-        if isinstance(res, dict) and isinstance(res.get("run_id"), str):
-            return res["run_id"]
-        for key in ("summary", "meta", "data"):
-            sub = obj.get(key)
-            if isinstance(sub, dict) and isinstance(sub.get("run_id"), str):
-                return sub["run_id"]
-    if isinstance(obj, list):
-        for it in obj:
-            if isinstance(it, dict):
-                rid = extract_run_id(it)
-                if rid:
-                    return rid
-    return None
 
-def json_to_dataframe(payload) -> pd.DataFrame | None:  # ADD
+
+# Theme bootstrapping
+if "ui_theme" not in st.session_state:
+    st.session_state["ui_theme"] = "dark"   # default bright
+
+
+
+#THEME SWITCHER
+
+def apply_theme(theme: str = "light"):
+    # Keep palette compact so it's easy to tune
+    if theme == "light":
+        bg      = "#ffffff"
+        text    = "#0f172a"
+        subtext = "#334155"
+        card    = "#f8fafc"
+        border  = "#e2e8f0"
+        accent  = "#2563eb"
+        accent2 = "#22c55e"
+        tab_bg  = "#eef2ff"
+        table_bg= "#ffffff"
+        table_head_bg = "#e2e8f0"
+        table_head_tx = "#0f172a"
+    else:  # dark
+        bg      = "#0E1117"
+        text    = "#f1f5f9"
+        subtext = "#93a4b8"
+        card    = "#0f172a"
+        border  = "#334155"
+        accent  = "#3b82f6"
+        accent2 = "#22c55e"
+        tab_bg  = "#111418"
+        table_bg= "#0f172a"
+        table_head_bg = "#1e293b"
+        table_head_tx = "#93c5fd"
+
+    st.markdown(f"""
+    <style>
+      /* App bg + text */
+      .stApp {{
+        background: {bg} !important;
+        color: {text} !important;
+      }}
+      .stCaption, .stMarkdown p, .stMarkdown li, .st-emotion-cache-16idsys {{
+        color: {subtext} !important;
+      }}
+
+      /* Buttons */
+      .stButton>button {{
+        background-color: {accent} !important;
+        color: white !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        border: 1px solid {border} !important;
+      }}
+      .stButton>button:hover {{
+        filter: brightness(0.95);
+      }}
+
+      /* Tabs */
+      .stTabs [data-baseweb="tab-list"] button {{
+        color: {text} !important;
+        background: {tab_bg} !important;
+        border-radius: 10px !important;
+        margin-right: 4px !important;
+        border: 1px solid {border} !important;
+      }}
+      .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {{
+        background-color: {accent} !important;
+        color: #ffffff !important;
+      }}
+
+      /* Dataframe/Data Editor container */
+      [data-testid="stDataFrame"] {{
+        background-color: {table_bg} !important;
+        color: {text} !important;
+        border-radius: 10px !important;
+        border: 1px solid {border} !important;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.2) !important;
+      }}
+      [data-testid="stDataFrame"] thead tr th {{
+        background: {table_head_bg} !important;
+        color: {table_head_tx} !important;
+        font-weight: 700 !important;
+        border-bottom: 2px solid {accent} !important;
+      }}
+      [data-testid="stDataFrameCell"]:not([data-testid="stDataFrameCellEditable"]) {{
+        background-color: {table_bg} !important;
+        color: {text} !important;
+        border-color: {border} !important;
+      }}
+      [data-testid="stDataFrameCellEditable"] textarea {{
+        background-color: {card} !important;
+        color: {text} !important;
+        border: 1px solid {border} !important;
+        border-radius: 6px !important;
+      }}
+      [data-testid="stDataFrameCellEditable"]:focus-within textarea,
+      [data-testid="stDataFrameCellEditable"]:hover textarea {{
+        border-color: {accent2} !important;
+        box-shadow: 0 0 0 2px rgba(34,197,94,0.35) !important;
+      }}
+
+      /* Horizontal rules */
+      hr, .stMarkdown hr {{
+        border-color: {border} !important;
+      }}
+    </style>
+    """, unsafe_allow_html=True)
+
+
+
+# ─────────────────────────────────────────────
+# CREDIT AGENT — HEADER (used in credit flow)
+# ─────────────────────────────────────────────
+import streamlit as st  # (no-op if already imported)
+
+def render_credit_header():
+    ss = st.session_state
+
+    # pick a display name if available
+    user = (
+        (ss.get("credit_user") or {}).get("name")
+        or (ss.get("asset_user") or {}).get("name")
+        or (ss.get("user_info") or {}).get("name")
+        or "guest"
+    )
+
+    # use your theme switch (defaults to dark)
+    theme = ss.get("theme", "dark")
+    brand = {
+        "dark": {"text":"#e2e8f0","muted":"#94a3b8","accent":"#3b82f6"},
+        "light":{"text":"#0f172a","muted":"#475569","accent":"#2563eb"},
+    }[theme]
+
+    st.title("🏦 Credit Appraisal Agent")
+    st.caption(
+        "A→H pipeline — Intake → Privacy → Credit Appraisal → Human Review → "
+        "Training → Deployment → Monitoring → Reporting "
+        f"| 👋 {user}"
+    )
+
+# ✅ JSON → DataFrame converter (final, unified, safe)
+# ============================================================
+def json_to_dataframe(payload) -> pd.DataFrame:
     """
-    Convert arbitrary API JSON into a DataFrame.
-    Tries common shapes first, then falls back to json_normalize.
+    Convert arbitrary API JSON (dict/list/bytes/str) into a DataFrame.
+    Prefers server 'artifacts.merged_csv' → fallback to json_normalize.
     """
-    # Prefer artifacts.merged_csv if present and readable
+
+    # -------------------------------
+    # Case 1: payload is dict
+    # -------------------------------
     if isinstance(payload, dict):
-        res = payload.get("result") or {}
+
+        # ✅ Try artifacts.merged_csv first
+        res = payload.get("result") or payload
         artifacts = res.get("artifacts") or {}
         merged_csv = artifacts.get("merged_csv")
+
         if isinstance(merged_csv, str) and os.path.exists(merged_csv):
             try:
                 return pd.read_csv(merged_csv)
             except Exception:
                 pass
 
-        # Embedded tabular data
-        merged_df = res.get("merged_df")
-        if merged_df is not None:
+        # ✅ Embedded merged_df inside the JSON
+        if "merged_df" in res:
             try:
-                return pd.DataFrame(merged_df)
+                return pd.DataFrame(res["merged_df"])
             except Exception:
                 pass
 
-        # Generic result → DF
+        # ✅ If result is list → DF
         if isinstance(res, list):
             try:
                 return pd.DataFrame(res)
             except Exception:
                 try:
-                    return json_normalize(res)
+                    return pd.json_normalize(res)
                 except Exception:
                     pass
-        if isinstance(res, dict) and res:
-            try:
-                return json_normalize(res)
-            except Exception:
-                pass
 
-        # Top-level dict
-        try:
-            return json_normalize(payload)
-        except Exception:
-            pass
+        # ✅ Try keys inside result
+        for key in ("rows", "data", "result", "results", "items", "records"):
+            if key in res:
+                try:
+                    return json_to_dataframe(res[key])
+                except Exception:
+                    pass
 
-    # Top-level list
+    # -------------------------------
+    # Case 2: payload is list
+    # -------------------------------
     if isinstance(payload, list):
-        try:
-            return pd.DataFrame(payload)
-        except Exception:
+        if len(payload) == 0:
+            return pd.DataFrame()
+        if all(isinstance(x, dict) for x in payload):
             try:
-                return json_normalize(payload)
-            except Exception:
-                pass
-    return None
+                return pd.DataFrame(payload)
+            except:
+                return pd.json_normalize(payload)
+        return pd.DataFrame({"value": payload})
+
+    # -------------------------------
+    # Case 3: payload is bytes
+    # -------------------------------
+    if isinstance(payload, bytes):
+        try:
+            payload = payload.decode("utf-8", errors="ignore")
+        except:
+            return pd.DataFrame({"value": [repr(payload)]})
+
+    # -------------------------------
+    # Case 4: payload is str → try JSON parse
+    # -------------------------------
+    if isinstance(payload, str):
+        payload = payload.strip()
+        if not payload:
+            return pd.DataFrame()
+        try:
+            j = json.loads(payload)
+            return json_to_dataframe(j)
+        except:
+            # Fallback → line-by-line DF
+            lines = [ln for ln in payload.splitlines() if ln.strip()]
+            return pd.DataFrame({"value": lines}) if lines else pd.DataFrame()
+
+    # -------------------------------
+    # Default fallback
+    # -------------------------------
+    return pd.DataFrame({"value": [payload]})
+
+
 
 def _extract_run_fields(raw_json):  # ADD
     """
@@ -147,7 +307,7 @@ st.markdown("""
 # ────────────────────────────────
 # GLOBAL CONFIG (directories + API)
 # ────────────────────────────────
-BASE_DIR = os.path.expanduser("~/credit-appraisal-agent-poc/services/ui")
+BASE_DIR = os.path.expanduser("~/AI-AIGENTbythePeoplesANDBOX/HUGKAG/services/ui")
 LANDING_IMG_DIR = os.path.join(BASE_DIR, "landing_images")
 RUNS_DIR = os.path.join(BASE_DIR, ".runs")
 TMP_FEEDBACK_DIR = os.path.join(BASE_DIR, ".tmp_feedback")
@@ -156,6 +316,7 @@ for d in (LANDING_IMG_DIR, RUNS_DIR, TMP_FEEDBACK_DIR):
     os.makedirs(d, exist_ok=True)
 
 API_URL = os.getenv("API_URL", "http://localhost:8090")
+
 
 
 # ────────────────────────────────
@@ -186,6 +347,65 @@ def render_nav_bar_app():
             st.rerun()  # already in app.py → rerun only
 
     st.markdown("---")
+
+
+
+# # ────────────────────────────────
+# # UNIVERSAL TOP NAVIGATION + THEME TOGGLE (fixed)
+# # ────────────────────────────────
+# def render_nav_bar_app():
+#     import streamlit as st
+#     ss = st.session_state  # ✅ define session alias
+
+#     # --- stage & visibility
+#     stage = ss.get("stage", "landing")
+#     show_home   = stage in ("agents", "credit_agent", "asset_agent")
+#     show_agents = stage not in ("landing", "agents")
+
+#     # nothing to render on pure landing
+#     if not (show_home or show_agents):
+#         return
+
+#     # --- theme state: migrate old key and set default
+#     # Theme state
+#     ss.setdefault("theme", "dark")
+
+    
+#     # if "theme" not in ss and "ui_theme" in ss:
+#     #     ss["theme"] = ss["ui_theme"]
+#     # ss.setdefault("theme", "dark")
+#     # ss["ui_theme"] = ss.get("theme", "dark")  # keep both in sync
+
+#     # three columns: home, agents, theme toggle
+#     c1, c2, c3 = st.columns([1, 1, 2.5])
+
+#     with c1:
+#         if show_home and st.button("🏠 Back to Home", key=f"btn_home_{stage}"):
+#             _go_stage("landing")
+#             st.stop()
+
+#     with c2:
+#         if show_agents and st.button("🤖 Back to Agents", key=f"btn_agents_{stage}"):
+#             _go_stage("agents")
+#             st.stop()
+
+#     with c3:
+#         is_dark = (ss.get("theme", "dark") == "dark")
+#         new_is_dark = st.toggle(
+#             "🌙 Dark mode",
+#             value=is_dark,
+#             key="ui_theme_toggle",
+#             help="Switch theme"
+#         )
+#         new_theme = "dark" if new_is_dark else "light"
+#         if new_theme != ss.get("theme"):
+#             ss["theme"] = new_theme      # ✅ primary key
+#             ss["ui_theme"] = new_theme   # ✅ legacy key stays in sync
+#             apply_theme(ss["theme"])     # your existing helper
+
+#     st.markdown("---")
+
+
 
 
 
@@ -291,125 +511,6 @@ def render_image_tag(agent_id: str, industry: str, emoji_fallback: str) -> str:
 
 
 
-# ─────────────────────────────────────────────
-# 🌑 DARK TABLE & EDITABLE CELL THEME (integrated with global UI)
-# ─────────────────────────────────────────────
-st.markdown("""
-<style>
-/* ─────────────── DARK THEME TABLE STYLE ─────────────── */
-
-/* Table container */
-[data-testid="stDataFrame"] {
-    background-color: #0f172a !important;  /* deep navy background */
-    color: #e2e8f0 !important;             /* light gray text */
-    border-radius: 10px !important;
-    border: 1px solid #334155 !important;
-    box-shadow: 0 4px 18px rgba(0,0,0,0.4) !important;
-}
-
-/* Header row */
-[data-testid="stDataFrame"] thead tr th {
-    background: linear-gradient(90deg, #1e293b, #0f172a) !important;
-    color: #93c5fd !important;             /* soft blue header text */
-    font-weight: 700 !important;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    border-bottom: 2px solid #2563eb !important;
-    padding: 10px 6px !important;
-}
-
-/* Table cells (read-only) */
-[data-testid="stDataFrameCell"]:not([data-testid="stDataFrameCellEditable"]) {
-    background-color: #0f172a !important;
-    color: #f1f5f9 !important;
-    border-color: #334155 !important;
-    font-weight: 500 !important;
-}
-
-/* Editable cells */
-[data-testid="stDataFrameCellEditable"] textarea {
-    background-color: #1e293b !important;   /* dark slate input background */
-    color: #f8fafc !important;              /* near-white text */
-    border: 1px solid #475569 !important;   /* slate border */
-    border-radius: 6px !important;
-    padding: 6px 8px !important;
-    font-weight: 500 !important;
-    font-size: 15px !important;
-    transition: all 0.2s ease-in-out;
-}
-
-/* Hover + focus state for editable cells */
-[data-testid="stDataFrameCellEditable"]:focus-within textarea,
-[data-testid="stDataFrameCellEditable"]:hover textarea {
-    background-color: #334155 !important;
-    border-color: #22c55e !important;       /* green focus border */
-    box-shadow: 0 0 0 2px rgba(34,197,94,0.35) !important;
-    color: #ffffff !important;
-}
-
-/* Text selection highlight */
-[data-testid="stDataFrame"] ::selection {
-    background: #22c55e !important;
-    color: #0f172a !important;
-}
-
-/* Hover row highlight */
-[data-testid="stDataFrame"] tbody tr:hover {
-    background-color: rgba(51,65,85,0.5) !important;
-}
-
-/* Scrollbar aesthetic */
-::-webkit-scrollbar {
-    height: 10px;
-    width: 10px;
-}
-::-webkit-scrollbar-track {
-    background: #0f172a;
-}
-::-webkit-scrollbar-thumb {
-    background-color: #475569;
-    border-radius: 8px;
-}
-::-webkit-scrollbar-thumb:hover {
-    background-color: #22c55e;
-}
-
-/* Dropdown cell popups (from SelectboxColumn) */
-div[data-baseweb="popover"] {
-    background-color: #1e293b !important;
-    color: #f8fafc !important;
-    border: 1px solid #3b82f6 !important;
-    border-radius: 6px !important;
-}
-div[data-baseweb="popover"] li:hover {
-    background-color: #2563eb !important;
-    color: white !important;
-}
-
-/* Column headers and tooltips */
-[data-testid="stColumnHeaderTooltip"] {
-    color: #93c5fd !important;
-    background-color: #1e293b !important;
-    border-radius: 6px !important;
-    font-size: 14px !important;
-}
-
-/* Data editor toolbar (top right icons) */
-[data-testid="stDataFrameToolbar"] {
-    background-color: #1e293b !important;
-    color: #93c5fd !important;
-}
-[data-testid="stDataFrameToolbar"] svg {
-    color: #93c5fd !important;
-}
-[data-testid="stDataFrameToolbar"] svg:hover {
-    color: #22c55e !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-
-
 
 
 # ────────────────────────────────
@@ -446,9 +547,13 @@ AGENTS = [
      "Estimate, optimize, and track film & production costs using AI", "Coming Soon", "🎬"),
 ]
 
-# ────────────────────────────────
-# STYLES
-# ────────────────────────────────
+
+
+
+# # ────────────────────────────────
+# # STYLES
+# # ────────────────────────────────
+
 st.markdown(
     """
     <style>
@@ -489,37 +594,131 @@ st.markdown(
         border-bottom: 6px solid #60a5fa !important;
         box-shadow: 0 4px 14px rgba(37,99,235,0.5);
     }
+
+    /* ---------------- NEW: hover/focus polish ---------------- */
+    /* Hover/active for buttons */
+    .stButton > button:hover { filter: brightness(1.06); transform: translateY(-1px); }
+    .stButton > button:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(15,111,255,0.35); }
+
+    /* Subtle hover for tabs */
+    [data-testid="stTabs"] [data-baseweb="tab"][role="tab"]:hover {
+      box-shadow: 0 6px 18px rgba(37,99,235,0.35);
+    }
+
+    /* Improve link focus visibility (a11y) */
+    a:focus { outline: 3px solid #60a5fa !important; outline-offset: 2px; border-radius: 6px; }
+    /* --------------------------------------------------------- */
     </style>
     """,
     unsafe_allow_html=True,
 )
 
+
+# st.markdown(
+#     """
+#     <style>
+#     html, body, .block-container { background-color:#0f172a !important; color:#e2e8f0 !important; }
+#     footer { text-align:center; padding:2rem; color:#aab3c2; font-size:1.2rem; font-weight:600; margin-top:2rem; }
+#     .left-box {
+#         background: radial-gradient(circle at top left, #0f172a, #1e293b);
+#         border-radius:20px; padding:3rem 2rem; color:#f1f5f9; box-shadow:6px 0 24px rgba(0,0,0,0.4);
+#     }
+#     .right-box {
+#         background:linear-gradient(180deg,#1e293b,#0f172a);
+#         border-radius:20px; padding:2rem; box-shadow:-6px 0 24px rgba(0,0,0,0.35);
+#     }
+#     .stButton > button {
+#         border:none !important; cursor:pointer;
+#         padding:14px 28px !important; font-size:18px !important; font-weight:700 !important;
+#         border-radius:14px !important; color:#fff !important;
+#         background:linear-gradient(180deg,#4ea3ff 0%,#2f86ff 60%,#0f6fff 100%) !important;
+#         box-shadow:0 8px 24px rgba(15,111,255,0.35);
+#     }
+#     a.macbtn {
+#         display:inline-block; text-decoration:none !important; color:#fff !important;
+#         padding:10px 22px; font-weight:700; border-radius:12px;
+#         background:linear-gradient(180deg,#4ea3ff 0%,#2f86ff 60%,#0f6fff 100%);
+#     }
+#     /* Larger workflow tabs */
+#     [data-testid="stTabs"] [data-baseweb="tab"] {
+#         font-size: 28px !important;
+#         font-weight: 800 !important;
+#         padding: 20px 40px !important;
+#         border-radius: 12px !important;
+#         background-color: #1e293b !important;
+#         color: #f8fafc !important;
+#     }
+#     [data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] {
+#         background: linear-gradient(90deg, #2563eb, #1d4ed8) !important;
+#         color: white !important;
+#         border-bottom: 6px solid #60a5fa !important;
+#         box-shadow: 0 4px 14px rgba(37,99,235,0.5);
+#     }
+#     </style>
+#     """,
+#     unsafe_allow_html=True,
+# )
+
+# # ────────────────────────────────
+# # QUERY PARAM ROUTING (modern API)
+# # ────────────────────────────────
+# try:
+#     qp = st.query_params
+# except Exception:
+#     qp = {}
+
+# if "stage" in qp:
+#     target = qp["stage"]
+#     # Add "asset_agent" here so it's recognized
+#     if target in {"landing", "agents", "login", "credit_agent", "asset_agent"} and st.session_state.stage != target:
+#         st.session_state.stage = target
+#         _clear_qp()
+#         st.rerun()
+
+# # Handle direct launch requests for specific agents
+# if "launch" in qp or "agent" in qp:
+#     agent = qp.get("agent", [""])[0] if isinstance(qp.get("agent"), list) else qp.get("agent", "")
+#     if agent == "credit":
+#         st.session_state.stage = "login"
+#     elif agent == "asset":
+#         st.session_state.stage = "asset_agent"
+#     _clear_qp()
+#     st.rerun()
+
+
 # ────────────────────────────────
-# QUERY PARAM ROUTING (modern API)
+# QUERY PARAM ROUTING (agent first, then stage)
 # ────────────────────────────────
 try:
     qp = st.query_params
 except Exception:
     qp = {}
 
-if "stage" in qp:
-    target = qp["stage"]
-    # Add "asset_agent" here so it's recognized
-    if target in {"landing", "agents", "login", "credit_agent", "asset_agent"} and st.session_state.stage != target:
-        st.session_state.stage = target
-        _clear_qp()
-        st.rerun()
-
-# Handle direct launch requests for specific agents
+# 1) Agent intent wins (direct actions)
 if "launch" in qp or "agent" in qp:
     agent = qp.get("agent", [""])[0] if isinstance(qp.get("agent"), list) else qp.get("agent", "")
     if agent == "credit":
         st.session_state.stage = "login"
+        _clear_qp()
+        st.rerun()
     elif agent == "asset":
-        st.session_state.stage = "asset_agent"
-    _clear_qp()
-    st.rerun()
+        _clear_qp()
+        # Go straight to the Asset page (no extra reroute hops)
+        try:
+            st.switch_page("pages/asset_appraisal.py")
+        except Exception as e:
+            # Fallback: set stage so user stays in same app gracefully
+            st.session_state.stage = "asset_agent"
+            st.warning(f"Could not switch to asset page, stage set to asset_agent: {e}")
+            st.rerun()
 
+# 2) Stage param (secondary)
+if "stage" in qp:
+    target = qp["stage"]
+    if target in {"landing", "agents", "login", "credit_agent", "asset_agent"} and st.session_state.stage != target:
+        st.session_state.stage = target
+        _clear_qp()
+        st.rerun()
 
 
 
@@ -588,24 +787,7 @@ st.session_state["feedback_data"] = feedback_data
 # ────────────────────────────────
 if st.session_state.stage == "landing":
 
-    # # ────────────────────────────────
-    # # Top navigation buttons — conditional visibility
-    # # ────────────────────────────────
-    # nav_cols = st.columns([1, 1, 8])
 
-    # with nav_cols[0]:
-    #     # Only show Back to Home if NOT already on home
-    #     if st.session_state.stage != "landing":
-    #         if st.button("🏠 Back to Home", key="btn_back_home_landing"):
-    #             st.session_state.stage = "landing"
-    #             st.rerun()
-
-    # with nav_cols[1]:
-    #     # Only show Back to Agents if NOT already on agents
-    #     if st.session_state.stage != "agents":
-    #         if st.button("🤖 Back to Agents", key="btn_back_agents_landing"):
-    #             st.session_state.stage = "agents"
-    #             st.rerun()
 
     # ────────────────────────────────
     # Layout columns
@@ -724,80 +906,478 @@ if st.session_state.stage == "landing":
         st.markdown("</div>", unsafe_allow_html=True)
 
 
-
-
-    # Right Panel
+    # RIGHT PANEL — Neon Interactive Agent List 
+    # ────────────────────────────────
     with c2:
-        st.markdown("<div class='right-box'>", unsafe_allow_html=True)
-        st.markdown("<h2>📊 Global AI Agent Library</h2>", unsafe_allow_html=True)
+        # Inject CSS once
+        st.markdown("""
+        <style>
+        @keyframes pulseFrame {
+            0%,100% { box-shadow: 0 0 35px rgba(0,200,255,0.25), inset 0 0 15px rgba(0,200,255,0.25); }
+            50% { box-shadow: 0 0 90px rgba(0,240,255,0.7), inset 0 0 25px rgba(0,240,255,0.45); }
+        }
 
+        .neon-frame {
+            border: 2px solid rgba(0,200,255,0.6);
+            border-radius: 18px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(180deg, rgba(8,17,30,0.95), rgba(10,25,45,0.95));
+            animation: pulseFrame 6s ease-in-out infinite;
+            box-shadow: 0 0 60px rgba(0,200,255,0.35);
+        }
+
+        .agent-card {
+            border: 1px solid rgba(0,200,255,0.3);
+            border-radius: 10px;
+            padding: 0.8rem 1.2rem;
+            margin: 0.6rem 0;
+            background: rgba(15,25,35,0.85);
+            transition: transform 0.25s ease-in-out, box-shadow 0.25s ease-in-out;
+        }
+
+        .agent-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 25px rgba(0,240,255,0.5);
+        }
+
+        .neon-header {
+            background: linear-gradient(90deg, #ff0033, #ff3366);
+            border-radius: 8px;
+            color: white;
+            font-weight: 700;
+            padding: 8px 14px;
+            margin-bottom: 14px;
+            text-align: center;
+            text-shadow: 0 0 8px rgba(255,80,100,0.9);
+            box-shadow: 0 0 20px rgba(255,60,100,0.6);
+            font-size: 1.6rem;
+        }
+
+        .launchbtn {
+            display: inline-block;
+            text-decoration: none;
+            color: #e6f7ff;
+            font-weight: 700;
+            padding: 6px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(0,220,255,0.8);
+            background: rgba(0,50,80,0.5);
+            box-shadow: 0 0 14px rgba(0,220,255,0.5);
+            transition: all 0.25s ease-in-out;
+        }
+
+        .launchbtn:hover {
+            box-shadow: 0 0 25px rgba(255,105,180,0.8);
+            transform: translateY(-2px) scale(1.05);
+            text-shadow: 0 0 12px #ff66cc;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        # ============================================================
+        # Build all agent HTML dynamically into one single string
+        # ============================================================
+        import re
+
+        html_agents = ""
         for sector, industry, agent, desc, status, emoji in AGENTS:
-            # ✅ Revert to original Available / Coming Soon logic
+            # ----- status color mapping -----
             if status == "Available":
-                status_label = "Available"
-                status_color = "#22c55e"   # green
+                status_label = "✅ Available"; status_color = "#22c55e"
             elif status == "Coming Soon":
-                status_label = "Coming Soon"
-                status_color = "#f59e0b"   # orange
+                status_label = "⏳ Coming Soon"; status_color = "#f59e0b"
             else:
-                status_label = status
-                status_color = "#f1f5f9"
+                status_label = status; status_color = "#f1f5f9"
 
+            # ----- feedback / usage data -----
             fb = feedback_data.get(agent, {"rating": 0, "users": 0, "comments": []})
-            rating_html = render_stars(fb.get("rating", 0))
             users = fb.get("users", 0)
-            comments = fb.get("comments", [])
-            comment_count = len(comments)
+            comment_count = len(fb.get("comments", []))
 
-            cols = st.columns([0.5, 1.0, 1.4, 2.8, 1.0, 0.8, 0.9, 1.0])
-            with cols[0]:
-                st.markdown(render_image_tag(agent, industry, emoji), unsafe_allow_html=True)
-            with cols[1]:
-                st.markdown(f"**{industry}**")
-            with cols[2]:
-                st.markdown(f"**{agent}**")
-            with cols[3]:
-                st.markdown(desc)
-            with cols[4]:
-                st.markdown(rating_html, unsafe_allow_html=True)
-            with cols[5]:
-                st.markdown(f"👥 {users}")
-            with cols[6]:
-                if comment_count > 0:
-                    if st.button(f"💬 {comment_count}", key=f"btn_{agent}"):
-                        st.session_state[f"show_comments_{agent}"] = not st.session_state.get(
-                            f"show_comments_{agent}", False
-                        )
-                else:
-                    st.markdown("💬 0")
-            with cols[7]:
-                st.markdown(
-                    f"<span style='color:{status_color};font-weight:700;'>{status_label}</span>",
-                    unsafe_allow_html=True,
-                )
+            # ----- build clean route name -----
+            clean_agent = re.sub(r"[^\w\s-]", "", agent).strip().lower()  # remove emojis/symbols
+            route_name = clean_agent.replace(" ", "_").replace("_agent", "")  # shorten URL
+            launch_url = f"/{route_name}"
 
-            if st.session_state.get(f"show_comments_{agent}", False):
-                with st.expander(f"🗣 Comments for {agent}", expanded=True):
-                    for cmt in reversed(comments):
-                        st.markdown(f"- {cmt}")
+            # ----- append HTML for this agent card -----
+            html_agents += f"""
+            <div class="agent-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+                    <div style="flex:1.2;color:#ccc;">{industry}</div>
+                    <div style="flex:1.5;font-weight:700;color:white;">{agent}</div>
+                    <div style="flex:3;color:#a0aec0;">{desc}</div>
+                    <div style="flex:1;text-align:center;color:{status_color};font-weight:700;">{status_label}</div>
+                    <div style="flex:0.6;text-align:center;">👥 {users}</div>
+                    <div style="flex:0.6;text-align:center;">💬 {comment_count}</div>
+                    <div style="flex:0.8;text-align:center;">
+                        <a class="launchbtn" href="{launch_url}">🚀 Launch</a>
+                    </div>
+                </div>
+            </div>
+            """
 
-            st.markdown("---")
+        # ============================================================
+        # Render all at once (HTML, not escaped Markdown)
+        # ============================================================
+        st.markdown(
+            f"""
+            <div class="neon-header">📊 Global AI Agent Library</div>
+            <div class="neon-frame">
+                {html_agents}
+            </div>
+            <footer style="text-align:center;margin-top:2rem;color:#a3e8ff;">
+                💎 Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative
+            </footer>
+            """,
+            unsafe_allow_html=True
+        )
 
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.stop()
 
-    st.markdown("<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>", unsafe_allow_html=True)
+        
+        # # Build all agent HTML dynamically into one single string
+        # html_agents = ""
+        # for sector, industry, agent, desc, status, emoji in AGENTS:
+        #     if status == "Available":
+        #         status_label = "✅ Available"; status_color = "#22c55e"
+        #     elif status == "Coming Soon":
+        #         status_label = "⏳ Coming Soon"; status_color = "#f59e0b"
+        #     else:
+        #         status_label = status; status_color = "#f1f5f9"
+
+        #     fb = feedback_data.get(agent, {"rating": 0, "users": 0, "comments": []})
+        #     users = fb.get("users", 0)
+        #     comment_count = len(fb.get("comments", []))
+
+        #     html_agents += f"""
+        #     <div class="agent-card">
+        #         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+        #             <div style="flex:1.2;color:#ccc;">{industry}</div>
+        #             <div style="flex:1.5;font-weight:700;color:white;">{agent}</div>
+        #             <div style="flex:3;color:#a0aec0;">{desc}</div>
+        #             <div style="flex:1;text-align:center;color:{status_color};font-weight:700;">{status_label}</div>
+        #             <div style="flex:0.6;text-align:center;">👥 {users}</div>
+        #             <div style="flex:0.6;text-align:center;">💬 {comment_count}</div>
+        #             <div style="flex:0.8;text-align:center;">
+        #                 <a class="launchbtn" href="?agent={agent.lower().replace(' ','_')}&stage=login">🚀 Launch</a>
+        #             </div>
+        #         </div>
+        #     </div>
+        #     """
+
+        # # Render all at once (HTML, not escaped Markdown)
+        # st.markdown(
+        #     f"""
+        #     <div class="neon-header">📊 Global AI Agent Library</div>
+        #     <div class="neon-frame">
+        #         {html_agents}
+        #     </div>
+        #     <footer style="text-align:center;margin-top:2rem;color:#a3e8ff;">
+        #         💎 Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative
+        #     </footer>
+        #     """,
+        #     unsafe_allow_html=True  # ← this must be TRUE so HTML isn't escaped
+        # )
+
+        # st.stop()
+
+    # ────────────────────────────────
+    # # RIGHT PANEL — Neon Interactive Agent List
+    # # ────────────────────────────────
+    # with c2:
+    #     # Inject Neon CSS
+    #     st.markdown("""
+    #     <style>
+    #     @keyframes pulseOuter {
+    #         0%,100% { box-shadow: 0 0 35px rgba(0,200,255,0.3), inset 0 0 15px rgba(0,200,255,0.3); }
+    #         50% { box-shadow: 0 0 90px rgba(0,240,255,0.8), inset 0 0 25px rgba(0,240,255,0.5); }
+    #     }
+
+    #     .neon-card {
+    #         border: 2px solid rgba(0,200,255,0.6);
+    #         border-radius: 14px;
+    #         padding: 1rem 1.5rem;
+    #         margin: 1.2rem 0;
+    #         background: linear-gradient(180deg, rgba(8,17,30,0.95), rgba(10,25,45,0.95));
+    #         animation: pulseOuter 6s ease-in-out infinite;
+    #         box-shadow: 0 0 60px rgba(0,200,255,0.35);
+    #         transition: transform 0.25s ease-in-out;
+    #     }
+
+    #     .neon-card:hover {
+    #         transform: translateY(-4px) scale(1.01);
+    #         box-shadow: 0 0 90px rgba(0,240,255,0.6);
+    #     }
+
+    #     .neon-header {
+    #         background: linear-gradient(90deg, #ff0033, #ff3366);
+    #         border-radius: 8px;
+    #         color: white;
+    #         font-weight: 700;
+    #         padding: 8px 14px;
+    #         margin-bottom: 10px;
+    #         text-shadow: 0 0 8px rgba(255,80,100,0.9);
+    #         box-shadow: 0 0 20px rgba(255,60,100,0.6);
+    #     }
+
+    #     .launchbtn {
+    #         display: inline-block;
+    #         text-decoration: none;
+    #         color: #e6f7ff;
+    #         font-weight: 700;
+    #         padding: 6px 16px;
+    #         border-radius: 8px;
+    #         border: 1px solid rgba(0,220,255,0.8);
+    #         background: rgba(0,50,80,0.5);
+    #         box-shadow: 0 0 14px rgba(0,220,255,0.5);
+    #         transition: all 0.25s ease-in-out;
+    #     }
+
+    #     .launchbtn:hover {
+    #         box-shadow: 0 0 25px rgba(255,105,180,0.8);
+    #         transform: translateY(-2px) scale(1.05);
+    #         text-shadow: 0 0 12px #ff66cc;
+    #     }
+
+    #     </style>
+    #     """, unsafe_allow_html=True)
+
+    #     # Header
+    #     st.markdown("<div class='neon-header' style='text-align:center;font-size:1.6rem;'>📊 Global AI Agent Library</div>", unsafe_allow_html=True)
+
+    #     # Agent cards
+    #     for sector, industry, agent, desc, status, emoji in AGENTS:
+    #         if status == "Available":
+    #             status_label = "✅ Available"
+    #             status_color = "#22c55e"
+    #         elif status == "Coming Soon":
+    #             status_label = "⏳ Coming Soon"
+    #             status_color = "#f59e0b"
+    #         else:
+    #             status_label = status
+    #             status_color = "#f1f5f9"
+
+    #         fb = feedback_data.get(agent, {"rating": 0, "users": 0, "comments": []})
+    #         rating_html = render_stars(fb.get("rating", 0))
+    #         users = fb.get("users", 0)
+    #         comments = fb.get("comments", [])
+    #         comment_count = len(comments)
+
+    #         # Neon card per agent
+    #         st.markdown("<div class='neon-card'>", unsafe_allow_html=True)
+    #         cols = st.columns([1.0, 1.4, 2.8, 1.0, 0.8, 0.9, 1.0])
+
+    #         with cols[0]:
+    #             st.markdown(f"{industry}")
+    #         with cols[1]:
+    #             st.markdown(f"**{agent}**")
+    #         with cols[2]:
+    #             st.markdown(desc)
+    #         with cols[3]:
+    #             st.markdown(f"<span style='color:{status_color};font-weight:700;'>{status_label}</span>", unsafe_allow_html=True)
+    #         with cols[4]:
+    #             st.markdown(f"👥 {users}")
+    #         with cols[5]:
+    #             if comment_count > 0:
+    #                 if st.button(f"💬 {comment_count}", key=f"btn_{agent}"):
+    #                     st.session_state[f"show_comments_{agent}"] = not st.session_state.get(f"show_comments_{agent}", False)
+    #             else:
+    #                 st.markdown("💬 0")
+    #         with cols[6]:
+    #             st.markdown(
+    #                 f"<a class='launchbtn' href='?agent={agent.lower().replace(' ','_')}&stage=login'>🚀 Launch</a>",
+    #                 unsafe_allow_html=True
+    #             )
+
+    #         # Comments expander
+    #         if st.session_state.get(f"show_comments_{agent}", False):
+    #             with st.expander(f"🗣 Comments for {agent}", expanded=True):
+    #                 if comments:
+    #                     for cmt in reversed(comments):
+    #                         st.markdown(f"- {cmt}")
+    #                 else:
+    #                     st.markdown("_No comments yet._")
+
+    #         st.markdown("</div>", unsafe_allow_html=True)
+
+    #     # Footer
+    #     st.markdown("<footer style='text-align:center;margin-top:2rem;color:#a3e8ff;'>💎 Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>", unsafe_allow_html=True)
+    #     st.stop()
+
+
+    # # Right Panel
+    # with c2:
+    #     st.markdown("<div class='right-box'>", unsafe_allow_html=True)
+    #     st.markdown("<h2>📊 Global AI Agent Library</h2>", unsafe_allow_html=True)
+
+    #     for sector, industry, agent, desc, status, emoji in AGENTS:
+    #         # ✅ Revert to original Available / Coming Soon logic
+    #         if status == "Available":
+    #             status_label = "Available"
+    #             status_color = "#22c55e"   # green
+    #         elif status == "Coming Soon":
+    #             status_label = "Coming Soon"
+    #             status_color = "#f59e0b"   # orange
+    #         else:
+    #             status_label = status
+    #             status_color = "#f1f5f9"
+
+    #         fb = feedback_data.get(agent, {"rating": 0, "users": 0, "comments": []})
+    #         rating_html = render_stars(fb.get("rating", 0))
+    #         users = fb.get("users", 0)
+    #         comments = fb.get("comments", [])
+    #         comment_count = len(comments)
+
+    #         cols = st.columns([0.5, 1.0, 1.4, 2.8, 1.0, 0.8, 0.9, 1.0])
+    #         with cols[0]:
+    #             st.markdown(render_image_tag(agent, industry, emoji), unsafe_allow_html=True)
+    #         with cols[1]:
+    #             st.markdown(f"**{industry}**")
+    #         with cols[2]:
+    #             st.markdown(f"**{agent}**")
+    #         with cols[3]:
+    #             st.markdown(desc)
+    #         with cols[4]:
+    #             st.markdown(rating_html, unsafe_allow_html=True)
+    #         with cols[5]:
+    #             st.markdown(f"👥 {users}")
+    #         with cols[6]:
+    #             if comment_count > 0:
+    #                 if st.button(f"💬 {comment_count}", key=f"btn_{agent}"):
+    #                     st.session_state[f"show_comments_{agent}"] = not st.session_state.get(
+    #                         f"show_comments_{agent}", False
+    #                     )
+    #             else:
+    #                 st.markdown("💬 0")
+    #         with cols[7]:
+    #             st.markdown(
+    #                 f"<span style='color:{status_color};font-weight:700;'>{status_label}</span>",
+    #                 unsafe_allow_html=True,
+    #             )
+
+    #         if st.session_state.get(f"show_comments_{agent}", False):
+    #             with st.expander(f"🗣 Comments for {agent}", expanded=True):
+    #                 for cmt in reversed(comments):
+    #                     st.markdown(f"- {cmt}")
+
+    #         st.markdown("---")
+
+    #     st.markdown("</div>", unsafe_allow_html=True)
+
+    # st.markdown("<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>", unsafe_allow_html=True)
+    # st.stop()
+
+
+# ────────────────────────────────
+# STAGE: AGENTS (Neon Styled)
+# ────────────────────────────────
+if st.session_state.stage == "agents":
+    # Inject CSS once
+    st.markdown("""
+    <style>
+    @keyframes pulseFrame {
+        0%,100% { box-shadow: 0 0 35px rgba(0,200,255,0.25), inset 0 0 15px rgba(0,200,255,0.25); }
+        50% { box-shadow: 0 0 90px rgba(0,240,255,0.7), inset 0 0 25px rgba(0,240,255,0.45); }
+    }
+
+    .neon-frame {
+        border: 2px solid rgba(0,200,255,0.6);
+        border-radius: 18px;
+        padding: 2rem;
+        margin: 1rem 0 3rem 0;
+        background: linear-gradient(180deg, rgba(8,17,30,0.95), rgba(10,25,45,0.95));
+        animation: pulseFrame 6s ease-in-out infinite;
+        box-shadow: 0 0 60px rgba(0,200,255,0.35);
+    }
+
+    .neon-header {
+        background: linear-gradient(90deg, #ff0033, #ff3366);
+        border-radius: 8px;
+        color: white;
+        font-weight: 700;
+        padding: 10px 20px;
+        text-align: center;
+        text-shadow: 0 0 8px rgba(255,80,100,0.9);
+        box-shadow: 0 0 20px rgba(255,60,100,0.6);
+        font-size: 1.6rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .neon-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .neon-table th, .neon-table td {
+        padding: 10px 16px;
+        border-bottom: 1px solid rgba(0,200,255,0.3);
+        color: #e2e8f0;
+        text-align: left;
+    }
+    .neon-table th {
+        color: #7dd3fc;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 0.9rem;
+    }
+
+    .macbtn {
+        text-decoration: none;
+        color: #e6f7ff;
+        font-weight: 700;
+        padding: 6px 16px;
+        border-radius: 8px;
+        border: 1px solid rgba(0,220,255,0.8);
+        background: rgba(0,50,80,0.5);
+        box-shadow: 0 0 14px rgba(0,220,255,0.5);
+        transition: all 0.25s ease-in-out;
+        display: inline-block;
+    }
+    .macbtn:hover {
+        box-shadow: 0 0 25px rgba(255,105,180,0.8);
+        transform: translateY(-2px) scale(1.05);
+        text-shadow: 0 0 12px #ff66cc;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Header section
+    st.markdown("<div class='neon-header'>🤖 Available AI Agents</div>", unsafe_allow_html=True)
+
+    # Data
+    df = pd.DataFrame([
+        {"Agent": "💳 Credit Appraisal Agent",
+         "Description": "Explainable AI for retail loan decisioning",
+         "Status": "✅ Available",
+         "Action": '<a class="macbtn" href="/credit_appraisal">🚀 Launch</a>'},
+        {"Agent": "🏦 Asset Appraisal Agent",
+         "Description": "Market-driven collateral valuation",
+         "Status": "✅ Available",
+         "Action": '<a class="macbtn" href="/asset_appraisal">🚀 Launch</a>'},
+    ])
+
+    # Neon table frame
+    html_table = df.to_html(escape=False, index=False, classes="neon-table")
+    st.markdown(f"<div class='neon-frame'>{html_table}</div>", unsafe_allow_html=True)
+
+    # Footer
+    st.markdown(
+        "<footer style='text-align:center;margin-top:1rem;color:#a3e8ff;'>"
+        "💎 Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>",
+        unsafe_allow_html=True
+    )
+
     st.stop()
 
 
+
+
 # # ────────────────────────────────
-# # STAGE: AGENTS
+# # STAGE: AGENTS boring
 # # ────────────────────────────────
 # if st.session_state.stage == "agents":
-#     top = st.columns([1, 4, 1])
-#     with top[0]:
-#         if st.button("⬅️ Back to Home", key="btn_back_home_from_agents"):
-#             st.session_state.stage = "landing"
-#             st.rerun()
+#     top = st.columns([1, 6, 1])
 #     with top[1]:
 #         st.title("🤖 Available AI Agents")
 
@@ -807,38 +1387,16 @@ if st.session_state.stage == "landing":
 #          "Status": "✅ Available",
 #          "Action": '<a class="macbtn" href="?agent=credit&stage=login">🚀 Launch</a>'},
 #         {"Agent": "🏦 Asset Appraisal Agent",
-#         "Description": "Market-driven collateral valuation",
-#         "Status": "✅ Available",
-#         "Action": '<a class="macbtn" href="?agent=asset&stage=asset_agent">🚀 Launch</a>'},
+#          "Description": "Market-driven collateral valuation",
+#          "Status": "✅ Available",
+#          "Action": '<a class="macbtn" href="?agent=asset&stage=asset_agent">🚀 Launch</a>'},
 #     ])
 #     st.write(df.to_html(escape=False, index=False), unsafe_allow_html=True)
-#     st.markdown("<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>", unsafe_allow_html=True)
+#     st.markdown(
+#         "<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>",
+#         unsafe_allow_html=True
+#     )
 #     st.stop()
-
-# ────────────────────────────────
-# STAGE: AGENTS
-# ────────────────────────────────
-if st.session_state.stage == "agents":
-    top = st.columns([1, 6, 1])
-    with top[1]:
-        st.title("🤖 Available AI Agents")
-
-    df = pd.DataFrame([
-        {"Agent": "💳 Credit Appraisal Agent",
-         "Description": "Explainable AI for retail loan decisioning",
-         "Status": "✅ Available",
-         "Action": '<a class="macbtn" href="?agent=credit&stage=login">🚀 Launch</a>'},
-        {"Agent": "🏦 Asset Appraisal Agent",
-         "Description": "Market-driven collateral valuation",
-         "Status": "✅ Available",
-         "Action": '<a class="macbtn" href="?agent=asset&stage=asset_agent">🚀 Launch</a>'},
-    ])
-    st.write(df.to_html(escape=False, index=False), unsafe_allow_html=True)
-    st.markdown(
-        "<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>",
-        unsafe_allow_html=True
-    )
-    st.stop()
 
 
 # ────────────────────────────────
@@ -879,30 +1437,98 @@ if st.session_state.stage == "login":
     st.markdown("<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>", unsafe_allow_html=True)
     st.stop()
 
-# ────────────────────────────────
-# STAGE: CREDIT WORKFLOW
-# ────────────────────────────────
-if st.session_state.stage == "credit_agent":
-    top = st.columns([1, 4, 1])
-    # with top[0]:
-    #     if st.button("⬅️ Back to Agents", key="btn_back_agents_from_pipeline"):
-    #         st.session_state.stage = "agents"
-    #         st.rerun()
-    with top[1]:
-        st.title("💳 AI Credit Appraisal Platform")
-        st.caption("Generate, sanitize, and appraise credit with AI agent power and human insight.")
 
-# # ─────────────────────────────────────────────
-# # WORKFLOW TABS — full 6 steps
-# # ─────────────────────────────────────────────
-# tab_gen, tab_clean, tab_run, tab_review, tab_train, tab_feedback = st.tabs([
-#     "🏦 Synthetic Data Generator",
-#     "🧹 Anonymize & Sanitize Data",
-#     "🤖 Credit appraisal by AI assistant",
-#     "🧑‍⚖️ Human Review",
-#     "🔁 Training (Feedback → Retrain)",
-#     "🗣️ Feedback & Feature Requests"
-# ])
+
+
+
+# -----------------------------------------------------------
+# CREDIT WORKFLOW ACTIVE ONLY IF CREDIT AGENT SELECTED
+# -----------------------------------------------------------
+ss = st.session_state
+stage = ss.get("stage")
+
+if stage == "credit_agent":
+    # (optional) keep your global nav above headers if you have one
+    # render_nav_bar_app()
+
+    # Header (from your render_credit_header() defined earlier)
+    render_credit_header()
+
+
+       
+# ✅ CREDIT APPRAISAL WORKFLOW TABS (1 → 8)
+
+    # ============================================================
+    # 🌈 Colorized Tabs (Matches A→H badge palette exactly)
+    # ============================================================
+    st.markdown("""
+    <style>
+    /* --- Layout adjustments for clean alignment --- */
+    .stTabs [data-baseweb="tab-list"] {
+    border-bottom: 2px solid #1e293b;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: .25rem;
+    }
+
+    /* --- Base style for all tabs --- */
+    .stTabs [data-baseweb="tab"] {
+    border-radius: .6rem;
+    padding: .45rem .9rem;
+    font-weight: 600;
+    color: #fff !important;
+    border: none;
+    opacity: 0.95;
+    transition: all 0.2s ease-in-out;
+    }
+
+    /* Hover and active effects */
+    .stTabs [data-baseweb="tab"]:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+    opacity: 1;
+    }
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+    box-shadow: 0 0 8px rgba(255,255,255,0.15);
+    transform: translateY(-1px);
+    filter: brightness(1.1);
+    }
+
+    /* --- Tab Colors: A→H palette --- */
+    .stTabs [data-baseweb="tab"]:nth-child(1) { background: #1d4ed8; }  /* A) Blue */
+    .stTabs [data-baseweb="tab"]:nth-child(2) { background: #059669; }  /* B) Green */
+    .stTabs [data-baseweb="tab"]:nth-child(3) { background: #d97706; }  /* C) Amber */
+    .stTabs [data-baseweb="tab"]:nth-child(4) { background: #7c3aed; }  /* D) Violet */
+    .stTabs [data-baseweb="tab"]:nth-child(5) { background: #a16207; }  /* E) Gold */
+    .stTabs [data-baseweb="tab"]:nth-child(6) { background: #e11d48; }  /* F) Red */
+    .stTabs [data-baseweb="tab"]:nth-child(7) { background: #0ea5e9; }  /* G) Cyan */
+    .stTabs [data-baseweb="tab"]:nth-child(8) { background: #64748b; }  /* H) Slate */
+    </style>
+    """, unsafe_allow_html=True)
+
+
+# ============================================================
+    tab_input, tab_clean, tab_run, tab_review, tab_train, tab_deploy, tab_handoff, tab_feedback = st.tabs([
+        "1️⃣ 🏦 Synthetic Data Generator",
+        "2️⃣ 🧹 Anonymize & Sanitize Data",
+        "3️⃣ 🤖 Credit appraisal by AI assistant",
+        "4️⃣ 🧑‍⚖️ Human Review",
+        "5️⃣ 🔁 Training (Feedback → Retrain)",
+        "6️⃣ 🚀 Deployment of Credit Model",
+        "7️⃣ 📦 Reporting & Handoff",
+        "8️⃣ 🗣️ Feedback & Feature Requests"
+    ])
+
+else:
+    # Safe placeholders when not on the Credit Agent stage
+    tab_input = st.container()
+    tab_clean = st.container()
+    tab_run = st.container()
+    tab_review = st.container()
+    tab_train = st.container()
+    tab_deploy = st.container()
+    tab_handoff = st.container()
+    tab_feedback = st.container()
 
 
 
@@ -1296,36 +1922,6 @@ def render_credit_dashboard(df: pd.DataFrame, currency_symbol: str = ""):
         st.dataframe(mix, use_container_width=True, height=220)
 
 
-# ─────────────────────────────────────────────
-# ✅ CREDIT APPRAISAL WORKFLOW (A → G)
-# Tabs preserved exactly as requested
-# ─────────────────────────────────────────────
-tab_gen, tab_clean, tab_run, tab_review, tab_train, tab_feedback = st.tabs([
-    "🏦 Synthetic Data Generator",         # Stage A — Data Generation & Intake
-    "🧹 Anonymize & Sanitize Data",        # Stage B — Cleaning & Feature Engineering
-    "🤖 Credit appraisal by AI assistant", # Stage C — Model Inference
-    "🧑‍⚖️ Human Review",                  # Stage D — Human Override + Finalize
-    "🔁 Training (Feedback → Retrain)",    # Stage E/F — Retraining + Deployment
-    "🗣️ Feedback & Feature Requests"       # Stage G — Reporting + Handoff
-])
-
-
-
-
-
-# # ─────────────────────────────────────────────
-# # ─────────────────────────────────────────────
-# # WORKFLOW TABS — full 6 steps
-# # ─────────────────────────────────────────────
-# tab_gen, tab_clean, tab_run, tab_review, tab_train, tab_feedback = st.tabs([
-#     "🏦 Synthetic Data Generator",
-#     "🧹 Anonymize & Sanitize Data",
-#     "🤖 Credit appraisal by AI assistant",
-#     "🧑‍⚖️ Human Review",
-#     "🔁 Training (Feedback → Retrain)",
-#     "🗣️ Feedback & Feature Requests"
-# ])
-
 
 
 # DATA GENERATORS
@@ -1441,7 +2037,7 @@ def to_agent_schema(df: pd.DataFrame) -> pd.DataFrame:
 
 # ─────────────────────────────────────────────
 # 🏦 TAB 1 — Synthetic Data Generator
-with tab_gen:
+with tab_input:
     st.subheader("🏦 Synthetic Credit Data Generator")
 
     # Currency selector (before generation)
@@ -1617,47 +2213,7 @@ with tab_run:
     else:
         st.warning("⚠️ No trained models found — train one in Step 5 first.")
 
-    # # ─────────────────────────────────────────────
-    # # 🧩 Model Selection (list all trained models)
-    # # ─────────────────────────────────────────────
-    # trained_dir = os.path.expanduser(
-    #     "~/credit-appraisal-agent-poc/agents/credit_appraisal/models/trained"
-    # )
-    # models = []
-    # if os.path.exists(trained_dir):
-    #     for f in os.listdir(trained_dir):
-    #         if f.endswith(".joblib"):
-    #             fpath = os.path.join(trained_dir, f)
-    #             ctime = os.path.getctime(fpath)
-    #             #created = datetime.datetime.fromtimestamp(ctime).strftime("%b %d, %Y %H:%M")
-    #             created = datetime.fromtimestamp(ctime, tz=timezone.utc).strftime("%b %d, %Y %H:%M")
-    #             models.append((f, fpath, created))
 
-    # if models:
-    #     models.sort(key=lambda x: x[2], reverse=True)
-    #     display_names = [f"{m[0]} — {m[2]}" for m in models]
-
-    #     selected_display = st.selectbox("📦 Select trained model to use", display_names)
-    #     selected_model = models[display_names.index(selected_display)][1]
-    #     st.success(f"✅ Using model: {os.path.basename(selected_model)}")
-
-    #     # Store for later use by /run API
-    #     st.session_state["selected_trained_model"] = selected_model
-
-    #     # Optional promote button
-    #     if st.button("🚀 Promote this model to Production"):
-    #         try:
-    #             prod_path = os.path.expanduser(
-    #                 "~/credit-appraisal-agent-poc/agents/credit_appraisal/models/production/model.joblib"
-    #             )
-    #             os.makedirs(os.path.dirname(prod_path), exist_ok=True)
-    #             import shutil
-    #             shutil.copy2(selected_model, prod_path)
-    #             st.success(f"✅ Model promoted to production: {os.path.basename(prod_path)}")
-    #         except Exception as e:
-    #             st.error(f"❌ Promotion failed: {e}")
-    # else:
-    #     st.warning("⚠️ No trained models found — train one in Step 5 first.")
 
     # 1) Model + Hardware selection (UI hints)
     LLM_MODELS = [
@@ -1965,7 +2521,10 @@ with tab_run:
                 return pd.DataFrame({"value": [obj]})
 
             # ---- Prefer server report via run_id; otherwise fall back to local JSON→DF ----
-            merged_df = pd.DataFrame()
+            
+            # ============================================================
+            # ✅ Prefer server CSV → fallback to JSON Parser
+            # ============================================================
             if run_id:
                 try:
                     rid = run_id
@@ -1975,11 +2534,13 @@ with tab_run:
                     st.session_state.last_run_id = rid
                     st.success(f"✅ Run succeeded! Run ID: {rid}")
                 except Exception as e:
-                    st.warning(f"Could not fetch merged CSV via run_id ({run_id}): {e}")
-                    merged_df = json_to_df(payload_rows)
+                    st.warning(f"Could not fetch CSV via run_id ({run_id}): {e}")
+                    merged_df = json_to_dataframe(payload_rows)
             else:
-                st.warning("⚠️ Backend did not return a run_id. Rendering raw response as table.")
-                merged_df = json_to_df(payload_rows if payload_rows is not None else res)
+                st.warning("⚠️ Backend did not return a run_id. Falling back to JSON.")
+                merged_df = json_to_dataframe(payload_rows)
+
+ 
 
             if merged_df is None or merged_df.empty:
                 st.error("No data available to render (both report and fallback JSON were empty).")
@@ -1988,6 +2549,14 @@ with tab_run:
 
             # Keep for later tabs
             st.session_state["last_merged_df"] = dedupe_columns(merged_df)
+            
+            # ✅ Make results available to Stage 7 (Reporting & Handoff)
+            try:
+                st.session_state["credit_scored_df"] = dedupe_columns(merged_df.copy())
+                st.success("✅ Stage C outputs saved for Stage 7 (Reporting & Handoff).")
+            except Exception as e:
+                st.warning(f"Could not persist scored dataset for Stage 7: {e}")
+
 
             # ---- Decisions Table (with filter) ----
             st.markdown("### 📄 Credit AI Agent Decisions Table (filtered)")
@@ -2048,6 +2617,39 @@ with tab_run:
                 mime="text/csv",
                 use_container_width=True
             )
+            
+            # ✅ CREATE TRAINING LABEL (Stage C → Stage F)
+            train_df = merged_df.copy()
+
+            # 1) Default probability → binary label
+            if "default_probability" in train_df.columns:
+                train_df["label"] = (train_df["default_probability"] >= 0.5).astype(int)
+
+            # 2) Fallback: use score column if exists
+            elif "score" in train_df.columns:
+                train_df["label"] = (train_df["score"] >= 0.5).astype(int)
+
+            # 3) Final fallback to avoid Stage F crash
+            else:
+                train_df["label"] = 0
+
+            # ✅ SAVE FOR TRAINING PIPELINE
+            try:
+                st.session_state["credit_train_df"] = train_df.copy()
+                st.success("✅ Stage C dataset prepared and saved for Stage F (training).")
+            except Exception as e:
+                st.error(f"Could not save training dataset for Stage F: {e}")
+
+            
+            # ✅ SAVE OUTPUT FOR STAGE F (Training)
+            try:
+                #st.session_state["credit_train_df"] = scored_df.copy()
+                st.session_state["credit_train_df"] = merged_df.copy()
+
+                st.success("✅ Stage C output saved for Stage F (training).")
+            except Exception as e:
+                st.error(f"Could not save Stage C dataset for training: {e}")
+
         except Exception as e:
             st.exception(e)
 
@@ -2247,317 +2849,658 @@ with tab_review:
         st.caption(f"Saved file name pattern: **{review_name}**")
 
 
-
-
 # -------------------------------------------------------------
-# ✅ STAGE F — Credit Model Training (Executive Dashboard)
+# ✅ STAGE 5 — Credit Model Training (Executive Dashboard)
 # -------------------------------------------------------------
 with tab_train:
     import os, json, glob, shutil, zipfile
     from datetime import datetime, timezone
-    import pandas as pd
+    from pathlib import Path
     import numpy as np
-    import joblib
-    import streamlit as st
+    import pandas as pd
     import plotly.express as px
     import plotly.graph_objects as go
+
+    from sklearn.model_selection import train_test_split
     from sklearn.metrics import (
-        roc_auc_score, accuracy_score, precision_score,
+        roc_auc_score, accuracy_score, precision_score, 
         recall_score, f1_score, confusion_matrix
     )
 
-    st.markdown("## 🧠 Stage F — Credit Model Training")
-    st.caption("Train → Compare → Evaluate → Promote credit scoring models")
+    import joblib
+    import streamlit as st
 
     # ---------------------------------------------------------
-    # ✅ TRAINING INPUT CHECK
+    # ✅ HEADER
+    # ---------------------------------------------------------
+    st.markdown("""
+    <h2>🧠 Stage 5 — Credit Model Training</h2>
+    <p style='font-size:1.1rem'>
+    Train → Compare → Evaluate → Promote<br>
+    Build a robust, regulator-friendly credit scoring model.
+    </p>
+    """, unsafe_allow_html=True)
+
+    # ---------------------------------------------------------
+    # ✅ LOAD TRAINING DATA (from Stage C)
     # ---------------------------------------------------------
     train_df = st.session_state.get("credit_train_df")
+
     if train_df is None or train_df.empty:
-        st.error("⚠️ Missing training dataset. Please load data in Stage C.")
+        st.error("⚠️ Missing training dataset. Please run Stage C first.")
         st.stop()
 
-    st.info("✅ Training dataset loaded.")
+    st.success(f"✅ Training dataset detected with {len(train_df):,} rows.")
     st.dataframe(train_df.head(), use_container_width=True)
 
+    st.markdown("---")
+
     # ---------------------------------------------------------
-    # ✅ CHOOSE MODEL
+    # ✅ TRAINING DATA LOADING (Human feedback OR CSV upload)
     # ---------------------------------------------------------
+    st.markdown("### 📥 Stage 5 Training Data Input")
+
+    train_df = None
+    source_label = None
+
+    # ✅ Option A — Human Review Stage output is available
+    if "credit_human_review_df" in st.session_state:
+        df_human = st.session_state.get("credit_human_review_df")
+        if isinstance(df_human, pd.DataFrame) and not df_human.empty:
+            train_df = df_human.copy()
+            source_label = "Human Review Stage (Session State)"
+
+    # ✅ Option B — Model Inference Stage C merged_df output (fallback)
+    elif "credit_train_df" in st.session_state:
+        df_auto = st.session_state.get("credit_train_df")
+        if isinstance(df_auto, pd.DataFrame) and not df_auto.empty:
+            train_df = df_auto.copy()
+            source_label = "Stage C auto-saved dataset"
+
+    # ✅ Option C — User uploads CSV manually
+    uploaded = st.file_uploader("Upload training CSV (optional)", type=["csv"])
+
+    if uploaded is not None:
+        try:
+            train_df = pd.read_csv(uploaded)
+            source_label = f"Uploaded CSV ({len(train_df)} rows)"
+        except Exception as e:
+            st.error(f"❌ Could not read uploaded CSV: {e}")
+
+    # ✅ Hard stop if no dataset is available
+    if train_df is None or train_df.empty:
+        st.error("""
+        ❌ No training data found.
+
+        ✅ Provide training dataset by:
+        • Completing Human Review Stage (Stage D)  
+        • OR uploading a CSV here  
+        • OR enabling Stage C to save merged output  
+        """)
+        st.stop()
+
+    # ✅ Show dataset preview + source
+    st.success(f"✅ Training dataset loaded from: **{source_label}**")
+    st.dataframe(train_df.head(), use_container_width=True)
+
+    st.markdown("---")
+
+    
+    
+    # # ---------------------------------------------------------
+    # # ✅ MODEL SELECTION
+    # # ---------------------------------------------------------
+    # st.subheader("🤖 Choose training model")
+
+    # model_choice = st.selectbox(
+    #     "Select model:",
+    #     ["LogisticRegression", "RandomForest", "LightGBM", "XGBoost"]
+    # )
+
+    # # ---------------------------------------------------------
+    # # ✅ Smart Target Auto-Detection (inserted BEFORE training)
+    # # ---------------------------------------------------------
+    # def detect_best_target(df):
+    #     """
+    #     Smart target auto-detection for credit scoring.
+    #     Priority:
+    #     1) AI numeric scores
+    #     2) human decisions
+    #     3) any suitable numeric predictive column
+    #     """
+
+    #     score_candidates = [
+    #         "score", "default_probability", "risk_score",
+    #         "pd", "probability_default"
+    #     ]
+
+    #     # ✅ 1. Direct AI score column
+    #     for col in score_candidates:
+    #         if col in df.columns:
+    #             return col, "numeric_score"
+
+    #     # ✅ 2. Human decision labels
+    #     decision_candidates = ["human_decision", "final_decision", "decision"]
+
+    #     for col in decision_candidates:
+    #         if col in df.columns:
+    #             # verify values look like decisions ("approved"/"rejected")
+    #             vals = df[col].dropna().astype(str).str.lower().unique()
+    #             if any(v in ["approved", "rejected"] for v in vals):
+    #                 return col, "decision_label"
+
+    #     # ✅ 3. Numeric fallback
+    #     numeric_cols = df.select_dtypes(include=["number"]).columns.tolist()
+
+    #     # exclude leakage columns
+    #     blacklist = ["loan_amount", "requested_amount", "income", "assets_owned"]
+    #     numeric_cols = [c for c in numeric_cols if c not in blacklist]
+
+    #     if numeric_cols:
+    #         return numeric_cols[0], "numeric_fallback"
+
+    #     return None, "none"
+
+    
+    # # ---------------------------------------------------------
+    # # ✅ TRAINING LOGIC
+    # # ---------------------------------------------------------
+    # if st.button("🚀 Train Credit Model Now"):
+    #     with st.spinner("Training model…"):
+
+    #         # ✅ Smart Target Detection
+    #         TARGET_COL, target_mode = detect_best_target(train_df)
+
+    #         if TARGET_COL is None:
+    #             st.error("❌ No suitable target column found in dataset.")
+    #             st.stop()
+
+    #         st.success(f"✅ Selected target: **{TARGET_COL}** ({target_mode})")
+
+    #         # ✅ Clean + convert target
+    #         y_cont = pd.to_numeric(train_df[TARGET_COL], errors="coerce")
+    #         df_clean = train_df.dropna(subset=[TARGET_COL]).copy()
+    #         y_cont = df_clean[TARGET_COL].astype(float)
+
+    #         # ✅ If target is a decision label → convert to 0/1
+    #         if target_mode == "decision_label":
+    #             y_bin = df_clean[TARGET_COL].astype(str).str.lower().map({
+    #                 "approved": 1,
+    #                 "rejected": 0
+    #             })
+    #             st.info("✅ Using human decisions converted to binary 0/1")
+    #         else:
+    #             # ✅ Numeric → Binarize by median threshold
+    #             threshold = float(y_cont.median())
+    #             y_bin = (y_cont >= threshold).astype(int)
+    #             st.info(f"✅ Numeric target → auto-threshold = {threshold:.4f}")
+
+            
+    #         # # ✅ TARGET COLUMN = score
+    #         # TARGET_COL = "score"
+
+    #         # if TARGET_COL not in train_df.columns:
+    #         #     st.error(f"❌ Target '{TARGET_COL}' not found.")
+    #         #     st.stop()
+
+    #         # ✅ Clean target
+    #         y_cont = pd.to_numeric(train_df[TARGET_COL], errors="coerce")
+    #         df_clean = train_df.dropna(subset=[TARGET_COL]).copy()
+    #         y_cont = df_clean[TARGET_COL].astype(float)
+
+    #         # ✅ Binarize score
+    #         threshold = float(y_cont.median())
+    #         y_bin = (y_cont >= threshold).astype(int)
+
+    #         st.info(f"✅ Auto-threshold for binarization = {threshold:.4f}")
+
+    #         # ✅ Feature selection (remove target + leakage)
+    #         LEAKAGE_COLS = [
+    #             TARGET_COL,
+    #             "decision", "confidence",
+    #             "top_feature", "explanation",
+    #             "proposed_loan_option", "proposed_consolidation_loan",
+    #             "rule_reasons"
+    #         ]
+
+    # #         X = df_clean.drop(columns=[c for c in LEAKAGE_COLS if c in df_clean.columns])
+
+            
+    #         # ---------------------------------------------------------
+    #         # ✅ FEATURE SELECTION — DROP ALL NON-NUMERIC COLUMNS
+    #         # ---------------------------------------------------------
+
+    #         # Columns that MUST NOT be used as features
+    #         BAD_COLS = [
+    #             TARGET_COL,                   # remove score
+    #             "application_id",
+    #             "asset_id",
+    #             "customer_id",
+    #             "currency_code",
+    #             "collateral_type",
+    #             "customer_type",
+    #             "created_at",
+    #             "session_flagged",
+    #             "decision", "confidence",
+    #             "top_feature", "explanation",
+    #             "proposed_loan_option", "proposed_consolidation_loan",
+    #             "rule_reasons"
+    #         ]
+
+    #         # Drop all known non-features
+    #         df_fe = df_clean.drop(columns=[c for c in BAD_COLS if c in df_clean.columns])
+
+    #         # ✅ Keep ONLY numeric columns
+    #         X = df_fe.select_dtypes(include=["number"]).copy()
+
+    #         # ✅ Safety check
+    #         if X.empty:
+    #             st.error("❌ No numeric features available for training. Check your dataset.")
+    #             st.stop()
+
+    #         st.success(f"✅ Using {X.shape[1]} numeric features for training.")
+    #         st.dataframe(X.head())
+
+            
+    #         # ✅ Split
+    #         Xtr, Xte, ytr, yte = train_test_split(
+    #             X, y_bin, test_size=0.2, random_state=42
+    #         )
+
+    #         # ✅ Model selection
+    #         if model_choice == "LogisticRegression":
+    #             from sklearn.linear_model import LogisticRegression
+    #             model = LogisticRegression(max_iter=2000)
+    #         elif model_choice == "RandomForest":
+    #             from sklearn.ensemble import RandomForestClassifier
+    #             model = RandomForestClassifier(n_estimators=300)
+    #         elif model_choice == "LightGBM":
+    #             from lightgbm import LGBMClassifier
+    #             model = LGBMClassifier()
+    #         else:
+    #             from xgboost import XGBClassifier
+    #             model = XGBClassifier()
+
+    #         # ✅ Train
+    #         model.fit(Xtr, ytr)
+
+    #         # ✅ Predictions
+    #         preds_proba = model.predict_proba(Xte)[:, 1]
+    #         preds = (preds_proba >= 0.5).astype(int)
+
+    #         # ✅ Metrics
+    #         metrics = {
+    #             "AUC": roc_auc_score(yte, preds_proba),
+    #             "Accuracy": accuracy_score(yte, preds),
+    #             "Precision": precision_score(yte, preds),
+    #             "Recall": recall_score(yte, preds),
+    #             "F1": f1_score(yte, preds),
+    #         }
+    # ---------------------------------------------------------
+    # ✅ MODEL SELECTION
+    # ---------------------------------------------------------
+    st.subheader("🤖 Choose training model")
+
     model_choice = st.selectbox(
-        "Select model to train:",
+        "Select model:",
         ["LogisticRegression", "RandomForest", "LightGBM", "XGBoost"]
     )
 
     # ---------------------------------------------------------
-    # ✅ Train button
+    # ✅ Smart Target Auto-Detection (BEFORE training)
+    # ---------------------------------------------------------
+    def detect_best_target(df):
+        """
+        Smart target auto-detection for credit scoring.
+        Priority:
+        1) AI numeric scores
+        2) human decisions
+        3) any suitable numeric predictive column
+        """
+
+        score_candidates = [
+            "score", "default_probability", "risk_score",
+            "pd", "probability_default"
+        ]
+
+        # ✅ 1. Direct AI numeric score column
+        for col in score_candidates:
+            if col in df.columns:
+                return col, "numeric_score"
+
+        # ✅ 2. Human decision labels
+        decision_candidates = ["human_decision", "final_decision", "decision"]
+
+        for col in decision_candidates:
+            if col in df.columns:
+                vals = df[col].dropna().astype(str).str.lower().unique()
+                if any(v in ["approved", "rejected"] for v in vals):
+                    return col, "decision_label"
+
+        # ✅ 3. Numeric fallback
+        numeric_cols = df.select_dtypes(include=["number"]).columns.tolist()
+
+        # exclude leakage columns
+        blacklist = ["loan_amount", "requested_amount", "income", "assets_owned"]
+        numeric_cols = [c for c in numeric_cols if c not in blacklist]
+
+        if numeric_cols:
+            return numeric_cols[0], "numeric_fallback"
+
+        return None, "none"
+
+
+    # ---------------------------------------------------------
+    # ✅ TRAINING LOGIC
     # ---------------------------------------------------------
     if st.button("🚀 Train Credit Model Now"):
         with st.spinner("Training model…"):
 
-            # ---------------- TRAIN YOUR MODEL HERE ----------------
-            from sklearn.model_selection import train_test_split
-            y = train_df["label"]
-            X = train_df.drop(columns=["label"])
+            # ✅ Smart Target Detection
+            TARGET_COL, target_mode = detect_best_target(train_df)
 
+            if TARGET_COL is None:
+                st.error("❌ No suitable target column found in dataset.")
+                st.stop()
+
+            st.success(f"✅ Selected target: **{TARGET_COL}** ({target_mode})")
+
+            # ✅ Clean and prepare target
+            y_cont = pd.to_numeric(train_df[TARGET_COL], errors="coerce")
+            df_clean = train_df.dropna(subset=[TARGET_COL]).copy()
+            y_cont = df_clean[TARGET_COL].astype(float)
+
+            # ---------------------------------------------------------
+            # ✅ MODE 1: DECISION LABEL (approved / rejected → 1/0)
+            # ---------------------------------------------------------
+            if target_mode == "decision_label":
+                y_bin = df_clean[TARGET_COL].astype(str).str.lower().map({
+                    "approved": 1,
+                    "rejected": 0
+                })
+                st.info("✅ Using human decisions converted to binary 0/1")
+
+            # ---------------------------------------------------------
+            # ✅ MODE 2 & 3: NUMERIC TARGET → BINARIZE USING MEDIAN
+            # ---------------------------------------------------------
+            else:
+                threshold = float(y_cont.median())
+                y_bin = (y_cont >= threshold).astype(int)
+                st.info(f"✅ Numeric target → auto-threshold = {threshold:.4f}")
+
+            # ---------------------------------------------------------
+            # ✅ FEATURE SELECTION — remove target + leakage
+            # ---------------------------------------------------------
+            LEAKAGE_COLS = [
+                TARGET_COL,
+                "decision", "confidence",
+                "top_feature", "explanation",
+                "proposed_loan_option", "proposed_consolidation_loan",
+                "rule_reasons"
+            ]
+
+            X = df_clean.drop(columns=[c for c in LEAKAGE_COLS if c in df_clean.columns])
+            
+            
+            # ---------------------------------------------------------
+            # ✅ Encode non-numeric columns for ML training
+            # ---------------------------------------------------------
+            X = X.copy()  # safe copy
+
+            # Detect non-numeric columns
+            non_numeric_cols = X.select_dtypes(include=["object"]).columns.tolist()
+
+            if non_numeric_cols:
+                st.warning(f"Encoding non-numeric columns: {non_numeric_cols}")
+
+                # ✅ Safe label encoding for LightGBM / RF / XGB / LR
+                from sklearn.preprocessing import LabelEncoder
+
+                for col in non_numeric_cols:
+                    try:
+                        le = LabelEncoder()
+                        X[col] = le.fit_transform(X[col].astype(str))
+                    except Exception as e:
+                        st.error(f"❌ Failed to encode column '{col}': {e}")
+                        st.stop()
+
+
+            # ---------------------------------------------------------
+            # ✅ TRAIN/TEST SPLIT
+            # ---------------------------------------------------------
+            from sklearn.model_selection import train_test_split
             Xtr, Xte, ytr, yte = train_test_split(
-                X, y, test_size=0.2, random_state=42
+                X, y_bin, test_size=0.2, random_state=42
             )
 
+            # ---------------------------------------------------------
+            # ✅ MODEL SELECTION AND TRAINING
+            # ---------------------------------------------------------
             if model_choice == "LogisticRegression":
                 from sklearn.linear_model import LogisticRegression
                 model = LogisticRegression(max_iter=2000)
+
             elif model_choice == "RandomForest":
                 from sklearn.ensemble import RandomForestClassifier
                 model = RandomForestClassifier(n_estimators=300)
+
             elif model_choice == "LightGBM":
                 from lightgbm import LGBMClassifier
                 model = LGBMClassifier()
+
             else:
                 from xgboost import XGBClassifier
                 model = XGBClassifier()
 
             model.fit(Xtr, ytr)
+
+            # ---------------------------------------------------------
+            # ✅ PREDICTIONS & METRICS
+            # ---------------------------------------------------------
             preds_proba = model.predict_proba(Xte)[:, 1]
             preds = (preds_proba >= 0.5).astype(int)
 
-            # ---------------- METRICS ----------------
-            new_m = {
+            from sklearn.metrics import (
+                roc_auc_score, accuracy_score, precision_score,
+                recall_score, f1_score
+            )
+
+            metrics = {
                 "AUC": roc_auc_score(yte, preds_proba),
                 "Accuracy": accuracy_score(yte, preds),
                 "Precision": precision_score(yte, preds),
                 "Recall": recall_score(yte, preds),
-                "F1": f1_score(yte, preds),
+                "F1": f1_score(yte, preds)
             }
 
+            st.success("✅ Model trained successfully!")
+            st.json(metrics)
+
+        
+    
             # -----------------------------------------------------
-            # ✅ LOAD EXISTING PRODUCTION METRICS (IF ANY)
+            # ✅ LOAD PRODUCTION BASELINE IF EXISTS
             # -----------------------------------------------------
-            prod_meta_path = "./agents/credit_appraisal/models/production/production_meta.json"
-            if os.path.exists(prod_meta_path):
+            PROD_DIR = Path("./agents/credit_appraisal/models/production")
+            prod_meta_path = PROD_DIR / "production_meta.json"
+
+            if prod_meta_path.exists():
                 prod_m = json.load(open(prod_meta_path))["metrics"]
             else:
                 prod_m = None
 
-            # -----------------------------------------------------
-            # ✅ EXECUTIVE DASHBOARD — WHAT → SO WHAT → NOW WHAT
-            # -----------------------------------------------------
-            from math import isnan
+            st.markdown("---")
+            st.subheader("📊 A/B Model Comparison")
 
-            st.markdown("### ✅ Executive Model Evaluation")
-
-            if prod_m:
-                auc_delta = (new_m["AUC"] - prod_m["AUC"]) * 100
-                acc_delta = (new_m["Accuracy"] - prod_m["Accuracy"]) * 100
-
-                st.success(
-                    f"✅ AUC improved by **{auc_delta:+.2f}%**. "
-                    f"Accuracy improved by **{acc_delta:+.2f}%**."
-                )
-            else:
-                st.info("🟢 First model trained — establishing production baseline.")
-
-            # METRICS TABLE
-            cmp = pd.DataFrame({
-                "Metric": list(new_m.keys()),
-                "New Model": [f"{v:.4f}" for v in new_m.values()],
+            # ✅ COMPARISON TABLE
+            cmp_df = pd.DataFrame({
+                "Metric": list(metrics.keys()),
+                "New Model": [f"{v:.4f}" for v in metrics.values()],
                 "Production": [
                     f"{prod_m[k]:.4f}" if prod_m else "—"
-                    for k in new_m.keys()
-                ],
+                    for k in metrics.keys()
+                ]
             })
-            st.table(cmp)
+            st.table(cmp_df)
+
+            # -----------------------------------------------------
+            # ✅ EXECUTIVE SUMMARY (WHAT → SO WHAT → NOW WHAT)
+            # -----------------------------------------------------
+            st.markdown("## 🧭 Executive Summary (WHAT → SO WHAT → NOW WHAT)")
+
+            if prod_m:
+                auc_delta = metrics["AUC"] - prod_m["AUC"]
+                if auc_delta > 0:
+                    st.success(f"✅ Model improves **AUC by {auc_delta:.4f}** — better discrimination.")
+                else:
+                    st.warning(f"⚠️ AUC dropped by {auc_delta:.4f} — further tuning required.")
+            else:
+                st.info("🟢 First model — will become baseline.")
 
             # -----------------------------------------------------
             # ✅ CONFUSION MATRIX
             # -----------------------------------------------------
             cm = confusion_matrix(yte, preds)
-            fig_cm = px.imshow(
+            cm_fig = px.imshow(
                 cm, text_auto=True,
                 title="Confusion Matrix",
-                labels=dict(x="Predicted", y="Actual")
+                labels={"x": "Predicted", "y": "Actual"}
             )
-            st.plotly_chart(fig_cm, use_container_width=True)
+            st.plotly_chart(cm_fig, use_container_width=True)
 
             # -----------------------------------------------------
-            # ✅ SAVE ARTIFACTS
+            # ✅ FEATURE IMPORTANCE
             # -----------------------------------------------------
+            st.subheader("🧠 Feature Importance")
+
+            if hasattr(model, "feature_importances_"):
+                imp = pd.DataFrame({
+                    "feature": X.columns,
+                    "importance": model.feature_importances_
+                }).sort_values("importance", ascending=False)
+                st.bar_chart(imp.set_index("feature"))
+            elif hasattr(model, "coef_"):
+                coef = pd.DataFrame({
+                    "feature": X.columns,
+                    "coef": np.ravel(model.coef_)
+                }).sort_values("coef", key=np.abs, ascending=False)
+                st.bar_chart(coef.set_index("feature"))
+            else:
+                st.info("This model does not expose importance metrics.")
+
+            # -----------------------------------------------------
+            # ✅ SAVE MODEL
+            # -----------------------------------------------------
+            TRAINED_DIR = Path("./agents/credit_appraisal/models/trained")
+            TRAINED_DIR.mkdir(parents=True, exist_ok=True)
+
+            ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+            model_path = TRAINED_DIR / f"{model_choice}_{ts}.joblib"
+            joblib.dump(model, model_path)
+
+            st.success(f"✅ Model saved → `{model_path}`")
+
+            # ✅ SAVE REPORT
             RUNS_DIR = Path("./.tmp_runs")
             RUNS_DIR.mkdir(exist_ok=True)
 
-            ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-
-            trained_dir = Path("./agents/credit_appraisal/models/trained")
-            trained_dir.mkdir(parents=True, exist_ok=True)
-
-            model_path = trained_dir / f"{model_choice}_{ts}.joblib"
-            joblib.dump(model, model_path)
-
-            rep = {
+            report = {
                 "timestamp": ts,
                 "model_choice": model_choice,
-                "metrics": new_m,
+                "metrics": metrics,
+                "model_path": str(model_path),
+                "features": list(X.columns),
+                "threshold": threshold,
             }
+
             rep_path = RUNS_DIR / f"credit_training_report_{ts}.json"
-            json.dump(rep, open(rep_path, "w"), indent=2)
+            json.dump(report, open(rep_path, "w"), indent=2)
 
-            st.success(f"✅ Model saved: `{model_path}`")
-            st.caption(f"Training report → `{rep_path}`")
-
-            # persist to session for Stage G/H
+            # store for next stage
             st.session_state["credit_last_model_path"] = str(model_path)
-            st.session_state["credit_last_metrics"] = new_m
-            st.session_state["credit_last_report"] = rep
+            st.session_state["credit_last_metrics"] = metrics
+            st.session_state["credit_last_report"] = report
+
+            st.caption(f"📄 Report saved → `{rep_path}`")
+
+            # -----------------------------------------------------
+            # ✅ PROMOTION BLOCK
+            # -----------------------------------------------------
+            st.markdown("## 📤 Promote This Model to Production")
+
+            if st.button("✅ Promote to Production"):
+                try:
+                    PROD_DIR.mkdir(parents=True, exist_ok=True)
+
+                    shutil.copy(model_path, PROD_DIR / "model.joblib")
+
+                    meta = {
+                        "promoted_at": datetime.now(timezone.utc).isoformat(),
+                        "metrics": metrics,
+                        "model_path": str(model_path),
+                        "model_choice": model_choice
+                    }
+                    json.dump(meta, open(PROD_DIR / "production_meta.json", "w"), indent=2)
+
+                    st.balloons()
+                    st.success("✅ Model promoted successfully!")
+
+                except Exception as e:
+                    st.error(f"❌ Promotion failed: {e}")
+
+            # -----------------------------------------------------
+            # ✅ EXPORT ZIP
+            # -----------------------------------------------------
+            st.markdown("## 📦 Export Project ZIP")
+
+            EXPORT_DIR = Path("./exports")
+            EXPORT_DIR.mkdir(exist_ok=True)
+
+            zip_name = f"credit_project_bundle_{ts}.zip"
+            zip_path = EXPORT_DIR / zip_name
+
+            if st.button("⬇️ Build ZIP Bundle"):
+                try:
+                    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+
+                        # Runs
+                        for root, dirs, files in os.walk(RUNS_DIR):
+                            for f in files:
+                                full = os.path.join(root, f)
+                                arc = os.path.relpath(full, RUNS_DIR)
+                                zf.write(full, f"runs/{arc}")
+
+                        # Production models
+                        if PROD_DIR.exists():
+                            for f in PROD_DIR.glob("*"):
+                                zf.write(f, f"production/{f.name}")
+
+                        # Trained models
+                        for f in TRAINED_DIR.glob("*.joblib"):
+                            zf.write(f, f"trained/{f.name}")
+
+                        # Training report
+                        zf.write(rep_path, "training_report.json")
+
+                    st.success("✅ ZIP created!")
+                    with open(zip_path, "rb") as fp:
+                        st.download_button(
+                            "⬇️ Download ZIP",
+                            data=fp,
+                            file_name=zip_name,
+                            mime="application/zip",
+                            use_container_width=True
+                        )
+                except Exception as e:
+                    st.error(f"❌ ZIP creation failed: {e}")
 
 
-# # ─────────────────────────────────────────────
-# # 🔁 TAB 5 — Training (Feedback → Retrain)
-# with tab_train:
-#     st.subheader("🔁 From Human Feedback CSV → Train and Promote Trained Model to Production Model ")
-
-#     st.markdown("**Drag & drop** one or more review CSVs exported from the Human Review tab.")
-#     up_list = st.file_uploader("Upload feedback CSV(s)", type=["csv"], accept_multiple_files=True, key="train_feedback_uploader")
-
-#     staged_paths: List[str] = []
-#     if up_list:
-#         for up in up_list:
-#             # stage to tmp_feedback dir
-#             dest = os.path.join(TMP_FEEDBACK_DIR, up.name)
-#             with open(dest, "wb") as f:
-#                 f.write(up.getvalue())
-#             staged_paths.append(dest)
-#         st.success(f"Staged {len(staged_paths)} feedback file(s) to {TMP_FEEDBACK_DIR}")
-#         st.write(staged_paths)
-
-#     st.markdown("#### Launch Retrain")
-#     payload = {
-#         "feedback_csvs": staged_paths,
-#         "user_name": st.session_state["user_info"]["name"],
-#         "agent_name": "credit_appraisal",
-#         "algo_name": "credit_lr",
-#     }
-#     st.code(json.dumps(payload, indent=2), language="json")
-
-#     colA, colB = st.columns([1,1])
-#     with colA:
-#         if st.button("🚀 Train candidate model"):
-#             try:
-#                 r = requests.post(f"{API_URL}/v1/training/train", json=payload, timeout=90)
-#                 if r.ok:
-#                     st.success(r.json())
-#                     st.session_state["last_train_job"] = r.json().get("job_id")
-#                 else:
-#                     st.error(r.text)
-#             except Exception as e:
-#                 st.error(f"Train failed: {e}")
-#     with colB:
-#         if st.button("⬆️ Promote last candidate to PRODUCTION"):
-#             try:
-#                 r = requests.post(f"{API_URL}/v1/training/promote", timeout=30)
-#                 st.write(r.json() if r.ok else r.text)
-#             except Exception as e:
-#                 st.error(f"Promote failed: {e}")
-
-#     st.markdown("---")
-#     st.markdown("#### Production Model")
-#     try:
-#         resp = requests.get(f"{API_URL}/v1/training/production_meta", timeout=5)
-#         if resp.ok:
-#             st.json(resp.json())
-#         else:
-#             st.info("No production model yet.")
-#     except Exception as e:
-#         st.warning(f"Could not load production meta: {e}")
-
-
-
-
-#     # ─────────────────────────────────────────────
-#     # 🔁 Loopback Section — Go back to Step 3
-#     # ─────────────────────────────────────────────
-#     st.markdown("---")
-#     st.markdown("### 💳 Loop back to Step 3 — Credit Appraisal Agent")
-#     st.caption("After retraining, return to the Credit Appraisal tab and use your new production model.")
-
-#     st.markdown("""
-#     <a href="#credit-appraisal-stage" target="_self">
-#         <button style="
-#             background-color:#2563eb;
-#             color:white;
-#             border:none;
-#             border-radius:8px;
-#             padding:12px 24px;
-#             font-size:16px;
-#             font-weight:600;
-#             cursor:pointer;
-#             width:100%;
-#             box-shadow:0px 0px 6px rgba(37,99,235,0.5);
-#         ">⬅️ Go Back to Step 3 and Use New Model</button>
-#     </a>
-#     """, unsafe_allow_html=True)
-
-# # ─────────────────────────────────────────────
-# # 🗣️ TAB 6 — Feedback & Feature Requests
-# # ─────────────────────────────────────────────
-# with tab_feedback:
-#     st.subheader("🗣️ Share Your Feedback and Feature Ideas")
-
-#     FEEDBACK_FILE = os.path.join(BASE_DIR, "agents_feedback.json")
-
-#     def load_feedback() -> dict:
-#         try:
-#             with open(FEEDBACK_FILE, "r", encoding="utf-8") as f:
-#                 return json.load(f)
-#         except Exception:
-#             return {}
-
-#     def save_feedback(data: dict):
-#         try:
-#             with open(FEEDBACK_FILE, "w", encoding="utf-8") as f:
-#                 json.dump(data, f, ensure_ascii=False, indent=2)
-#         except Exception as e:
-#             st.error(f"Could not save feedback: {e}")
-
-#     feedback_data = load_feedback()
-
-#     # View all current agent feedback
-#     st.markdown("### 💬 Current Agent Reviews & Ratings")
-#     for agent, fb in feedback_data.items():
-#         with st.expander(f"⭐ {agent} — {fb.get('rating', 0)}/5  |  👥 {fb.get('users', 0)} users"):
-#             st.markdown("#### Recent Comments:")
-#             for cmt in reversed(fb.get("comments", [])):
-#                 st.markdown(f"- {cmt}")
-#             st.markdown("---")
-
-#     st.markdown("### ✍️ Submit Your Own Feedback or Feature Request")
-
-#     agent_choice = st.selectbox("Select Agent", list(feedback_data.keys()))
-#     new_comment = st.text_area("Your Comment or Feature Suggestion", placeholder="e.g. Add multi-language support for reports...")
-#     new_rating = st.slider("Your Rating", 1, 5, 5)
-
-
-#     if st.button("📨 Submit Feedback"):
-#         if new_comment.strip():
-#             fb = feedback_data.get(agent_choice, {"rating": 0, "users": 0, "comments": []})
-#             fb["comments"].append(new_comment.strip())
-#             fb["rating"] = round((fb.get("rating", 0) + new_rating) / 2, 2)
-#             fb["users"] = fb.get("users", 0) + 1
-#             feedback_data[agent_choice] = fb
-#             save_feedback(feedback_data)
-
-#             # ✅ Sync latest feedback globally
-#             st.session_state["feedback_data"] = feedback_data
-
-#             # ✅ Force full reload so Landing updates instantly
-#             st.success("✅ Feedback submitted successfully!")
-#             st.rerun()
-#         else:
-#             st.warning("Please enter a comment before submitting.")
 
 
 # -------------------------------------------------------------
-# ✅ STAGE G — Deployment of Credit Scoring Model
+# ✅ STAGE 6 — Deployment of Credit Scoring Model
 # -------------------------------------------------------------
-with tabG:
+with tab_deploy:
     import os, json, shutil, zipfile
     from pathlib import Path
     from datetime import datetime, timezone
@@ -2623,9 +3566,10 @@ with tabG:
 
 
 # -------------------------------------------------------------
-# ✅ STAGE H — Reporting & Handoff
+# ✅ STAGE 7 — Reporting & Handoff
 # -------------------------------------------------------------
-with tab_feedback:
+
+with tab_handoff:
     import os, json, zipfile
     import numpy as np
     import pandas as pd
@@ -2634,15 +3578,40 @@ with tab_feedback:
     import streamlit as st
     import plotly.express as px
 
-    st.markdown("## 📊 Stage H — Portfolio Reporting & Handoff")
+    st.markdown("## 📊 Stage 7 — Portfolio Reporting & Handoff")
 
+    # 1) Primary: dataset saved by Stage C/E
     df = st.session_state.get("credit_scored_df")
+
+    # 2) Fallback: Stage C merged output
     if df is None or df.empty:
-        st.warning("⚠️ Missing scored dataset from Stage E.")
+        df = st.session_state.get("last_merged_df")
+
+    # 3) Optional: user upload
+    uploaded_scored = st.file_uploader(
+        "⬆️ (Optional) Load scored CSV for reporting",
+        type=["csv"], key="stage7_upload"
+    )
+    if uploaded_scored is not None:
+        try:
+            df = pd.read_csv(uploaded_scored)
+            st.success(f"Loaded scored dataset from upload ({len(df)} rows).")
+        except Exception as e:
+            st.error(f"Could not read uploaded CSV: {e}")
+
+    # Final guard
+    if df is None or df.empty:
+        st.warning("⚠️ Missing scored dataset. Run Stage 3 (Credit appraisal) or upload a scored CSV above.")
         st.stop()
+
+    # Persist for other tabs
+    st.session_state["credit_scored_df"] = df.copy()
 
     st.success("✅ Portfolio loaded.")
     st.dataframe(df.head(), use_container_width=True)
+
+    # … (keep the rest of Stage 7: metrics, charts, handoff CSV/ZIP) …
+
 
     # ---------------------------------------------------------
     # ✅ Executive dashboard
@@ -2657,28 +3626,129 @@ with tab_feedback:
     with col3:
         st.metric("Rejected", (df["decision"] == "reject").sum())
 
+    # # ---------------------------------------------------------
+    # # ✅ Approval distribution
+    # # ---------------------------------------------------------
+    # # st.markdown("### 📈 Approval Distribution")
+    # # fig = px.histogram(df, x="decision", color="decision", title="Approval vs Rejection")
+    # # st.plotly_chart(fig, use_container_width=True)
+    # fig = px.histogram(
+    # df, x="decision", color="decision",
+    # color_discrete_sequence=PALETTE,
+    # title="Approval vs Rejection"
+    # )
+    # fig = apply_dark(fig)
+    # fig.update_traces(marker_line_width=0.5)
+    # fig.update_xaxes(title=None, gridcolor="rgba(255,255,255,0.08)")
+    # fig.update_yaxes(gridcolor="rgba(255,255,255,0.08)")
+    # st.plotly_chart(fig, use_container_width=True)
+
     # ---------------------------------------------------------
-    # ✅ Approval distribution
+    # ✅ Approval distribution (robust to 0/1, strings, themes)
     # ---------------------------------------------------------
     st.markdown("### 📈 Approval Distribution")
-    fig = px.histogram(df, x="decision", color="decision", title="Approval vs Rejection")
-    st.plotly_chart(fig, use_container_width=True)
+
+    # 1) Normalize labels
+    if "decision" not in df.columns:
+        st.info("No 'decision' column found; skipping approval chart.")
+    else:
+        vals = df["decision"]
+
+        def to_label(v):
+            if isinstance(v, str):
+                s = v.strip().lower()
+                if s in ("approve", "approved", "yes", "y", "1", "true"):
+                    return "approve"
+                if s in ("reject", "rejected", "no", "n", "0", "false"):
+                    return "reject"
+                return s or "unknown"
+            # numeric/bool
+            try:
+                return "approve" if float(v) >= 1 else "reject"
+            except Exception:
+                return "unknown"
+
+        df["decision_label"] = vals.map(to_label).fillna("unknown")
+
+        # 2) Safe color map (must be a LIST → map to dict)
+        palette = px.colors.qualitative.Set2  # e.g., ['#66c2a5', '#fc8d62', ...]
+        color_map = {
+            "approve": palette[0] if len(palette) > 0 else "#22c55e",
+            "reject":  palette[1] if len(palette) > 1 else "#ef4444",
+            "unknown": palette[2] if len(palette) > 2 else "#94a3b8",
+        }
+
+        # 3) Fixed category order for readability
+        categories = ["approve", "reject", "unknown"]
+
+        fig = px.histogram(
+            df,
+            x="decision_label",
+            color="decision_label",
+            category_orders={"decision_label": categories},
+            color_discrete_map=color_map,
+            title="Approval vs Rejection",
+        )
+        fig.update_layout(
+            legend_title_text="Decision",
+            bargap=0.2,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font_color=("#e2e8f0" if st.session_state.get("theme", "dark") == "dark" else "#0f172a"),
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
 
     # ---------------------------------------------------------
     # ✅ Department Handoff: Credit / Risk / Compliance / CS
     # ---------------------------------------------------------
     st.markdown("## 🏦 Department Handoff Packages")
+    
+    # ---------- helpers ----------
+    def pick(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
+        """Return df with only columns that actually exist (no KeyError)."""
+        keep = [c for c in cols if c in df.columns]
+        return df[keep].copy()
+
+    # ---------- ensure 'reason' exists ----------
+    if "reason" not in df.columns:
+        if "explanation" in df.columns:
+            df["reason"] = df["explanation"].astype(str).str.slice(0, 200)
+        elif {"pd", "dti", "ltv"}.issubset(df.columns) or "score" in df.columns:
+            def infer_reason(row):
+                try:
+                    if float(row.get("pd", 0)) >= 0.15:
+                        return "High probability of default"
+                    if float(row.get("dti", 0)) >= 0.5:
+                        return "High debt-to-income"
+                    if float(row.get("ltv", 0)) >= 0.8:
+                        return "High loan-to-value"
+                    if float(row.get("score", 999)) < 600:
+                        return "Low credit score"
+                except Exception:
+                    pass
+                return "Policy/Other"
+            df["reason"] = df.apply(infer_reason, axis=1)
+        else:
+            df["reason"] = ""
+
 
     ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     HANDOFF_DIR = Path("./credit_handoff")
     ZIP_DIR = HANDOFF_DIR / "zips"
     HANDOFF_DIR.mkdir(exist_ok=True)
     ZIP_DIR.mkdir(exist_ok=True)
+    
+    credit = pick(df, ["application_id","score","decision","reason","income","loan_amount"])
+    risk = pick(df, ["application_id","score","pd","ltv","dti","decision"])
+    compliance = pick(df, ["application_id","account_age","delinquencies","fraud_flag","decision"])
+    customer = pick(df, ["application_id","score","decision","explanation","reason"])
 
-    credit = df[["application_id","score","decision","reason","income","loan_amount"]]
-    risk = df[["application_id","score","pd","ltv","dti","decision"]]
-    compliance = df[["application_id","account_age","delinquencies","fraud_flag","decision"]]
-    customer = df[["application_id","score","decision","explanation"]]
+
+    # credit = df[["application_id","score","decision","reason","income","loan_amount"]]
+    # risk = df[["application_id","score","pd","ltv","dti","decision"]]
+    # compliance = df[["application_id","account_age","delinquencies","fraud_flag","decision"]]
+    # customer = df[["application_id","score","decision","explanation"]]
 
     paths = {
         "credit": HANDOFF_DIR / f"credit_{ts}.csv",
@@ -2709,8 +3779,96 @@ with tab_feedback:
         use_container_width=True
     )
 
+    # st.markdown("### 🧩 Department Package Map")
+    # st.json({k: list(df[list(credit.columns)].columns)})
     st.markdown("### 🧩 Department Package Map")
-    st.json({k: list(df[list(credit.columns)].columns)})
+    st.json({
+        "credit":   list(credit.columns),
+        "risk":     list(risk.columns),
+        "compliance": list(compliance.columns),
+        "customer_service": list(customer.columns),
+    })
+
+    # Optional: tell user if something was missing
+    expected = {
+        "credit": ["application_id","score","decision","reason","income","loan_amount"],
+        "risk": ["application_id","score","pd","ltv","dti","decision"],
+        "compliance": ["application_id","account_age","delinquencies","fraud_flag","decision"],
+        "customer_service": ["application_id","score","decision","explanation","reason"],
+    }
+    missing_report = {
+        pkg: [c for c in expected[pkg] if c not in cols]
+        for pkg, cols in {
+            "credit": credit.columns,
+            "risk": risk.columns,
+            "compliance": compliance.columns,
+            "customer_service": customer.columns,
+        }.items()
+    }
+    if any(missing_report.values()):
+        st.info(f"Some expected columns were not present and were skipped: {missing_report}")
+
+
+
+# ─────────────────────────────────────────────
+# 🗣️ TAB 8 — Feedback & Feature Requests
+# ─────────────────────────────────────────────
+with tab_feedback:
+    st.subheader("🗣️ Share Your Feedback and Feature Ideas")
+
+    FEEDBACK_FILE = os.path.join(BASE_DIR, "agents_feedback.json")
+
+    def load_feedback() -> dict:
+        try:
+            with open(FEEDBACK_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+
+    def save_feedback(data: dict):
+        try:
+            with open(FEEDBACK_FILE, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            st.error(f"Could not save feedback: {e}")
+
+    feedback_data = load_feedback()
+
+    # View all current agent feedback
+    st.markdown("### 💬 Current Agent Reviews & Ratings")
+    for agent, fb in feedback_data.items():
+        with st.expander(f"⭐ {agent} — {fb.get('rating', 0)}/5  |  👥 {fb.get('users', 0)} users"):
+            st.markdown("#### Recent Comments:")
+            for cmt in reversed(fb.get("comments", [])):
+                st.markdown(f"- {cmt}")
+            st.markdown("---")
+
+    st.markdown("### ✍️ Submit Your Own Feedback or Feature Request")
+
+    agent_choice = st.selectbox("Select Agent", list(feedback_data.keys()))
+    new_comment = st.text_area("Your Comment or Feature Suggestion", placeholder="e.g. Add multi-language support for reports...")
+    new_rating = st.slider("Your Rating", 1, 5, 5)
+
+
+    if st.button("📨 Submit Feedback"):
+        if new_comment.strip():
+            fb = feedback_data.get(agent_choice, {"rating": 0, "users": 0, "comments": []})
+            fb["comments"].append(new_comment.strip())
+            fb["rating"] = round((fb.get("rating", 0) + new_rating) / 2, 2)
+            fb["users"] = fb.get("users", 0) + 1
+            feedback_data[agent_choice] = fb
+            save_feedback(feedback_data)
+
+            # ✅ Sync latest feedback globally
+            st.session_state["feedback_data"] = feedback_data
+
+            # ✅ Force full reload so Landing updates instantly
+            st.success("✅ Feedback submitted successfully!")
+            st.rerun()
+        else:
+            st.warning("Please enter a comment before submitting.")
+
+
 
 # ────────────────────────────────
 # STAGE: ASSET WORKFLOW (redirect to page)

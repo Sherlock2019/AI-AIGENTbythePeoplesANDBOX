@@ -1,0 +1,54 @@
+{
+  "model_path": "agents/credit_appraisal/models/trained/LightGBM_20251107-135846.joblib",
+  "promoted_at": "2025-11-07T13:58:56.789974+00:00",
+  "metrics": {
+    "AUC": 0.9348958333333333,
+    "Accuracy": 0.825,
+    "Precision": 0.9047619047619048,
+    "Recall": 0.7916666666666666,
+    "F1": 0.8444444444444444
+  },
+  "report": {
+    "timestamp": "20251107-135846",
+    "model_choice": "LightGBM",
+    "metrics": {
+      "AUC": 0.9348958333333333,
+      "Accuracy": 0.825,
+      "Precision": 0.9047619047619048,
+      "Recall": 0.7916666666666666,
+      "F1": 0.8444444444444444
+    },
+    "model_path": "agents/credit_appraisal/models/trained/LightGBM_20251107-135846.joblib",
+    "features": [
+      "application_id",
+      "age",
+      "income",
+      "employment_length",
+      "loan_amount",
+      "loan_duration_months",
+      "collateral_value",
+      "collateral_type",
+      "co_loaners",
+      "credit_score",
+      "existing_debt",
+      "assets_owned",
+      "current_loans",
+      "customer_type",
+      "DTI",
+      "LTV",
+      "CCR",
+      "ITI",
+      "CWI",
+      "currency_code",
+      "session_flagged",
+      "created_at",
+      "employment_years",
+      "debt_to_income",
+      "credit_history_length",
+      "num_delinquencies",
+      "requested_amount",
+      "loan_term_months"
+    ],
+    "threshold": 0.60305
+  }
+}

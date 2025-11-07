@@ -1,315 +1,481 @@
-# services/ui/app.py
-# ─────────────────────────────────────────────
-# 🌐 OpenSource AI Agent Library + Credit Appraisal PoC by Dzoan
-# ─────────────────────────────────────────────
+# services/ui/pages/credit_appraisal.py
 from __future__ import annotations
-import os
-import re
-import io
-import json
-import datetime
-from typing import Optional, Dict, List, Any
 
+import os
+import io
+import re
+import json
+import shutil
+from pathlib import Path
+from datetime import datetime, timezone
+from typing import Optional, Dict, List, Any
 import pandas as pd
 import numpy as np
 import streamlit as st
 import requests
 import plotly.express as px
 import plotly.graph_objects as go
+import logging
+import sys
+
+from pandas import json_normalize  # ADD
 
 
-# ────────────────────────────────
-# 🔁 Manage active tab navigation manually
-# ────────────────────────────────
-if "active_tab" not in st.session_state:
-    st.session_state.active_tab = "tab_gen"  # or whichever tab should open by default
 
-def switch_tab(tab_name: str):
-    """Programmatically switch between workflow tabs."""
-    st.session_state.active_tab = tab_name
-    st.rerun()
+
+
+
+def apply_theme(theme: str = "dark"):
+    import streamlit as st
+
+    st.markdown("""
+    <style>
+    /* ===============================================
+       🌙 MACOS BLUE DARK THEME — GLOBAL BASE
+    =============================================== */
+    html, body, [data-testid="stAppViewContainer"] {
+        background: radial-gradient(circle at 20% 20%, #0b0f16, #060a12 85%) !important;
+        color: #f8fafc !important;
+        font-family: "Inter","SF Pro Display","Segoe UI",system-ui,sans-serif !important;
+    }
+
+    h1,h2,h3,h4,h5,h6 {
+        color: #f8fafc !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.02em !important;
+    }
+
+    p, li, label, span, div {
+        color: #e2e8f0 !important;
+    }
+    small, .stCaption { color: #94a3b8 !important; }
+
+    a, a:link, a:visited { color: #339dff !important; }
+    a:hover { color: #60a5fa !important; text-decoration: underline; }
+
+    hr {
+        border: none !important;
+        height: 1px !important;
+        background: linear-gradient(90deg,transparent,#007aff,transparent) !important;
+    }
+
+    /* ===============================================
+       🧱 CONTAINERS & CARDS
+    =============================================== */
+    .stMarkdown, .stContainer, .stAlert, [class*="stCard"], [class*="block-container"] {
+        background: #0f172a !important;
+        border: 1px solid #1e3a8a !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
+    }
+
+    /* ===============================================
+       🔘 BUTTONS — macOS BLUE
+    =============================================== */
+    button[kind="primary"], .stButton>button, .stDownloadButton>button, .stDownloadButton button {
+        background: linear-gradient(180deg,#007aff,#005ecb) !important;
+        color: #ffffff !important;
+        border: 1px solid #0051b8 !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        padding: 0.5rem 1rem !important;
+        box-shadow: 0 4px 10px rgba(0,122,255,0.35),
+                    inset 0 -1px 0 rgba(255,255,255,0.2) !important;
+        transition: all 0.25s ease-in-out !important;
+    }
+    button[kind="primary"]:hover, .stButton>button:hover, .stDownloadButton>button:hover {
+        background: linear-gradient(180deg,#339dff,#006ae6) !important;
+        box-shadow: 0 4px 14px rgba(0,122,255,0.45) !important;
+        transform: translateY(-1px) !important;
+    }
+    button[kind="primary"]:active, .stButton>button:active, .stDownloadButton>button:active {
+        background: linear-gradient(180deg,#004fc4,#0042a8) !important;
+        box-shadow: inset 0 2px 6px rgba(0,122,255,0.3) !important;
+        transform: translateY(0) !important;
+    }
+    .stButton button[disabled], .stDownloadButton button[disabled] {
+        background: #1e293b !important;
+        color: #64748b !important;
+        border: 1px solid #334155 !important;
+    }
+
+    /* ===============================================
+    🧠 INPUTS (Text, Select, Number) & FOCUS STATE
+    =============================================== */
+    .stTextInput>div>div>input,
+    .stSelectbox>div>div>div,
+    .stNumberInput input {
+        background: #111827 !important;
+        color: #f8fafc !important;
+        border: 1px solid #1e3a8a !important;
+        border-radius: 8px !important;
+        padding: 6px 10px !important;
+        transition: all 0.25s ease;
+    }
+    .stTextInput>div>div>input:focus,
+    .stSelectbox>div>div>div:focus-within,
+    .stNumberInput input:focus {
+        outline: none !important;
+        border-color: #007aff !important;
+        box-shadow: 0 0 0 2px rgba(0,122,255,0.4) !important;
+    }
+    ::placeholder {
+        color: #9ca3af !important;
+        opacity: 1 !important;
+    }
+    /* ===============================================
+   🎛 DROPDOWN MENUS
+    =============================================== */
+    [data-baseweb="popover"], [role="listbox"] {
+        background: #0f172a !important;
+        color: #f8fafc !important;
+        border: 1px solid #1e3a8a !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.6) !important;
+    }
+    [data-baseweb="menu-item"] {
+        background: #0f172a !important;
+        color: #f8fafc !important;
+    }
+    [data-baseweb="menu-item"]:hover {
+        background: #1e3a8a !important;
+        color: #ffffff !important;
+    }
+    /* ===============================================
+    🧭 SIDEBAR THEME
+    =============================================== */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg,#0d1320,#060a12) !important;
+        border-right: 1px solid #1e3a8a !important;
+        color: #f8fafc !important;
+    }
+
+    
+    /* ===============================================
+       ☑️ CHECKBOXES / RADIOS / SLIDERS
+    =============================================== */
+    input[type="checkbox"], input[type="radio"] {
+        accent-color: #007aff !important;
+    }
+    .stSlider [role="slider"] {
+        background-color: #007aff !important;
+    }
+
+    /* ===============================================
+       🗂️ TABS
+    =============================================== */
+    .stTabs [data-baseweb="tab-list"] button {
+        color: #e2e8f0 !important;
+        background: #111827 !important;
+        border: 1px solid #1e293b !important;
+        border-radius: 10px !important;
+        font-weight: 500 !important;
+        margin-right: 4px !important;
+    }
+    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
+        background: #007aff !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 12px rgba(0,122,255,0.4) !important;
+    }
+
+    /* ===============================================
+       🧭 EXPANDERS / ACCORDIONS
+    =============================================== */
+    .streamlit-expanderHeader {
+        background: linear-gradient(90deg,#0d284d,#0a1f3a) !important;
+        color: #dbeafe !important;
+        border: 1px solid #1e3a5f !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+    }
+    .streamlit-expanderContent {
+        background: #0f172a !important;
+        color: #e2e8f0 !important;
+        border: 1px solid #1e3a5f !important;
+        border-radius: 0 0 8px 8px !important;
+    }
+
+    /* ===============================================
+       📊 METRIC CARDS (st.metric)
+    =============================================== */
+    [data-testid="stMetric"] {
+        background: linear-gradient(180deg,#0b1220,#101a2c) !important;
+        border: 1px solid #1e3a8a !important;
+        border-radius: 10px !important;
+        box-shadow: inset 0 0 10px rgba(255,255,255,0.03),
+                    0 3px 10px rgba(0,0,0,0.6) !important;
+        padding: 10px 14px !important;
+        text-align: center !important;
+    }
+    div[data-testid="stMetricLabel"] {
+        color: #94a3b8 !important;
+        font-size: 0.85rem !important;
+        font-weight: 500 !important;
+    }
+    div[data-testid="stMetricValue"] {
+        color: #ffffff !important;
+        font-size: 1.3rem !important;
+        font-weight: 600 !important;
+    }
+
+    /* ===============================================
+       📊 METRIC COMPARISON TABLE — FINAL
+    =============================================== */
+    [data-testid="stDataFrame"] {
+        background: radial-gradient(circle at 50% 50%, #0b1220, #060a12 90%) !important;
+        border: 1px solid #1e3a8a !important;
+        border-radius: 12px !important;
+        box-shadow:
+            0 0 14px rgba(0,0,0,0.6) inset,
+            0 4px 18px rgba(0,0,0,0.7),
+            0 0 12px rgba(0,122,255,0.15) !important;
+        margin-top: 12px !important;
+        padding: 8px !important;
+    }
+    [data-testid="stDataFrame"] thead tr th {
+        background: linear-gradient(90deg,#004fc4,#007aff) !important;
+        color: #ffffff !important;
+        border-bottom: 2px solid #007aff !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.02em !important;
+        font-size: 0.92rem !important;
+        padding: 10px 14px !important;
+    }
+    [data-testid="stDataFrame"] tbody tr {
+        background-color: #0b1220 !important;
+        color: #ffffff !important;
+        transition: background 0.25s ease;
+    }
+    [data-testid="stDataFrame"] tbody tr:nth-child(even) {
+        background-color: #101a2c !important;
+    }
+    [data-testid="stDataFrame"] tbody tr:hover {
+        background-color: #112a52 !important;
+        box-shadow: 0 0 8px rgba(0,122,255,0.25) inset !important;
+    }
+    [data-testid="stDataFrame"] tbody td {
+        border-top: 1px solid #1e3a8a !important;
+        color: #ffffff !important;
+        padding: 9px 14px !important;
+        font-size: 0.95rem !important;
+        font-weight: 500 !important;
+    }
+    [data-testid="stDataFrame"] tbody td:last-child {
+        color: #60a5fa !important;
+        font-weight: 500 !important;
+    }
+
+    /* ===============================================
+       📁 FILE UPLOADER
+    =============================================== */
+    [data-testid="stFileUploaderDropzone"] {
+        background: rgba(255,255,255,0.03) !important;
+        border: 1px dashed #1e3a8a !important;
+        border-radius: 10px !important;
+        color: #cbd5e1 !important;
+        transition: all 0.25s ease;
+    }
+    [data-testid="stFileUploaderDropzone"]:hover {
+        border-color: #007aff !important;
+        background: rgba(0,122,255,0.1) !important;
+    }
+
+    /* ===============================================
+       ⚠️ ALERT BOXES
+    =============================================== */
+    [data-testid^="stAlert"] {
+        border-radius: 10px !important;
+        border: 1px solid #1e3a8a !important;
+        color: #e2e8f0 !important;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.4) !important;
+    }
+    [data-testid="stAlertInfo"]    { background: linear-gradient(145deg,#0d1829,#10243d)!important; }
+    [data-testid="stAlertSuccess"] { background: linear-gradient(145deg,#0f2414,#183820)!important; }
+    [data-testid="stAlertError"]   { background: linear-gradient(145deg,#2b1617,#1a0c0d)!important; }
+    [data-testid="stAlertWarning"] { background: linear-gradient(145deg,#2f2a10,#1c1a0a)!important; }
+
+    </style>
+    """, unsafe_allow_html=True)
+
+
 
 
 # ─────────────────────────────────────────────
-# 🌌 GLOBAL DARK THEME + BLUE GLOW ENHANCED UI
-st.markdown("""
-<style>
-/* ─────────────────────────────
-   GLOBAL BACKGROUND + TEXT
-───────────────────────────── */
-body, .stApp {
-    background-color: #0f172a !important;   /* very dark navy */
-    color: #e5e7eb !important;
-    font-family: 'Inter', sans-serif;
-}
+# 🧭 THEME BOOTSTRAP — Default to DARK
+# ─────────────────────────────────────────────
+import streamlit as st
 
-/* ─────────────────────────────
-   HEADER + TITLE AREA
-───────────────────────────── */
-[data-testid="stHeader"], .stApp header {
-    background: #0f172a !important;
-    color: #f8fafc !important;
-    border-bottom: 1px solid #1e293b !important;
-}
+# Define default session theme early
+if "ui_theme" not in st.session_state:
+    st.session_state["ui_theme"] = "dark"
 
-/* Main App Title — add neon blue glow */
-h1, h2, h3 {
-    color: #f8fafc !important;
-    font-weight: 800 !important;
-    text-shadow: 0 0 8px rgba(37,99,235,0.6),
-                 0 0 16px rgba(59,130,246,0.3);
-}
+# Apply immediately before any Streamlit renders
+apply_theme(st.session_state["ui_theme"])
 
-/* Subheaders (like Human Review, Credit Appraisal, etc.) */
-.stSubheader, h4, h5, h6 {
-    color: #f1f5f9 !important;
-    font-weight: 700 !important;
-    text-shadow: 0 0 4px rgba(37,99,235,0.4);
-}
+# ✅ Then continue with Streamlit config
+st.set_page_config(page_title="Asset Appraisal Agent", layout="wide")
 
-/* ─────────────────────────────
-   TAB BAR
-───────────────────────────── */
-div[data-baseweb="tab"] > button {
-    color: #cbd5e1 !important;
-    background-color: #1e293b !important;
-    border: 1px solid #334155 !important;
-    border-radius: 10px !important;
-    font-weight: 600 !important;
-}
-div[data-baseweb="tab"] > button[aria-selected="true"] {
-    background: linear-gradient(90deg, #2563eb, #1d4ed8);
-    color: white !important;
-    border: none !important;
-    box-shadow: 0 0 12px rgba(37,99,235,0.5);
-    transform: scale(1.05);
-}
 
-/* ─────────────────────────────
-   BOXES, EXPANDERS, AND CONTAINERS
-───────────────────────────── */
-.stExpander, .stFileUploader, .stDataFrame, .stJson, .stMetric {
-    background-color: #1e293b !important;
-    color: #f1f5f9 !important;
-    border-radius: 10px !important;
-}
 
-/* DataFrames */
-[data-testid="stDataFrame"] thead tr th {
-    color: #f1f5f9 !important;
-    background-color: #1e293b !important;
-    border-bottom: 1px solid #334155 !important;
-}
-[data-testid="stDataFrame"] tbody tr td {
-    color: #e2e8f0 !important;
-}
 
-/* Inputs & Selectors */
-input, select, textarea {
-    background-color: #1e293b !important;
-    color: #f8fafc !important;
-    border: 1px solid #334155 !important;
-    border-radius: 8px !important;
-}
 
-/* ─────────────────────────────
-   BUTTONS
-───────────────────────────── */
-.stButton > button {
-    background: linear-gradient(90deg, #2563eb, #1d4ed8) !important;
-    color: white !important;
-    font-weight: 700 !important;
-    border-radius: 10px !important;
-    padding: 10px 26px !important;
-    border: none !important;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.3),
-                0 0 10px rgba(37,99,235,0.4);
-    transition: all 0.25s ease-in-out;
-}
-.stButton > button:hover {
-    transform: translateY(-3px);
-    background: linear-gradient(90deg, #1e40af, #1e3a8a) !important;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.4),
-                0 0 18px rgba(37,99,235,0.6);
-}
-
-/* ─────────────────────────────
-   LINK STYLES
-───────────────────────────── */
-a {
-    color: #60a5fa !important;
-    text-decoration: none !important;
-}
-a:hover {
-    color: #93c5fd !important;
-    text-shadow: 0 0 6px rgba(96,165,250,0.6);
-}
-
-/* ─────────────────────────────
-   FILE UPLOADER + PROGRESS
-───────────────────────────── */
-.stFileUploader {
-    border: 1px solid #334155 !important;
-    background-color: #1e293b !important;
-    border-radius: 10px !important;
-    color: #e2e8f0 !important;
-    box-shadow: inset 0 0 8px rgba(37,99,235,0.25);
-}
-
-/* ─────────────────────────────
-   SCROLLBARS (for aesthetics)
-───────────────────────────── */
-::-webkit-scrollbar {
-    width: 10px;
-}
-::-webkit-scrollbar-track {
-    background: #1e293b;
-}
-::-webkit-scrollbar-thumb {
-    background: #3b82f6;
-    border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover {
-    background: #60a5fa;
-}
-</style>
-""", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
-# 🌟 READABILITY & INPUT FIELD FIX PATCH
-
-st.markdown("""
-<style>
-/* ─────────────────────────────
-   FIX: Input Fields + Dropdowns Too Dark
-───────────────────────────── */
-input, select, textarea, .stTextInput, .stSelectbox, .stNumberInput {
-    background-color: #1e293b !important;
-    color: #ffffff !important;
-    border: 1px solid #3b82f6 !important;
-    border-radius: 8px !important;
-    font-size: 18px !important;
-    font-weight: 600 !important;
-    padding: 8px 12px !important;
-}
-
-/* Dropdown menu items */
-div[data-baseweb="select"] > div {
-    background-color: #1e293b !important;
-    color: #f8fafc !important;
-    font-size: 18px !important;
-}
-
-/* Dropdown list options */
-ul[role="listbox"] li {
-    background-color: #1e293b !important;
-    color: #f8fafc !important;
-    font-size: 18px !important;
-}
-ul[role="listbox"] li:hover {
-    background-color: #2563eb !important;
-    color: white !important;
-}
-
-/* Sliders — brighter and thicker */
-[data-baseweb="slider"] div[role="slider"] {
-    background-color: #3b82f6 !important;
-}
-[data-baseweb="slider"] div {
-    height: 8px !important;
-}
-[data-testid="stSliderTickBar"] {
-    background-color: #334155 !important;
-}
-
-/* Labels + Captions */
-label, .stMarkdown p, .stCaption, .stText {
-    font-size: 18px !important;
-    color: #f1f5f9 !important;
-    font-weight: 500 !important;
-}
-
-/* Subheaders and Section Titles */
-h2, h3, h4, .stSubheader {
-    font-size: 26px !important;
-    color: #f8fafc !important;
-    text-shadow: 0 0 8px rgba(59,130,246,0.4);
-}
-
-/* Decision Rule Section Styling */
-[data-testid="stExpander"] > div:first-child {
-    background-color: #111827 !important;
-    color: #f8fafc !important;
-    font-size: 20px !important;
-    font-weight: 700 !important;
-}
-
-/* Tabs — make them more visible and larger text */
-div[data-baseweb="tab"] > button {
-    font-size: 18px !important;
-    padding: 10px 18px !important;
-}
-
-/* Global font size bump */
-.stMarkdown, .stText, p, span, div {
-    font-size: 18px !important;
-}
-</style>
-""", unsafe_allow_html=True)
-st.markdown("""
-<style>
-/* Brighten all radio + checkbox labels */
-div[role="radio"], div[role="checkbox"] label, label[data-baseweb="radio"], label[data-baseweb="checkbox"] {
-    color: #f8fafc !important;
-    font-size: 18px !important;
-    font-weight: 600 !important;
-}
-
-/* Fix small sub-labels near checkboxes */
-div[role="radio"] p, div[role="checkbox"] p {
-    color: #e2e8f0 !important;
-    font-size: 16px !important;
-}
-
-/* Make rule mode label visible */
-.stRadio label {
-    color: #f1f5f9 !important;
-    font-weight: 600 !important;
-}
-
-/* "Use LLM narrative" checkbox label */
-[data-testid="stCheckbox"] label {
-    color: #f8fafc !important;
-    font-size: 18px !important;
-    font-weight: 700 !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
+# CREDIT AGENT — HEADER (used in credit flow)
 # ─────────────────────────────────────────────
-# 🔁 Manage active tab navigation manually (INSERT HERE)
-# ─────────────────────────────────────────────
-if "active_tab" not in st.session_state:
-    st.session_state.active_tab = "tab_gen"  # or tab_train if you want to start from training
+import streamlit as st  # (no-op if already imported)
 
-def switch_tab(tab_name: str):
-    """Programmatically switch between workflow tabs."""
-    st.session_state.active_tab = tab_name
-    st.rerun()
+def render_credit_header():
+    ss = st.session_state
+
+    # pick a display name if available
+    user = (
+        (ss.get("credit_user") or {}).get("name")
+        or (ss.get("asset_user") or {}).get("name")
+        or (ss.get("user_info") or {}).get("name")
+        or "guest"
+    )
+
+    # use your theme switch (defaults to dark)
+    theme = ss.get("theme", "dark")
+    brand = {
+        "dark": {"text":"#e2e8f0","muted":"#94a3b8","accent":"#3b82f6"},
+        "light":{"text":"#0f172a","muted":"#475569","accent":"#2563eb"},
+    }[theme]
+
+    st.title("🏦 Credit Appraisal Agent")
+    st.caption(
+        "A→H pipeline — Intake → Privacy → Credit Appraisal → Human Review → "
+        "Training → Deployment → Monitoring → Reporting "
+        f"| 👋 {user}"
+    )
+
+# ✅ JSON → DataFrame converter (final, unified, safe)
+# ============================================================
+def json_to_dataframe(payload) -> pd.DataFrame:
+    """
+    Convert arbitrary API JSON (dict/list/bytes/str) into a DataFrame.
+    Prefers server 'artifacts.merged_csv' → fallback to json_normalize.
+    """
+
+    # -------------------------------
+    # Case 1: payload is dict
+    # -------------------------------
+    if isinstance(payload, dict):
+
+        # ✅ Try artifacts.merged_csv first
+        res = payload.get("result") or payload
+        artifacts = res.get("artifacts") or {}
+        merged_csv = artifacts.get("merged_csv")
+
+        if isinstance(merged_csv, str) and os.path.exists(merged_csv):
+            try:
+                return pd.read_csv(merged_csv)
+            except Exception:
+                pass
+
+        # ✅ Embedded merged_df inside the JSON
+        if "merged_df" in res:
+            try:
+                return pd.DataFrame(res["merged_df"])
+            except Exception:
+                pass
+
+        # ✅ If result is list → DF
+        if isinstance(res, list):
+            try:
+                return pd.DataFrame(res)
+            except Exception:
+                try:
+                    return pd.json_normalize(res)
+                except Exception:
+                    pass
+
+        # ✅ Try keys inside result
+        for key in ("rows", "data", "result", "results", "items", "records"):
+            if key in res:
+                try:
+                    return json_to_dataframe(res[key])
+                except Exception:
+                    pass
+
+    # -------------------------------
+    # Case 2: payload is list
+    # -------------------------------
+    if isinstance(payload, list):
+        if len(payload) == 0:
+            return pd.DataFrame()
+        if all(isinstance(x, dict) for x in payload):
+            try:
+                return pd.DataFrame(payload)
+            except:
+                return pd.json_normalize(payload)
+        return pd.DataFrame({"value": payload})
+
+    # -------------------------------
+    # Case 3: payload is bytes
+    # -------------------------------
+    if isinstance(payload, bytes):
+        try:
+            payload = payload.decode("utf-8", errors="ignore")
+        except:
+            return pd.DataFrame({"value": [repr(payload)]})
+
+    # -------------------------------
+    # Case 4: payload is str → try JSON parse
+    # -------------------------------
+    if isinstance(payload, str):
+        payload = payload.strip()
+        if not payload:
+            return pd.DataFrame()
+        try:
+            j = json.loads(payload)
+            return json_to_dataframe(j)
+        except:
+            # Fallback → line-by-line DF
+            lines = [ln for ln in payload.splitlines() if ln.strip()]
+            return pd.DataFrame({"value": lines}) if lines else pd.DataFrame()
+
+    # -------------------------------
+    # Default fallback
+    # -------------------------------
+    return pd.DataFrame({"value": [payload]})
 
 
-# ────────────────────────────────
-# GLOBAL CONFIG
-# ────────────────────────────────
-BASE_DIR = os.path.expanduser("~/credit-appraisal-agent-poc/services/ui")
-LANDING_IMG_DIR = os.path.join(BASE_DIR, "landing_images")
-RUNS_DIR = os.path.join(BASE_DIR, ".runs")
-TMP_FEEDBACK_DIR = os.path.join(BASE_DIR, ".tmp_feedback")
 
-for d in (LANDING_IMG_DIR, RUNS_DIR, TMP_FEEDBACK_DIR):
-    os.makedirs(d, exist_ok=True)
+def _extract_run_fields(raw_json):  # ADD
+    """
+    Return (run_id, normalized_payload_dict).
+    Ensures downstream code always receives a dict-like 'payload'.
+    """
+    run_id = extract_run_id(raw_json)
 
-API_URL = os.getenv("API_URL", "http://localhost:8090")
+    # Normalize to dict payload so later code can access keys safely
+    payload = raw_json
+    if not isinstance(payload, dict):
+        if isinstance(payload, list):
+            first_dict = next((x for x in payload if isinstance(x, dict)), None)
+            payload = first_dict if first_dict is not None else {"result": raw_json}
+        else:
+            payload = {"result": raw_json}
+    return run_id, payload
+
+
+
+
+
+# ──────────────────────────────────────────────────────────────
+# PAGE CONFIG & THEME
+# ──────────────────────────────────────────────────────────────
+st.set_page_config(
+    page_title="💳 Credit Appraisal",
+    page_icon="💳",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
+#
+
+
 
 # ────────────────────────────────
 # SESSION STATE INIT
@@ -323,21 +489,53 @@ if "logged_in" not in st.session_state:
 if "flagged" not in st.session_state.user_info:
     st.session_state.user_info["flagged"] = False
 if "timestamp" not in st.session_state.user_info:
-    st.session_state.user_info["timestamp"] = datetime.datetime.utcnow().isoformat()
-
-# ────────────────────────────────
-# PAGE CONFIG
-# ────────────────────────────────
-st.set_page_config(
-    page_title="AI Agent Sandbox — By the People, For the People",
-    layout="wide",
-)
-
+    st.session_state.user_info["timestamp"] = datetime.now(timezone.utc).isoformat()
 
 
 # ────────────────────────────────
 # HELPERS
 # ────────────────────────────────
+def _extract_run_fields(res_json):
+    """
+    Return (run_id, result_dict) from API responses that may be dicts or lists.
+    """
+    run_id = None
+    result_obj = {}
+
+    if isinstance(res_json, dict):
+        run_id = (
+            res_json.get("run_id")
+            or res_json.get("id")
+            or (res_json.get("data") or {}).get("run_id")
+        )
+        result_obj = (
+            res_json.get("result")
+            or (res_json.get("data") or {}).get("result")
+            or {}
+        )
+
+    elif isinstance(res_json, list):
+        # Find first dict item that contains identifiers/results
+        for item in res_json:
+            if isinstance(item, dict):
+                if not run_id:
+                    run_id = item.get("run_id") or item.get("id")
+                if not result_obj:
+                    result_obj = item.get("result") or {}
+                if run_id and result_obj != {}:
+                    break
+        # If still nothing and list[0] is a dict, use it as best-effort
+        if not run_id and res_json and isinstance(res_json[0], dict):
+            run_id = res_json[0].get("run_id") or res_json[0].get("id")
+            result_obj = res_json[0].get("result") or {}
+
+    # Ensure result is a dict
+    if not isinstance(result_obj, dict):
+        result_obj = {"value": result_obj}
+
+    return run_id, result_obj
+
+
 def _clear_qp():
     """Clear query params (modern Streamlit API)."""
     try:
@@ -375,229 +573,102 @@ def render_image_tag(agent_id: str, industry: str, emoji_fallback: str) -> str:
     return f'<div style="font-size:32px;">{emoji_fallback}</div>'
 
 
-# ────────────────────────────────
-# DATA
-# ────────────────────────────────
-AGENTS = [
-    ("🏦 Banking & Finance", "💰 Retail Banking", "💳 Credit Appraisal Agent",
-     "Explainable AI for loan decisioning", "Available", "💳"),
-    ("🏦 Banking & Finance", "💰 Retail Banking", "🏦 Asset Appraisal Agent",
-     "Market-driven collateral valuation", "Available", "🏦"),
-    ("🏦 Banking & Finance", "🩺 Insurance", "🩺 Claims Triage Agent",
-     "Automated claims prioritization", "Coming Soon", "🩺"),
-    ("⚡ Energy & Sustainability", "🔋 EV & Charging", "⚡ EV Charger Optimizer",
-     "Optimize charger deployment via AI", "Coming Soon", "⚡"),
-    ("⚡ Energy & Sustainability", "☀️ Solar", "☀️ Solar Yield Estimator",
-     "Estimate solar ROI and efficiency", "Coming Soon", "☀️"),
-    ("🚗 Automobile & Transport", "🚙 Automobile", "🚗 Predictive Maintenance",
-     "Prevent downtime via sensor analytics", "Coming Soon", "🚗"),
-    ("🚗 Automobile & Transport", "🔋 EV", "🔋 EV Battery Health Agent",
-     "Monitor EV battery health cycles", "Coming Soon", "🔋"),
-    ("🚗 Automobile & Transport", "🚚 Ride-hailing / Logistics", "🛻 Fleet Route Optimizer",
-     "Dynamic route optimization for fleets", "Coming Soon", "🛻"),
-    ("💻 Information Technology", "🧰 Support & Security", "🧩 IT Ticket Triage",
-     "Auto-prioritize support tickets", "Coming Soon", "🧩"),
-    ("💻 Information Technology", "🛡️ Security", "🔐 SecOps Log Triage",
-     "Detect anomalies & summarize alerts", "Coming Soon", "🔐"),
-    ("⚖️ Legal & Government", "⚖️ Law Firms", "⚖️ Contract Analyzer",
-     "Extract clauses and compliance risks", "Coming Soon", "⚖️"),
-    ("⚖️ Legal & Government", "🏛️ Public Services", "🏛️ Citizen Service Agent",
-     "Smart assistant for citizen services", "Coming Soon", "🏛️"),
-    ("🛍️ Retail / SMB / Creative", "🏬 Retail & eCommerce", "📈 Sales Forecast Agent",
-     "Predict demand & inventory trends", "Coming Soon", "📈"),
-    ("🎬 Retail / SMB / Creative", "🎨 Media & Film", "🎬 Budget Cost Assistant",
-     "Estimate, optimize, and track film & production costs using AI", "Coming Soon", "🎬"),
-]
 
 
-# ────────────────────────────────
-# STYLES
-# ────────────────────────────────
 st.markdown(
     """
     <style>
-    html, body, .block-container { background-color:#0f172a !important; color:#e2e8f0 !important; }
-    footer { text-align:center; padding:2rem; color:#aab3c2; font-size:1.2rem; font-weight:600; margin-top:2rem; }
-    .left-box {
-        background: radial-gradient(circle at top left, #0f172a, #1e293b);
-        border-radius:20px; padding:3rem 2rem; color:#f1f5f9; box-shadow:6px 0 24px rgba(0,0,0,0.4);
-    }
-    .right-box {
-        background:linear-gradient(180deg,#1e293b,#0f172a);
-        border-radius:20px; padding:2rem; box-shadow:-6px 0 24px rgba(0,0,0,0.35);
-    }
-    .stButton > button {
-        border:none !important; cursor:pointer;
-        padding:14px 28px !important; font-size:18px !important; font-weight:700 !important;
-        border-radius:14px !important; color:#fff !important;
-        background:linear-gradient(180deg,#4ea3ff 0%,#2f86ff 60%,#0f6fff 100%) !important;
-        box-shadow:0 8px 24px rgba(15,111,255,0.35);
-    }
-    a.macbtn {
-        display:inline-block; text-decoration:none !important; color:#fff !important;
-        padding:10px 22px; font-weight:700; border-radius:12px;
-        background:linear-gradient(180deg,#4ea3ff 0%,#2f86ff 60%,#0f6fff 100%);
-    }
-    /* Larger workflow tabs */
-    [data-testid="stTabs"] [data-baseweb="tab"] {
-        font-size: 28px !important;
-        font-weight: 800 !important;
-        padding: 20px 40px !important;
-        border-radius: 12px !important;
-        background-color: #1e293b !important;
-        color: #f8fafc !important;
-    }
-    [data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] {
-        background: linear-gradient(90deg, #2563eb, #1d4ed8) !important;
-        color: white !important;
-        border-bottom: 6px solid #60a5fa !important;
-        box-shadow: 0 4px 14px rgba(37,99,235,0.5);
-    }
+    [data-testid="stSidebar"], section[data-testid="stSidebar"]{display:none!important}
+    [data-testid="stAppViewContainer"]{margin-left:0!important;padding-left:0!important}
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# ────────────────────────────────
-# QUERY PARAM ROUTING (modern API)
-# ────────────────────────────────
-try:
-    qp = st.query_params
-except Exception:
-    qp = {}
 
-if "stage" in qp:
-    target = qp["stage"]
-    if target in {"landing", "agents", "login", "credit_agent"} and st.session_state.stage != target:
-        st.session_state.stage = target
-        _clear_qp()
-        st.rerun()
+# ──────────────────────────────────────────────────────────────
+# CONSTANTS / PATHS
+# ──────────────────────────────────────────────────────────────
+# You can point this to your FastAPI host
+API_URL = os.environ.get("AGENT_API_URL", "http://localhost:8090")
 
-if "launch" in qp or ("agent" in qp and qp.get("agent") == ["credit"]):
-    st.session_state.stage = "login"
-    _clear_qp()
+# Base & temp runs folder
+BASE_DIR = os.path.abspath(".")
+RUNS_DIR = os.path.join(BASE_DIR, ".tmp_runs")
+os.makedirs(RUNS_DIR, exist_ok=True)
+
+
+
+# ─────────────────────────────────────────────
+# NAVIGATION — Reliable jump to Home / Agents
+# ─────────────────────────────────────────────
+def _set_query_params_safe(**kwargs):
+    """Backwards-compatible setter for Streamlit versions before query_params."""
+    try:
+        for k, v in kwargs.items():
+            st.query_params[k] = v
+        return True
+    except Exception:
+        pass
+    try:
+        st.experimental_set_query_params(**kwargs)
+        return True
+    except Exception:
+        return False
+
+
+def _go_stage(target_stage: str):
+    """Reliable navigation that returns to Home or Agents even from sub-pages."""
+    st.session_state["stage"] = target_stage
+    try:
+        # Jump back to main app router (must exist in /services/ui/app.py)
+        st.switch_page("app.py")
+        return
+    except Exception:
+        pass
+    _set_query_params_safe(stage=target_stage)
     st.rerun()
 
+
 # ────────────────────────────────
-# STAGE: LANDING
+# 🧭 NAVBAR + THEME SWITCHER
 # ────────────────────────────────
-if st.session_state.stage == "landing":
-    c1, c2 = st.columns([1.1, 1.9], gap="large")
+def render_nav_bar_app():
+    """Top navigation bar with Home, Agents, and Theme switch."""
+    ss = st.session_state
+
+    c1, c2, c3 = st.columns([1, 1, 2.5])
+
     with c1:
-        st.markdown("<div class='left-box'>", unsafe_allow_html=True)
-        logo_path = load_image("people_logo")
-        if logo_path:
-            st.image(logo_path, width=160)
-        else:
-            up = st.file_uploader("Upload People Logo", type=["jpg", "png", "webp"], key="upload_logo")
-            if up:
-                save_uploaded_image(up, "people_logo")
-                st.success("✅ Logo uploaded, refresh to view.")
-        st.markdown(
-            """
-            <h1 style="font-size:38px; font-weight:800;">🚀 Together, Let’s Build an AI Foundry — by the People, for the People</h1>
-            <h3 style="font-size:28px; font-weight:700; color:#38bdf8;">⚙️ Open AI Agent Sandbox — From Idea to Production</h3>
-
-            <p style="font-size:18px; line-height:1.8;">
-            <span style="font-size:26px; font-weight:800; color:#60a5fa;">What:</span><br>
-            The <b>Open AI Agent Sandbox</b> is a <b>Foundry</b> where your AI ideas become reality —
-            turning imagination into explainable, open, and living agents.
-            </p>
-
-            <p style="font-size:18px; line-height:1.8;">
-            <span style="font-size:26px; font-weight:800; color:#60a5fa;">So What:</span><br>
-            No CAPEX. No gatekeepers. Just <b>GPU-for-Rent power</b>, <b>open-source models</b>, and <b>privacy-first design</b>.
-            Build faster, own your data, and innovate without limits.
-            </p>
-
-            <p style="font-size:18px; line-height:1.8;">
-            <span style="font-size:26px; font-weight:800; color:#60a5fa;">How:</span><br>
-            Start with a <b>ready-to-use AI Agent Template</b> — customize, test, improve,
-            and export when it’s production-ready.
-            </p>
-
-            <p style="font-size:18px; line-height:1.8;">
-            <span style="font-size:26px; font-weight:800; color:#60a5fa;">Where:</span><br>
-            All inside your <b>GPU-for-Rent Cloud Sandbox</b> —
-            a secure, sovereign forge where ideas ignite and models evolve.
-            </p>
-
-            <p style="font-size:18px; line-height:1.8;">
-            <span style="font-size:26px; font-weight:800; color:#60a5fa;">For Who:</span><br>
-            For builders, dreamers, educators, and enterprises who believe
-            AI should empower the many, not the few.
-            </p>
-
-            <p style="font-size:18px; line-height:1.8;">
-            <span style="font-size:26px; font-weight:800; color:#60a5fa;">What Now:</span><br>
-            Bring your spark. Shape your agent. Forge your legacy.<br>
-            <b>Your AI idea → Production-ready Reality.</b>
-            </p>
-            """,
-            unsafe_allow_html=True,
-        )
-        if st.button("🚀 Start Building Now", key="btn_start_build_now"):
-            st.session_state.stage = "agents"
-            st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
+        if st.button("🏠 Back to Home", key=f"btn_home_{ss.get('stage','landing')}"):
+            _go_stage("landing")
     with c2:
-        st.markdown("<div class='right-box'>", unsafe_allow_html=True)
-        st.markdown("<h2>📊 Global AI Agent Library</h2>", unsafe_allow_html=True)
-        rows = []
-        for sector, industry, agent, desc, status, emoji in AGENTS:
-            rows.append({
-                "🖼️": render_image_tag(agent, industry, emoji),
-                "🏭 Sector": sector,
-                "🧩 Industry": industry,
-                "🤖 Agent": agent,
-                "🧠 Description": desc,
-                "📶 Status": f'<span style="color:{"#22c55e" if status=="Available" else "#f59e0b"};">{status}</span>'
-            })
-        st.write(pd.DataFrame(rows).to_html(escape=False, index=False), unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>", unsafe_allow_html=True)
-    st.stop()
+        if st.button("🤖 Back to Agents", key=f"btn_agents_{ss.get('stage','landing')}"):
+            _go_stage("agents")
+    with c3:
+        is_dark = (ss.get("ui_theme", "dark") == "dark")
+        new_is_dark = st.toggle("🌙 Dark mode", value=is_dark, key="ui_theme_toggle", help="Switch theme")
+        new_theme = "dark" if new_is_dark else "light"
+        if new_theme != ss["ui_theme"]:
+            ss["ui_theme"] = new_theme
+            apply_theme(ss["ui_theme"])
+            st.experimental_rerun()
+
+    st.markdown("---")
+
+
+# ✅ Render navbar before showing login or main content
+render_nav_bar_app()
+
+
+
+
 
 # ────────────────────────────────
-# STAGE: AGENTS
+# 🔐 LOGIN GATE
 # ────────────────────────────────
-if st.session_state.stage == "agents":
-    top = st.columns([1, 4, 1])
-    with top[0]:
-        if st.button("⬅️ Back to Home", key="btn_back_home_from_agents"):
-            st.session_state.stage = "landing"
-            st.rerun()
-    with top[1]:
-        st.title("🤖 Available AI Agents")
-
-    df = pd.DataFrame([
-        {"Agent": "💳 Credit Appraisal Agent",
-         "Description": "Explainable AI for retail loan decisioning",
-         "Status": "✅ Available",
-         "Action": '<a class="macbtn" href="?agent=credit&stage=login">🚀 Launch</a>'},
-        {"Agent": "🏦 Asset Appraisal Agent",
-         "Description": "Market-driven collateral valuation",
-	 "Status": "✅ Available",
-	 "Action": '<a class="macbtn" href="?agent=asset&stage=login">🚀 Launch</a>'},
-         
-	 
-	
-    ])
-    st.write(df.to_html(escape=False, index=False), unsafe_allow_html=True)
-    st.markdown("<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>", unsafe_allow_html=True)
-    st.stop()
-
-# ────────────────────────────────
-# STAGE: LOGIN
-# ────────────────────────────────
-if st.session_state.stage == "login":
-    top = st.columns([1, 4, 1])
-    with top[0]:
-        if st.button("⬅️ Back to Agents", key="btn_back_agents_from_login"):
-            st.session_state.stage = "agents"
-            st.rerun()
-    with top[1]:
-        st.title("🔐 Login to AI Credit Appraisal Platform")
+def login_block():
+    st.title("🔐 Login to AI Credit Appraisal Platform")
     c1, c2, c3 = st.columns([1, 1, 1])
     with c1:
         user = st.text_input("Username", placeholder="e.g. dzoan")
@@ -605,47 +676,149 @@ if st.session_state.stage == "login":
         email = st.text_input("Email", placeholder="e.g. dzoan@demo.local")
     with c3:
         pwd = st.text_input("Password", type="password", placeholder="Enter any password")
-    if st.button("Login", key="btn_login_submit", use_container_width=True):
-        if user.strip() and email.strip():
-            st.session_state.user_info = {
+
+    if st.button("Login", key="btn_credit_login", use_container_width=True):
+        if (user or "").strip() and (email or "").strip():
+            st.session_state["user_info"] = {
                 "name": user.strip(),
                 "email": email.strip(),
                 "flagged": False,
-                "timestamp": datetime.datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
-            st.session_state.logged_in = True
-            st.session_state.stage = "credit_agent"
+            st.session_state["credit_logged_in"] = True
+            st.session_state["stage"] = "credit_agent"
             st.rerun()
         else:
             st.error("⚠️ Please fill all fields before continuing.")
-    st.markdown("<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>", unsafe_allow_html=True)
+
+
+# ✅ Always render navbar — and only then login
+if not st.session_state.get("credit_logged_in", False):
+    login_block()
     st.stop()
 
-# ────────────────────────────────
-# STAGE: CREDIT WORKFLOW
-# ────────────────────────────────
-if st.session_state.stage == "credit_agent":
-    top = st.columns([1, 4, 1])
-    with top[0]:
-        if st.button("⬅️ Back to Agents", key="btn_back_agents_from_pipeline"):
-            st.session_state.stage = "agents"
-            st.rerun()
-    with top[1]:
-        st.title("💳 AI Credit Appraisal Platform")
-        st.caption("Generate, sanitize, and appraise credit with AI agent power and human insight.")
+# # ────────────────────────────────
+# # LOGIN GATE
+# # ────────────────────────────────
+# def login_block():
+#     st.title("🔐 Login to AI Credit Appraisal Platform")
+#     c1, c2, c3 = st.columns([1, 1, 1])
+#     with c1:
+#         user = st.text_input("Username", placeholder="e.g. dzoan")
+#     with c2:
+#         email = st.text_input("Email", placeholder="e.g. dzoan@demo.local")
+#     with c3:
+#         pwd = st.text_input("Password", type="password", placeholder="Enter any password")
 
-# # ─────────────────────────────────────────────
-# # WORKFLOW TABS — full 6 steps
-# # ─────────────────────────────────────────────
-# tab_gen, tab_clean, tab_run, tab_review, tab_train, tab_feedback = st.tabs([
-#     "🏦 Synthetic Data Generator",
-#     "🧹 Anonymize & Sanitize Data",
-#     "🤖 Credit appraisal by AI assistant",
-#     "🧑‍⚖️ Human Review",
-#     "🔁 Training (Feedback → Retrain)",
-#     "🗣️ Feedback & Feature Requests"
-# ])
+#     if st.button("Login", key="btn_credit_login", use_container_width=True):
+#         if (user or "").strip() and (email or "").strip():
+#             st.session_state["user_info"] = {
+#                 "name": user.strip(),
+#                 "email": email.strip(),
+#                 "flagged": False,
+#                 "timestamp": datetime.now(timezone.utc).isoformat(),
+#             }
+#             st.session_state["credit_logged_in"] = True
+#             st.session_state["stage"] = "credit_agent"
+#             st.rerun()
+#         else:
+#             st.error("⚠️ Please fill all fields before continuing.")
 
+
+# if not st.session_state.get("credit_logged_in", False):
+#     login_block()
+#     st.stop()
+
+
+
+
+
+# -----------------------------------------------------------
+# CREDIT WORKFLOW ACTIVE ONLY IF CREDIT AGENT SELECTED
+# -----------------------------------------------------------
+ss = st.session_state
+stage = ss.get("stage")
+
+if stage == "credit_agent":
+
+    # Header (from your render_credit_header() defined earlier)
+    render_credit_header()
+
+
+       
+# ✅ CREDIT APPRAISAL WORKFLOW TABS (1 → 8)
+
+    # ============================================================
+    # 🌈 Colorized Tabs (Matches A→H badge palette exactly)
+    # ============================================================
+    st.markdown("""
+    <style>
+    /* --- Layout adjustments for clean alignment --- */
+    .stTabs [data-baseweb="tab-list"] {
+    border-bottom: 2px solid #1e293b;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: .25rem;
+    }
+
+    /* --- Base style for all tabs --- */
+    .stTabs [data-baseweb="tab"] {
+    border-radius: .6rem;
+    padding: .45rem .9rem;
+    font-weight: 600;
+    color: #fff !important;
+    border: none;
+    opacity: 0.95;
+    transition: all 0.2s ease-in-out;
+    }
+
+    /* Hover and active effects */
+    .stTabs [data-baseweb="tab"]:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+    opacity: 1;
+    }
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+    box-shadow: 0 0 8px rgba(255,255,255,0.15);
+    transform: translateY(-1px);
+    filter: brightness(1.1);
+    }
+
+    /* --- Tab Colors: A→H palette --- */
+    .stTabs [data-baseweb="tab"]:nth-child(1) { background: #1d4ed8; }  /* A) Blue */
+    .stTabs [data-baseweb="tab"]:nth-child(2) { background: #059669; }  /* B) Green */
+    .stTabs [data-baseweb="tab"]:nth-child(3) { background: #d97706; }  /* C) Amber */
+    .stTabs [data-baseweb="tab"]:nth-child(4) { background: #7c3aed; }  /* D) Violet */
+    .stTabs [data-baseweb="tab"]:nth-child(5) { background: #a16207; }  /* E) Gold */
+    .stTabs [data-baseweb="tab"]:nth-child(6) { background: #e11d48; }  /* F) Red */
+    .stTabs [data-baseweb="tab"]:nth-child(7) { background: #0ea5e9; }  /* G) Cyan */
+    .stTabs [data-baseweb="tab"]:nth-child(8) { background: #64748b; }  /* H) Slate */
+    </style>
+    """, unsafe_allow_html=True)
+
+
+# TABSLIST =====================================================
+    tab_input, tab_clean, tab_run, tab_review, tab_train, tab_deploy, tab_handoff, tab_feedback = st.tabs([
+        "1️⃣ 🏦 Synthetic Data Generator",
+        "2️⃣ 🧹 Anonymize & Sanitize Data",
+        "3️⃣ 🤖 Credit appraisal by AI assistant",
+        "4️⃣ 🧑‍⚖️ Human Review",
+        "5️⃣ 🔁 Training (Feedback → Retrain)",
+        "6️⃣ 🚀 Deployment of Credit Model",
+        "7️⃣ 📦 Reporting & Handoff",
+        "8️⃣ 🗣️ Feedback & Feature Requests"
+    ])
+
+else:
+    # Safe placeholders when not on the Credit Agent stage
+    tab_input = st.container()
+    tab_clean = st.container()
+    tab_run = st.container()
+    tab_review = st.container()
+    tab_train = st.container()
+    tab_deploy = st.container()
+    tab_handoff = st.container()
+    tab_feedback = st.container()
 
 
 
@@ -654,15 +827,16 @@ if st.session_state.stage == "credit_agent":
 # GLOBAL UTILS
 # ────────────────────────────────
 
-
 BANNED_NAMES = {"race", "gender", "religion", "ethnicity", "ssn", "national_id"}
 PII_COLS = {"customer_name", "name", "email", "phone", "address", "ssn", "national_id", "dob"}
 
 EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 PHONE_RE = re.compile(r"\+?\d[\d\-\s]{6,}\d")
 
+
 def dedupe_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df.loc[:, ~df.columns.duplicated(keep="last")]
+
 
 def scrub_text_pii(s):
     if not isinstance(s, str):
@@ -670,6 +844,7 @@ def scrub_text_pii(s):
     s = EMAIL_RE.sub("", s)
     s = PHONE_RE.sub("", s)
     return s.strip()
+
 
 def drop_pii_columns(df: pd.DataFrame):
     original_cols = list(df.columns)
@@ -680,6 +855,7 @@ def drop_pii_columns(df: pd.DataFrame):
         out[c] = out[c].apply(scrub_text_pii)
     return dedupe_columns(out), dropped
 
+
 def strip_policy_banned(df: pd.DataFrame) -> pd.DataFrame:
     keep = []
     for c in df.columns:
@@ -688,6 +864,7 @@ def strip_policy_banned(df: pd.DataFrame) -> pd.DataFrame:
             continue
         keep.append(c)
     return df[keep]
+
 
 def append_user_info(df: pd.DataFrame) -> pd.DataFrame:
     meta = st.session_state["user_info"]
@@ -698,13 +875,16 @@ def append_user_info(df: pd.DataFrame) -> pd.DataFrame:
     out["created_at"] = meta["timestamp"]
     return dedupe_columns(out)
 
+
 def save_to_runs(df: pd.DataFrame, prefix: str) -> str:
-    ts = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+    #ts = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
     flag_suffix = "_FLAGGED" if st.session_state["user_info"]["flagged"] else ""
     fname = f"{prefix}_{ts}{flag_suffix}.csv"
     fpath = os.path.join(RUNS_DIR, fname)
     dedupe_columns(df).to_csv(fpath, index=False)
     return fpath
+
 
 def try_json(x):
     if isinstance(x, (dict, list)):
@@ -716,6 +896,7 @@ def try_json(x):
     except Exception:
         return None
 
+
 def _safe_json(x):
     if isinstance(x, dict):
         return x
@@ -726,13 +907,14 @@ def _safe_json(x):
             return {}
     return {}
 
+
 def fmt_currency_label(base: str) -> str:
     sym = st.session_state.get("currency_symbol", "")
     return f"{base} ({sym})" if sym else base
 
+
 # ─────────────────────────────────────────────
 # CURRENCY CATALOG
-
 CURRENCY_OPTIONS = {
     # code: (label, symbol, fx to apply on USD-like base generated numbers)
     "USD": ("USD $", "$", 1.0),
@@ -742,6 +924,7 @@ CURRENCY_OPTIONS = {
     "VND": ("VND ₫", "₫", 24000.0),
 }
 
+
 def set_currency_defaults():
     if "currency_code" not in st.session_state:
         st.session_state["currency_code"] = "USD"
@@ -750,11 +933,12 @@ def set_currency_defaults():
     st.session_state["currency_symbol"] = symbol
     st.session_state["currency_fx"] = fx
 
+
 set_currency_defaults()
+
 
 # ─────────────────────────────────────────────
 # DASHBOARD HELPERS (Plotly, dark theme)
-
 def _kpi_card(label: str, value: str, sublabel: str | None = None):
     st.markdown(
         f"""
@@ -766,6 +950,7 @@ def _kpi_card(label: str, value: str, sublabel: str | None = None):
         """,
         unsafe_allow_html=True,
     )
+
 
 def render_credit_dashboard(df: pd.DataFrame, currency_symbol: str = ""):
     """
@@ -1037,20 +1222,9 @@ def render_credit_dashboard(df: pd.DataFrame, currency_symbol: str = ""):
         st.markdown("### 👥 Customer Mix")
         st.dataframe(mix, use_container_width=True, height=220)
 
-# ─────────────────────────────────────────────
-# ─────────────────────────────────────────────
-# WORKFLOW TABS — full 6 steps
-# ─────────────────────────────────────────────
-tab_gen, tab_clean, tab_run, tab_review, tab_train, tab_feedback = st.tabs([
-    "🏦 Synthetic Data Generator",
-    "🧹 Anonymize & Sanitize Data",
-    "🤖 Credit appraisal by AI assistant",
-    "🧑‍⚖️ Human Review",
-    "🔁 Training (Feedback → Retrain)",
-    "🗣️ Feedback & Feature Requests"
-])
 
-# ─────────────────────────────────────────────
+
+
 # DATA GENERATORS
 
 def generate_raw_synthetic(n: int, non_bank_ratio: float) -> pd.DataFrame:
@@ -1100,6 +1274,7 @@ def generate_raw_synthetic(n: int, non_bank_ratio: float) -> pd.DataFrame:
     df["currency_code"] = st.session_state["currency_code"]
     return dedupe_columns(df)
 
+
 def generate_anon_synthetic(n: int, non_bank_ratio: float) -> pd.DataFrame:
     rng = np.random.default_rng(42)
     is_non = rng.random(n) < non_bank_ratio
@@ -1134,6 +1309,7 @@ def generate_anon_synthetic(n: int, non_bank_ratio: float) -> pd.DataFrame:
     df["currency_code"] = st.session_state["currency_code"]
     return dedupe_columns(df)
 
+
 def to_agent_schema(df: pd.DataFrame) -> pd.DataFrame:
     """
     Harmonize to the server-side agent’s expected schema.
@@ -1162,9 +1338,10 @@ def to_agent_schema(df: pd.DataFrame) -> pd.DataFrame:
         out["loan_term_months"] = out.get("loan_duration_months", 0)
     return dedupe_columns(out)
 
+
 # ─────────────────────────────────────────────
 # 🏦 TAB 1 — Synthetic Data Generator
-with tab_gen:
+with tab_input:
     st.subheader("🏦 Synthetic Credit Data Generator")
 
     # Currency selector (before generation)
@@ -1191,7 +1368,6 @@ with tab_gen:
             """,
             unsafe_allow_html=True,
         )
-
 
     rows = st.slider("Number of rows to generate", 50, 2000, 200, step=50)
     non_bank_ratio = st.slider("Share of non-bank customers", 0.0, 1.0, 0.30, 0.05)
@@ -1224,6 +1400,7 @@ with tab_gen:
                 os.path.basename(anon_path),
                 "text/csv"
             )
+
 
 # ─────────────────────────────────────────────
 # 🧹 TAB 2 — Anonymize & Sanitize Data
@@ -1262,6 +1439,7 @@ with tab_clean:
     else:
         st.info("Choose a CSV to see the sanitize flow.", icon="ℹ️")
 
+
 # ─────────────────────────────────────────────
 # 🤖 TAB 3 — Credit appraisal by AI assistant
 with tab_run:
@@ -1285,26 +1463,25 @@ with tab_run:
     except Exception:
         st.info("ℹ️ Production meta unavailable.")
 
-    
     # ─────────────────────────────────────────────
-    # 🧩 Model Selection (list all trained models) — HARD-CODED TEST
+    # 🧩 Model Selection (list all trained models) — Hardcoded Stable Version
     # ─────────────────────────────────────────────
     from datetime import datetime
     import os, shutil, streamlit as st
 
-    # Hardcoded absolute paths for your environment
+    # Hardcoded absolute paths (your confirmed working setup)
     trained_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/credit_appraisal/models/trained"
     production_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/credit_appraisal/models/production"
 
-    # Debug info
-    st.caption(f"📂 Trained dir: `{trained_dir}`")
-    st.caption(f"📦 Production dir: `{production_dir}`")
+    st.caption(f"📦 Trained dir = `{trained_dir}`")
+    st.caption(f"📦 Production dir = `{production_dir}`")
 
-    # Refresh button
+    # ── Refresh models list
     if st.button("↻ Refresh models", key="credit_refresh_models"):
         st.session_state.pop("selected_trained_model", None)
         st.rerun()
 
+    # ── Collect models
     models = []
     if os.path.isdir(trained_dir):
         for f in os.listdir(trained_dir):
@@ -1316,8 +1493,8 @@ with tab_run:
     else:
         st.error(f"❌ Trained dir not found: {trained_dir}")
 
+    # ── Show list if found
     if models:
-        # Sort by creation time (latest first)
         models.sort(key=lambda x: os.path.getctime(x[1]), reverse=True)
         display_names = [f"{m[0]} — {m[2]}" for m in models]
 
@@ -1327,6 +1504,7 @@ with tab_run:
 
         st.session_state["selected_trained_model"] = selected_model
 
+        # ── Promote model
         if st.button("🚀 Promote this model to Production"):
             try:
                 os.makedirs(production_dir, exist_ok=True)
@@ -1337,47 +1515,6 @@ with tab_run:
                 st.error(f"❌ Promotion failed: {e}")
     else:
         st.warning("⚠️ No trained models found — train one in Step 5 first.")
-
-    # # ─────────────────────────────────────────────
-    # # 🧩 Model Selection (list all trained models)
-    # # ─────────────────────────────────────────────
-    # trained_dir = os.path.expanduser(
-    #     "~/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/credit_appraisal/models/trained"
-    # )
-    # models = []
-    # if os.path.exists(trained_dir):
-    #     for f in os.listdir(trained_dir):
-    #         if f.endswith(".joblib"):
-    #             fpath = os.path.join(trained_dir, f)
-    #             ctime = os.path.getctime(fpath)
-    #             created = datetime.datetime.fromtimestamp(ctime).strftime("%b %d, %Y %H:%M")
-    #             models.append((f, fpath, created))
-
-    # if models:
-    #     models.sort(key=lambda x: x[2], reverse=True)
-    #     display_names = [f"{m[0]} — {m[2]}" for m in models]
-
-    #     selected_display = st.selectbox("📦 Select trained model to use", display_names)
-    #     selected_model = models[display_names.index(selected_display)][1]
-    #     st.success(f"✅ Using model: {os.path.basename(selected_model)}")
-
-    #     # Store for later use by /run API
-    #     st.session_state["selected_trained_model"] = selected_model
-
-    #     # Optional promote button
-    #     if st.button("🚀 Promote this model to Production"):
-    #         try:
-    #             prod_path = os.path.expanduser(
-    #                 "~/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/credit_appraisal/models/production/model.joblib"
-    #             )
-    #             os.makedirs(os.path.dirname(prod_path), exist_ok=True)
-    #             import shutil
-    #             shutil.copy2(selected_model, prod_path)
-    #             st.success(f"✅ Model promoted to production: {os.path.basename(prod_path)}")
-    #         except Exception as e:
-    #             st.error(f"❌ Promotion failed: {e}")
-    # else:
-    #     st.warning("⚠️ No trained models found — train one in Step 5 first.")
 
     # 1) Model + Hardware selection (UI hints)
     LLM_MODELS = [
@@ -1393,11 +1530,11 @@ with tab_run:
     LLM_HINT_BY_LABEL = {l: h for (l, _, h) in LLM_MODELS}
 
     OPENSTACK_FLAVORS = {
-        "m4.medium":  "4 vCPU / 8 GB RAM — CPU-only small",
-        "m8.large":   "8 vCPU / 16 GB RAM — CPU-only medium",
-        "g1.a10.1":   "8 vCPU / 32 GB RAM + 1×A10 24GB",
-        "g1.l40.1":   "16 vCPU / 64 GB RAM + 1×L40 48GB",
-        "g2.a100.1":  "24 vCPU / 128 GB RAM + 1×A100 80GB",
+        "m4.medium": "4 vCPU / 8 GB RAM — CPU-only small",
+        "m8.large": "8 vCPU / 16 GB RAM — CPU-only medium",
+        "g1.a10.1": "8 vCPU / 32 GB RAM + 1×A10 24GB",
+        "g1.l40.1": "16 vCPU / 64 GB RAM + 1×L40 48GB",
+        "g2.a100.1": "24 vCPU / 128 GB RAM + 1×A100 80GB",
     }
 
     with st.expander("🧠 Local LLM & Hardware Profile", expanded=True):
@@ -1419,7 +1556,7 @@ with tab_run:
             "Use synthetic (RAW – auto-sanitize)",
             "Use anonymized dataset",
             "Upload manually",
-        ]
+        ],
     )
     use_llm = st.checkbox("Use LLM narrative", value=False)
     agent_name = "credit_appraisal"
@@ -1437,14 +1574,25 @@ with tab_run:
         "Choose rule mode",
         ["Classic (bank-style metrics)", "NDI (Net Disposable Income) — simple"],
         index=0,
-        help="NDI = income - all monthly obligations. Approve if NDI and NDI ratio pass thresholds."
+        help="NDI = income - all monthly obligations. Approve if NDI and NDI ratio pass thresholds.",
     )
 
     CLASSIC_DEFAULTS = {
-        "max_dti": 0.45, "min_emp_years": 2, "min_credit_hist": 3, "salary_floor": 3000,
-        "max_delinquencies": 2, "max_current_loans": 3, "req_min": 1000, "req_max": 200000,
-        "loan_terms": [12, 24, 36, 48, 60], "threshold": 0.45, "target_rate": None, "random_band": True,
-        "min_income_debt_ratio": 0.35, "compounded_debt_factor": 1.0, "monthly_debt_relief": 0.50,
+        "max_dti": 0.45,
+        "min_emp_years": 2,
+        "min_credit_hist": 3,
+        "salary_floor": 3000,
+        "max_delinquencies": 2,
+        "max_current_loans": 3,
+        "req_min": 1000,
+        "req_max": 200000,
+        "loan_terms": [12, 24, 36, 48, 60],
+        "threshold": 0.45,
+        "target_rate": None,
+        "random_band": True,
+        "min_income_debt_ratio": 0.35,
+        "compounded_debt_factor": 1.0,
+        "monthly_debt_relief": 0.50,
     }
     NDI_DEFAULTS = {"ndi_value": 800.0, "ndi_ratio": 0.50, "threshold": 0.45, "target_rate": None, "random_band": True}
 
@@ -1465,29 +1613,37 @@ with tab_run:
                 rc["min_emp_years"] = st.number_input("Min Employment Years", 0, 40, rc["min_emp_years"])
                 rc["min_credit_hist"] = st.number_input("Min Credit History (years)", 0, 40, rc["min_credit_hist"])
             with r2:
-                rc["salary_floor"] = st.number_input("Minimum Monthly Salary", 0, 1_000_000_000, rc["salary_floor"], step=1000, help=fmt_currency_label("in local currency"))
+                rc["salary_floor"] = st.number_input(
+                    "Minimum Monthly Salary", 0, 1_000_000_000, rc["salary_floor"], step=1000, help=fmt_currency_label("in local currency")
+                )
                 rc["max_delinquencies"] = st.number_input("Max Delinquencies", 0, 10, rc["max_delinquencies"])
                 rc["max_current_loans"] = st.number_input("Max Current Loans", 0, 10, rc["max_current_loans"])
             with r3:
                 rc["req_min"] = st.number_input(fmt_currency_label("Requested Amount Min"), 0, 10_000_000_000, rc["req_min"], step=1000)
                 rc["req_max"] = st.number_input(fmt_currency_label("Requested Amount Max"), 0, 10_000_000_000, rc["req_max"], step=1000)
-                rc["loan_terms"] = st.multiselect("Allowed Loan Terms (months)", [12,24,36,48,60,72], default=rc["loan_terms"])
+                rc["loan_terms"] = st.multiselect("Allowed Loan Terms (months)", [12, 24, 36, 48, 60, 72], default=rc["loan_terms"])
 
             st.markdown("#### 🧮 Debt Pressure Controls")
             d1, d2, d3 = st.columns(3)
             with d1:
-                rc["min_income_debt_ratio"] = st.slider("Min Income / (Compounded Debt) Ratio", 0.10, 2.00, rc["min_income_debt_ratio"], 0.01)
+                rc["min_income_debt_ratio"] = st.slider(
+                    "Min Income / (Compounded Debt) Ratio", 0.10, 2.00, rc["min_income_debt_ratio"], 0.01
+                )
             with d2:
-                rc["compounded_debt_factor"] = st.slider("Compounded Debt Factor (× requested)", 0.5, 3.0, rc["compounded_debt_factor"], 0.1)
+                rc["compounded_debt_factor"] = st.slider(
+                    "Compounded Debt Factor (× requested)", 0.5, 3.0, rc["compounded_debt_factor"], 0.1
+                )
             with d3:
                 rc["monthly_debt_relief"] = st.slider("Monthly Debt Relief Factor", 0.10, 1.00, rc["monthly_debt_relief"], 0.05)
 
             st.markdown("---")
-            c1, c2, c3 = st.columns([1,1,1])
+            c1, c2, c3 = st.columns([1, 1, 1])
             with c1:
                 use_target = st.toggle("🎯 Use target approval rate", value=(rc["target_rate"] is not None))
             with c2:
-                rc["random_band"] = st.toggle("🎲 Randomize approval band (20–60%) when no target", value=rc["random_band"])
+                rc["random_band"] = st.toggle(
+                    "🎲 Randomize approval band (20–60%) when no target", value=rc["random_band"]
+                )
             with c3:
                 if st.button("↩️ Reset to defaults"):
                     reset_classic()
@@ -1504,17 +1660,25 @@ with tab_run:
             rn = st.session_state.ndi_rules
             n1, n2 = st.columns(2)
             with n1:
-                rn["ndi_value"] = st.number_input(fmt_currency_label("Min NDI (Net Disposable Income) per month"), 0.0, 1e12, float(rn["ndi_value"]), step=50.0)
+                rn["ndi_value"] = st.number_input(
+                    fmt_currency_label("Min NDI (Net Disposable Income) per month"),
+                    0.0,
+                    1e12,
+                    float(rn["ndi_value"]),
+                    step=50.0,
+                )
             with n2:
                 rn["ndi_ratio"] = st.slider("Min NDI / Income ratio", 0.0, 1.0, float(rn["ndi_ratio"]), 0.01)
             st.caption("NDI = income - all monthly obligations (rent, food, loans, cards, etc.).")
 
             st.markdown("---")
-            c1, c2, c3 = st.columns([1,1,1])
+            c1, c2, c3 = st.columns([1, 1, 1])
             with c1:
                 use_target = st.toggle("🎯 Use target approval rate", value=(rn["target_rate"] is not None))
             with c2:
-                rn["random_band"] = st.toggle("🎲 Randomize approval band (20–60%) when no target", value=rn["random_band"])
+                rn["random_band"] = st.toggle(
+                    "🎲 Randomize approval band (20–60%) when no target", value=rn["random_band"]
+                )
             with c3:
                 if st.button("↩️ Reset to defaults (NDI)"):
                     reset_ndi()
@@ -1526,6 +1690,48 @@ with tab_run:
             else:
                 rn["threshold"] = st.slider("Model score threshold", 0.0, 1.0, rn["threshold"], 0.01)
                 rn["target_rate"] = None
+
+    # Helper used below (your function name later referenced as json_to_dataframe in the draft)
+    def json_to_df(obj) -> pd.DataFrame:
+        if obj is None:
+            return pd.DataFrame()
+        if isinstance(obj, pd.DataFrame):
+            return obj
+        if isinstance(obj, bytes):
+            try:
+                obj = obj.decode("utf-8", errors="ignore")
+            except Exception:
+                return pd.DataFrame({"value": [repr(obj)]})
+        if isinstance(obj, str):
+            obj = obj.strip()
+            if not obj:
+                return pd.DataFrame()
+            try:
+                j = json.loads(obj)
+                return json_to_df(j)
+            except Exception:
+                lines = [ln for ln in obj.splitlines() if ln.strip()]
+                return pd.DataFrame({"value": lines}) if lines else pd.DataFrame()
+        if isinstance(obj, list):
+            if len(obj) == 0:
+                return pd.DataFrame()
+            if all(isinstance(x, dict) for x in obj):
+                try:
+                    return pd.json_normalize(obj)
+                except Exception:
+                    return pd.DataFrame(obj)
+            if all(isinstance(x, list) for x in obj):
+                return pd.DataFrame({"row": obj})
+            return pd.DataFrame({"value": obj})
+        if isinstance(obj, dict):
+            for key in ("rows", "data", "result", "results", "items", "records"):
+                if key in obj and isinstance(obj[key], (list, dict)):
+                    return json_to_df(obj[key])
+            try:
+                return pd.json_normalize(obj)
+            except Exception:
+                return pd.DataFrame([obj])
+        return pd.DataFrame({"value": [obj]})
 
     # 4) Run
     if st.button("🚀 Run Agent", use_container_width=True):
@@ -1540,36 +1746,40 @@ with tab_run:
             }
             if rule_mode.startswith("Classic"):
                 rc = st.session_state.classic_rules
-                data.update({
-                    "min_employment_years": str(rc["min_emp_years"]),
-                    "max_debt_to_income": str(rc["max_dti"]),
-                    "min_credit_history_length": str(rc["min_credit_hist"]),
-                    "max_num_delinquencies": str(rc["max_delinquencies"]),
-                    "max_current_loans": str(rc["max_current_loans"]),
-                    "requested_amount_min": str(rc["req_min"]),
-                    "requested_amount_max": str(rc["req_max"]),
-                    "loan_term_months_allowed": ",".join(map(str, rc["loan_terms"])) if rc["loan_terms"] else "",
-                    "min_income_debt_ratio": str(rc["min_income_debt_ratio"]),
-                    "compounded_debt_factor": str(rc["compounded_debt_factor"]),
-                    "monthly_debt_relief": str(rc["monthly_debt_relief"]),
-                    "salary_floor": str(rc["salary_floor"]),
-                    "threshold": "" if rc["threshold"] is None else str(rc["threshold"]),
-                    "target_approval_rate": "" if rc["target_rate"] is None else str(rc["target_rate"]),
-                    "random_band": str(rc["random_band"]).lower(),
-                    "random_approval_band": str(rc["random_band"]).lower(),
-                    "rule_mode": "classic",
-                })
+                data.update(
+                    {
+                        "min_employment_years": str(rc["min_emp_years"]),
+                        "max_debt_to_income": str(rc["max_dti"]),
+                        "min_credit_history_length": str(rc["min_credit_hist"]),
+                        "max_num_delinquencies": str(rc["max_delinquencies"]),
+                        "max_current_loans": str(rc["max_current_loans"]),
+                        "requested_amount_min": str(rc["req_min"]),
+                        "requested_amount_max": str(rc["req_max"]),
+                        "loan_term_months_allowed": ",".join(map(str, rc["loan_terms"])) if rc["loan_terms"] else "",
+                        "min_income_debt_ratio": str(rc["min_income_debt_ratio"]),
+                        "compounded_debt_factor": str(rc["compounded_debt_factor"]),
+                        "monthly_debt_relief": str(rc["monthly_debt_relief"]),
+                        "salary_floor": str(rc["salary_floor"]),
+                        "threshold": "" if rc["threshold"] is None else str(rc["threshold"]),
+                        "target_approval_rate": "" if rc["target_rate"] is None else str(rc["target_rate"]),
+                        "random_band": str(rc["random_band"]).lower(),
+                        "random_approval_band": str(rc["random_band"]).lower(),
+                        "rule_mode": "classic",
+                    }
+                )
             else:
                 rn = st.session_state.ndi_rules
-                data.update({
-                    "ndi_value": str(rn["ndi_value"]),
-                    "ndi_ratio": str(rn["ndi_ratio"]),
-                    "threshold": "" if rn["threshold"] is None else str(rn["threshold"]),
-                    "target_approval_rate": "" if rn["target_rate"] is None else str(rn["target_rate"]),
-                    "random_band": str(rn["random_band"]).lower(),
-                    "random_approval_band": str(rn["random_band"]).lower(),
-                    "rule_mode": "ndi",
-                })
+                data.update(
+                    {
+                        "ndi_value": str(rn["ndi_value"]),
+                        "ndi_ratio": str(rn["ndi_ratio"]),
+                        "threshold": "" if rn["threshold"] is None else str(rn["threshold"]),
+                        "target_approval_rate": "" if rn["target_rate"] is None else str(rn["target_rate"]),
+                        "random_band": str(rn["random_band"]).lower(),
+                        "random_approval_band": str(rn["random_band"]).lower(),
+                        "rule_mode": "ndi",
+                    }
+                )
 
             def prep_and_pack(df: pd.DataFrame, filename: str):
                 safe = dedupe_columns(df)
@@ -1582,89 +1792,182 @@ with tab_run:
 
             if data_choice == "Use synthetic (ANON)":
                 if "synthetic_df" not in st.session_state:
-                    st.warning("No ANON synthetic dataset found. Generate it in the first tab."); st.stop()
+                    st.warning("No ANON synthetic dataset found. Generate it in the first tab.")
+                    st.stop()
                 files = prep_and_pack(st.session_state.synthetic_df, "synthetic_anon.csv")
 
             elif data_choice == "Use synthetic (RAW – auto-sanitize)":
                 if "synthetic_raw_df" not in st.session_state:
-                    st.warning("No RAW synthetic dataset found. Generate it in the first tab."); st.stop()
+                    st.warning("No RAW synthetic dataset found. Generate it in the first tab.")
+                    st.stop()
                 files = prep_and_pack(st.session_state.synthetic_raw_df, "synthetic_raw_sanitized.csv")
 
             elif data_choice == "Use anonymized dataset":
                 if "anonymized_df" not in st.session_state:
-                    st.warning("No anonymized dataset found. Create it in the second tab."); st.stop()
+                    st.warning("No anonymized dataset found. Create it in the second tab.")
+                    st.stop()
                 files = prep_and_pack(st.session_state.anonymized_df, "anonymized.csv")
 
             elif data_choice == "Upload manually":
                 up_name = st.session_state.get("manual_upload_name")
                 up_bytes = st.session_state.get("manual_upload_bytes")
                 if not up_name or not up_bytes:
-                    st.warning("Please upload a CSV first."); st.stop()
+                    st.warning("Please upload a CSV first.")
+                    st.stop()
                 try:
                     tmp_df = pd.read_csv(io.BytesIO(up_bytes))
                     files = prep_and_pack(tmp_df, up_name)
                 except Exception:
                     files = {"file": (up_name, up_bytes, "text/csv")}
             else:
-                st.error("Unknown data source selection."); st.stop()
+                st.error("Unknown data source selection.")
+                st.stop()
 
-            r = requests.post(f"{API_URL}/v1/agents/{agent_name}/run", data=data, files=files, timeout=180)
+            # ---- RUN REQUEST ----
+            r = requests.post(
+                f"{API_URL}/v1/agents/{agent_name}/run",
+                data=data,
+                files=files,
+                timeout=180
+            )
+
             if r.status_code != 200:
-                st.error(f"Run failed ({r.status_code}): {r.text}"); st.stop()
+                st.error(f"Run failed ({r.status_code}): {r.text}")
+                st.stop()
 
             res = r.json()
-            st.session_state.last_run_id = res.get("run_id")
-            result = res.get("result", {}) or {}
-            st.success(f"✅ Run succeeded! Run ID: {st.session_state.last_run_id}")
 
-            # Pull merged.csv for dashboards/review
-            rid = st.session_state.last_run_id
-            merged_url = f"{API_URL}/v1/runs/{rid}/report?format=csv"
-            merged_bytes = requests.get(merged_url, timeout=30).content
-            merged_df = pd.read_csv(io.BytesIO(merged_bytes))
-            st.session_state["last_merged_df"] = merged_df
+            # ---- Robust run_id + data extraction ----
+            run_id = None
+            payload_rows = None  # fallback rows for rendering
 
-            # # Export AI outputs as csv with currency code (for Human Review dropdown)
-            # ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-            # out_name = f"ai-appraisal-outputs-{ts}-{st.session_state['currency_code']}.csv"
-            # st.download_button("⬇️ Download AI outputs (CSV)", merged_df.to_csv(index=False).encode("utf-8"), out_name, "text/csv")
+            if isinstance(res, dict):
+                run_id = res.get("run_id") or res.get("id")
+                payload_rows = res.get("result") or res.get("data") or res.get("results") or res.get("rows")
+            elif isinstance(res, list):
+                payload_rows = res
+            else:
+                try:
+                    maybe = json.loads(res)
+                    if isinstance(maybe, dict):
+                        run_id = maybe.get("run_id") or maybe.get("id")
+                        payload_rows = maybe.get("result") or maybe.get("data") or maybe.get("results") or maybe.get("rows")
+                    elif isinstance(maybe, list):
+                        payload_rows = maybe
+                except Exception:
+                    pass
 
-            # Decision filter IN TABLE (not hiding dashboard)
-            st.markdown("### 📄 Credit Ai Agent  Decisions Table (filtered)")
-            uniq_dec = sorted([d for d in merged_df.get("decision", pd.Series(dtype=str)).dropna().unique()])
+            # ---- Helper: turn any JSON-like into a DataFrame ----
+            def json_to_df(obj) -> pd.DataFrame:
+                if obj is None:
+                    return pd.DataFrame()
+                if isinstance(obj, pd.DataFrame):
+                    return obj
+                if isinstance(obj, bytes):
+                    try:
+                        obj = obj.decode("utf-8", errors="ignore")
+                    except Exception:
+                        return pd.DataFrame({"value": [repr(obj)]})
+                if isinstance(obj, str):
+                    obj = obj.strip()
+                    if not obj:
+                        return pd.DataFrame()
+                    try:
+                        j = json.loads(obj)
+                        return json_to_df(j)
+                    except Exception:
+                        lines = [ln for ln in obj.splitlines() if ln.strip()]
+                        return pd.DataFrame({"value": lines}) if lines else pd.DataFrame()
+                if isinstance(obj, list):
+                    if len(obj) == 0:
+                        return pd.DataFrame()
+                    if all(isinstance(x, dict) for x in obj):
+                        try:
+                            return pd.json_normalize(obj)
+                        except Exception:
+                            return pd.DataFrame(obj)
+                    if all(isinstance(x, list) for x in obj):
+                        return pd.DataFrame({"row": obj})
+                    return pd.DataFrame({"value": obj})
+                if isinstance(obj, dict):
+                    for key in ("rows", "data", "result", "results", "items", "records"):
+                        if key in obj and isinstance(obj[key], (list, dict)):
+                            return json_to_df(obj[key])
+                    try:
+                        return pd.json_normalize(obj)
+                    except Exception:
+                        return pd.DataFrame([obj])
+                return pd.DataFrame({"value": [obj]})
+
+            # ---- Prefer server report via run_id; otherwise fall back to local JSON→DF ----
+            
+            # ============================================================
+            # ✅ Prefer server CSV → fallback to JSON Parser
+            # ============================================================
+            if run_id:
+                try:
+                    rid = run_id
+                    merged_url = f"{API_URL}/v1/runs/{rid}/report?format=csv"
+                    merged_bytes = requests.get(merged_url, timeout=30).content
+                    merged_df = pd.read_csv(io.BytesIO(merged_bytes))
+                    st.session_state.last_run_id = rid
+                    st.success(f"✅ Run succeeded! Run ID: {rid}")
+                except Exception as e:
+                    st.warning(f"Could not fetch CSV via run_id ({run_id}): {e}")
+                    merged_df = json_to_dataframe(payload_rows)
+            else:
+                st.warning("⚠️ Backend did not return a run_id. Falling back to JSON.")
+                merged_df = json_to_dataframe(payload_rows)
+
+ 
+
+            if merged_df is None or merged_df.empty:
+                st.error("No data available to render (both report and fallback JSON were empty).")
+                st.write("Raw response:", res)
+                st.stop()
+
+            # Keep for later tabs
+            st.session_state["last_merged_df"] = dedupe_columns(merged_df)
+            
+            # ✅ Make results available to Stage 7 (Reporting & Handoff)
+            try:
+                st.session_state["credit_scored_df"] = dedupe_columns(merged_df.copy())
+                st.success("✅ Stage C outputs saved for Stage 7 (Reporting & Handoff).")
+            except Exception as e:
+                st.warning(f"Could not persist scored dataset for Stage 7: {e}")
+
+            # ---- Decisions Table (with filter) ----
+            st.markdown("### 📄 Credit AI Agent Decisions Table (filtered)")
+            uniq_dec = sorted([d for d in merged_df.get("decision", pd.Series(dtype=str)).dropna().unique()]) \
+                    if "decision" in merged_df.columns else []
             chosen = st.multiselect("Filter decision", options=uniq_dec, default=uniq_dec, key="filter_decisions")
             df_view = merged_df.copy()
             if "decision" in df_view.columns and chosen:
                 df_view = df_view[df_view["decision"].isin(chosen)]
             st.dataframe(df_view, use_container_width=True)
 
-            # ── DASHBOARD (always visible; filters apply in table below)
+            # ---- Dashboard ----
             st.markdown("## 📊 Dashboard")
             render_credit_dashboard(merged_df, st.session_state.get("currency_symbol", ""))
 
-            # Per-row metrics met/not met
+            # Add per-row metrics columns if present
             if "rule_reasons" in df_view.columns:
                 rr = df_view["rule_reasons"].apply(try_json)
                 df_view["metrics_met"] = rr.apply(lambda d: ", ".join(sorted([k for k, v in (d or {}).items() if v is True])) if isinstance(d, dict) else "")
                 df_view["metrics_unmet"] = rr.apply(lambda d: ", ".join(sorted([k for k, v in (d or {}).items() if v is False])) if isinstance(d, dict) else "")
+
             cols_show = [c for c in [
                 "application_id","customer_type","decision","score","loan_amount","income","metrics_met","metrics_unmet",
                 "proposed_loan_option","proposed_consolidation_loan","top_feature","explanation"
             ] if c in df_view.columns]
-            st.dataframe(df_view[cols_show].head(500), use_container_width=True)
+            if cols_show:
+                st.dataframe(df_view[cols_show].head(500), use_container_width=True)
 
-            #  # Export AI outputs as csv with currency code (for Human Review dropdown)
-            # ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-            # out_name = f"ai-appraisal-outputs-{ts}-{st.session_state['currency_code']}.csv"
-            # st.download_button("⬇️ Download AI outputs (CSV)", merged_df.to_csv(index=False).encode("utf-8"), out_name, "text/csv")
-            # Export AI outputs as CSV with currency code (for Human Review dropdown)
-
-                        # Export AI outputs as CSV with currency code (for Human Review dropdown)
-            ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+            # ---- Download button (keep your large button style) ----
+            ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
             out_name = f"ai-appraisal-outputs-{ts}-{st.session_state['currency_code']}.csv"
             csv_data = merged_df.to_csv(index=False).encode("utf-8")
 
-            # Correct CSS selector for Streamlit's download button
             st.markdown("""
             <style>
             div[data-testid="stDownloadButton"] button {
@@ -1685,7 +1988,6 @@ with tab_run:
             </style>
             """, unsafe_allow_html=True)
 
-            # Styled large download button
             st.download_button(
                 "⬇️ Download AI Outputs For Human Review (CSV)",
                 csv_data,
@@ -1693,11 +1995,41 @@ with tab_run:
                 mime="text/csv",
                 use_container_width=True
             )
+            
+            # ✅ CREATE TRAINING LABEL (Stage C → Stage F)
+            train_df = merged_df.copy()
+
+            # 1) Default probability → binary label
+            if "default_probability" in train_df.columns:
+                train_df["label"] = (train_df["default_probability"] >= 0.5).astype(int)
+
+            # 2) Fallback: use score column if exists
+            elif "score" in train_df.columns:
+                train_df["label"] = (train_df["score"] >= 0.5).astype(int)
+
+            # 3) Final fallback to avoid Stage F crash
+            else:
+                train_df["label"] = 0
+
+            # ✅ SAVE FOR TRAINING PIPELINE
+            try:
+                st.session_state["credit_train_df"] = train_df.copy()
+                st.success("✅ Stage C dataset prepared and saved for Stage F (training).")
+            except Exception as e:
+                st.error(f"Could not save training dataset for Stage F: {e}")
+
+            
+            # ✅ SAVE OUTPUT FOR STAGE F (Training)
+            try:
+                #st.session_state["credit_train_df"] = scored_df.copy()
+                st.session_state["credit_train_df"] = merged_df.copy()
+
+                st.success("✅ Stage C output saved for Stage F (training).")
+            except Exception as e:
+                st.error(f"Could not save Stage C dataset for training: {e}")
 
         except Exception as e:
             st.exception(e)
-
-
 
     # Re-download quick section
     if st.session_state.get("last_run_id"):
@@ -1876,7 +2208,6 @@ with tab_review:
                     ]
                     styled_df = mismatched[show_cols].style.apply(highlight_disagreement, axis=1)
                     st.dataframe(styled_df, use_container_width=True, height=420)
-
                 else:
                     st.success("✅ Full agreement — no human-AI mismatches found.")
 
@@ -1885,7 +2216,7 @@ with tab_review:
         # Export review CSV (manual loop into training)
         st.markdown("#### 3) Export Human review CSV for Next Step : Training and loopback ")
         model_used = "production"  # if you track specific model names, set it here
-        ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
         safe_user = st.session_state["user_info"]["name"].replace(" ", "").lower()
         review_name = f"creditappraisal.{safe_user}.{model_used}.{ts}.csv"
         csv_bytes = edited.to_csv(index=False).encode("utf-8")
@@ -1893,96 +2224,765 @@ with tab_review:
         st.caption(f"Saved file name pattern: **{review_name}**")
 
 
-# ─────────────────────────────────────────────
-# 🔁 TAB 5 — Training (Feedback → Retrain)
+# -------------------------------------------------------------
+# ✅ STAGE 5 — Credit Model Training (Executive Dashboard)
+# -------------------------------------------------------------
 with tab_train:
-    st.subheader("🔁 From Human Feedback CSV → Train and Promote Trained Model to Production Model ")
+    import os, json, glob, shutil, zipfile
+    from datetime import datetime, timezone
+    from pathlib import Path
+    import numpy as np
+    import pandas as pd
+    import plotly.express as px
+    import plotly.graph_objects as go
 
-    st.markdown("**Drag & drop** one or more review CSVs exported from the Human Review tab.")
-    up_list = st.file_uploader("Upload feedback CSV(s)", type=["csv"], accept_multiple_files=True, key="train_feedback_uploader")
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import (
+        roc_auc_score, accuracy_score, precision_score, 
+        recall_score, f1_score, confusion_matrix
+    )
 
-    staged_paths: List[str] = []
-    if up_list:
-        for up in up_list:
-            # stage to tmp_feedback dir
-            dest = os.path.join(TMP_FEEDBACK_DIR, up.name)
-            with open(dest, "wb") as f:
-                f.write(up.getvalue())
-            staged_paths.append(dest)
-        st.success(f"Staged {len(staged_paths)} feedback file(s) to {TMP_FEEDBACK_DIR}")
-        st.write(staged_paths)
+    import joblib
+    import streamlit as st
 
-    st.markdown("#### Launch Retrain")
-    payload = {
-        "feedback_csvs": staged_paths,
-        "user_name": st.session_state["user_info"]["name"],
-        "agent_name": "credit_appraisal",
-        "algo_name": "credit_lr",
-    }
-    st.code(json.dumps(payload, indent=2), language="json")
-
-    colA, colB = st.columns([1,1])
-    with colA:
-        if st.button("🚀 Train candidate model"):
-            try:
-                r = requests.post(f"{API_URL}/v1/training/train", json=payload, timeout=90)
-                if r.ok:
-                    st.success(r.json())
-                    st.session_state["last_train_job"] = r.json().get("job_id")
-                else:
-                    st.error(r.text)
-            except Exception as e:
-                st.error(f"Train failed: {e}")
-    with colB:
-        if st.button("⬆️ Promote last candidate to PRODUCTION"):
-            try:
-                r = requests.post(f"{API_URL}/v1/training/promote", timeout=30)
-                st.write(r.json() if r.ok else r.text)
-            except Exception as e:
-                st.error(f"Promote failed: {e}")
-
-    st.markdown("---")
-    st.markdown("#### Production Model")
-    try:
-        resp = requests.get(f"{API_URL}/v1/training/production_meta", timeout=5)
-        if resp.ok:
-            st.json(resp.json())
-        else:
-            st.info("No production model yet.")
-    except Exception as e:
-        st.warning(f"Could not load production meta: {e}")
-
-
-      # 🔁 Loopback Section (Real functional button)
-
-    st.markdown("---")
-
-    # ─────────────────────────────────────────────
-    # 🔁 Loopback Section — Go back to Step 3
-    # ─────────────────────────────────────────────
-    st.markdown("---")
-    st.markdown("### 💳 Loop back to Step 3 — Credit Appraisal Agent")
-    st.caption("After retraining, return to the Credit Appraisal tab and use your new production model.")
-
+    # ---------------------------------------------------------
+    # ✅ HEADER
+    # ---------------------------------------------------------
     st.markdown("""
-    <a href="#credit-appraisal-stage" target="_self">
-        <button style="
-            background-color:#2563eb;
-            color:white;
-            border:none;
-            border-radius:8px;
-            padding:12px 24px;
-            font-size:16px;
-            font-weight:600;
-            cursor:pointer;
-            width:100%;
-            box-shadow:0px 0px 6px rgba(37,99,235,0.5);
-        ">⬅️ Go Back to Step 3 and Use New Model</button>
-    </a>
+    <h2>🧠 Stage 5 — Credit Model Training</h2>
+    <p style='font-size:1.1rem'>
+    Train → Compare → Evaluate → Promote<br>
+    Build a robust, regulator-friendly credit scoring model.
+    </p>
     """, unsafe_allow_html=True)
 
+    # ---------------------------------------------------------
+    # ✅ LOAD TRAINING DATA (from Stage C)
+    # ---------------------------------------------------------
+    train_df = st.session_state.get("credit_train_df")
+
+    if train_df is None or train_df.empty:
+        st.error("⚠️ Missing training dataset. Please run Stage C first.")
+        st.stop()
+
+    st.success(f"✅ Training dataset detected with {len(train_df):,} rows.")
+    st.dataframe(train_df.head(), use_container_width=True)
+
+    st.markdown("---")
+
+    # ---------------------------------------------------------
+    # ✅ TRAINING DATA LOADING (Human feedback OR CSV upload)
+    # ---------------------------------------------------------
+    st.markdown("### 📥 Stage 5 Training Data Input")
+
+    train_df = None
+    source_label = None
+
+    # ✅ Option A — Human Review Stage output is available
+    if "credit_human_review_df" in st.session_state:
+        df_human = st.session_state.get("credit_human_review_df")
+        if isinstance(df_human, pd.DataFrame) and not df_human.empty:
+            train_df = df_human.copy()
+            source_label = "Human Review Stage (Session State)"
+
+    # ✅ Option B — Model Inference Stage C merged_df output (fallback)
+    elif "credit_train_df" in st.session_state:
+        df_auto = st.session_state.get("credit_train_df")
+        if isinstance(df_auto, pd.DataFrame) and not df_auto.empty:
+            train_df = df_auto.copy()
+            source_label = "Stage C auto-saved dataset"
+
+    
+    # ✅ Option C — User uploads CSV manually
+    uploaded = st.file_uploader("Upload training CSV (optional)", type=["csv"])
+
+    if uploaded is not None:
+        try:
+            train_df = pd.read_csv(uploaded)
+            source_label = f"Uploaded CSV ({len(train_df)} rows)"
+        except Exception as e:
+            st.error(f"❌ Could not read uploaded CSV: {e}")
+
+    # ✅ Hard stop if no dataset is available
+    if train_df is None or train_df.empty:
+        st.error("""
+        ❌ No training data found.
+
+        ✅ Provide training dataset by:
+        • Completing Human Review Stage (Stage D)  
+        • OR uploading a CSV here  
+        • OR enabling Stage C to save merged output  
+        """)
+        st.stop()
+    
+
+
+    # ✅ Show dataset preview + source
+    st.success(f"✅ Training dataset loaded from: **{source_label}**")
+    st.dataframe(train_df.head(), use_container_width=True)
+
+    st.markdown("---")
+
+ 
+    # ---------------------------------------------------------
+    # ✅ MODEL SELECTION
+    # ---------------------------------------------------------
+    st.subheader("🤖 Choose training model")
+
+    model_choice = st.selectbox(
+        "Select model:",
+        ["LogisticRegression", "RandomForest", "LightGBM", "XGBoost"]
+    )
+
+    # ---------------------------------------------------------
+    # ✅ Smart Target Auto-Detection (BEFORE training)
+    # ---------------------------------------------------------
+    def detect_best_target(df):
+        """
+        Smart target auto-detection for credit scoring.
+        Priority:
+        1) AI numeric scores
+        2) human decisions
+        3) any suitable numeric predictive column
+        """
+
+        score_candidates = [
+            "score", "default_probability", "risk_score",
+            "pd", "probability_default"
+        ]
+
+        # ✅ 1. Direct AI numeric score column
+        for col in score_candidates:
+            if col in df.columns:
+                return col, "numeric_score"
+
+        # ✅ 2. Human decision labels
+        decision_candidates = ["human_decision", "final_decision", "decision"]
+
+        for col in decision_candidates:
+            if col in df.columns:
+                vals = df[col].dropna().astype(str).str.lower().unique()
+                if any(v in ["approved", "rejected"] for v in vals):
+                    return col, "decision_label"
+
+        # ✅ 3. Numeric fallback
+        numeric_cols = df.select_dtypes(include=["number"]).columns.tolist()
+
+        # exclude leakage columns
+        blacklist = ["loan_amount", "requested_amount", "income", "assets_owned"]
+        numeric_cols = [c for c in numeric_cols if c not in blacklist]
+
+        if numeric_cols:
+            return numeric_cols[0], "numeric_fallback"
+
+        return None, "none"
+
+
+    # ---------------------------------------------------------
+    # ✅ TRAINING LOGIC
+    # ---------------------------------------------------------
+    if st.button("🚀 Train Credit Model Now"):
+        with st.spinner("Training model…"):
+
+            # ✅ Smart Target Detection
+            TARGET_COL, target_mode = detect_best_target(train_df)
+
+            if TARGET_COL is None:
+                st.error("❌ No suitable target column found in dataset.")
+                st.stop()
+
+            st.success(f"✅ Selected target: **{TARGET_COL}** ({target_mode})")
+
+            # ✅ Clean and prepare target
+            y_cont = pd.to_numeric(train_df[TARGET_COL], errors="coerce")
+            df_clean = train_df.dropna(subset=[TARGET_COL]).copy()
+            y_cont = df_clean[TARGET_COL].astype(float)
+
+            # ---------------------------------------------------------
+            # ✅ MODE 1: DECISION LABEL (approved / rejected → 1/0)
+            # ---------------------------------------------------------
+            if target_mode == "decision_label":
+                y_bin = df_clean[TARGET_COL].astype(str).str.lower().map({
+                    "approved": 1,
+                    "rejected": 0
+                })
+                st.info("✅ Using human decisions converted to binary 0/1")
+
+            # ---------------------------------------------------------
+            # ✅ MODE 2 & 3: NUMERIC TARGET → BINARIZE USING MEDIAN
+            # ---------------------------------------------------------
+            else:
+                threshold = float(y_cont.median())
+                y_bin = (y_cont >= threshold).astype(int)
+                st.info(f"✅ Numeric target → auto-threshold = {threshold:.4f}")
+
+            # ---------------------------------------------------------
+            # ✅ FEATURE SELECTION — remove target + leakage
+            # ---------------------------------------------------------
+            LEAKAGE_COLS = [
+                TARGET_COL,
+                "decision", "confidence",
+                "top_feature", "explanation",
+                "proposed_loan_option", "proposed_consolidation_loan",
+                "rule_reasons"
+            ]
+
+            X = df_clean.drop(columns=[c for c in LEAKAGE_COLS if c in df_clean.columns])
+            
+            
+            # ---------------------------------------------------------
+            # ✅ Encode non-numeric columns for ML training
+            # ---------------------------------------------------------
+            X = X.copy()  # safe copy
+
+            # Detect non-numeric columns
+            non_numeric_cols = X.select_dtypes(include=["object"]).columns.tolist()
+
+            if non_numeric_cols:
+                st.warning(f"Encoding non-numeric columns: {non_numeric_cols}")
+
+                # ✅ Safe label encoding for LightGBM / RF / XGB / LR
+                from sklearn.preprocessing import LabelEncoder
+
+                for col in non_numeric_cols:
+                    try:
+                        le = LabelEncoder()
+                        X[col] = le.fit_transform(X[col].astype(str))
+                    except Exception as e:
+                        st.error(f"❌ Failed to encode column '{col}': {e}")
+                        st.stop()
+
+
+            # ---------------------------------------------------------
+            # ✅ TRAIN/TEST SPLIT
+            # ---------------------------------------------------------
+            from sklearn.model_selection import train_test_split
+            Xtr, Xte, ytr, yte = train_test_split(
+                X, y_bin, test_size=0.2, random_state=42
+            )
+
+            # ---------------------------------------------------------
+            # ✅ MODEL SELECTION AND TRAINING
+            # ---------------------------------------------------------
+            if model_choice == "LogisticRegression":
+                from sklearn.linear_model import LogisticRegression
+                model = LogisticRegression(max_iter=2000)
+
+                model = LogisticRegression(max_iter=2000)
+            elif model_choice == "RandomForest":
+                from sklearn.ensemble import RandomForestClassifier
+                model = RandomForestClassifier(n_estimators=300)
+
+                model = RandomForestClassifier(n_estimators=300)
+            elif model_choice == "LightGBM":
+                from lightgbm import LGBMClassifier
+                model = LGBMClassifier()
+
+                model = LGBMClassifier()
+            else:
+                from xgboost import XGBClassifier
+
+                model = XGBClassifier()
+
+            model.fit(Xtr, ytr)
+
+            # ---------------------------------------------------------
+            # ✅ PREDICTIONS & METRICS
+            # ---------------------------------------------------------
+            preds_proba = model.predict_proba(Xte)[:, 1]
+            preds = (preds_proba >= 0.5).astype(int)
+
+            from sklearn.metrics import (
+                roc_auc_score, accuracy_score, precision_score,
+                recall_score, f1_score
+            )
+
+            metrics = {
+                "AUC": roc_auc_score(yte, preds_proba),
+                "Accuracy": accuracy_score(yte, preds),
+                "Precision": precision_score(yte, preds),
+                "Recall": recall_score(yte, preds),
+                "F1": f1_score(yte, preds),
+            }
+
+            st.success("✅ Model trained successfully!")
+            st.json(metrics)
+
+        
+    
+            # -----------------------------------------------------
+            # ✅ LOAD PRODUCTION BASELINE IF EXISTS
+            # -----------------------------------------------------
+            PROD_DIR = Path("./agents/credit_appraisal/models/production")
+            prod_meta_path = PROD_DIR / "production_meta.json"
+            if prod_meta_path.exists():
+                prod_m = json.load(open(prod_meta_path))["metrics"]
+            else:
+                prod_m = None
+
+            st.markdown("---")
+            st.subheader("📊 A/B Model Comparison")
+
+            # ✅ COMPARISON TABLE
+            cmp_df = pd.DataFrame({
+                "Metric": list(metrics.keys()),
+                "New Model": [f"{v:.4f}" for v in metrics.values()],
+                "Production": [
+                    f"{prod_m[k]:.4f}" if prod_m else "—"
+                    for k in metrics.keys()
+                ]
+            })
+            st.table(cmp_df)
+
+            # -----------------------------------------------------
+            # ✅ EXECUTIVE SUMMARY (WHAT → SO WHAT → NOW WHAT)
+            # -----------------------------------------------------
+            st.markdown("## 🧭 Executive Summary (WHAT → SO WHAT → NOW WHAT)")
+
+            if prod_m:
+                auc_delta = metrics["AUC"] - prod_m["AUC"]
+                if auc_delta > 0:
+                    st.success(f"✅ Model improves **AUC by {auc_delta:.4f}** — better discrimination.")
+                else:
+                    st.warning(f"⚠️ AUC dropped by {auc_delta:.4f} — further tuning required.")
+            else:
+                st.info("🟢 First model — will become baseline.")
+
+            # -----------------------------------------------------
+            # ✅ CONFUSION MATRIX
+            # -----------------------------------------------------
+            cm = confusion_matrix(yte, preds)
+            cm_fig = px.imshow(
+                cm, text_auto=True,
+                title="Confusion Matrix",
+                labels={"x": "Predicted", "y": "Actual"}
+            )
+            st.plotly_chart(cm_fig, use_container_width=True)
+
+            # -----------------------------------------------------
+            # ✅ FEATURE IMPORTANCE
+            # -----------------------------------------------------
+            st.subheader("🧠 Feature Importance")
+            if hasattr(model, "feature_importances_"):
+                imp = pd.DataFrame({"feature": X.columns, "importance": model.feature_importances_}).sort_values(
+                    "importance", ascending=False
+                )
+                st.bar_chart(imp.set_index("feature"))
+            elif hasattr(model, "coef_"):
+                coef = pd.DataFrame({"feature": X.columns, "coef": np.ravel(model.coef_)}).sort_values(
+                    "coef", key=np.abs, ascending=False
+                )
+                st.bar_chart(coef.set_index("feature"))
+            else:
+                st.info("This model does not expose importance metrics.")
+
+            # -----------------------------------------------------
+            # ✅ SAVE MODEL
+            # -----------------------------------------------------
+            TRAINED_DIR = Path("./agents/credit_appraisal/models/trained")
+            TRAINED_DIR.mkdir(parents=True, exist_ok=True)
+
+            ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+            model_path = TRAINED_DIR / f"{model_choice}_{ts}.joblib"
+            joblib.dump(model, model_path)
+            st.success(f"✅ Model saved → `{model_path}`")
+
+            # ✅ SAVE REPORT
+            RUNS_DIR = Path("./.tmp_runs")
+            RUNS_DIR.mkdir(exist_ok=True)
+
+            report = {
+                "timestamp": ts,
+                "model_choice": model_choice,
+                "metrics": metrics,
+                "model_path": str(model_path),
+                "features": list(X.columns),
+                "threshold": threshold,
+            }
+
+            rep_path = RUNS_DIR / f"credit_training_report_{ts}.json"
+            json.dump(report, open(rep_path, "w"), indent=2)
+
+            # store for next stage
+            st.session_state["credit_last_model_path"] = str(model_path)
+            st.session_state["credit_last_metrics"] = metrics
+            st.session_state["credit_last_report"] = report
+
+            st.caption(f"📄 Report saved → `{rep_path}`")
+
+            # -----------------------------------------------------
+            # ✅ PROMOTION BLOCK
+            # -----------------------------------------------------
+            st.markdown("## 📤 Promote This Model to Production")
+            if st.button("✅ Promote to Production"):
+                try:
+                    PROD_DIR.mkdir(parents=True, exist_ok=True)
+                    shutil.copy(model_path, PROD_DIR / "model.joblib")
+                    meta = {
+                        "promoted_at": datetime.now(timezone.utc).isoformat(),
+                        "metrics": metrics,
+                        "model_path": str(model_path),
+                        "model_choice": model_choice,
+                    }
+                    json.dump(meta, open(PROD_DIR / "production_meta.json", "w"), indent=2)
+                    st.balloons()
+                    st.success("✅ Model promoted successfully!")
+                except Exception as e:
+                    st.error(f"❌ Promotion failed: {e}")
+
+            # -----------------------------------------------------
+            # ✅ EXPORT ZIP
+            # -----------------------------------------------------
+            st.markdown("## 📦 Export Project ZIP")
+            EXPORT_DIR = Path("./exports")
+            EXPORT_DIR.mkdir(exist_ok=True)
+            zip_name = f"credit_project_bundle_{ts}.zip"
+            zip_path = EXPORT_DIR / zip_name
+
+            if st.button("⬇️ Build ZIP Bundle"):
+                try:
+                    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+
+                        # Runs
+                        for root, dirs, files in os.walk(RUNS_DIR):
+                            for f in files:
+                                full = os.path.join(root, f)
+                                arc = os.path.relpath(full, RUNS_PATH)
+                                zf.write(full, f"runs/{arc}")
+
+                        # Production models
+                        if PROD_DIR.exists():
+                            for f in PROD_DIR.glob("*"):
+                                zf.write(f, f"production/{f.name}")
+
+                        # Trained models
+                        for f in TRAINED_DIR.glob("*.joblib"):
+                            zf.write(f, f"trained/{f.name}")
+
+                        # Training report
+                        zf.write(rep_path, "training_report.json")
+
+                    st.success("✅ ZIP created!")
+                    with open(zip_path, "rb") as fp:
+                        st.download_button(
+                            "⬇️ Download ZIP",
+                            data=fp,
+                            file_name=zip_name,
+                            mime="application/zip",
+                            use_container_width=True
+                        )
+                except Exception as e:
+                    st.error(f"❌ ZIP creation failed: {e}")
+
+
+# -------------------------------------------------------------
+# ✅ STAGE 6 — Deployment of Credit Scoring Model
+# -------------------------------------------------------------
+with tab_deploy:
+    import os, json, shutil, zipfile
+    from pathlib import Path
+    from datetime import datetime, timezone
+
+    st.markdown("## 🚀 Stage G — Model Deployment")
+    st.caption("Promote trained model → publish → export deployment bundle")
+
+    last_model = st.session_state.get("credit_last_model_path")
+    metrics = st.session_state.get("credit_last_metrics")
+    report = st.session_state.get("credit_last_report")
+
+    if not last_model:
+        st.warning("⚠️ Train a model in Stage F before deploying.")
+        st.stop()
+
+    st.success(f"✅ Latest trained model detected:\n`{last_model}`")
+    st.json(metrics)
+
+    # ---------------------------------------------------------
+    # ✅ Promote to production
+    # ---------------------------------------------------------
+    if st.button("✅ Promote This Model to Production"):
+        prod_dir = Path("./agents/credit_appraisal/models/production")
+        prod_dir.mkdir(parents=True, exist_ok=True)
+
+        shutil.copy(last_model, prod_dir / "model.joblib")
+
+        prod_meta = {
+            "model_path": last_model,
+            "promoted_at": datetime.now(timezone.utc).isoformat(),
+            "metrics": metrics,
+            "report": report,
+        }
+        json.dump(prod_meta, open(prod_dir / "production_meta.json", "w"), indent=2)
+
+        st.balloons()
+        st.success("✅ Model promoted to production successfully!")
+
+    # ---------------------------------------------------------
+    # ✅ Export deployment ZIP
+    # ---------------------------------------------------------
+    EXPORT_DIR = Path("./exports")
+    EXPORT_DIR.mkdir(exist_ok=True)
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+
+    if st.button("⬇️ Export Deployment Bundle"):
+        zip_path = EXPORT_DIR / f"credit_deployment_{ts}.zip"
+        with zipfile.ZipFile(zip_path, "w") as zf:
+            zf.write(last_model, arcname="trained_model.joblib")
+            zf.write("./agents/credit_appraisal/models/production/production_meta.json",
+                     arcname="production_meta.json")
+
+        with open(zip_path, "rb") as f:
+            st.download_button(
+                "⬇️ Download Deployment ZIP",
+                data=f,
+                file_name=zip_path.name,
+                mime="application/zip",
+            )
+        st.success("✅ Deployment bundle ready!")
+
+
+# -------------------------------------------------------------
+# ✅ STAGE 7 — Reporting & Handoff
+# -------------------------------------------------------------
+with tab_handoff:
+    import os, json, zipfile
+    import numpy as np
+    import pandas as pd
+    from pathlib import Path
+    from datetime import datetime, timezone
+    import streamlit as st
+    import plotly.express as px
+
+    st.markdown("## 📊 Stage 7 — Portfolio Reporting & Handoff")
+
+    # 1) Primary: dataset saved by Stage C/E
+    df = st.session_state.get("credit_scored_df")
+
+    # 2) Fallback: Stage C merged output
+    if df is None or df.empty:
+        df = st.session_state.get("last_merged_df")
+
+    # 3) Optional: user upload
+    uploaded_scored = st.file_uploader(
+        "⬆️ (Optional) Load scored CSV for reporting",
+        type=["csv"], key="stage7_upload"
+    )
+    if uploaded_scored is not None:
+        try:
+            df = pd.read_csv(uploaded_scored)
+            st.success(f"Loaded scored dataset from upload ({len(df)} rows).")
+        except Exception as e:
+            st.error(f"Could not read uploaded CSV: {e}")
+
+    # Final guard
+    if df is None or df.empty:
+        st.warning("⚠️ Missing scored dataset. Run Stage 3 (Credit appraisal) or upload a scored CSV above.")
+        st.stop()
+
+    st.session_state["credit_scored_df"] = df.copy()
+
+    st.success("✅ Portfolio loaded.")
+    st.dataframe(df.head(), use_container_width=True)
+
+    # … (keep the rest of Stage 7: metrics, charts, handoff CSV/ZIP) …
+
+
+    # ---------------------------------------------------------
+    # ✅ Executive dashboard
+    # ---------------------------------------------------------
+    st.markdown("### 🧭 Executive Summary")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total Applications", len(df))
+    with col2:
+        st.metric("Approved", (df["decision"] == "approve").sum())
+    with col3:
+        st.metric("Rejected", (df["decision"] == "reject").sum())
+
+    # # ---------------------------------------------------------
+    # # ✅ Approval distribution
+    # # ---------------------------------------------------------
+    # # st.markdown("### 📈 Approval Distribution")
+    # # fig = px.histogram(df, x="decision", color="decision", title="Approval vs Rejection")
+    # # st.plotly_chart(fig, use_container_width=True)
+    # fig = px.histogram(
+    # df, x="decision", color="decision",
+    # color_discrete_sequence=PALETTE,
+    # title="Approval vs Rejection"
+    # )
+    # fig = apply_dark(fig)
+    # fig.update_traces(marker_line_width=0.5)
+    # fig.update_xaxes(title=None, gridcolor="rgba(255,255,255,0.08)")
+    # fig.update_yaxes(gridcolor="rgba(255,255,255,0.08)")
+    # st.plotly_chart(fig, use_container_width=True)
+
+    # ---------------------------------------------------------
+    # ✅ Approval distribution (robust to 0/1, strings, themes)
+    # ---------------------------------------------------------
+    st.markdown("### 📈 Approval Distribution")
+
+    # 1) Normalize labels
+    if "decision" not in df.columns:
+        st.info("No 'decision' column found; skipping approval chart.")
+    else:
+        vals = df["decision"]
+
+        def to_label(v):
+            if isinstance(v, str):
+                s = v.strip().lower()
+                if s in ("approve", "approved", "yes", "y", "1", "true"):
+                    return "approve"
+                if s in ("reject", "rejected", "no", "n", "0", "false"):
+                    return "reject"
+                return s or "unknown"
+            try:
+                return "approve" if float(v) >= 1 else "reject"
+            except Exception:
+                return "unknown"
+
+        df = df.copy()
+        df["decision_label"] = vals.map(to_label).fillna("unknown")
+
+        # 2) Safe color map (must be a LIST → map to dict)
+        palette = px.colors.qualitative.Set2  # e.g., ['#66c2a5', '#fc8d62', ...]
+        color_map = {
+            "approve": palette[0] if len(palette) > 0 else "#22c55e",
+            "reject":  palette[1] if len(palette) > 1 else "#ef4444",
+            "unknown": palette[2] if len(palette) > 2 else "#94a3b8",
+        }
+
+        # 3) Fixed category order for readability
+        categories = ["approve", "reject", "unknown"]
+
+        fig = px.histogram(
+            df,
+            x="decision_label",
+            color="decision_label",
+            category_orders={"decision_label": categories},
+            color_discrete_map=color_map,
+            title="Approval vs Rejection",
+        )
+        fig.update_layout(
+            legend_title_text="Decision",
+            bargap=0.2,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font_color=("#e2e8f0" if st.session_state.get("theme", "dark") == "dark" else "#0f172a"),
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+
+    # ---------------------------------------------------------
+    # ✅ Department Handoff: Credit / Risk / Compliance / CS
+    # ---------------------------------------------------------
+    st.markdown("## 🏦 Department Handoff Packages")
+    
+    # ---------- helpers ----------
+    def pick(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
+        """Return df with only columns that actually exist (no KeyError)."""
+        keep = [c for c in cols if c in df.columns]
+        return df[keep].copy()
+
+    # ---------- ensure 'reason' exists ----------
+    if "reason" not in df.columns:
+        if "explanation" in df.columns:
+            df["reason"] = df["explanation"].astype(str).str.slice(0, 200)
+        elif {"pd", "dti", "ltv"}.issubset(df.columns) or "score" in df.columns:
+            def infer_reason(row):
+                try:
+                    if float(row.get("pd", 0)) >= 0.15:
+                        return "High probability of default"
+                    if float(row.get("dti", 0)) >= 0.5:
+                        return "High debt-to-income"
+                    if float(row.get("ltv", 0)) >= 0.8:
+                        return "High loan-to-value"
+                    if float(row.get("score", 999)) < 600:
+                        return "Low credit score"
+                except Exception:
+                    pass
+                return "Policy/Other"
+            df["reason"] = df.apply(infer_reason, axis=1)
+        else:
+            df["reason"] = ""
+
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    HANDOFF_DIR = Path("./credit_handoff")
+    ZIP_DIR = HANDOFF_DIR / "zips"
+    HANDOFF_DIR.mkdir(exist_ok=True)
+    ZIP_DIR.mkdir(exist_ok=True)
+    
+    credit = pick(df, ["application_id","score","decision","reason","income","loan_amount"])
+    risk = pick(df, ["application_id","score","pd","ltv","dti","decision"])
+    compliance = pick(df, ["application_id","account_age","delinquencies","fraud_flag","decision"])
+    customer = pick(df, ["application_id","score","decision","explanation","reason"])
+
+
+    # credit = df[["application_id","score","decision","reason","income","loan_amount"]]
+    # risk = df[["application_id","score","pd","ltv","dti","decision"]]
+    # compliance = df[["application_id","account_age","delinquencies","fraud_flag","decision"]]
+    # customer = df[["application_id","score","decision","explanation"]]
+
+    paths = {
+        "credit": HANDOFF_DIR / f"credit_{ts}.csv",
+        "risk": HANDOFF_DIR / f"risk_{ts}.csv",
+        "compliance": HANDOFF_DIR / f"compliance_{ts}.csv",
+        "customer": HANDOFF_DIR / f"customer_service_{ts}.csv",
+    }
+
+    # Save all
+    credit.to_csv(paths["credit"], index=False)
+    risk.to_csv(paths["risk"], index=False)
+    compliance.to_csv(paths["compliance"], index=False)
+    customer.to_csv(paths["customer"], index=False)
+
+    # ---------------------------------------------------------
+    # ✅ ZIP bundle
+    # ---------------------------------------------------------
+    zip_path = ZIP_DIR / f"credit_handoff_{ts}.zip"
+    with zipfile.ZipFile(zip_path, "w") as zf:
+        for p in paths.values():
+            zf.write(p, arcname=os.path.basename(p))
+
+    st.download_button(
+        "⬇️ Download Full Handoff ZIP",
+        data=open(zip_path, "rb").read(),
+        file_name=os.path.basename(zip_path),
+        mime="application/zip",
+        use_container_width=True,
+    )
+
+    # st.markdown("### 🧩 Department Package Map")
+    # st.json({k: list(df[list(credit.columns)].columns)})
+    st.markdown("### 🧩 Department Package Map")
+    st.json({
+        "credit":   list(credit.columns),
+        "risk":     list(risk.columns),
+        "compliance": list(compliance.columns),
+        "customer_service": list(customer.columns),
+    })
+
+    # Optional: tell user if something was missing
+    expected = {
+        "credit": ["application_id","score","decision","reason","income","loan_amount"],
+        "risk": ["application_id","score","pd","ltv","dti","decision"],
+        "compliance": ["application_id","account_age","delinquencies","fraud_flag","decision"],
+        "customer_service": ["application_id","score","decision","explanation","reason"],
+    }
+    missing_report = {
+        pkg: [c for c in expected[pkg] if c not in cols]
+        for pkg, cols in {
+            "credit": credit.columns,
+            "risk": risk.columns,
+            "compliance": compliance.columns,
+            "customer_service": customer.columns,
+        }.items()
+    }
+    if any(missing_report.values()):
+        st.info(f"Some expected columns were not present and were skipped: {missing_report}")
+
+
 # ─────────────────────────────────────────────
-# 🗣️ TAB 6 — Feedback & Feature Requests
+# 🗣️ TAB 8 — Feedback & Feature Requests
 # ─────────────────────────────────────────────
 with tab_feedback:
     st.subheader("🗣️ Share Your Feedback and Feature Ideas")
@@ -2004,8 +3004,13 @@ with tab_feedback:
             st.error(f"Could not save feedback: {e}")
 
     feedback_data = load_feedback()
+    if not feedback_data:
+        # bootstrap section names to avoid empty selectbox
+        feedback_data = {
+            "💳 Credit Appraisal Agent": {"rating": 5, "users": 1, "comments": ["Great starting point!"]},
+            "🏦 Asset Appraisal Agent": {"rating": 5, "users": 1, "comments": ["Loving the dashboard."]},
+        }
 
-    # View all current agent feedback
     st.markdown("### 💬 Current Agent Reviews & Ratings")
     for agent, fb in feedback_data.items():
         with st.expander(f"⭐ {agent} — {fb.get('rating', 0)}/5  |  👥 {fb.get('users', 0)} users"):
@@ -2015,23 +3020,10 @@ with tab_feedback:
             st.markdown("---")
 
     st.markdown("### ✍️ Submit Your Own Feedback or Feature Request")
-
     agent_choice = st.selectbox("Select Agent", list(feedback_data.keys()))
     new_comment = st.text_area("Your Comment or Feature Suggestion", placeholder="e.g. Add multi-language support for reports...")
     new_rating = st.slider("Your Rating", 1, 5, 5)
 
-    # if st.button("📨 Submit Feedback"):
-    #     if new_comment.strip():
-    #         fb = feedback_data.get(agent_choice, {"rating": 0, "users": 0, "comments": []})
-    #         fb["comments"].append(new_comment.strip())
-    #         fb["rating"] = round((fb.get("rating", 0) + new_rating) / 2, 2)
-    #         fb["users"] = fb.get("users", 0) + 1
-    #         feedback_data[agent_choice] = fb
-    #         save_feedback(feedback_data)
-    #         st.success("✅ Feedback submitted successfully!")
-    #         st.rerun()
-    #     else:
-    #         st.warning("Please enter a comment before submitting.")
     if st.button("📨 Submit Feedback"):
         if new_comment.strip():
             fb = feedback_data.get(agent_choice, {"rating": 0, "users": 0, "comments": []})
@@ -2040,13 +3032,10 @@ with tab_feedback:
             fb["users"] = fb.get("users", 0) + 1
             feedback_data[agent_choice] = fb
             save_feedback(feedback_data)
-
-            # ✅ Sync latest feedback globally
             st.session_state["feedback_data"] = feedback_data
-
-            # ✅ Force full reload so Landing updates instantly
             st.success("✅ Feedback submitted successfully!")
             st.rerun()
         else:
             st.warning("Please enter a comment before submitting.")
+
 
