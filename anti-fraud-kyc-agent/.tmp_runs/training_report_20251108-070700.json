@@ -1,0 +1,14 @@
+{
+  "timestamp": "20251108-070700",
+  "model": "Logistic Regression",
+  "gpu_profile": "CPU",
+  "source": "Stage D fraud scoring",
+  "rows": 300,
+  "metrics": {
+    "Accuracy": 0.9888888888888889,
+    "Precision": 1.0,
+    "Recall": 0.5,
+    "F1": 0.6666666666666666,
+    "ROC-AUC": 1.0
+  }
+}

@@ -105,9 +105,9 @@ def apply_theme(theme: str = "dark"):
     .stTextInput>div>div>input,
     .stSelectbox>div>div>div,
     .stNumberInput input {
-        background: #111827 !important;
-        color: #f8fafc !important;
-        border: 1px solid #1e3a8a !important;
+        background: #f8fafc !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5f5 !important;
         border-radius: 8px !important;
         padding: 6px 10px !important;
         transition: all 0.25s ease;
@@ -652,7 +652,7 @@ def render_nav_bar_app():
         if new_theme != ss["ui_theme"]:
             ss["ui_theme"] = new_theme
             apply_theme(ss["ui_theme"])
-            st.experimental_rerun()
+            st.rerun()
 
     st.markdown("---")
 
@@ -798,7 +798,8 @@ if stage == "credit_agent":
 
 
 # TABSLIST =====================================================
-    tab_input, tab_clean, tab_run, tab_review, tab_train, tab_deploy, tab_handoff, tab_feedback = st.tabs([
+    tab_howto, tab_input, tab_clean, tab_run, tab_review, tab_train, tab_deploy, tab_handoff, tab_feedback = st.tabs([
+        "📘 How-To",
         "1️⃣ 🏦 Synthetic Data Generator",
         "2️⃣ 🧹 Anonymize & Sanitize Data",
         "3️⃣ 🤖 Credit appraisal by AI assistant",
@@ -808,6 +809,33 @@ if stage == "credit_agent":
         "7️⃣ 📦 Reporting & Handoff",
         "8️⃣ 🗣️ Feedback & Feature Requests"
     ])
+
+    with tab_howto:
+        st.title("📘 How to Use This Agent")
+        st.markdown("""
+### What
+An AI-driven credit appraisal agent that evaluates borrower risk using explainable machine-learning models and policy rules.
+
+### Goal
+To help financial institutions automate loan decisioning while maintaining transparency, compliance, and human oversight.
+
+### How
+1. Upload borrower or loan data, or import datasets from Kaggle or Hugging Face.
+2. The agent cleans and anonymizes data, detects target columns, and trains predictive models (LightGBM or HF tabular).
+3. It applies business policies such as LTV, DTI, and score thresholds, generating real-time approve/reject/review decisions.
+4. Outputs include explainable model charts, confidence scores, and decision summaries.
+
+### So What (Benefits)
+- Speeds up credit decisioning from hours to seconds.
+- Reduces manual errors and human bias.
+- Provides clear, auditable AI logic for regulators.
+- Continuously learns from feedback to improve accuracy.
+
+### What Next
+1. Try it now—upload your dataset or choose a public sample.
+2. Contact our team to tailor the rules and credit policies to your needs.
+3. Once satisfied, import the trained model and decision engine into your production environment to power real-world loan approvals.
+        """)
 
 else:
     # Safe placeholders when not on the Credit Agent stage
@@ -2683,8 +2711,9 @@ with tab_deploy:
     from pathlib import Path
     from datetime import datetime, timezone
 
-    st.markdown("## 🚀 Stage G — Model Deployment")
-    st.caption("Promote trained model → publish → export deployment bundle")
+    st.title("🚀 Stage G — Deployment & Distribution")
+    st.caption("Package → Verify → Upload → Release → Distribute to Credit / Legal / Risk units.")
+
 
     last_model = st.session_state.get("credit_last_model_path")
     metrics = st.session_state.get("credit_last_metrics")
@@ -2696,7 +2725,159 @@ with tab_deploy:
 
     st.success(f"✅ Latest trained model detected:\n`{last_model}`")
     st.json(metrics)
+    
 
+    # ---------------------------------------------
+    # 1) Load the latest ZIP bundle created in Stage F
+    # ---------------------------------------------
+    st.markdown("## 📦 1) Project Package (Generated in Stage F)")
+    
+    EXPORT_DIR = Path("./exports")
+    EXPORT_DIR.mkdir(exist_ok=True)
+
+    # Find ZIP files
+    zip_files = sorted(EXPORT_DIR.glob("asset_project_bundle_*.zip"), reverse=True)
+    
+    if not zip_files:
+        st.warning("⚠️ No project ZIP found. Run Stage F and export a bundle first.")
+        st.stop()
+
+    latest_zip = zip_files[0]
+
+    st.success(f"✅ Latest bundle detected: `{latest_zip.name}`")
+    st.caption(f"Size: **{latest_zip.stat().st_size/1e6:.2f} MB**")
+    
+
+    # ---------------------------------------------
+    # 3) Upload Targets (S3 / Swift / GitHub Release)
+    # ---------------------------------------------
+    st.markdown("## ☁️ 3) Upload / Publish Package")
+
+    dest = st.radio(
+        "Choose destination",
+        ["AWS S3", "OpenStack Swift", "GitHub Release"],
+        horizontal=True
+    )
+
+    if dest == "AWS S3":
+        st.info("Upload to S3 (requires AWS credentials)")
+        bucket = st.text_input("Bucket Name", "my-ai-models")
+        key = st.text_input("Object Key", latest_zip.name)
+
+        if st.button("⬆️ Upload to S3"):
+            try:
+                import boto3
+                s3 = boto3.client("s3")
+                s3.upload_file(str(latest_zip), bucket, key)
+                st.success(f"✅ Uploaded to `s3://{bucket}/{key}`")
+            except Exception as e:
+                st.error(f"❌ Failed: {e}")
+
+    elif dest == "OpenStack Swift":
+        st.info("Upload to Swift (requires Swift credentials)")
+        container = st.text_input("Container Name", "ai-models")
+        if st.button("⬆️ Upload to Swift"):
+            try:
+                from swiftclient.service import SwiftService, SwiftUploadObject
+                with SwiftService() as swift:
+                    swift.upload(container, [SwiftUploadObject(str(latest_zip))])
+                st.success(f"✅ Uploaded to Swift container `{container}`")
+            except Exception as e:
+                st.error(f"❌ Failed: {e}")
+
+    elif dest == "GitHub Release":
+        st.info("Publish as a GitHub release asset")
+        repo = st.text_input("Repo (owner/repo)", "RackspaceAI/asset-appraisal-agent")
+        token = st.text_input("GitHub Personal Access Token", type="password")
+        tag = datetime.now().strftime("v%Y%m%d-%H%M%S")
+
+        if st.button("⬆️ Publish Release on GitHub"):
+            try:
+                headers = {
+                    "Authorization": f"token {token}",
+                    "Accept": "application/vnd.github+json",
+                }
+
+                # Create release
+                r = requests.post(
+                    f"https://api.github.com/repos/{repo}/releases",
+                    headers=headers,
+                    json={"tag_name": tag, "name": f"Release {tag}", 
+                          "body": "Automated export from Stage G"}
+                )
+                r.raise_for_status()
+
+                upload_url = r.json()["upload_url"].split("{")[0]
+
+                # Upload asset
+                with open(latest_zip, "rb") as f:
+                    ur = requests.post(
+                        f"{upload_url}?name={latest_zip.name}",
+                        headers={**headers, "Content-Type": "application/zip"},
+                        data=f,
+                    )
+                ur.raise_for_status()
+
+                st.success(f"✅ GitHub Release `{tag}` published successfully!")
+            except Exception as e:
+                st.error(f"❌ Failed: {e}")
+
+
+
+
+    # ---------------------------------------------
+    # 5) Next Steps Checklist
+    # ---------------------------------------------
+    st.markdown("## ✅ 5) Next Steps for DevOps / IT")
+
+    st.markdown("""
+    ### ✔ For Credit Underwriting
+    - Import CSV assets into the Credit Appraisal Agent  
+    - Validate LTV, confidence, breaches  
+    - Promote selected assets for loan approval  
+
+    ### ✔ For Legal & Compliance
+    - Use verification subset (ownership, encumbrances)  
+    - Run through Legal Verification Agent  
+    - Flag encumbrances & fraud paths  
+
+    ### ✔ For Risk Management
+    - Use realizable_value, condition_score, legal_penalty  
+    - Re-run LTV stress tests  
+    - Update risk dashboards monthly  
+
+    ### ✔ For DevOps / Platform Teams
+    - Push ZIP to GitHub / Swift / S3  
+    - Deploy production model into RunAI / SageMaker / OpenStack MLOps  
+    - Update production_meta.json  
+    """)
+
+    st.info("Stage G is complete — continue to Stage H for Inter-Department Handoff.")
+
+
+    # ---------------------------------------------
+    # 1) Load the latest ZIP bundle created in Stage F
+    # ---------------------------------------------
+    st.markdown("## 📦 1) Project Package (Generated in Stage F)")
+    
+    EXPORT_DIR = Path("./exports")
+    EXPORT_DIR.mkdir(exist_ok=True)
+
+    # Find ZIP files
+    zip_files = sorted(EXPORT_DIR.glob("asset_project_bundle_*.zip"), reverse=True)
+    
+    if not zip_files:
+        st.warning("⚠️ No project ZIP found. Run Stage F and export a bundle first.")
+        st.stop()
+
+    latest_zip = zip_files[0]
+
+    st.success(f"✅ Latest bundle detected: `{latest_zip.name}`")
+    st.caption(f"Size: **{latest_zip.stat().st_size/1e6:.2f} MB**")
+    
+    
+    
+    
     # ---------------------------------------------------------
     # ✅ Promote to production
     # ---------------------------------------------------------
@@ -2754,15 +2935,47 @@ with tab_handoff:
     import plotly.express as px
 
     st.markdown("## 📊 Stage 7 — Portfolio Reporting & Handoff")
+    
+    
+    # ---------------------------------------------------------
+    # ✅ Required outputs from earlier stages — MUST COME FIRST
+    # ---------------------------------------------------------
+    scored_df   = st.session_state.get("credit_scored_df")
+    policy_df   = st.session_state.get("credit_policy_df")
+    decision_df = st.session_state.get("credit_decision_df")
 
+    # Helper
+    import pandas as pd
+    def is_nonempty_df(x) -> bool:
+        return isinstance(x, pd.DataFrame) and not x.empty
+
+    missing = []
+    if not is_nonempty_df(scored_df):
+        missing.append("Stage C — Credit AI Evaluation (credit_scored_df)")
+
+    if missing:
+        st.error("⚠️ Missing required data: " + ", ".join(missing))
+        st.info("Please run the missing stages before returning to Stage H.")
+        st.stop()
+
+    # ✅ Only now is dfv allowed to be created
+    # Prefer final decision table; fall back to Stage C scored output
+    if is_nonempty_df(decision_df):
+        dfv = decision_df.copy()
+    else:
+        dfv = scored_df.copy()
+
+    # ---------------------------------------------------------
+    # ✅ Load portfolio for Stage 7 visuals/exports
     # 1) Primary: dataset saved by Stage C/E
+    # 2) Fallback: Stage C merged output (last_merged_df)
+    # 3) Optional: user upload
+    # ---------------------------------------------------------
     df = st.session_state.get("credit_scored_df")
 
-    # 2) Fallback: Stage C merged output
-    if df is None or df.empty:
+    if not is_nonempty_df(df):
         df = st.session_state.get("last_merged_df")
 
-    # 3) Optional: user upload
     uploaded_scored = st.file_uploader(
         "⬆️ (Optional) Load scored CSV for reporting",
         type=["csv"], key="stage7_upload"
@@ -2775,7 +2988,7 @@ with tab_handoff:
             st.error(f"Could not read uploaded CSV: {e}")
 
     # Final guard
-    if df is None or df.empty:
+    if not is_nonempty_df(df):
         st.warning("⚠️ Missing scored dataset. Run Stage 3 (Credit appraisal) or upload a scored CSV above.")
         st.stop()
 
@@ -2785,6 +2998,64 @@ with tab_handoff:
     st.dataframe(df.head(), use_container_width=True)
 
     # … (keep the rest of Stage 7: metrics, charts, handoff CSV/ZIP) …
+
+    
+    
+    # # ---------------------------------------------------------
+    # # ✅ Required outputs from earlier stages — MUST COME FIRST
+    # # ---------------------------------------------------------
+    # scored_df   = st.session_state.get("credit_scored_df")
+    # policy_df   = st.session_state.get("credit_policy_df")
+    # decision_df = st.session_state.get("credit_decision_df")
+
+    # missing = []
+    
+    # if scored_df is None or getattr(scored_df, "empty", True):
+    #     missing.append("Stage C — Credit AI Evaluation (credit_scored_df)")
+
+
+
+    # if missing:
+    #     st.error("⚠️ Missing required data: " + ", ".join(missing))
+    #     st.info("Please run the missing stages before returning to Stage H.")
+    #     st.stop()
+
+    # # ✅ Only now is dfv allowed to be created
+  
+    #     dfv = decision_df.copy()
+
+
+    # # 1) Primary: dataset saved by Stage C/E
+    # df = st.session_state.get("credit_scored_df")
+
+    # # 2) Fallback: Stage C merged output
+    # if df is None or df.empty:
+    #     df = st.session_state.get("last_merged_df")
+
+    # # 3) Optional: user upload
+    # uploaded_scored = st.file_uploader(
+    #     "⬆️ (Optional) Load scored CSV for reporting",
+    #     type=["csv"], key="stage7_upload"
+    # )
+    # if uploaded_scored is not None:
+    #     try:
+    #         df = pd.read_csv(uploaded_scored)
+    #         st.success(f"Loaded scored dataset from upload ({len(df)} rows).")
+    #     except Exception as e:
+    #         st.error(f"Could not read uploaded CSV: {e}")
+
+    # # Final guard
+    # if df is None or df.empty:
+    #     st.warning("⚠️ Missing scored dataset. Run Stage 3 (Credit appraisal) or upload a scored CSV above.")
+    #     st.stop()
+
+    # st.session_state["credit_scored_df"] = df.copy()
+
+    # st.success("✅ Portfolio loaded.")
+    # st.dataframe(df.head(), use_container_width=True)
+
+    # # … (keep the rest of Stage 7: metrics, charts, handoff CSV/ZIP) …
+
 
 
     # ---------------------------------------------------------
@@ -2799,22 +3070,36 @@ with tab_handoff:
     with col3:
         st.metric("Rejected", (df["decision"] == "reject").sum())
 
-    # # ---------------------------------------------------------
-    # # ✅ Approval distribution
-    # # ---------------------------------------------------------
-    # # st.markdown("### 📈 Approval Distribution")
-    # # fig = px.histogram(df, x="decision", color="decision", title="Approval vs Rejection")
-    # # st.plotly_chart(fig, use_container_width=True)
-    # fig = px.histogram(
-    # df, x="decision", color="decision",
-    # color_discrete_sequence=PALETTE,
-    # title="Approval vs Rejection"
-    # )
-    # fig = apply_dark(fig)
-    # fig.update_traces(marker_line_width=0.5)
-    # fig.update_xaxes(title=None, gridcolor="rgba(255,255,255,0.08)")
-    # fig.update_yaxes(gridcolor="rgba(255,255,255,0.08)")
-    # st.plotly_chart(fig, use_container_width=True)
+    # ---------------------------------------------------------
+    # new ✅ MARKET INSIGHTS — CITY LEVEL DISTRIBUTION
+    # ---------------------------------------------------------
+    st.markdown("### 🌍 Asset Distribution by City")
+
+    if "city" in dfv.columns:
+        fig_city = px.histogram(
+            dfv, x="city", color="status",
+            title="Asset Count per City by Status",
+            barmode="group"
+        )
+        st.plotly_chart(fig_city, use_container_width=True)
+
+    # ---------------------------------------------------------
+    # ✅ VALUE INSIGHTS — Realizable Value Curve
+    # ---------------------------------------------------------
+    st.markdown("### 💰 Value Distribution — FMV vs Realizable Value")
+
+    if "realizable_value" in dfv.columns:
+        fig_val = go.Figure()
+        fig_val.add_trace(go.Violin(y=dfv["fmv"], name="FMV", box_visible=True))
+        fig_val.add_trace(go.Violin(y=dfv["realizable_value"], name="Realizable", box_visible=True))
+        st.plotly_chart(fig_val, use_container_width=True)
+
+    # ---------------------------------------------------------
+    # ✅ FULL PORTFOLIO TABLE
+    # ---------------------------------------------------------
+    st.markdown("### 📂 Unified Portfolio (with status)")
+    st.dataframe(dfv, use_container_width=True)
+
 
     # ---------------------------------------------------------
     # ✅ Approval distribution (robust to 0/1, strings, themes)
@@ -2951,15 +3236,15 @@ with tab_handoff:
         use_container_width=True,
     )
 
+    # # st.markdown("### 🧩 Department Package Map")
+    # # st.json({k: list(df[list(credit.columns)].columns)})
     # st.markdown("### 🧩 Department Package Map")
-    # st.json({k: list(df[list(credit.columns)].columns)})
-    st.markdown("### 🧩 Department Package Map")
-    st.json({
-        "credit":   list(credit.columns),
-        "risk":     list(risk.columns),
-        "compliance": list(compliance.columns),
-        "customer_service": list(customer.columns),
-    })
+    # st.json({
+    #     "credit":   list(credit.columns),
+    #     "risk":     list(risk.columns),
+    #     "compliance": list(compliance.columns),
+    #     "customer_service": list(customer.columns),
+    # })
 
     # Optional: tell user if something was missing
     expected = {
@@ -3037,5 +3322,3 @@ with tab_feedback:
             st.rerun()
         else:
             st.warning("Please enter a comment before submitting.")
-
-

@@ -1,0 +1,18 @@
+{
+  "model_path": "logistic_regression_20251108-094154.joblib",
+  "promoted_at": "2025-11-08T09:41:54.066767",
+  "report": {
+    "timestamp": "20251108-094154",
+    "model": "Logistic Regression",
+    "gpu_profile": "CPU",
+    "source": "Stage F human feedback",
+    "rows": 8,
+    "metrics": {
+      "Accuracy": 1.0,
+      "Precision": 1.0,
+      "Recall": 1.0,
+      "F1": 1.0,
+      "ROC-AUC": 1.0
+    }
+  }
+}

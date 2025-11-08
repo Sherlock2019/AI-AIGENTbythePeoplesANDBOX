@@ -1,6 +1,6 @@
 {
-  "model_path": "agents/credit_appraisal/models/trained/LightGBM_20251107-135846.joblib",
-  "promoted_at": "2025-11-07T13:58:56.789974+00:00",
+  "model_path": "agents/credit_appraisal/models/trained/LightGBM_20251108-092405.joblib",
+  "promoted_at": "2025-11-08T09:24:18.147693+00:00",
   "metrics": {
     "AUC": 0.9348958333333333,
     "Accuracy": 0.825,
@@ -9,7 +9,7 @@
     "F1": 0.8444444444444444
   },
   "report": {
-    "timestamp": "20251107-135846",
+    "timestamp": "20251108-092405",
     "model_choice": "LightGBM",
     "metrics": {
       "AUC": 0.9348958333333333,
@@ -18,7 +18,7 @@
       "Recall": 0.7916666666666666,
       "F1": 0.8444444444444444
     },
-    "model_path": "agents/credit_appraisal/models/trained/LightGBM_20251107-135846.joblib",
+    "model_path": "agents/credit_appraisal/models/trained/LightGBM_20251108-092405.joblib",
     "features": [
       "application_id",
       "age",

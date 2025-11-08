@@ -1,0 +1,9 @@
+{
+  "timestamp": "20251107-201324",
+  "rows": 150,
+  "status": {
+    "RISKY": 137,
+    "VALIDATED": 13
+  },
+  "avg_confidence": 67.06600000000002
+}

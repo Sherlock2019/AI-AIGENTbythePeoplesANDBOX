@@ -6,11 +6,16 @@ VENV="${ROOT}/.venv"
 LOGDIR="${ROOT}/.logs"
 APIPORT="${APIPORT:-8090}"
 UIPORT="${UIPORT:-8502}"   # UI stays on 8502
+AFK_DIR="${ROOT}/anti-fraud-kyc-agent"
+AFK_REQ="${AFK_DIR}/requirements.txt"
 
 mkdir -p "${LOGDIR}" \
          "${ROOT}/services/api/.runs" \
          "${ROOT}/agents/credit_appraisal/models/production" \
          "${ROOT}/.pids"
+if [[ -d "${AFK_DIR}" ]]; then
+  mkdir -p "${AFK_DIR}/.tmp_runs"
+fi
 
 # ---------- helpers ----------
 color_echo() {
@@ -75,6 +80,11 @@ pip -V
 python -m pip install -U pip wheel
 pip install -r "${ROOT}/services/api/requirements.txt"
 pip install -r "${ROOT}/services/ui/requirements.txt"
+if [[ -f "${AFK_REQ}" ]]; then
+  pip install -r "${AFK_REQ}"
+else
+  color_echo yellow "Anti-Fraud agent requirements not found. Run fraudinst.sh if you plan to launch it."
+fi
 export PYTHONPATH="${ROOT}"
 
 # ---------- API (8090) with detailed access logs ----------

@@ -1,0 +1,140 @@
+# 📄 services/api/main.py
+from __future__ import annotations
+
+import os
+import sys
+import subprocess
+from importlib.util import find_spec
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse, JSONResponse
+
+# ───────────────────────────────────────────────
+# 🧰 Auto-check & install missing core dependencies
+# ───────────────────────────────────────────────
+REQUIRED_PKGS = [
+    "fastapi", "uvicorn", "pydantic", "datasets",
+    "huggingface_hub", "kaggle"
+]
+for pkg in REQUIRED_PKGS:
+    if find_spec(pkg) is None:
+        print(f"⚙️  Installing missing dependency: {pkg}")
+        subprocess.run([sys.executable, "-m", "pip", "install", pkg], check=False)
+
+# ───────────────────────────────────────────────
+# App metadata
+# ───────────────────────────────────────────────
+APP_NAME = "Demo Agent API"
+APP_VERSION = "1.5.1"  # bump: adds self-healing imports for FastAPI core deps
+
+# ───────────────────────────────────────────────
+# Ensure repo root importability
+# ───────────────────────────────────────────────
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if ROOT not in sys.path:
+    sys.path.append(ROOT)
+
+# ───────────────────────────────────────────────
+# FastAPI App
+# ───────────────────────────────────────────────
+app = FastAPI(
+    title=APP_NAME,
+    version=APP_VERSION,
+    description=(
+        "Credit/Asset Appraisal PoC API with Hub registry, "
+        "training, reporting, and self-healing dependency bootstrap."
+    ),
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+)
+
+# ───────────────────────────────────────────────
+# CORS Configuration
+# ───────────────────────────────────────────────
+DEFAULT_ORIGINS = [
+    "http://localhost:8501", "http://127.0.0.1:8501",
+    "http://localhost:8502", "http://127.0.0.1:8502",
+    "http://localhost:8090", "http://127.0.0.1:8090",
+    "http://localhost:3000", "http://127.0.0.1:3000",
+]
+_env = os.getenv("CORS_ALLOW_ORIGINS", "")
+origins = [o.strip() for o in _env.split(",") if o.strip()] or DEFAULT_ORIGINS
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ───────────────────────────────────────────────
+# Routers
+# ───────────────────────────────────────────────
+from services.api.routers.system import router as system_router
+from services.api.routers.agents import (
+    router as agents_router,
+    AGENT_REGISTRY,
+    _ALIAS_TO_CANON,
+)
+from services.api.routers.reports import router as reports_router
+from services.api.routers.training import router as training_router
+from services.api.routers.training_credit import router as training_credit_router
+# ───────────────────────────────────────────────
+# Hub Routers (Models / Datasets / Recommendations)
+# ───────────────────────────────────────────────
+from services.api.routers.hub import models_router
+from services.api.routers.hub import datasets_router
+from services.api.routers.hub import recommendations_router
+
+
+
+# Hub Routers (Models / Datasets / Recommendations)
+from services.api.routers.hub import (
+    models_router,
+    datasets_router,
+    recommendations_router,
+)
+
+# ───────────────────────────────────────────────
+# Router Registration
+# ───────────────────────────────────────────────
+app.include_router(system_router)
+app.include_router(agents_router)
+app.include_router(reports_router)
+app.include_router(training_router)
+app.include_router(training_credit_router)
+app.include_router(models_router.router)
+app.include_router(datasets_router.router)
+app.include_router(recommendations_router.router)
+
+# ───────────────────────────────────────────────
+# Root + Health Endpoints
+# ───────────────────────────────────────────────
+@app.get("/")
+def root():
+    """Redirect root to API docs."""
+    return RedirectResponse(url="/docs")
+
+@app.get("/health")
+def health():
+    """Basic health endpoint."""
+    return JSONResponse({"status": "ok", "version": APP_VERSION})
+
+@app.get("/v1/health")
+def health_v1():
+    """Extended diagnostics for UI probe."""
+    return JSONResponse({
+        "status": "ok",
+        "version": APP_VERSION,
+        "services": ["api"],
+        "cors_allowed": origins,
+        "agents": [meta["id"] for meta in AGENT_REGISTRY.values()],
+        "aliases": _ALIAS_TO_CANON,
+        "hub_endpoints": [
+            "/v1/hub/models",
+            "/v1/hub/datasets",
+            "/v1/hub/recommendations",
+        ],
+    })

@@ -1094,6 +1094,7 @@ def render_nav_bar_app():
         if new_theme != ss["ui_theme"]:
             ss["ui_theme"] = new_theme
             apply_theme(ss["ui_theme"])
+            st.rerun()
 
     st.markdown("---")
 
@@ -1830,18 +1831,46 @@ if ss.get("asset_logged_in") and ss.get("asset_stage") in ("asset_flow", "asset_
 
 
     # ─────────────────────────────────────────
-    # TABS (A..G) — Live tabs
+    # TABS (How-To + A..H) — Live tabs
     # ─────────────────────────────────────────
-    tabA, tabB, tabC, tabD, tabE, tabF, tabG, tabH = st.tabs([
-    "🟦 A) Intake & Evidence",
-    "🟩 B) Privacy & Features",
-    "🟨 C) Valuation & Verification",
-    "🟧 D) Policy & Decision",
-    "🟪 E) Human Review & Feedback",
-    "🟫 F) Model Training & Promotion",
-    "🟫 G) Deployment & Export 🚀",     # ✅ corrected label (was double F)
-    "⬜ H) Reporting & Handoff 🧾"      # ✅ make this Stage H
+    tabHow, tabA, tabB, tabC, tabD, tabE, tabF, tabG, tabH = st.tabs([
+        "📘 How-To",
+        "🟦 A) Intake & Evidence",
+        "🟩 B) Privacy & Features",
+        "🟨 C) Valuation & Verification",
+        "🟧 D) Policy & Decision",
+        "🟪 E) Human Review & Feedback",
+        "🟫 F) Model Training & Promotion",
+        "🟫 G) Deployment & Export 🚀",     # ✅ corrected label (was double F)
+        "⬜ H) Reporting & Handoff 🧾"      # ✅ make this Stage H
     ])
+
+    with tabHow:
+        st.title("📘 How to Use This Agent")
+        st.markdown("""
+### What
+An AI-powered agent that performs collateral and asset valuation automatically using market data, machine learning, and verification logic.
+
+### Goal
+To provide instant, data-driven, and consistent asset valuations for credit, insurance, or regulatory use.
+
+### How
+1. Import property or asset data from CSV, Kaggle, or Hugging Face sources.
+2. The agent anonymizes and enriches data, extracts geospatial and condition features, and predicts fair market value (FMV).
+3. Applies haircut and LTV policy thresholds to derive realizable value.
+4. Verifies ownership, encumbrances, and generates professional reports.
+
+### So What (Benefits)
+- Cuts appraisal turnaround from days to minutes.
+- Standardizes valuations across asset classes.
+- Increases confidence with explainable AI valuations.
+- Ensures data consistency and legal traceability.
+
+### What Next
+1. Run a test with your asset dataset or public examples.
+2. Contact our team to customize valuation rules, haircut logic, and report templates.
+3. Once validated, integrate the agent into your production credit or appraisal systems to automate end-to-end asset evaluation.
+        """)
 
 
     # Runtime tip
@@ -2804,6 +2833,7 @@ with tabC:
                 os.makedirs(production_dir, exist_ok=True)
                 prod_path = os.path.join(production_dir, "model.joblib")
                 shutil.copy2(selected_model, prod_path)
+                st.balloons()
                 st.success(f"✅ Model promoted to production: {prod_path}")
             except Exception as e:
                 st.error(f"❌ Promotion failed: {e}")
@@ -4850,65 +4880,6 @@ with tabF:
             y_pred_new=y_pred_new
         )
         
-    # ---------------------------------------------------------
-    # ✅ EXPORT: FULL PROJECT + MODELS (always works)
-    # ---------------------------------------------------------
-    st.markdown("### 📦 Export Full Project (Model + Reports + Artifacts)")
-
-    EXPORT_DIR = Path("./exports")
-    EXPORT_DIR.mkdir(exist_ok=True)
-
-    zip_name = f"asset_project_bundle_{_ts()}.zip"
-    zip_path = EXPORT_DIR / zip_name
-
-    if st.button("⬇️ Build & Download Project ZIP"):
-        try:
-            with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-                
-                # Include all run artifacts
-                for root, dirs, files in os.walk(RUNS_DIR):
-                    for f in files:
-                        full = os.path.join(root, f)
-                        arc  = os.path.relpath(full, RUNS_DIR)
-                        zf.write(full, f"runs/{arc}")
-
-                # Include production model
-                if os.path.exists("./agents/asset_appraisal/models/production"):
-                    for root, dirs, files in os.walk("./agents/asset_appraisal/models/production"):
-                        for f in files:
-                            full = os.path.join(root, f)
-                            zf.write(full, f"production_models/{f}")
-
-                # Include trained models
-                if os.path.exists("./agents/asset_appraisal/models/trained"):
-                    for root, dirs, files in os.walk("./agents/asset_appraisal/models/trained"):
-                        for f in files:
-                            full = os.path.join(root, f)
-                            zf.write(full, f"trained_models/{f}")
-
-                # Include training report (the JSON)
-                if "report" in locals():
-                    rep_path = RUNS_DIR / f"training_report_{report['timestamp']}.json"
-               
-                    if os.path.exists(rep_path):
-                        zf.write(rep_path, "training_report.json")
-
-            st.success(f"✅ Exported: {zip_name}")
-
-            # Actual download
-            with open(zip_path, "rb") as fp:
-                st.download_button(
-                    "⬇️ Download ZIP Now",
-                    data=fp,
-                    file_name=zip_name,
-                    mime="application/zip",
-                    use_container_width=True
-                )
-
-        except Exception as e:
-            st.error(f"❌ ZIP creation failed: {e}")
-
-
 # ───────────────────────────────────────────────
 # ✅ Helper functions required by Stage G
 # ───────────────────────────────────────────────
@@ -4934,14 +4905,55 @@ with tabG:
 
     st.title("🚀 Stage G — Deployment & Distribution")
     st.caption("Package → Verify → Upload → Release → Distribute to Credit / Legal / Risk units.")
+    EXPORT_DIR = Path("./exports")
+    EXPORT_DIR.mkdir(exist_ok=True)
+
+    st.markdown("## 📦 Build Project Bundle (Model + Reports + Artifacts)")
+    build_zip_name = f"asset_project_bundle_{_ts()}.zip"
+    build_zip_path = EXPORT_DIR / build_zip_name
+
+    if st.button("⬇️ Build & Download Project ZIP", key="btn_build_stage_g_zip"):
+        try:
+            with zipfile.ZipFile(build_zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+                for root, dirs, files in os.walk(RUNS_DIR):
+                    for f in files:
+                        full = os.path.join(root, f)
+                        arc = os.path.relpath(full, RUNS_DIR)
+                        zf.write(full, f"runs/{arc}")
+
+                if os.path.exists("./agents/asset_appraisal/models/production"):
+                    for root, dirs, files in os.walk("./agents/asset_appraisal/models/production"):
+                        for f in files:
+                            full = os.path.join(root, f)
+                            zf.write(full, f"production_models/{f}")
+
+                if os.path.exists("./agents/asset_appraisal/models/trained"):
+                    for root, dirs, files in os.walk("./agents/asset_appraisal/models/trained"):
+                        for f in files:
+                            full = os.path.join(root, f)
+                            zf.write(full, f"trained_models/{f}")
+
+                latest_report = sorted(Path(RUNS_DIR).glob("training_report_*.json"), reverse=True)
+                if latest_report:
+                    zf.write(latest_report[0], "training_report.json")
+
+            st.success(f"✅ Exported: {build_zip_name}")
+            with open(build_zip_path, "rb") as fp:
+                st.download_button(
+                    "⬇️ Download ZIP Now",
+                    data=fp,
+                    file_name=build_zip_name,
+                    mime="application/zip",
+                    use_container_width=True,
+                    key="btn_download_stage_g_zip",
+                )
+        except Exception as e:
+            st.error(f"❌ ZIP creation failed: {e}")
 
     # ---------------------------------------------
     # 1) Load the latest ZIP bundle created in Stage F
     # ---------------------------------------------
     st.markdown("## 📦 1) Project Package (Generated in Stage F)")
-    
-    EXPORT_DIR = Path("./exports")
-    EXPORT_DIR.mkdir(exist_ok=True)
 
     # Find ZIP files
     zip_files = sorted(EXPORT_DIR.glob("asset_project_bundle_*.zip"), reverse=True)
@@ -5120,34 +5132,7 @@ with tabH:
     st.markdown("## 🧭 Stage H — Unified Portfolio, Insights & Handoff Export")
     st.caption("Executive summary • Asset insights • Fraud/risk signals • Department deliverables")
 
-# with tabH:
-#     import os, json, zipfile
-#     from pathlib import Path
-#     from datetime import datetime, timezone
-#     import pandas as pd
-#     import numpy as np
-#     import streamlit as st
-#     import plotly.express as px
-#     import plotly.graph_objects as go
 
-#     st.markdown("## 🧭 Stage H — Unified Portfolio, Insights & Handoff Export")
-#     st.caption("Executive summary • Asset insights • Fraud/risk signals • Department deliverables")
-
-    # # ---------------------------------------------------------
-    # # ✅ Required outputs from earlier stages
-    # # ---------------------------------------------------------
-    # ai_df        = st.session_state.get("asset_ai_df")
-    # policy_df    = st.session_state.get("asset_policy_df")
-    # decision_df  = st.session_state.get("asset_decision_df")
-
-    # if ai_df is None or ai_df.empty:
-    #     st.warning("⚠️ Stage C valuation missing. Please run Stage C first.")
-    #     st.stop()
-    # if decision_df is None or decision_df.empty:
-    #     st.warning("⚠️ Stage D (risk & decision) missing. Please run Stage D first.")
-    #     st.stop()
-
-    # dfv = decision_df.copy()
     
     # ---------------------------------------------------------
     # ✅ Required outputs from earlier stages — MUST COME FIRST
@@ -5349,87 +5334,22 @@ with tabH:
     with open(audit_path, "rb") as f:
         st.download_button("⬇️ Audit Record (JSON)", f, file_name=audit_path.name, mime="application/json")
 
-    # ---------------------------
-    # ✅ FULL ZIP BUNDLE
-    # ---------------------------
-    zip_path = ZIP_DIR / f"handoff_bundle_{ts}.zip"
-    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-        for fp in [credit_path, legal_path, risk_path, cust_path, portfolio_path, audit_path]:
-            zf.write(fp, arcname=os.path.basename(fp))
+    # # ---------------------------
+    # # ✅ FULL ZIP BUNDLE
+    # # ---------------------------
+    # zip_path = ZIP_DIR / f"handoff_bundle_{ts}.zip"
+    # with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+    #     for fp in [credit_path, legal_path, risk_path, cust_path, portfolio_path, audit_path]:
+    #         zf.write(fp, arcname=os.path.basename(fp))
 
-    with open(zip_path, "rb") as f:
-        st.download_button("⬇️ Download FULL Handoff ZIP", f,
-                        file_name=zip_path.name, mime="application/zip",
-                        use_container_width=True)
+    # with open(zip_path, "rb") as f:
+    #     st.download_button("⬇️ Download FULL Handoff ZIP", f,
+    #                     file_name=zip_path.name, mime="application/zip",
+    #                     use_container_width=True)
 
     
     
-    # # ---------------------------------------------------------
-    # # ✅ HANDOFF OUTPUTS — Department-Specific Files
-    # # ---------------------------------------------------------
-    # st.markdown("## 🏦 Department Handoff Packages")
-    # st.caption("Each team receives only what they need. Clear, simple, compliant.")
-
-    # ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-    # HANDOFF_DIR = Path("./handoff")
-    # ZIP_DIR      = HANDOFF_DIR / "zips"
-    # HANDOFF_DIR.mkdir(exist_ok=True)
-    # ZIP_DIR.mkdir(exist_ok=True)
-
-    # # CREDIT APPRAISAL
-    # credit_cols = [
-    #     "application_id","asset_id","asset_type","city",
-    #     "ai_adjusted","fmv","realizable_value",
-    #     "loan_amount","ltv_ai","ltv_cap",
-    #     "decision","policy_breaches"
-    # ]
-    # credit = dfv[[c for c in credit_cols if c in dfv.columns]].copy()
-    # credit_path = HANDOFF_DIR / f"credit_appraisal_{ts}.csv"
-    # credit.to_csv(credit_path, index=False)
-
-    # # LEGAL & TITLE
-    # legal_cols = [
-    #     "application_id","asset_id","verified_owner",
-    #     "encumbrance_flag","legal_penalty","condition_score","notes"
-    # ]
-    # legal = dfv[[c for c in legal_cols if c in dfv.columns]].copy()
-    # legal_path = HANDOFF_DIR / f"legal_pack_{ts}.csv"
-    # legal.to_csv(legal_path, index=False)
-
-    # # RISK MANAGEMENT
-    # risk_cols = [
-    #     "application_id","asset_id","confidence",
-    #     "ltv_ai","ltv_cap","policy_breaches","decision","status"
-    # ]
-    # risk = dfv[[c for c in risk_cols if c in dfv.columns]].copy()
-    # risk_path = HANDOFF_DIR / f"risk_management_{ts}.csv"
-    # risk.to_csv(risk_path, index=False)
-
-    # # CUSTOMER SERVICE SUMMARY
-    # cust_cols = [
-    #     "application_id","asset_id","asset_type","city",
-    #     "fmv","ai_adjusted","decision",
-    #     "status","why"
-    # ]
-    # cust = dfv[[c for c in cust_cols if c in dfv.columns]].copy()
-    # cust_path = HANDOFF_DIR / f"customer_service_{ts}.csv"
-    # cust.to_csv(cust_path, index=False)
-
-    # # FULL PORTFOLIO
-    # portfolio_path = HANDOFF_DIR / f"portfolio_{ts}.csv"
-    # dfv.to_csv(portfolio_path, index=False)
-
-    # # AUDIT LOG
-    # audit = {
-    #     "timestamp": ts,
-    #     "rows": len(dfv),
-    #     "status": dfv["status"].value_counts().to_dict(),
-    #     "avg_confidence": float(dfv["confidence"].mean()),
-    # }
-    # audit_path = HANDOFF_DIR / f"audit_{ts}.json"
-    # with open(audit_path, "w") as f:
-    #     json.dump(audit, f, indent=2)
-
+   
     # ---------------------------------------------------------
     # ✅ ZIP bundle
     # ---------------------------------------------------------
@@ -5447,6 +5367,3 @@ with tabH:
             mime="application/zip",
             use_container_width=True
         )
-
-
-

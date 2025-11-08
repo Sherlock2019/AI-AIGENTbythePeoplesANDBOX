@@ -1,0 +1,11 @@
+{
+  "timestamp": "20251108-084406",
+  "ref": "mlg-ulb/creditcardfraud",
+  "row_limit": 1500,
+  "rows_imported": 1500,
+  "target_csv": "creditcard.csv",
+  "dest_dir": "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/anti-fraud-kyc-agent/.tmp_runs/kaggle/mlg-ulb__creditcardfraud/20251108-084406",
+  "files": [
+    "creditcard.csv"
+  ]
+}

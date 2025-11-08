@@ -1,0 +1,11 @@
+{
+  "timestamp": "20251107-192104",
+  "rows": 200,
+  "decisions": {
+    "approve": 188,
+    "denied": 12
+  },
+  "avg_score": 0.6109680000000001,
+  "avg_ltv": NaN,
+  "avg_pd": NaN
+}
