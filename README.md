@@ -158,10 +158,46 @@ from the sandbox to the furnace — this is AI by the People, for the People.
 
 🧩 CONNECT
 
+---
+
+## 🚀 Deployment Options
+
+### Render (Buildpack)
+The repo includes `render.yaml`, so you can deploy via Render’s Blueprint flow:
+1. Push your changes to a Git repo.
+2. In Render, choose **New → Blueprint** and point it at the repo URL.
+3. Render will run `pip install -r requirements.txt` and start Streamlit with:
+   ```
+   streamlit run services/ui/app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+   ```
+4. Set environment variables (e.g., `API_URL`) in the Render dashboard.
+
+### Fly.io (Docker)
+For Fly.io deployments we ship a lightweight Dockerfile plus `fly.toml`:
+```
+Dockerfile   → builds on python:3.11-slim and runs the Streamlit app on port 8080  
+fly.toml     → references that Dockerfile, sets region/env, and exposes the HTTP service
+```
+Steps:
+1. Install Fly CLI and run `fly launch --now` (or `fly deploy`) from the repo root.
+2. Fly builds the image using the Dockerfile and deploys it in the configured region.
+3. Configure secrets via `fly secrets set API_URL=...`.
+
+### Generic Docker (any cloud or VM)
+Use the same Dockerfile locally or on another platform:
+```bash
+docker build -t ai-agent-sandbox .
+docker run -p 8080:8080 \
+  -e API_URL=http://localhost:8090 \
+  ai-agent-sandbox
+```
+This runs Streamlit at `http://localhost:8080`; adjust env vars/ports as needed.
+
+With these options you can deploy the UI on Render, Fly.io, or any Docker-capable environment without extra wiring.
+
 💡 GitHub → Sherlock2019/Hugmesandbox
 
 🏢 Rackspace FAIR | AI Foundry Sandbox
 
 📧 Contact → DoanStevenTran@gmail.com
-
 
