@@ -1,3 +1,4 @@
+have this cript backup all agents realted files and list a summy at the end list of files backup per agents and  count nb :dzoan@DESKTOP-KU8613L:~/AI-AIGENTbythePeoplesANDBOX/HUGKAG$ cat backitagents.sh
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -193,6 +194,10 @@ backup_directory() {
 categorize_path() {
   local path="$1"
   case "$path" in
+    */services/ui/app.py|*/services/ui/app.*|*/services/ui/app??.py)
+      echo "app" ;;
+    */anti-fraud-kyc-agent/*|*/services/ui/pages/anti_fraud_*.py)
+      echo "anti_fraud" ;;
     */agents/credit_appraisal/*|*/services/ui/pages/*credit_*.py)
       echo "credit" ;;
     */agents/asset_appraisal/*|*/services/ui/pages/*asset_*.py)
@@ -208,6 +213,7 @@ categorize_path() {
 declare -a ALL_FILES=("${FILES[@]}" "${AGENT_DYNAMIC_FILES[@]}")
 declare -a EXISTING=()
 declare -A seen_all=()
+declare -A PLAN_COUNTS=( ["app"]=0 ["anti_fraud"]=0 ["credit"]=0 ["asset"]=0 ["common"]=0 )
 missing=0
 
 for f in "${ALL_FILES[@]}"; do
@@ -218,6 +224,8 @@ for f in "${ALL_FILES[@]}"; do
   seen_all["$f"]=1
   if [[ -f "$f" ]]; then
     EXISTING+=("$f")
+    cat_key="$(categorize_path "$f")"
+    PLAN_COUNTS["$cat_key"]=$(( PLAN_COUNTS["$cat_key"] + 1 ))
   else
     ((missing++))
     echo "  ⚠️ Missing file (skipped): $f"
@@ -233,6 +241,12 @@ echo
 if (( missing > 0 )); then
   echo "⚠️ $missing curated/dynamic file(s) were not found and will be skipped."
 fi
+echo "Planned file counts (pre-backup):"
+printf "   • App shell:    %d\n" "${PLAN_COUNTS[app]}"
+printf "   • Anti-fraud:   %d\n" "${PLAN_COUNTS[anti_fraud]}"
+printf "   • Credit agent: %d\n" "${PLAN_COUNTS[credit]}"
+printf "   • Asset agent:  %d\n" "${PLAN_COUNTS[asset]}"
+printf "   • Common:       %d\n" "${PLAN_COUNTS[common]}"
 printf "\nProceed with curated + dynamic backups and model dirs? [y/N] "
 read -r -n 1 CONFIRM
 printf "\n"
@@ -247,9 +261,13 @@ SKIPPED_COUNT=0
 COMMON_BACKUP=0
 CREDIT_BACKUP=0
 ASSET_BACKUP=0
+APP_BACKUP=0
+ANTI_BACKUP=0
 declare -a COMMON_FILES=()
 declare -a CREDIT_FILES=()
 declare -a ASSET_FILES=()
+declare -a APP_FILES=()
+declare -a ANTI_FILES=()
 
 for file in "${EXISTING[@]}"; do
   bak="${file}${BACKUP_EXT}"
@@ -266,6 +284,14 @@ for file in "${EXISTING[@]}"; do
       asset)
         ((ASSET_BACKUP++))
         ASSET_FILES+=("$file")
+        ;;
+      app)
+        ((APP_BACKUP++))
+        APP_FILES+=("$file")
+        ;;
+      anti_fraud)
+        ((ANTI_BACKUP++))
+        ANTI_FILES+=("$file")
         ;;
       *)
         ((COMMON_BACKUP++))
@@ -298,9 +324,11 @@ echo
 echo "────────────────────────────────────────────"
 echo "✅ Backup complete!"
 echo "   • Files backed up (total): $BACKUP_COUNT"
-echo "     - Common: $COMMON_BACKUP"
+echo "     - App shell:    $APP_BACKUP"
+echo "     - Anti-fraud:   $ANTI_BACKUP"
 echo "     - Credit agent: $CREDIT_BACKUP"
 echo "     - Asset agent:  $ASSET_BACKUP"
+echo "     - Common:       $COMMON_BACKUP"
 echo "   • Files skipped: $SKIPPED_COUNT"
 echo "   • Model directories copied: $MODEL_DIRS_BACKED / ${#MODEL_DIRS[@]}"
 if [[ -n "$COMMENT_CLEAN" ]]; then
@@ -309,6 +337,14 @@ fi
 echo "Backup suffix used: ${BACKUP_EXT}"
 echo
 echo "Backed up files by category:"
+echo "  - App shell (${APP_BACKUP}):"
+for appf in "${APP_FILES[@]}"; do
+  echo "      • ${appf}"
+done
+echo "  - Anti-fraud (${ANTI_BACKUP}):"
+for aff in "${ANTI_FILES[@]}"; do
+  echo "      • ${aff}"
+done
 echo "  - Credit agent (${CREDIT_BACKUP}):"
 for cpf in "${CREDIT_FILES[@]}"; do
   echo "      • ${cpf}"

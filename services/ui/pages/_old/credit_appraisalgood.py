@@ -519,7 +519,7 @@ if st.session_state.stage == "landing":
             })
         st.write(pd.DataFrame(rows).to_html(escape=False, index=False), unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>", unsafe_allow_html=True)
+    st.markdown("<footer>Made with ❤️ by DzoanNguyenTran@gmail.com — Open AIgents Sandbox Initiative</footer>", unsafe_allow_html=True)
     st.stop()
 
 # ────────────────────────────────
@@ -544,7 +544,7 @@ if st.session_state.stage == "agents":
          "Status": "🕓 Coming Soon", "Action": "—"},
     ])
     st.write(df.to_html(escape=False, index=False), unsafe_allow_html=True)
-    st.markdown("<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>", unsafe_allow_html=True)
+    st.markdown("<footer>Made with ❤️ by DzoanNguyenTran@gmail.com — Open AIgents Sandbox Initiative</footer>", unsafe_allow_html=True)
     st.stop()
 
 # ────────────────────────────────
@@ -578,7 +578,7 @@ if st.session_state.stage == "login":
             st.rerun()
         else:
             st.error("⚠️ Please fill all fields before continuing.")
-    st.markdown("<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>", unsafe_allow_html=True)
+    st.markdown("<footer>Made with ❤️ by DzoanNguyenTran@gmail.com — Open AIgents Sandbox Initiative</footer>", unsafe_allow_html=True)
     st.stop()
 
 # ────────────────────────────────

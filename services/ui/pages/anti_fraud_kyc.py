@@ -6,6 +6,15 @@ from pathlib import Path
 
 import streamlit as st
 st.set_page_config(page_title="Anti-Fraud & KYC Agent", layout="wide")
+from services.ui.components.operator_banner import render_operator_banner
+from services.ui.components.telemetry_dashboard import render_telemetry_dashboard
+from services.ui.components.feedback import render_feedback_tab
+from services.ui.theme_manager import (
+    apply_theme as apply_global_theme,
+    get_palette,
+    get_theme,
+    render_theme_toggle,
+)
 
 BASE_DIR = Path(__file__).resolve().parents[3]
 AFK_ROOT = BASE_DIR / "anti-fraud-kyc-agent"
@@ -35,31 +44,54 @@ except Exception as exc:  # pragma: no cover - guard for partial installs
 RUNS_DIR = AFK_ROOT / ".tmp_runs"
 RUNS_DIR.mkdir(exist_ok=True)
 ss = st.session_state
-ss.setdefault("afk_theme", "light")
-ss.setdefault("afk_logged_in", False)
-ss.setdefault("afk_user", {"name": "Guest"})
+ss.setdefault("stage", "agents")
+ss.setdefault("afk_logged_in", True)
+ss.setdefault("afk_user", {"name": "Operator", "email": "operator@demo.local"})
 ss.setdefault("afk_pending", 12)
 ss.setdefault("afk_flagged", 4)
 ss.setdefault("afk_avg_time", "14 min")
+ss.setdefault("afk_ai_performance", 0.91)
+ss["afk_logged_in"] = True
+if not ss["afk_user"].get("name"):
+    ss["afk_user"]["name"] = "Operator"
+
+
+def _coerce_minutes(value, fallback: float = 0.0) -> float:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        cleaned = "".join(ch for ch in value if ch.isdigit() or ch == ".")
+        try:
+            return float(cleaned)
+        except (TypeError, ValueError):
+            pass
+    return float(fallback)
+
+
+def _go_stage(target_stage: str) -> None:
+    """Navigate back to the shared app router if available."""
+    ss["stage"] = target_stage
+    try:
+        st.switch_page("app.py")
+        return
+    except Exception:
+        pass
+    try:
+        st.query_params["stage"] = target_stage
+    except Exception:
+        pass
 
 
 def _theme_css(theme: str) -> str:
-    if theme == "dark":
-        bg = "#05070d"
-        text = "#f8fafc"
-        panel = "#0f172a"
-        accent = "#60a5fa"
-        border = "rgba(99,102,241,0.4)"
-        input_bg = "#0f172a"
-        shadow = "0 20px 60px rgba(15,23,42,0.4)"
-    else:
-        bg = "#f4f6fb"
-        text = "#0f172a"
-        panel = "#ffffff"
-        accent = "#2563eb"
-        border = "rgba(59,130,246,0.25)"
-        input_bg = "#ffffff"
-        shadow = "0 20px 60px rgba(148,163,184,0.25)"
+    pal = get_palette(theme)
+    bg = pal["bg"]
+    text = pal["text"]
+    panel = pal["card"]
+    accent = pal["accent"]
+    accent_alt = pal.get("accent_alt", pal["accent"])
+    border = pal["border"]
+    input_bg = pal.get("input_bg", panel)
+    shadow = pal["shadow"]
     return f"""
     <style>
     .stApp {{
@@ -79,7 +111,7 @@ def _theme_css(theme: str) -> str:
       box-shadow: {shadow} !important;
     }}
     .stButton>button {{
-      background: linear-gradient(95deg,{accent},{border}) !important;
+      background: linear-gradient(95deg,{accent},{accent_alt}) !important;
       color: #fff !important;
       border: none !important;
     }}
@@ -115,23 +147,23 @@ def _theme_css(theme: str) -> str:
 
 
 def _apply_theme(theme: str):
+    apply_global_theme(theme)
     st.markdown(_theme_css(theme), unsafe_allow_html=True)
 
 
-def _render_theme_toggle(label: str, key: str):
-    current = ss["afk_theme"] == "dark"
-    preference = st.checkbox(label, value=current, key=key, help="Switch between light and dark themes.")
-    selected = "dark" if preference else "light"
-    if selected != ss["afk_theme"]:
-        ss["afk_theme"] = selected
-        st.rerun()
+_apply_theme(get_theme())
 
-
-_apply_theme(ss["afk_theme"])
+nav_cols = st.columns([1, 1, 4])
+with nav_cols[0]:
+    if st.button("🏠 Back to Home", key="afk_back_home"):
+        _go_stage("landing")
+with nav_cols[1]:
+    if st.button("🤖 Back to Agents", key="afk_back_agents"):
+        _go_stage("agents")
 
 if not ss["afk_logged_in"]:
     st.title("🔐 Anti-Fraud & KYC Agent Login")
-    _render_theme_toggle("🌗 Dark mode", "afk_theme_toggle_login")
+    render_theme_toggle("🌗 Dark mode", key="afk_theme_toggle_login")
     st.caption("Authenticate to orchestrate intake → KYC → fraud triage in one cockpit.")
 
     with st.form("afk_login_form"):
@@ -156,7 +188,7 @@ st.caption("Unified onboarding → privacy → verification → fraud response �
 
 _, theme_col = st.columns([5, 1])
 with theme_col:
-    _render_theme_toggle("🌗 Dark mode", "afk_theme_toggle_main")
+    render_theme_toggle("🌗 Dark mode", key="afk_theme_toggle_main")
 
 st.markdown(
     """
@@ -200,63 +232,50 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-left_col, right_col = st.columns([1.4, 1], gap="large")
-with left_col:
-    user_name = ss.get("afk_user", {}).get("name", "Guest")
-    st.markdown(
-        f"""
-        <div class='afk-hero'>
-            <h3>👤 Operator: {user_name}</h3>
-            <p>Manage digital onboarding with live KYC, privacy, policy attestation, and fraud scoring.</p>
-            <ul style='color:#a5b4fc;'>
-              <li>Collect minimal viable data → anonymize before sharing.</li>
-              <li>Run IDV + watchlist scans, then route risky cases.</li>
-              <li>Capture manual overrides to feed training + reports.</li>
-            </ul>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+afk_ai_minutes = _coerce_minutes(ss.get("afk_avg_time"), 14.0)
 
-with right_col:
-    st.markdown("<div class='afk-right-panel'>", unsafe_allow_html=True)
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown(
-            f"""
-            <div class='afk-status-card'>
-                <h4>Pending Applicants</h4>
-                <span class='value'>{ss.get('afk_pending')}</span>
-                <p style='color:#34d399;margin:0;'>+3 vs yesterday</p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-    with c2:
-        st.markdown(
-            f"""
-            <div class='afk-status-card'>
-                <h4>Flagged Cases</h4>
-                <span class='value'>{ss.get('afk_flagged')}</span>
-                <p style='color:#f87171;margin:0;'>-1 cleared</p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-    st.markdown(
-        f"""
-        <div class='afk-status-card' style='margin-top:0.8rem;'>
-            <h4>Avg Verification Time</h4>
-            <span class='value'>{ss.get('afk_avg_time')}</span>
-            <p style='color:#60a5fa;margin:0;'>-2 min vs last week</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown("</div>", unsafe_allow_html=True)
-
+render_operator_banner(
+    operator_name=ss.get("afk_user", {}).get("name", "Guest"),
+    title="Anti-Fraud & KYC Command",
+    summary="Manage digital onboarding with live KYC, privacy, policy attestation, and fraud scoring.",
+    bullets=[
+        "Collect minimal viable data → anonymize before sharing.",
+        "Run IDV + watchlist scans, then route risky cases.",
+        "Capture manual overrides to feed training + reports.",
+    ],
+    metrics=[
+        {
+            "label": "Pending Applicants",
+            "value": ss.get("afk_pending"),
+            "delta": "+3 vs yesterday",
+            "delta_color": "#34d399",
+            "color": "#34d399",
+            "percent": 0.72,
+            "context": "Human avg queue: 26",
+        },
+        {
+            "label": "Flagged Cases",
+            "value": ss.get("afk_flagged"),
+            "delta": "-1 cleared",
+            "delta_color": "#f87171",
+            "color": "#f87171",
+            "percent": 0.35,
+            "context": "Manual review avg: 7",
+        },
+        {
+            "label": "Avg Verification Time",
+            "value": ss.get("afk_avg_time") or f"{afk_ai_minutes:.0f} min",
+            "delta": "-2 min vs last week",
+            "delta_color": "#60a5fa",
+            "color": "#60a5fa",
+            "percent": min(1.0, afk_ai_minutes / 40.0),
+            "context": "AI verification cycle",
+        },
+    ],
+    icon="🛡️",
+)
 # Replace sidebar radio with tabbed workflow like asset_appraisal
-tab_guide, tab_intake, tab_privacy, tab_kyc, tab_fraud, tab_policy, tab_review, tab_train, tab_report = st.tabs([
+tab_guide, tab_intake, tab_privacy, tab_kyc, tab_fraud, tab_policy, tab_review, tab_train, tab_report, tab_feedback = st.tabs([
     "🧭 Guide",
     "A) Intake",
     "B) Privacy",
@@ -266,6 +285,7 @@ tab_guide, tab_intake, tab_privacy, tab_kyc, tab_fraud, tab_policy, tab_review, 
     "F) Human Review",
     "G) Train",
     "H) Reports",
+    "🗣️ Feedback",
 ])
 
 with tab_guide:
@@ -319,3 +339,6 @@ with tab_train:
 
 with tab_report:
     render_report_tab(ss, RUNS_DIR)
+
+with tab_feedback:
+    render_feedback_tab("🛡️ Anti-Fraud & KYC Agent")

@@ -1,0 +1,6 @@
+application_id,age,income,employment_years,debt_to_income,credit_history_length,num_delinquencies,current_loans,requested_amount,loan_term_months
+a001,34,72000,5,0.18,60,0,1,15000,36
+a002,41,95000,9,0.22,84,1,2,30000,48
+a003,29,54000,3,0.27,24,0,0,12000,24
+a004,52,120000,15,0.12,180,0,1,50000,60
+a005,38,80000,7,0.30,72,2,3,25000,36

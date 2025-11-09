@@ -20,303 +20,24 @@ import sys
 
 from pandas import json_normalize  # ADD
 
+from services.ui.theme_manager import (
+    apply_theme as apply_global_theme,
+    get_theme,
+    render_theme_toggle,
+)
+from services.ui.components.operator_banner import render_operator_banner
+from services.ui.components.telemetry_dashboard import render_telemetry_dashboard
+from services.ui.components.feedback import render_feedback_tab
 
 
 
 
 
-def apply_theme(theme: str = "dark"):
-    import streamlit as st
 
-    st.markdown("""
-    <style>
-    /* ===============================================
-       🌙 MACOS BLUE DARK THEME — GLOBAL BASE
-    =============================================== */
-    html, body, [data-testid="stAppViewContainer"] {
-        background: radial-gradient(circle at 20% 20%, #0b0f16, #060a12 85%) !important;
-        color: #f8fafc !important;
-        font-family: "Inter","SF Pro Display","Segoe UI",system-ui,sans-serif !important;
-    }
-
-    h1,h2,h3,h4,h5,h6 {
-        color: #f8fafc !important;
-        font-weight: 700 !important;
-        letter-spacing: -0.02em !important;
-    }
-
-    p, li, label, span, div {
-        color: #e2e8f0 !important;
-    }
-    small, .stCaption { color: #94a3b8 !important; }
-
-    a, a:link, a:visited { color: #339dff !important; }
-    a:hover { color: #60a5fa !important; text-decoration: underline; }
-
-    hr {
-        border: none !important;
-        height: 1px !important;
-        background: linear-gradient(90deg,transparent,#007aff,transparent) !important;
-    }
-
-    /* ===============================================
-       🧱 CONTAINERS & CARDS
-    =============================================== */
-    .stMarkdown, .stContainer, .stAlert, [class*="stCard"], [class*="block-container"] {
-        background: #0f172a !important;
-        border: 1px solid #1e3a8a !important;
-        border-radius: 12px !important;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
-    }
-
-    /* ===============================================
-       🔘 BUTTONS — macOS BLUE
-    =============================================== */
-    button[kind="primary"], .stButton>button, .stDownloadButton>button, .stDownloadButton button {
-        background: linear-gradient(180deg,#007aff,#005ecb) !important;
-        color: #ffffff !important;
-        border: 1px solid #0051b8 !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
-        padding: 0.5rem 1rem !important;
-        box-shadow: 0 4px 10px rgba(0,122,255,0.35),
-                    inset 0 -1px 0 rgba(255,255,255,0.2) !important;
-        transition: all 0.25s ease-in-out !important;
-    }
-    button[kind="primary"]:hover, .stButton>button:hover, .stDownloadButton>button:hover {
-        background: linear-gradient(180deg,#339dff,#006ae6) !important;
-        box-shadow: 0 4px 14px rgba(0,122,255,0.45) !important;
-        transform: translateY(-1px) !important;
-    }
-    button[kind="primary"]:active, .stButton>button:active, .stDownloadButton>button:active {
-        background: linear-gradient(180deg,#004fc4,#0042a8) !important;
-        box-shadow: inset 0 2px 6px rgba(0,122,255,0.3) !important;
-        transform: translateY(0) !important;
-    }
-    .stButton button[disabled], .stDownloadButton button[disabled] {
-        background: #1e293b !important;
-        color: #64748b !important;
-        border: 1px solid #334155 !important;
-    }
-
-    /* ===============================================
-    🧠 INPUTS (Text, Select, Number) & FOCUS STATE
-    =============================================== */
-    .stTextInput>div>div>input,
-    .stSelectbox>div>div>div,
-    .stNumberInput input {
-        background: #f8fafc !important;
-        color: #0f172a !important;
-        border: 1px solid #cbd5f5 !important;
-        border-radius: 8px !important;
-        padding: 6px 10px !important;
-        transition: all 0.25s ease;
-    }
-    .stTextInput>div>div>input:focus,
-    .stSelectbox>div>div>div:focus-within,
-    .stNumberInput input:focus {
-        outline: none !important;
-        border-color: #007aff !important;
-        box-shadow: 0 0 0 2px rgba(0,122,255,0.4) !important;
-    }
-    ::placeholder {
-        color: #9ca3af !important;
-        opacity: 1 !important;
-    }
-    /* ===============================================
-   🎛 DROPDOWN MENUS
-    =============================================== */
-    [data-baseweb="popover"], [role="listbox"] {
-        background: #0f172a !important;
-        color: #f8fafc !important;
-        border: 1px solid #1e3a8a !important;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.6) !important;
-    }
-    [data-baseweb="menu-item"] {
-        background: #0f172a !important;
-        color: #f8fafc !important;
-    }
-    [data-baseweb="menu-item"]:hover {
-        background: #1e3a8a !important;
-        color: #ffffff !important;
-    }
-    /* ===============================================
-    🧭 SIDEBAR THEME
-    =============================================== */
-    [data-testid="stSidebar"] {
-        background: linear-gradient(180deg,#0d1320,#060a12) !important;
-        border-right: 1px solid #1e3a8a !important;
-        color: #f8fafc !important;
-    }
-
-    
-    /* ===============================================
-       ☑️ CHECKBOXES / RADIOS / SLIDERS
-    =============================================== */
-    input[type="checkbox"], input[type="radio"] {
-        accent-color: #007aff !important;
-    }
-    .stSlider [role="slider"] {
-        background-color: #007aff !important;
-    }
-
-    /* ===============================================
-       🗂️ TABS
-    =============================================== */
-    .stTabs [data-baseweb="tab-list"] button {
-        color: #e2e8f0 !important;
-        background: #111827 !important;
-        border: 1px solid #1e293b !important;
-        border-radius: 10px !important;
-        font-weight: 500 !important;
-        margin-right: 4px !important;
-    }
-    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
-        background: #007aff !important;
-        color: #ffffff !important;
-        box-shadow: 0 0 12px rgba(0,122,255,0.4) !important;
-    }
-
-    /* ===============================================
-       🧭 EXPANDERS / ACCORDIONS
-    =============================================== */
-    .streamlit-expanderHeader {
-        background: linear-gradient(90deg,#0d284d,#0a1f3a) !important;
-        color: #dbeafe !important;
-        border: 1px solid #1e3a5f !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
-    }
-    .streamlit-expanderContent {
-        background: #0f172a !important;
-        color: #e2e8f0 !important;
-        border: 1px solid #1e3a5f !important;
-        border-radius: 0 0 8px 8px !important;
-    }
-
-    /* ===============================================
-       📊 METRIC CARDS (st.metric)
-    =============================================== */
-    [data-testid="stMetric"] {
-        background: linear-gradient(180deg,#0b1220,#101a2c) !important;
-        border: 1px solid #1e3a8a !important;
-        border-radius: 10px !important;
-        box-shadow: inset 0 0 10px rgba(255,255,255,0.03),
-                    0 3px 10px rgba(0,0,0,0.6) !important;
-        padding: 10px 14px !important;
-        text-align: center !important;
-    }
-    div[data-testid="stMetricLabel"] {
-        color: #94a3b8 !important;
-        font-size: 0.85rem !important;
-        font-weight: 500 !important;
-    }
-    div[data-testid="stMetricValue"] {
-        color: #ffffff !important;
-        font-size: 1.3rem !important;
-        font-weight: 600 !important;
-    }
-
-    /* ===============================================
-       📊 METRIC COMPARISON TABLE — FINAL
-    =============================================== */
-    [data-testid="stDataFrame"] {
-        background: radial-gradient(circle at 50% 50%, #0b1220, #060a12 90%) !important;
-        border: 1px solid #1e3a8a !important;
-        border-radius: 12px !important;
-        box-shadow:
-            0 0 14px rgba(0,0,0,0.6) inset,
-            0 4px 18px rgba(0,0,0,0.7),
-            0 0 12px rgba(0,122,255,0.15) !important;
-        margin-top: 12px !important;
-        padding: 8px !important;
-    }
-    [data-testid="stDataFrame"] thead tr th {
-        background: linear-gradient(90deg,#004fc4,#007aff) !important;
-        color: #ffffff !important;
-        border-bottom: 2px solid #007aff !important;
-        font-weight: 700 !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.02em !important;
-        font-size: 0.92rem !important;
-        padding: 10px 14px !important;
-    }
-    [data-testid="stDataFrame"] tbody tr {
-        background-color: #0b1220 !important;
-        color: #ffffff !important;
-        transition: background 0.25s ease;
-    }
-    [data-testid="stDataFrame"] tbody tr:nth-child(even) {
-        background-color: #101a2c !important;
-    }
-    [data-testid="stDataFrame"] tbody tr:hover {
-        background-color: #112a52 !important;
-        box-shadow: 0 0 8px rgba(0,122,255,0.25) inset !important;
-    }
-    [data-testid="stDataFrame"] tbody td {
-        border-top: 1px solid #1e3a8a !important;
-        color: #ffffff !important;
-        padding: 9px 14px !important;
-        font-size: 0.95rem !important;
-        font-weight: 500 !important;
-    }
-    [data-testid="stDataFrame"] tbody td:last-child {
-        color: #60a5fa !important;
-        font-weight: 500 !important;
-    }
-
-    /* ===============================================
-       📁 FILE UPLOADER
-    =============================================== */
-    [data-testid="stFileUploaderDropzone"] {
-        background: rgba(255,255,255,0.03) !important;
-        border: 1px dashed #1e3a8a !important;
-        border-radius: 10px !important;
-        color: #cbd5e1 !important;
-        transition: all 0.25s ease;
-    }
-    [data-testid="stFileUploaderDropzone"]:hover {
-        border-color: #007aff !important;
-        background: rgba(0,122,255,0.1) !important;
-    }
-
-    /* ===============================================
-       ⚠️ ALERT BOXES
-    =============================================== */
-    [data-testid^="stAlert"] {
-        border-radius: 10px !important;
-        border: 1px solid #1e3a8a !important;
-        color: #e2e8f0 !important;
-        box-shadow: 0 3px 15px rgba(0,0,0,0.4) !important;
-    }
-    [data-testid="stAlertInfo"]    { background: linear-gradient(145deg,#0d1829,#10243d)!important; }
-    [data-testid="stAlertSuccess"] { background: linear-gradient(145deg,#0f2414,#183820)!important; }
-    [data-testid="stAlertError"]   { background: linear-gradient(145deg,#2b1617,#1a0c0d)!important; }
-    [data-testid="stAlertWarning"] { background: linear-gradient(145deg,#2f2a10,#1c1a0a)!important; }
-
-    </style>
-    """, unsafe_allow_html=True)
-
-
-
-
-# ─────────────────────────────────────────────
-# 🧭 THEME BOOTSTRAP — Default to DARK
-# ─────────────────────────────────────────────
-import streamlit as st
-
-# Define default session theme early
-if "ui_theme" not in st.session_state:
-    st.session_state["ui_theme"] = "dark"
-
-# Apply immediately before any Streamlit renders
-apply_theme(st.session_state["ui_theme"])
-
-# ✅ Then continue with Streamlit config
-st.set_page_config(page_title="Asset Appraisal Agent", layout="wide")
-
-
-
+def apply_theme(theme: str | None = None):
+    """Proxy to shared theme manager for credit page."""
+    theme = theme or get_theme()
+    apply_global_theme(theme)
 
 
 
@@ -461,6 +182,19 @@ def _extract_run_fields(raw_json):  # ADD
     return run_id, payload
 
 
+def _coerce_minutes(value, fallback: float = 0.0) -> float:
+    """Best-effort conversion of strings like '22 min' to minute floats."""
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        cleaned = "".join(ch for ch in value if ch.isdigit() or ch == ".")
+        try:
+            return float(cleaned)
+        except (TypeError, ValueError):
+            pass
+    return float(fallback)
+
+
 
 
 
@@ -475,13 +209,15 @@ st.set_page_config(
 )
 #
 
+apply_theme()
+
 
 
 # ────────────────────────────────
 # SESSION STATE INIT
 # ────────────────────────────────
 if "stage" not in st.session_state:
-    st.session_state.stage = "landing"
+    st.session_state.stage = "credit_agent"
 if "user_info" not in st.session_state:
     st.session_state.user_info = {"name": "", "email": "", "flagged": False}
 if "logged_in" not in st.session_state:
@@ -490,6 +226,20 @@ if "flagged" not in st.session_state.user_info:
     st.session_state.user_info["flagged"] = False
 if "timestamp" not in st.session_state.user_info:
     st.session_state.user_info["timestamp"] = datetime.now(timezone.utc).isoformat()
+st.session_state.setdefault("credit_apps_in_review", 24)
+st.session_state.setdefault("credit_flagged_cases", 5)
+st.session_state.setdefault("credit_avg_decision_time", "9 min")
+st.session_state.setdefault("credit_ai_performance", 0.92)
+st.session_state.setdefault(
+    "credit_user",
+    {"name": "Operator", "email": "operator@demo.local", "timestamp": datetime.now(timezone.utc).isoformat()},
+)
+st.session_state.setdefault("credit_logged_in", True)
+st.session_state["credit_logged_in"] = True
+if not st.session_state.user_info.get("name"):
+    st.session_state.user_info["name"] = st.session_state["credit_user"]["name"]
+if st.session_state.get("credit_logged_in", False):
+    st.session_state.stage = "credit_agent"
 
 
 # ────────────────────────────────
@@ -646,13 +396,11 @@ def render_nav_bar_app():
         if st.button("🤖 Back to Agents", key=f"btn_agents_{ss.get('stage','landing')}"):
             _go_stage("agents")
     with c3:
-        is_dark = (ss.get("ui_theme", "dark") == "dark")
-        new_is_dark = st.toggle("🌙 Dark mode", value=is_dark, key="ui_theme_toggle", help="Switch theme")
-        new_theme = "dark" if new_is_dark else "light"
-        if new_theme != ss["ui_theme"]:
-            ss["ui_theme"] = new_theme
-            apply_theme(ss["ui_theme"])
-            st.rerun()
+        render_theme_toggle(
+            label="🌗 Dark mode",
+            key="credit_theme_toggle",
+            help="Switch theme",
+        )
 
     st.markdown("---")
 
@@ -696,6 +444,56 @@ def login_block():
 if not st.session_state.get("credit_logged_in", False):
     login_block()
     st.stop()
+
+# Operator overview
+operator_name = (
+    st.session_state.get("user_info", {}).get("name")
+    or st.session_state.get("credit_user", {}).get("name")
+    or "Operator"
+)
+
+credit_ai_minutes = _coerce_minutes(st.session_state.get("credit_avg_decision_time"), 9.0)
+
+render_operator_banner(
+    operator_name=operator_name,
+    title="Credit Appraisal Command",
+    summary="Coordinate intake → anonymization → AI scoring → policy decisions inside one unified cockpit.",
+    bullets=[
+        "Collect borrower data once and auto-sanitize for analytics.",
+        "Score risk with explainable AI plus policy/NDI overlays.",
+        "Route exceptions to human reviewers and capture feedback for retraining.",
+    ],
+    metrics=[
+        {
+            "label": "Apps in Review",
+            "value": st.session_state.get("credit_apps_in_review"),
+            "delta": "+2 vs last week",
+            "delta_color": "#34d399",
+            "color": "#34d399",
+            "percent": min(1.0, st.session_state.get("credit_apps_in_review", 0) / 40.0),
+            "context": "Human queue avg: 41",
+        },
+        {
+            "label": "Compliance Flags",
+            "value": st.session_state.get("credit_flagged_cases"),
+            "delta": "-1 cleared",
+            "delta_color": "#f87171",
+            "color": "#f87171",
+            "percent": min(1.0, st.session_state.get("credit_flagged_cases", 0) / 15.0),
+            "context": "Manual avg flags: 9",
+        },
+        {
+            "label": "Avg AI Decision Time",
+            "value": st.session_state.get("credit_avg_decision_time") or f"{credit_ai_minutes:.0f} min",
+            "delta": "-3 min vs last cycle",
+            "delta_color": "#60a5fa",
+            "color": "#60a5fa",
+            "percent": min(1.0, credit_ai_minutes / 45.0),
+            "context": "AI adjudication speed",
+        },
+    ],
+    icon="🏦",
+)
 
 # # ────────────────────────────────
 # # LOGIN GATE
@@ -2999,62 +2797,6 @@ with tab_handoff:
 
     # … (keep the rest of Stage 7: metrics, charts, handoff CSV/ZIP) …
 
-    
-    
-    # # ---------------------------------------------------------
-    # # ✅ Required outputs from earlier stages — MUST COME FIRST
-    # # ---------------------------------------------------------
-    # scored_df   = st.session_state.get("credit_scored_df")
-    # policy_df   = st.session_state.get("credit_policy_df")
-    # decision_df = st.session_state.get("credit_decision_df")
-
-    # missing = []
-    
-    # if scored_df is None or getattr(scored_df, "empty", True):
-    #     missing.append("Stage C — Credit AI Evaluation (credit_scored_df)")
-
-
-
-    # if missing:
-    #     st.error("⚠️ Missing required data: " + ", ".join(missing))
-    #     st.info("Please run the missing stages before returning to Stage H.")
-    #     st.stop()
-
-    # # ✅ Only now is dfv allowed to be created
-  
-    #     dfv = decision_df.copy()
-
-
-    # # 1) Primary: dataset saved by Stage C/E
-    # df = st.session_state.get("credit_scored_df")
-
-    # # 2) Fallback: Stage C merged output
-    # if df is None or df.empty:
-    #     df = st.session_state.get("last_merged_df")
-
-    # # 3) Optional: user upload
-    # uploaded_scored = st.file_uploader(
-    #     "⬆️ (Optional) Load scored CSV for reporting",
-    #     type=["csv"], key="stage7_upload"
-    # )
-    # if uploaded_scored is not None:
-    #     try:
-    #         df = pd.read_csv(uploaded_scored)
-    #         st.success(f"Loaded scored dataset from upload ({len(df)} rows).")
-    #     except Exception as e:
-    #         st.error(f"Could not read uploaded CSV: {e}")
-
-    # # Final guard
-    # if df is None or df.empty:
-    #     st.warning("⚠️ Missing scored dataset. Run Stage 3 (Credit appraisal) or upload a scored CSV above.")
-    #     st.stop()
-
-    # st.session_state["credit_scored_df"] = df.copy()
-
-    # st.success("✅ Portfolio loaded.")
-    # st.dataframe(df.head(), use_container_width=True)
-
-    # # … (keep the rest of Stage 7: metrics, charts, handoff CSV/ZIP) …
 
 
 
@@ -3266,6 +3008,11 @@ with tab_handoff:
         st.info(f"Some expected columns were not present and were skipped: {missing_report}")
 
 
+with tab_feedback:
+    render_feedback_tab("💳 Credit Appraisal Agent")
+
+
+
 # ─────────────────────────────────────────────
 # 🗣️ TAB 8 — Feedback & Feature Requests
 # ─────────────────────────────────────────────
@@ -3289,13 +3036,8 @@ with tab_feedback:
             st.error(f"Could not save feedback: {e}")
 
     feedback_data = load_feedback()
-    if not feedback_data:
-        # bootstrap section names to avoid empty selectbox
-        feedback_data = {
-            "💳 Credit Appraisal Agent": {"rating": 5, "users": 1, "comments": ["Great starting point!"]},
-            "🏦 Asset Appraisal Agent": {"rating": 5, "users": 1, "comments": ["Loving the dashboard."]},
-        }
 
+    # View all current agent feedback
     st.markdown("### 💬 Current Agent Reviews & Ratings")
     for agent, fb in feedback_data.items():
         with st.expander(f"⭐ {agent} — {fb.get('rating', 0)}/5  |  👥 {fb.get('users', 0)} users"):
@@ -3305,10 +3047,23 @@ with tab_feedback:
             st.markdown("---")
 
     st.markdown("### ✍️ Submit Your Own Feedback or Feature Request")
+
     agent_choice = st.selectbox("Select Agent", list(feedback_data.keys()))
     new_comment = st.text_area("Your Comment or Feature Suggestion", placeholder="e.g. Add multi-language support for reports...")
     new_rating = st.slider("Your Rating", 1, 5, 5)
 
+    # if st.button("📨 Submit Feedback"):
+    #     if new_comment.strip():
+    #         fb = feedback_data.get(agent_choice, {"rating": 0, "users": 0, "comments": []})
+    #         fb["comments"].append(new_comment.strip())
+    #         fb["rating"] = round((fb.get("rating", 0) + new_rating) / 2, 2)
+    #         fb["users"] = fb.get("users", 0) + 1
+    #         feedback_data[agent_choice] = fb
+    #         save_feedback(feedback_data)
+    #         st.success("✅ Feedback submitted successfully!")
+    #         st.rerun()
+    #     else:
+    #         st.warning("Please enter a comment before submitting.")
     if st.button("📨 Submit Feedback"):
         if new_comment.strip():
             fb = feedback_data.get(agent_choice, {"rating": 0, "users": 0, "comments": []})
@@ -3317,8 +3072,291 @@ with tab_feedback:
             fb["users"] = fb.get("users", 0) + 1
             feedback_data[agent_choice] = fb
             save_feedback(feedback_data)
+
+            # ✅ Sync latest feedback globally
             st.session_state["feedback_data"] = feedback_data
+
+            # ✅ Force full reload so Landing updates instantly
             st.success("✅ Feedback submitted successfully!")
             st.rerun()
         else:
             st.warning("Please enter a comment before submitting.")
+
+
+
+
+# Legacy credit theme (kept for optional reuse)
+LEGACY_CREDIT_THEME_SNIPPET = '''
+def legacy_credit_theme(theme: str = "dark"):
+    import streamlit as st
+
+    st.markdown("""
+    <style>
+    /* ===============================================
+       🌙 MACOS BLUE DARK THEME — GLOBAL BASE
+    =============================================== */
+    html, body, [data-testid="stAppViewContainer"] {
+        background: radial-gradient(circle at 20% 20%, #0b0f16, #060a12 85%) !important;
+        color: #f8fafc !important;
+        font-family: "Inter","SF Pro Display","Segoe UI",system-ui,sans-serif !important;
+    }
+
+    h1,h2,h3,h4,h5,h6 {
+        color: #f8fafc !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.02em !important;
+    }
+
+    p, li, label, span, div {
+        color: #e2e8f0 !important;
+    }
+    small, .stCaption { color: #94a3b8 !important; }
+
+    a, a:link, a:visited { color: #339dff !important; }
+    a:hover { color: #60a5fa !important; text-decoration: underline; }
+
+    hr {
+        border: none !important;
+        height: 1px !important;
+        background: linear-gradient(90deg,transparent,#007aff,transparent) !important;
+    }
+
+    /* ===============================================
+       🧱 CONTAINERS & CARDS
+    =============================================== */
+    .stMarkdown, .stContainer, .stAlert, [class*="stCard"], [class*="block-container"] {
+        background: #0f172a !important;
+        border: 1px solid #1e3a8a !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
+    }
+
+    /* ===============================================
+       🔘 BUTTONS — macOS BLUE
+    =============================================== */
+    button[kind="primary"], .stButton>button, .stDownloadButton>button, .stDownloadButton button {
+        background: linear-gradient(180deg,#007aff,#005ecb) !important;
+        color: #ffffff !important;
+        border: 1px solid #0051b8 !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        padding: 0.5rem 1rem !important;
+        box-shadow: 0 4px 10px rgba(0,122,255,0.35),
+                    inset 0 -1px 0 rgba(255,255,255,0.2) !important;
+        transition: all 0.25s ease-in-out !important;
+    }
+    button[kind="primary"]:hover, .stButton>button:hover, .stDownloadButton>button:hover {
+        background: linear-gradient(180deg,#339dff,#006ae6) !important;
+        box-shadow: 0 4px 14px rgba(0,122,255,0.45) !important;
+        transform: translateY(-1px) !important;
+    }
+    button[kind="primary"]:active, .stButton>button:active, .stDownloadButton>button:active {
+        background: linear-gradient(180deg,#004fc4,#0042a8) !important;
+        box-shadow: inset 0 2px 6px rgba(0,122,255,0.3) !important;
+        transform: translateY(0) !important;
+    }
+    .stButton button[disabled], .stDownloadButton button[disabled] {
+        background: #1e293b !important;
+        color: #64748b !important;
+        border: 1px solid #334155 !important;
+    }
+
+    /* ===============================================
+    🧠 INPUTS (Text, Select, Number) & FOCUS STATE
+    =============================================== */
+    .stTextInput>div>div>input,
+    .stSelectbox>div>div>div,
+    .stNumberInput input {
+        background: #111827 !important;
+        color: #f8fafc !important;
+        border: 1px solid #1e3a8a !important;
+        border-radius: 8px !important;
+        padding: 6px 10px !important;
+        transition: all 0.25s ease;
+    }
+    .stTextInput>div>div>input:focus,
+    .stSelectbox>div>div>div:focus-within,
+    .stNumberInput input:focus {
+        outline: none !important;
+        border-color: #007aff !important;
+        box-shadow: 0 0 0 2px rgba(0,122,255,0.4) !important;
+    }
+    ::placeholder {
+        color: #9ca3af !important;
+        opacity: 1 !important;
+    }
+    /* ===============================================
+   🎛 DROPDOWN MENUS
+    =============================================== */
+    [data-baseweb="popover"], [role="listbox"] {
+        background: #0f172a !important;
+        color: #f8fafc !important;
+        border: 1px solid #1e3a8a !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.6) !important;
+    }
+    [data-baseweb="menu-item"] {
+        background: #0f172a !important;
+        color: #f8fafc !important;
+    }
+    [data-baseweb="menu-item"]:hover {
+        background: #1e3a8a !important;
+        color: #ffffff !important;
+    }
+    /* ===============================================
+    🧭 SIDEBAR THEME
+    =============================================== */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg,#0d1320,#060a12) !important;
+        border-right: 1px solid #1e3a8a !important;
+        color: #f8fafc !important;
+    }
+
+    
+    /* ===============================================
+       ☑️ CHECKBOXES / RADIOS / SLIDERS
+    =============================================== */
+    input[type="checkbox"], input[type="radio"] {
+        accent-color: #007aff !important;
+    }
+    .stSlider [role="slider"] {
+        background-color: #007aff !important;
+    }
+
+    /* ===============================================
+       🗂️ TABS
+    =============================================== */
+    .stTabs [data-baseweb="tab-list"] button {
+        color: #e2e8f0 !important;
+        background: #111827 !important;
+        border: 1px solid #1e293b !important;
+        border-radius: 10px !important;
+        font-weight: 500 !important;
+        margin-right: 4px !important;
+    }
+    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
+        background: #007aff !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 12px rgba(0,122,255,0.4) !important;
+    }
+
+    /* ===============================================
+       🧭 EXPANDERS / ACCORDIONS
+    =============================================== */
+    .streamlit-expanderHeader {
+        background: linear-gradient(90deg,#0d284d,#0a1f3a) !important;
+        color: #dbeafe !important;
+        border: 1px solid #1e3a5f !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+    }
+    .streamlit-expanderContent {
+        background: #0f172a !important;
+        color: #e2e8f0 !important;
+        border: 1px solid #1e3a5f !important;
+        border-radius: 0 0 8px 8px !important;
+    }
+
+    /* ===============================================
+       📊 METRIC CARDS (st.metric)
+    =============================================== */
+    [data-testid="stMetric"] {
+        background: linear-gradient(180deg,#0b1220,#101a2c) !important;
+        border: 1px solid #1e3a8a !important;
+        border-radius: 10px !important;
+        box-shadow: inset 0 0 10px rgba(255,255,255,0.03),
+                    0 3px 10px rgba(0,0,0,0.6) !important;
+        padding: 10px 14px !important;
+        text-align: center !important;
+    }
+    div[data-testid="stMetricLabel"] {
+        color: #94a3b8 !important;
+        font-size: 0.85rem !important;
+        font-weight: 500 !important;
+    }
+    div[data-testid="stMetricValue"] {
+        color: #ffffff !important;
+        font-size: 1.3rem !important;
+        font-weight: 600 !important;
+    }
+
+    /* ===============================================
+       📊 METRIC COMPARISON TABLE — FINAL
+    =============================================== */
+    [data-testid="stDataFrame"] {
+        background: radial-gradient(circle at 50% 50%, #0b1220, #060a12 90%) !important;
+        border: 1px solid #1e3a8a !important;
+        border-radius: 12px !important;
+        box-shadow:
+            0 0 14px rgba(0,0,0,0.6) inset,
+            0 4px 18px rgba(0,0,0,0.7),
+            0 0 12px rgba(0,122,255,0.15) !important;
+        margin-top: 12px !important;
+        padding: 8px !important;
+    }
+    [data-testid="stDataFrame"] thead tr th {
+        background: linear-gradient(90deg,#004fc4,#007aff) !important;
+        color: #ffffff !important;
+        border-bottom: 2px solid #007aff !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.02em !important;
+        font-size: 0.92rem !important;
+        padding: 10px 14px !important;
+    }
+    [data-testid="stDataFrame"] tbody tr {
+        background-color: #0b1220 !important;
+        color: #ffffff !important;
+        transition: background 0.25s ease;
+    }
+    [data-testid="stDataFrame"] tbody tr:nth-child(even) {
+        background-color: #101a2c !important;
+    }
+    [data-testid="stDataFrame"] tbody tr:hover {
+        background-color: #112a52 !important;
+        box-shadow: 0 0 8px rgba(0,122,255,0.25) inset !important;
+    }
+    [data-testid="stDataFrame"] tbody td {
+        border-top: 1px solid #1e3a8a !important;
+        color: #ffffff !important;
+        padding: 9px 14px !important;
+        font-size: 0.95rem !important;
+        font-weight: 500 !important;
+    }
+    [data-testid="stDataFrame"] tbody td:last-child {
+        color: #60a5fa !important;
+        font-weight: 500 !important;
+    }
+
+    /* ===============================================
+       📁 FILE UPLOADER
+    =============================================== */
+    [data-testid="stFileUploaderDropzone"] {
+        background: rgba(255,255,255,0.03) !important;
+        border: 1px dashed #1e3a8a !important;
+        border-radius: 10px !important;
+        color: #cbd5e1 !important;
+        transition: all 0.25s ease;
+    }
+    [data-testid="stFileUploaderDropzone"]:hover {
+        border-color: #007aff !important;
+        background: rgba(0,122,255,0.1) !important;
+    }
+
+    /* ===============================================
+       ⚠️ ALERT BOXES
+    =============================================== */
+    [data-testid^="stAlert"] {
+        border-radius: 10px !important;
+        border: 1px solid #1e3a8a !important;
+        color: #e2e8f0 !important;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.4) !important;
+    }
+    [data-testid="stAlertInfo"]    { background: linear-gradient(145deg,#0d1829,#10243d)!important; }
+    [data-testid="stAlertSuccess"] { background: linear-gradient(145deg,#0f2414,#183820)!important; }
+    [data-testid="stAlertError"]   { background: linear-gradient(145deg,#2b1617,#1a0c0d)!important; }
+    [data-testid="stAlertWarning"] { background: linear-gradient(145deg,#2f2a10,#1c1a0a)!important; }
+
+    </style>
+    """, unsafe_allow_html=True)
+
+'''

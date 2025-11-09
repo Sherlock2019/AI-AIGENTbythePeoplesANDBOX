@@ -1,24 +1,24 @@
 {
-  "model_path": "agents/credit_appraisal/models/trained/LightGBM_20251108-092405.joblib",
-  "promoted_at": "2025-11-08T09:24:18.147693+00:00",
+  "model_path": "agents/credit_appraisal/models/trained/LogisticRegression_20251109-084025.joblib",
+  "promoted_at": "2025-11-09T08:40:39.127307+00:00",
   "metrics": {
-    "AUC": 0.9348958333333333,
-    "Accuracy": 0.825,
-    "Precision": 0.9047619047619048,
-    "Recall": 0.7916666666666666,
-    "F1": 0.8444444444444444
+    "AUC": 0.9010416666666666,
+    "Accuracy": 0.775,
+    "Precision": 0.7586206896551724,
+    "Recall": 0.9166666666666666,
+    "F1": 0.8301886792452831
   },
   "report": {
-    "timestamp": "20251108-092405",
-    "model_choice": "LightGBM",
+    "timestamp": "20251109-084025",
+    "model_choice": "LogisticRegression",
     "metrics": {
-      "AUC": 0.9348958333333333,
-      "Accuracy": 0.825,
-      "Precision": 0.9047619047619048,
-      "Recall": 0.7916666666666666,
-      "F1": 0.8444444444444444
+      "AUC": 0.9010416666666666,
+      "Accuracy": 0.775,
+      "Precision": 0.7586206896551724,
+      "Recall": 0.9166666666666666,
+      "F1": 0.8301886792452831
     },
-    "model_path": "agents/credit_appraisal/models/trained/LightGBM_20251108-092405.joblib",
+    "model_path": "agents/credit_appraisal/models/trained/LogisticRegression_20251109-084025.joblib",
     "features": [
       "application_id",
       "age",

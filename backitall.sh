@@ -30,7 +30,13 @@ fi
 echo "==> Using ROOT: $ROOT"
 
 TS="$(date +%Y%m%d-%H%M%S)"
-BACKUP_EXT=".ok.${TS}.bak"
+read -rp "Optional short comment for this backup (e.g. unifiedtheme): " COMMENT_RAW
+COMMENT_CLEAN="$(echo "${COMMENT_RAW:-}" | tr ' ' '_' | tr -cd '[:alnum:]_-')"
+if [[ -n "$COMMENT_CLEAN" ]]; then
+  BACKUP_EXT=".ok.${TS}.${COMMENT_CLEAN}.bak"
+else
+  BACKUP_EXT=".ok.${TS}.bak"
+fi
 
 echo "==> Starting curated backup for Credit & Asset Appraisal Agent"
 echo "==> Backup suffix: ${BACKUP_EXT}"
@@ -43,10 +49,9 @@ FILES=(
   "$ROOT/services/ui/app.py"
   "$ROOT/services/ui/requirements.txt"
   "$ROOT/services/ui/runwebui.sh"
-
-  # UI pages
-  "$ROOT/services/ui/pages/asset_appraisal.py"
-  "$ROOT/services/ui/pages/credit_appraisal.py"
+  "$ROOT/services/ui/theme_manager.py"
+  "$ROOT/services/ui/utils/style.py"
+  "$ROOT/docs/unified-theme.md"
 
   # API
   "$ROOT/services/api/main.py"
@@ -83,14 +88,14 @@ FILES=(
   "$ROOT/agents/credit_appraisal/sample_data/credit_sample.csv"
   "$ROOT/agents/credit_appraisal/sample_data/credit_training_sample.csv"
 
-  # Credit agent
+  # Credit agent (core)
   "$ROOT/agents/credit_appraisal/__init__.py"
   "$ROOT/agents/credit_appraisal/agent.py"
   "$ROOT/agents/credit_appraisal/model_utils.py"
   "$ROOT/agents/credit_appraisal/runner.py"
   "$ROOT/agents/credit_appraisal/agent.yaml"
 
-  # Asset agent
+  # Asset agent (core)
   "$ROOT/agents/asset_appraisal/__init__.py"
   "$ROOT/agents/asset_appraisal/agent.py"
   "$ROOT/agents/asset_appraisal/runner.py"
@@ -105,6 +110,49 @@ MODEL_DIRS=(
   "$ROOT/agents/asset_appraisal/models/trained"
 )
 
+# ───────────────────────────────────────────────────────────────
+# Dynamic additions: agent files + UI pages
+# ───────────────────────────────────────────────────────────────
+AGENT_BASE_DIRS=("$ROOT/agents")
+[[ -d "$ROOT/anti-fraud-kyc-agent" ]] && AGENT_BASE_DIRS+=("$ROOT/anti-fraud-kyc-agent")
+AGENT_FILE_PATTERNS=("agent.py" "runner.py" "model_utils.py" "__init__.py" "agent.yaml" "README.md" "*.yml")
+declare -a AGENT_DYNAMIC_FILES=()
+declare -A seen_dyn=()
+
+for base in "${AGENT_BASE_DIRS[@]}"; do
+  [[ -d "$base" ]] || continue
+  for agent_dir in "$base"/*; do
+    [[ -d "$agent_dir" ]] || continue
+    for pattern in "${AGENT_FILE_PATTERNS[@]}"; do
+      while IFS= read -r f; do
+        [[ -f "$f" ]] || continue
+        if [[ -z "${seen_dyn[$f]:-}" ]]; then
+          AGENT_DYNAMIC_FILES+=("$f")
+          seen_dyn["$f"]=1
+        fi
+      done < <(find "$agent_dir" -maxdepth 1 -type f -name "$pattern" 2>/dev/null)
+    done
+  done
+done
+
+PAGE_DIR="$ROOT/services/ui/pages"
+if [[ -d "$PAGE_DIR" ]]; then
+  while IFS= read -r page; do
+    [[ -f "$page" ]] || continue
+    if [[ -z "${seen_dyn[$page]:-}" ]]; then
+      AGENT_DYNAMIC_FILES+=("$page")
+      seen_dyn["$page"]=1
+    fi
+  done < <(find "$PAGE_DIR" -maxdepth 1 -type f -name '*.py' 2>/dev/null)
+fi
+
+if [[ ${#AGENT_DYNAMIC_FILES[@]} -gt 0 ]]; then
+  echo "==> Discovered agent/ui files to include (${#AGENT_DYNAMIC_FILES[@]}):"
+  printf "  • %s\n" "${AGENT_DYNAMIC_FILES[@]}"
+  echo
+  FILES+=("${AGENT_DYNAMIC_FILES[@]}")
+fi
+
 echo "==> Including model directories:"
 for dir in "${MODEL_DIRS[@]}"; do
   echo "  • $dir"
@@ -116,7 +164,13 @@ echo
 # ───────────────────────────────────────────────────────────────
 missing=0
 declare -a EXISTING=()
+declare -A SEEN_FILES=()
 for f in "${FILES[@]}"; do
+  [[ -n "$f" ]] || continue
+  if [[ -n "${SEEN_FILES[$f]:-}" ]]; then
+    continue
+  fi
+  SEEN_FILES["$f"]=1
   if [[ -f "$f" ]]; then
     echo "  • $f"
     EXISTING+=("$f")
@@ -177,9 +231,13 @@ backup_directory() {
 }
 
 categorize_path() {
-  # Echo one of: credit | asset | common
+  # Echo one of: app | anti_fraud | credit | asset | common
   local p="$1"
   case "$p" in
+    */services/ui/app*.py) echo "app"; return ;;
+    */services/ui/theme_manager.py|*/services/ui/utils/style.py) echo "app"; return ;;
+    */docs/unified-theme.md) echo "app"; return ;;
+    */anti-fraud-kyc-agent/*|*/services/ui/pages/anti_fraud_*.py) echo "anti_fraud"; return ;;
     */agents/credit_appraisal/*) echo "credit"; return ;;
     */agents/asset_appraisal/*)  echo "asset";  return ;;
     */services/ui/pages/credit_*.py) echo "credit"; return ;;
@@ -200,6 +258,8 @@ SKIPPED_COUNT=0
 COMMON_BACKUP=0
 CREDIT_BACKUP=0
 ASSET_BACKUP=0
+APP_BACKUP=0
+ANTI_BACKUP=0
 
 for file in "${EXISTING[@]}"; do
   bak="${file}${BACKUP_EXT}"
@@ -209,6 +269,8 @@ for file in "${EXISTING[@]}"; do
     echo "   ✅ Backed up → $bak"
     ((BACKUP_COUNT++)) || true
     case "$(categorize_path "$file")" in
+      app)    ((APP_BACKUP++))    || true ;;
+      anti_fraud) ((ANTI_BACKUP++)) || true ;;
       credit) ((CREDIT_BACKUP++)) || true ;;
       asset)  ((ASSET_BACKUP++))  || true ;;
       *)      ((COMMON_BACKUP++)) || true ;;
@@ -239,9 +301,11 @@ echo
 echo "────────────────────────────────────────────"
 echo "✅ Backup complete!"
 echo "   • Files backed up (total): $BACKUP_COUNT"
-echo "     - Common: $COMMON_BACKUP"
+echo "     - App shell / theme: $APP_BACKUP"
+echo "     - Anti-fraud agent:  $ANTI_BACKUP"
 echo "     - Credit agent: $CREDIT_BACKUP"
 echo "     - Asset agent:  $ASSET_BACKUP"
+echo "     - Common:       $COMMON_BACKUP"
 echo "   • Files skipped:           $SKIPPED_COUNT"
 echo "   • Model directories copied: $MODEL_DIRS_BACKED / ${#MODEL_DIRS[@]}"
 echo "Backup suffix used: ${BACKUP_EXT}"

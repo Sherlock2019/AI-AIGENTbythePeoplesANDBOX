@@ -1,0 +1,14 @@
+{
+  "timestamp": "20251109-084303",
+  "model": "Logistic Regression",
+  "gpu_profile": "CPU",
+  "source": "Stage F human feedback",
+  "rows": 8,
+  "metrics": {
+    "Accuracy": 1.0,
+    "Precision": 1.0,
+    "Recall": 1.0,
+    "F1": 1.0,
+    "ROC-AUC": 1.0
+  }
+}

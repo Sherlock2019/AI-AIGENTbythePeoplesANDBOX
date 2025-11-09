@@ -3,60 +3,50 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import streamlit as st
 
+from services.ui.theme_manager import (
+    apply_theme as apply_global_theme,
+    ensure_theme,
+    get_theme,
+    render_theme_toggle,
+    set_theme,
+)
+
+
 # -------------- Theme --------------
 def apply_theme(theme: str = "dark"):
-    if theme == "light":
-        bg      = "#ffffff"; text    = "#0f172a"; subtext = "#334155"
-        card    = "#f8fafc"; border  = "#e2e8f0"; accent  = "#2563eb"; accent2 = "#22c55e"
-        tab_bg  = "#eef2ff"; table_bg= "#ffffff"; table_head_bg = "#e2e8f0"; table_head_tx = "#0f172a"
-    else:
-        bg      = "#0E1117"; text    = "#f1f5f9"; subtext = "#93a4b8"
-        card    = "#0f172a"; border  = "#334155"; accent  = "#3b82f6"; accent2 = "#22c55e"
-        tab_bg  = "#111418"; table_bg= "#0f172a"; table_head_bg = "#1e293b"; table_head_tx = "#93c5fd"
+    """
+    Compatibility wrapper around services.ui.theme_manager.apply_theme.
 
-    st.markdown(f"""
-    <style>
-      .stApp {{ background:{bg}!important; color:{text}!important; }}
-      .stCaption, .stMarkdown p, .stMarkdown li {{ color:{subtext}!important; }}
-      .stButton>button {{
-        background-color:{accent}!important; color:#fff!important; border-radius:8px!important;
-        font-weight:600!important; border:1px solid {border}!important;
-      }}
-      .stButton>button:hover {{ filter:brightness(0.95); }}
-      .stTabs [data-baseweb="tab-list"] button {{
-        color:{text}!important; background:{tab_bg}!important; border-radius:10px!important;
-        margin-right:4px!important; border:1px solid {border}!important;
-      }}
-      .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {{
-        background-color:{accent}!important; color:#fff!important;
-      }}
-      [data-testid="stDataFrame"] {{
-        background-color:{table_bg}!important; color:{text}!important; border-radius:10px!important;
-        border:1px solid {border}!important; box-shadow:0 4px 18px rgba(0,0,0,0.2)!important;
-      }}
-      [data-testid="stDataFrame"] thead tr th {{
-        background:{table_head_bg}!important; color:{table_head_tx}!important; font-weight:700!important;
-        border-bottom:2px solid {accent}!important;
-      }}
-    </style>
-    """, unsafe_allow_html=True)
+    Pages that still import this helper will automatically pick up the
+    unified palette, while the legacy CSS snippet below remains available
+    if you ever want to revert to the old styling.
+    """
+    return apply_global_theme(theme)
 
 def ensure_keys():
     ss = st.session_state
+    ensure_theme("dark")
     ss.setdefault("stage", "landing")
-    ss.setdefault("theme", "dark")
-    ss.setdefault("ui_theme", ss["theme"])  # keep legacy key in sync
     ss.setdefault("credit_logged_in", False)
     ss.setdefault("credit_stage", "login")
-    ss.setdefault("user_info", {"name": "", "email": "", "flagged": False,
-                                "timestamp": datetime.now(timezone.utc).isoformat()})
+    ss.setdefault(
+        "user_info",
+        {
+            "name": "",
+            "email": "",
+            "flagged": False,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        },
+    )
 
 def sync_theme(new_is_dark: bool):
-    new_theme = "dark" if new_is_dark else "light"
-    if new_theme != st.session_state.get("theme"):
-        st.session_state["theme"] = new_theme
-        st.session_state["ui_theme"] = new_theme
-        apply_theme(new_theme)
+    """Legacy hook that keeps shared theme state in sync with a boolean toggle."""
+    desired = "dark" if new_is_dark else "light"
+    if desired != get_theme():
+        set_theme(desired)
+        apply_global_theme(desired)
+        return True
+    return False
 
 def render_nav_bar_app():
     """Home / Agents buttons + theme toggle identical across pages."""
@@ -83,8 +73,39 @@ def render_nav_bar_app():
                 st.rerun()
 
     with c3:
-        is_dark = (ss.get("theme", "dark") == "dark")
-        new_is_dark = st.toggle("🌙 Dark mode", value=is_dark, key="ui_theme_toggle", help="Switch theme")
-        sync_theme(new_is_dark)
+        render_theme_toggle(
+            label="🌗 Dark mode",
+            key="utils_style_nav_toggle",
+            help="Switch theme",
+        )
 
     st.markdown("---")
+
+
+# --- Legacy theme snippet (kept for optional reuse) --------------------------
+LEGACY_STYLE_THEME_CSS = """
+<style>
+  .stApp { background:#0E1117!important; color:#f1f5f9!important; }
+  .stCaption, .stMarkdown p, .stMarkdown li { color:#93a4b8!important; }
+  .stButton>button {
+    background-color:#3b82f6!important; color:#fff!important; border-radius:8px!important;
+    font-weight:600!important; border:1px solid #334155!important;
+  }
+  .stButton>button:hover { filter:brightness(0.95); }
+  .stTabs [data-baseweb="tab-list"] button {
+    color:#f1f5f9!important; background:#111418!important; border-radius:10px!important;
+    margin-right:4px!important; border:1px solid #334155!important;
+  }
+  .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
+    background-color:#3b82f6!important; color:#fff!important;
+  }
+  [data-testid="stDataFrame"] {
+    background-color:#0f172a!important; color:#f1f5f9!important; border-radius:10px!important;
+    border:1px solid #334155!important; box-shadow:0 4px 18px rgba(0,0,0,0.2)!important;
+  }
+  [data-testid="stDataFrame"] thead tr th {
+    background:#1e293b!important; color:#93c5fd!important; font-weight:700!important;
+    border-bottom:2px solid #3b82f6!important;
+  }
+</style>
+"""

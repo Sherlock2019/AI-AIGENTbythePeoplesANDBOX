@@ -7,6 +7,7 @@ import os
 import re
 import io
 import json
+import html
 from datetime import datetime, timezone
 from typing import Optional, Dict, List, Any
 import pandas as pd
@@ -19,117 +20,16 @@ import logging
 import sys
 
 from pandas import json_normalize  # ADD
+from services.ui.theme_manager import (
+    get_theme,
+    init_theme,
+    render_theme_toggle,
+)
+from services.ui.components.feedback import load_feedback_data
 
 
-
-# Theme bootstrapping
-if "ui_theme" not in st.session_state:
-    st.session_state["ui_theme"] = "dark"   # default bright
-
-
-
-#THEME SWITCHER
-
-def apply_theme(theme: str = "light"):
-    # Keep palette compact so it's easy to tune
-    if theme == "light":
-        bg      = "#ffffff"
-        text    = "#0f172a"
-        subtext = "#334155"
-        card    = "#f8fafc"
-        border  = "#e2e8f0"
-        accent  = "#2563eb"
-        accent2 = "#22c55e"
-        tab_bg  = "#eef2ff"
-        table_bg= "#ffffff"
-        table_head_bg = "#e2e8f0"
-        table_head_tx = "#0f172a"
-    else:  # dark
-        bg      = "#0E1117"
-        text    = "#f1f5f9"
-        subtext = "#93a4b8"
-        card    = "#0f172a"
-        border  = "#334155"
-        accent  = "#3b82f6"
-        accent2 = "#22c55e"
-        tab_bg  = "#111418"
-        table_bg= "#0f172a"
-        table_head_bg = "#1e293b"
-        table_head_tx = "#93c5fd"
-
-    st.markdown(f"""
-    <style>
-      /* App bg + text */
-      .stApp {{
-        background: {bg} !important;
-        color: {text} !important;
-      }}
-      .stCaption, .stMarkdown p, .stMarkdown li, .st-emotion-cache-16idsys {{
-        color: {subtext} !important;
-      }}
-
-      /* Buttons */
-      .stButton>button {{
-        background-color: {accent} !important;
-        color: white !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
-        border: 1px solid {border} !important;
-      }}
-      .stButton>button:hover {{
-        filter: brightness(0.95);
-      }}
-
-      /* Tabs */
-      .stTabs [data-baseweb="tab-list"] button {{
-        color: {text} !important;
-        background: {tab_bg} !important;
-        border-radius: 10px !important;
-        margin-right: 4px !important;
-        border: 1px solid {border} !important;
-      }}
-      .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {{
-        background-color: {accent} !important;
-        color: #ffffff !important;
-      }}
-
-      /* Dataframe/Data Editor container */
-      [data-testid="stDataFrame"] {{
-        background-color: {table_bg} !important;
-        color: {text} !important;
-        border-radius: 10px !important;
-        border: 1px solid {border} !important;
-        box-shadow: 0 4px 18px rgba(0,0,0,0.2) !important;
-      }}
-      [data-testid="stDataFrame"] thead tr th {{
-        background: {table_head_bg} !important;
-        color: {table_head_tx} !important;
-        font-weight: 700 !important;
-        border-bottom: 2px solid {accent} !important;
-      }}
-      [data-testid="stDataFrameCell"]:not([data-testid="stDataFrameCellEditable"]) {{
-        background-color: {table_bg} !important;
-        color: {text} !important;
-        border-color: {border} !important;
-      }}
-      [data-testid="stDataFrameCellEditable"] textarea {{
-        background-color: {card} !important;
-        color: {text} !important;
-        border: 1px solid {border} !important;
-        border-radius: 6px !important;
-      }}
-      [data-testid="stDataFrameCellEditable"]:focus-within textarea,
-      [data-testid="stDataFrameCellEditable"]:hover textarea {{
-        border-color: {accent2} !important;
-        box-shadow: 0 0 0 2px rgba(34,197,94,0.35) !important;
-      }}
-
-      /* Horizontal rules */
-      hr, .stMarkdown hr {{
-        border-color: {border} !important;
-      }}
-    </style>
-    """, unsafe_allow_html=True)
+if "stage" not in st.session_state:
+    st.session_state.stage = "landing"
 
 
 
@@ -150,7 +50,7 @@ def render_credit_header():
     )
 
     # use your theme switch (defaults to dark)
-    theme = ss.get("theme", "dark")
+    theme = get_theme()
     brand = {
         "dark": {"text":"#e2e8f0","muted":"#94a3b8","accent":"#3b82f6"},
         "light":{"text":"#0f172a","muted":"#475569","accent":"#2563eb"},
@@ -303,6 +203,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+if st.session_state.stage != "landing":
+    init_theme()
+
 
 # ────────────────────────────────
 # GLOBAL CONFIG (directories + API)
@@ -334,7 +237,7 @@ def render_nav_bar_app():
     if not (show_home or show_agents):
         return
 
-    c1, c2, _ = st.columns([1, 1, 6])
+    c1, c2, c3 = st.columns([1, 1, 2.5])
 
     with c1:
         if show_home and st.button("🏠 Back to Home", key=f"btn_home_{stage}"):
@@ -345,6 +248,13 @@ def render_nav_bar_app():
         if show_agents and st.button("🤖 Back to Agents", key=f"btn_agents_{stage}"):
             st.session_state.stage = "agents"
             st.rerun()  # already in app.py → rerun only
+
+    with c3:
+        render_theme_toggle(
+            label="🌗 Dark mode",
+            key="app_theme_toggle",
+            help="Toggle the shared UI palette",
+        )
 
     st.markdown("---")
 
@@ -413,8 +323,6 @@ def render_nav_bar_app():
 # ────────────────────────────────
 # SESSION STATE INIT
 # ────────────────────────────────
-if "stage" not in st.session_state:
-    st.session_state.stage = "landing"
 if "user_info" not in st.session_state:
     st.session_state.user_info = {"name": "", "email": "", "flagged": False}
 if "logged_in" not in st.session_state:
@@ -616,76 +524,7 @@ st.markdown(
 )
 
 
-# st.markdown(
-#     """
-#     <style>
-#     html, body, .block-container { background-color:#0f172a !important; color:#e2e8f0 !important; }
-#     footer { text-align:center; padding:2rem; color:#aab3c2; font-size:1.2rem; font-weight:600; margin-top:2rem; }
-#     .left-box {
-#         background: radial-gradient(circle at top left, #0f172a, #1e293b);
-#         border-radius:20px; padding:3rem 2rem; color:#f1f5f9; box-shadow:6px 0 24px rgba(0,0,0,0.4);
-#     }
-#     .right-box {
-#         background:linear-gradient(180deg,#1e293b,#0f172a);
-#         border-radius:20px; padding:2rem; box-shadow:-6px 0 24px rgba(0,0,0,0.35);
-#     }
-#     .stButton > button {
-#         border:none !important; cursor:pointer;
-#         padding:14px 28px !important; font-size:18px !important; font-weight:700 !important;
-#         border-radius:14px !important; color:#fff !important;
-#         background:linear-gradient(180deg,#4ea3ff 0%,#2f86ff 60%,#0f6fff 100%) !important;
-#         box-shadow:0 8px 24px rgba(15,111,255,0.35);
-#     }
-#     a.macbtn {
-#         display:inline-block; text-decoration:none !important; color:#fff !important;
-#         padding:10px 22px; font-weight:700; border-radius:12px;
-#         background:linear-gradient(180deg,#4ea3ff 0%,#2f86ff 60%,#0f6fff 100%);
-#     }
-#     /* Larger workflow tabs */
-#     [data-testid="stTabs"] [data-baseweb="tab"] {
-#         font-size: 28px !important;
-#         font-weight: 800 !important;
-#         padding: 20px 40px !important;
-#         border-radius: 12px !important;
-#         background-color: #1e293b !important;
-#         color: #f8fafc !important;
-#     }
-#     [data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] {
-#         background: linear-gradient(90deg, #2563eb, #1d4ed8) !important;
-#         color: white !important;
-#         border-bottom: 6px solid #60a5fa !important;
-#         box-shadow: 0 4px 14px rgba(37,99,235,0.5);
-#     }
-#     </style>
-#     """,
-#     unsafe_allow_html=True,
-# )
 
-# # ────────────────────────────────
-# # QUERY PARAM ROUTING (modern API)
-# # ────────────────────────────────
-# try:
-#     qp = st.query_params
-# except Exception:
-#     qp = {}
-
-# if "stage" in qp:
-#     target = qp["stage"]
-#     # Add "asset_agent" here so it's recognized
-#     if target in {"landing", "agents", "login", "credit_agent", "asset_agent"} and st.session_state.stage != target:
-#         st.session_state.stage = target
-#         _clear_qp()
-#         st.rerun()
-
-# # Handle direct launch requests for specific agents
-# if "launch" in qp or "agent" in qp:
-#     agent = qp.get("agent", [""])[0] if isinstance(qp.get("agent"), list) else qp.get("agent", "")
-#     if agent == "credit":
-#         st.session_state.stage = "login"
-#     elif agent == "asset":
-#         st.session_state.stage = "asset_agent"
-#     _clear_qp()
-#     st.rerun()
 
 
 # ────────────────────────────────
@@ -767,18 +606,12 @@ if "stage" not in st.session_state:
 # DEFINE PATHS + FILES
 # ────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FEEDBACK_FILE = os.path.join(BASE_DIR, "agents_feedback.json")
 
 # ────────────────────────────────
 # FEEDBACK LOADING + CACHE
 # ────────────────────────────────
 def load_feedback() -> dict:
-    """Load feedback data (ratings, users, comments) from JSON file."""
-    try:
-        with open(FEEDBACK_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {}
+    return load_feedback_data()
 
 def render_stars(rating: float) -> str:
     """Render gold stars for rating."""
@@ -809,7 +642,7 @@ if st.session_state.stage == "landing":
         st.markdown("<div class='left-box'>", unsafe_allow_html=True)
 
         # ────────────────────────────────
-        # HERO LOGO — Double-click to upload
+        # HERO LOGO — Tap to upload
         # ────────────────────────────────
         logo_dir = os.path.join(BASE_DIR, "assets")
         os.makedirs(logo_dir, exist_ok=True)
@@ -832,28 +665,23 @@ if st.session_state.stage == "landing":
             .logo-upload-area [data-testid="stFileUploadDropzone"] {
                 display: none !important;
             }
+            #logo_upload { visibility:hidden; height:0; }
+            .block-container input[type="file"] { display:none !important; }
             </style>
-            <script>
-            function triggerLogoUpload() {
-                const hiddenInput = document.querySelector('.logo-upload-area input[type="file"]');
-                if (hiddenInput) hiddenInput.click();
-            }
-            </script>
             """,
             unsafe_allow_html=True,
         )
 
-        display_logo = ""
         if os.path.exists(saved_logo_path):
             with open(saved_logo_path, "rb") as f:
                 logo_base64 = base64.b64encode(f.read()).decode()
-            display_logo = f'<img src="data:image/png;base64,{logo_base64}" width="220" />'
+            display_logo = f'<img src="data:image/png;base64,{logo_base64}" style="width:320px;border-radius:16px;box-shadow:0 0 35px rgba(14,165,233,0.45);" />'
         else:
-            display_logo = "<div class='logo-upload-placeholder'>Tap to upload logo</div>"
+            display_logo = "<div class='logo-upload-placeholder' style='width:320px;height:160px;'>Tap to upload logo</div>"
 
         st.markdown(
             f"""
-            <div onclick="triggerLogoUpload()" style="cursor:pointer; text-align:center;">
+            <div id="logo_click_area" style="cursor:pointer; text-align:center;">
                 {display_logo}
                 <p style='font-size:12px;color:#94a3b8;'>Tap to upload/replace logo</p>
             </div>
@@ -861,21 +689,47 @@ if st.session_state.stage == "landing":
             unsafe_allow_html=True,
         )
 
-        st.markdown("<div class='logo-upload-area'>", unsafe_allow_html=True)
+        upload_label = "logo_upload_portal"
         uploaded_logo = st.file_uploader(
-            "Upload new logo",
+            upload_label,
             type=["png", "jpg", "jpeg", "webp"],
-            key="upload_logo_hidden",
+            key="logo_upload",
             label_visibility="collapsed",
         )
-        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown(
+            f"""
+            <style>
+            div[aria-label="{upload_label}"] {{
+                height: 0 !important;
+                opacity: 0 !important;
+                overflow: hidden !important;
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        st.markdown(
+            """
+            <script>
+            const logoArea = document.getElementById("logo_click_area");
+            if (logoArea) {
+                logoArea.onclick = function() {
+                    const hiddenWrapper = document.querySelector('div[aria-label="logo_upload_portal"]');
+                    const hiddenInput = hiddenWrapper ? hiddenWrapper.querySelector('input[type="file"]') : null;
+                    if (hiddenInput) hiddenInput.click();
+                };
+            }
+            </script>
+            """,
+            unsafe_allow_html=True,
+        )
         if uploaded_logo is not None:
             with open(saved_logo_path, "wb") as f:
                 f.write(uploaded_logo.read())
             st.success("✅ Logo updated!")
             st.rerun()
-
-
 
         # ────────────────────────────────
         # HERO + FOUNDATIONAL MESSAGE
@@ -999,6 +853,38 @@ if st.session_state.stage == "landing":
             transform: translateY(-2px) scale(1.05);
             text-shadow: 0 0 12px #ff66cc;
         }
+        .agent-comments details {
+            cursor: pointer;
+            color: #f9fafb;
+            font-weight: 600;
+        }
+        .agent-comments summary {
+            list-style: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 48px;
+        }
+        .agent-comments summary::-webkit-details-marker {
+            display: none;
+        }
+        .agent-comments details[open] {
+            background: rgba(59,130,246,0.08);
+            border-radius: 10px;
+            padding: 0.35rem;
+        }
+        .agent-comments .comment-list {
+            margin: 0.4rem 0 0;
+            padding-left: 1rem;
+            max-height: 180px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            color: #cbd5f5;
+            text-align: left;
+        }
+        .agent-comments .comment-list li {
+            margin-bottom: 0.25rem;
+        }
         </style>
         """, unsafe_allow_html=True)
 
@@ -1025,7 +911,14 @@ if st.session_state.stage == "landing":
             # ----- feedback / usage data -----
             fb = feedback_data.get(agent, {"rating": 0, "users": 0, "comments": []})
             users = fb.get("users", 0)
-            comment_count = len(fb.get("comments", []))
+            comments = fb.get("comments", [])
+            comment_count = len(comments)
+            rating = float(fb.get("rating", 0) or 0)
+            rating_html = render_stars(rating) if rating else "<span style='color:#475569;font-size:18px;'>—</span>"
+            rating_text = f"{rating:.1f}/5" if rating else "—"
+            latest_comment = html.escape(comments[-1]) if comments else "No feedback yet."
+            comment_items = "".join(f"<li>{html.escape(c)}</li>" for c in reversed(comments))
+            comment_list_html = comment_items or "<li>No feedback yet.</li>"
 
             # ----- build clean route name -----
             clean_agent = re.sub(r"[^\w\s-]", "", agent).strip().lower()  # remove emojis/symbols
@@ -1042,10 +935,24 @@ if st.session_state.stage == "landing":
                     <div style="flex:3;color:#a0aec0;">{desc}</div>
                     <div style="flex:1;text-align:center;color:{status_color};font-weight:700;">{status_label}</div>
                     <div style="flex:0.6;text-align:center;">👥 {users}</div>
-                    <div style="flex:0.6;text-align:center;">💬 {comment_count}</div>
+                    <div class="agent-comments" style="flex:1;text-align:center;">
+                        <details>
+                            <summary>💬 {comment_count}</summary>
+                            <ul class="comment-list">
+                                {comment_list_html}
+                            </ul>
+                        </details>
+                    </div>
+                    <div style="flex:0.9;text-align:center;line-height:1.4;">
+                        {rating_html}
+                        <div style="font-size:0.85rem;color:#c7d2fe;">{rating_text}</div>
+                    </div>
                     <div style="flex:0.8;text-align:center;">
                         <a class="launchbtn" href="{launch_url}">🚀 Launch</a>
                     </div>
+                </div>
+                <div style="margin-top:0.35rem;font-size:0.85rem;color:#94a3b8;font-style:italic;">
+                    &ldquo;{latest_comment}&rdquo;
                 </div>
             </div>
             """
@@ -1060,7 +967,7 @@ if st.session_state.stage == "landing":
                 {html_agents}
             </div>
             <footer style="text-align:center;margin-top:2rem;color:#a3e8ff;">
-                💎 Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative
+                💎 Made with ❤️ by DzoanNguyenTran@gmail.com — Open AIgents Sandbox Initiative
             </footer>
             """,
             unsafe_allow_html=True
@@ -1069,239 +976,7 @@ if st.session_state.stage == "landing":
         st.stop()
 
         
-        # # Build all agent HTML dynamically into one single string
-        # html_agents = ""
-        # for sector, industry, agent, desc, status, emoji in AGENTS:
-        #     if status == "Available":
-        #         status_label = "✅ Available"; status_color = "#22c55e"
-        #     elif status == "Coming Soon":
-        #         status_label = "⏳ Coming Soon"; status_color = "#f59e0b"
-        #     else:
-        #         status_label = status; status_color = "#f1f5f9"
-
-        #     fb = feedback_data.get(agent, {"rating": 0, "users": 0, "comments": []})
-        #     users = fb.get("users", 0)
-        #     comment_count = len(fb.get("comments", []))
-
-        #     html_agents += f"""
-        #     <div class="agent-card">
-        #         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
-        #             <div style="flex:1.2;color:#ccc;">{industry}</div>
-        #             <div style="flex:1.5;font-weight:700;color:white;">{agent}</div>
-        #             <div style="flex:3;color:#a0aec0;">{desc}</div>
-        #             <div style="flex:1;text-align:center;color:{status_color};font-weight:700;">{status_label}</div>
-        #             <div style="flex:0.6;text-align:center;">👥 {users}</div>
-        #             <div style="flex:0.6;text-align:center;">💬 {comment_count}</div>
-        #             <div style="flex:0.8;text-align:center;">
-        #                 <a class="launchbtn" href="?agent={agent.lower().replace(' ','_')}&stage=login">🚀 Launch</a>
-        #             </div>
-        #         </div>
-        #     </div>
-        #     """
-
-        # # Render all at once (HTML, not escaped Markdown)
-        # st.markdown(
-        #     f"""
-        #     <div class="neon-header">📊 Global AI Agent Library</div>
-        #     <div class="neon-frame">
-        #         {html_agents}
-        #     </div>
-        #     <footer style="text-align:center;margin-top:2rem;color:#a3e8ff;">
-        #         💎 Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative
-        #     </footer>
-        #     """,
-        #     unsafe_allow_html=True  # ← this must be TRUE so HTML isn't escaped
-        # )
-
-        # st.stop()
-
-    # ────────────────────────────────
-    # # RIGHT PANEL — Neon Interactive Agent List
-    # # ────────────────────────────────
-    # with c2:
-    #     # Inject Neon CSS
-    #     st.markdown("""
-    #     <style>
-    #     @keyframes pulseOuter {
-    #         0%,100% { box-shadow: 0 0 35px rgba(0,200,255,0.3), inset 0 0 15px rgba(0,200,255,0.3); }
-    #         50% { box-shadow: 0 0 90px rgba(0,240,255,0.8), inset 0 0 25px rgba(0,240,255,0.5); }
-    #     }
-
-    #     .neon-card {
-    #         border: 2px solid rgba(0,200,255,0.6);
-    #         border-radius: 14px;
-    #         padding: 1rem 1.5rem;
-    #         margin: 1.2rem 0;
-    #         background: linear-gradient(180deg, rgba(8,17,30,0.95), rgba(10,25,45,0.95));
-    #         animation: pulseOuter 6s ease-in-out infinite;
-    #         box-shadow: 0 0 60px rgba(0,200,255,0.35);
-    #         transition: transform 0.25s ease-in-out;
-    #     }
-
-    #     .neon-card:hover {
-    #         transform: translateY(-4px) scale(1.01);
-    #         box-shadow: 0 0 90px rgba(0,240,255,0.6);
-    #     }
-
-    #     .neon-header {
-    #         background: linear-gradient(90deg, #ff0033, #ff3366);
-    #         border-radius: 8px;
-    #         color: white;
-    #         font-weight: 700;
-    #         padding: 8px 14px;
-    #         margin-bottom: 10px;
-    #         text-shadow: 0 0 8px rgba(255,80,100,0.9);
-    #         box-shadow: 0 0 20px rgba(255,60,100,0.6);
-    #     }
-
-    #     .launchbtn {
-    #         display: inline-block;
-    #         text-decoration: none;
-    #         color: #e6f7ff;
-    #         font-weight: 700;
-    #         padding: 6px 16px;
-    #         border-radius: 8px;
-    #         border: 1px solid rgba(0,220,255,0.8);
-    #         background: rgba(0,50,80,0.5);
-    #         box-shadow: 0 0 14px rgba(0,220,255,0.5);
-    #         transition: all 0.25s ease-in-out;
-    #     }
-
-    #     .launchbtn:hover {
-    #         box-shadow: 0 0 25px rgba(255,105,180,0.8);
-    #         transform: translateY(-2px) scale(1.05);
-    #         text-shadow: 0 0 12px #ff66cc;
-    #     }
-
-    #     </style>
-    #     """, unsafe_allow_html=True)
-
-    #     # Header
-    #     st.markdown("<div class='neon-header' style='text-align:center;font-size:1.6rem;'>📊 Global AI Agent Library</div>", unsafe_allow_html=True)
-
-    #     # Agent cards
-    #     for sector, industry, agent, desc, status, emoji in AGENTS:
-    #         if status == "Available":
-    #             status_label = "✅ Available"
-    #             status_color = "#22c55e"
-    #         elif status == "Coming Soon":
-    #             status_label = "⏳ Coming Soon"
-    #             status_color = "#f59e0b"
-    #         else:
-    #             status_label = status
-    #             status_color = "#f1f5f9"
-
-    #         fb = feedback_data.get(agent, {"rating": 0, "users": 0, "comments": []})
-    #         rating_html = render_stars(fb.get("rating", 0))
-    #         users = fb.get("users", 0)
-    #         comments = fb.get("comments", [])
-    #         comment_count = len(comments)
-
-    #         # Neon card per agent
-    #         st.markdown("<div class='neon-card'>", unsafe_allow_html=True)
-    #         cols = st.columns([1.0, 1.4, 2.8, 1.0, 0.8, 0.9, 1.0])
-
-    #         with cols[0]:
-    #             st.markdown(f"{industry}")
-    #         with cols[1]:
-    #             st.markdown(f"**{agent}**")
-    #         with cols[2]:
-    #             st.markdown(desc)
-    #         with cols[3]:
-    #             st.markdown(f"<span style='color:{status_color};font-weight:700;'>{status_label}</span>", unsafe_allow_html=True)
-    #         with cols[4]:
-    #             st.markdown(f"👥 {users}")
-    #         with cols[5]:
-    #             if comment_count > 0:
-    #                 if st.button(f"💬 {comment_count}", key=f"btn_{agent}"):
-    #                     st.session_state[f"show_comments_{agent}"] = not st.session_state.get(f"show_comments_{agent}", False)
-    #             else:
-    #                 st.markdown("💬 0")
-    #         with cols[6]:
-    #             st.markdown(
-    #                 f"<a class='launchbtn' href='?agent={agent.lower().replace(' ','_')}&stage=login'>🚀 Launch</a>",
-    #                 unsafe_allow_html=True
-    #             )
-
-    #         # Comments expander
-    #         if st.session_state.get(f"show_comments_{agent}", False):
-    #             with st.expander(f"🗣 Comments for {agent}", expanded=True):
-    #                 if comments:
-    #                     for cmt in reversed(comments):
-    #                         st.markdown(f"- {cmt}")
-    #                 else:
-    #                     st.markdown("_No comments yet._")
-
-    #         st.markdown("</div>", unsafe_allow_html=True)
-
-    #     # Footer
-    #     st.markdown("<footer style='text-align:center;margin-top:2rem;color:#a3e8ff;'>💎 Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>", unsafe_allow_html=True)
-    #     st.stop()
-
-
-    # # Right Panel
-    # with c2:
-    #     st.markdown("<div class='right-box'>", unsafe_allow_html=True)
-    #     st.markdown("<h2>📊 Global AI Agent Library</h2>", unsafe_allow_html=True)
-
-    #     for sector, industry, agent, desc, status, emoji in AGENTS:
-    #         # ✅ Revert to original Available / Coming Soon logic
-    #         if status == "Available":
-    #             status_label = "Available"
-    #             status_color = "#22c55e"   # green
-    #         elif status == "Coming Soon":
-    #             status_label = "Coming Soon"
-    #             status_color = "#f59e0b"   # orange
-    #         else:
-    #             status_label = status
-    #             status_color = "#f1f5f9"
-
-    #         fb = feedback_data.get(agent, {"rating": 0, "users": 0, "comments": []})
-    #         rating_html = render_stars(fb.get("rating", 0))
-    #         users = fb.get("users", 0)
-    #         comments = fb.get("comments", [])
-    #         comment_count = len(comments)
-
-    #         cols = st.columns([0.5, 1.0, 1.4, 2.8, 1.0, 0.8, 0.9, 1.0])
-    #         with cols[0]:
-    #             st.markdown(render_image_tag(agent, industry, emoji), unsafe_allow_html=True)
-    #         with cols[1]:
-    #             st.markdown(f"**{industry}**")
-    #         with cols[2]:
-    #             st.markdown(f"**{agent}**")
-    #         with cols[3]:
-    #             st.markdown(desc)
-    #         with cols[4]:
-    #             st.markdown(rating_html, unsafe_allow_html=True)
-    #         with cols[5]:
-    #             st.markdown(f"👥 {users}")
-    #         with cols[6]:
-    #             if comment_count > 0:
-    #                 if st.button(f"💬 {comment_count}", key=f"btn_{agent}"):
-    #                     st.session_state[f"show_comments_{agent}"] = not st.session_state.get(
-    #                         f"show_comments_{agent}", False
-    #                     )
-    #             else:
-    #                 st.markdown("💬 0")
-    #         with cols[7]:
-    #             st.markdown(
-    #                 f"<span style='color:{status_color};font-weight:700;'>{status_label}</span>",
-    #                 unsafe_allow_html=True,
-    #             )
-
-    #         if st.session_state.get(f"show_comments_{agent}", False):
-    #             with st.expander(f"🗣 Comments for {agent}", expanded=True):
-    #                 for cmt in reversed(comments):
-    #                     st.markdown(f"- {cmt}")
-
-    #         st.markdown("---")
-
-    #     st.markdown("</div>", unsafe_allow_html=True)
-
-    # st.markdown("<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>", unsafe_allow_html=True)
-    # st.stop()
-
-
+       
 # ────────────────────────────────
 # STAGE: AGENTS (Neon Styled)
 # ────────────────────────────────
@@ -1400,7 +1075,7 @@ if st.session_state.stage == "agents":
     # Footer
     st.markdown(
         "<footer style='text-align:center;margin-top:1rem;color:#a3e8ff;'>"
-        "💎 Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>",
+        "💎 Made with ❤️ by DzoanNguyenTran@gmail.com — Open AIgents Sandbox Initiative</footer>",
         unsafe_allow_html=True
     )
 
@@ -1429,7 +1104,7 @@ if st.session_state.stage == "agents":
 #     ])
 #     st.write(df.to_html(escape=False, index=False), unsafe_allow_html=True)
 #     st.markdown(
-#         "<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>",
+#         "<footer>Made with ❤️ by DzoanNguyenTran@gmail.com — Open AIgents Sandbox Initiative</footer>",
 #         unsafe_allow_html=True
 #     )
 #     st.stop()
@@ -1470,7 +1145,7 @@ if st.session_state.stage == "login":
             st.rerun()
         else:
             st.error("⚠️ Please fill all fields before continuing.")
-    st.markdown("<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>", unsafe_allow_html=True)
+    st.markdown("<footer>Made with ❤️ by DzoanNguyenTran@gmail.com — Open AIgents Sandbox Initiative</footer>", unsafe_allow_html=True)
     st.stop()
 
 

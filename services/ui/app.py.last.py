@@ -1038,7 +1038,7 @@ if st.session_state.stage == "landing":
                 {html_agents}
             </div>
             <footer style="text-align:center;margin-top:2rem;color:#a3e8ff;">
-                💎 Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative
+                💎 Made with ❤️ by DzoanNguyenTran@gmail.com — Open AIgents Sandbox Initiative
             </footer>
             """,
             unsafe_allow_html=True
@@ -1085,7 +1085,7 @@ if st.session_state.stage == "landing":
         #         {html_agents}
         #     </div>
         #     <footer style="text-align:center;margin-top:2rem;color:#a3e8ff;">
-        #         💎 Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative
+        #         💎 Made with ❤️ by DzoanNguyenTran@gmail.com — Open AIgents Sandbox Initiative
         #     </footer>
         #     """,
         #     unsafe_allow_html=True  # ← this must be TRUE so HTML isn't escaped
@@ -1213,7 +1213,7 @@ if st.session_state.stage == "landing":
     #         st.markdown("</div>", unsafe_allow_html=True)
 
     #     # Footer
-    #     st.markdown("<footer style='text-align:center;margin-top:2rem;color:#a3e8ff;'>💎 Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>", unsafe_allow_html=True)
+    #     st.markdown("<footer style='text-align:center;margin-top:2rem;color:#a3e8ff;'>💎 Made with ❤️ by DzoanNguyenTran@gmail.com — Open AIgents Sandbox Initiative</footer>", unsafe_allow_html=True)
     #     st.stop()
 
 
@@ -1276,7 +1276,7 @@ if st.session_state.stage == "landing":
 
     #     st.markdown("</div>", unsafe_allow_html=True)
 
-    # st.markdown("<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>", unsafe_allow_html=True)
+    # st.markdown("<footer>Made with ❤️ by DzoanNguyenTran@gmail.com — Open AIgents Sandbox Initiative</footer>", unsafe_allow_html=True)
     # st.stop()
 
 
@@ -1378,7 +1378,7 @@ if st.session_state.stage == "agents":
     # Footer
     st.markdown(
         "<footer style='text-align:center;margin-top:1rem;color:#a3e8ff;'>"
-        "💎 Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>",
+        "💎 Made with ❤️ by DzoanNguyenTran@gmail.com — Open AIgents Sandbox Initiative</footer>",
         unsafe_allow_html=True
     )
 
@@ -1407,7 +1407,7 @@ if st.session_state.stage == "agents":
 #     ])
 #     st.write(df.to_html(escape=False, index=False), unsafe_allow_html=True)
 #     st.markdown(
-#         "<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>",
+#         "<footer>Made with ❤️ by DzoanNguyenTran@gmail.com — Open AIgents Sandbox Initiative</footer>",
 #         unsafe_allow_html=True
 #     )
 #     st.stop()
@@ -1448,7 +1448,7 @@ if st.session_state.stage == "login":
             st.rerun()
         else:
             st.error("⚠️ Please fill all fields before continuing.")
-    st.markdown("<footer>Made with ❤️ by Dzoan Nguyen — Open AI Sandbox Initiative</footer>", unsafe_allow_html=True)
+    st.markdown("<footer>Made with ❤️ by DzoanNguyenTran@gmail.com — Open AIgents Sandbox Initiative</footer>", unsafe_allow_html=True)
     st.stop()
 
 

@@ -20,6 +20,7 @@ import re
 import json
 from datetime import datetime, timezone  # ✅ clean, safe, supports datetime.now()
 from pathlib import Path
+from textwrap import dedent
 from typing import Any, Dict
 
 # ── Third-party
@@ -33,869 +34,26 @@ import plotly.graph_objects as go
 import csv
 import zipfile  # ✅ ADD THIS
 
+from services.ui.theme_manager import (
+    apply_theme as apply_global_theme,
+    get_palette,
+    get_theme,
+    render_theme_toggle,
+)
+from services.ui.components.operator_banner import render_operator_banner
+from services.ui.components.telemetry_dashboard import render_telemetry_dashboard
+from services.ui.components.feedback import render_feedback_tab
 
 
 
 
 
-def apply_theme(theme: str = "dark"):
-    import streamlit as st
 
-    st.markdown("""
-    <style>
-    /* ===============================================
-       🌙 MACOS BLUE DARK THEME — GLOBAL BASE
-    =============================================== */
-    html, body, [data-testid="stAppViewContainer"] {
-        background: radial-gradient(circle at 20% 20%, #0b0f16, #060a12 85%) !important;
-        color: #f8fafc !important;
-        font-family: "Inter","SF Pro Display","Segoe UI",system-ui,sans-serif !important;
-    }
-
-    h1,h2,h3,h4,h5,h6 {
-        color: #f8fafc !important;
-        font-weight: 700 !important;
-        letter-spacing: -0.02em !important;
-    }
-
-    p, li, label, span, div {
-        color: #e2e8f0 !important;
-    }
-    small, .stCaption { color: #94a3b8 !important; }
-
-    a, a:link, a:visited { color: #339dff !important; }
-    a:hover { color: #60a5fa !important; text-decoration: underline; }
-
-    hr {
-        border: none !important;
-        height: 1px !important;
-        background: linear-gradient(90deg,transparent,#007aff,transparent) !important;
-    }
-
-    /* ===============================================
-       🧱 CONTAINERS & CARDS
-    =============================================== */
-    .stMarkdown, .stContainer, .stAlert, [class*="stCard"], [class*="block-container"] {
-        background: #0f172a !important;
-        border: 1px solid #1e3a8a !important;
-        border-radius: 12px !important;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
-    }
-
-    /* ===============================================
-       🔘 BUTTONS — macOS BLUE
-    =============================================== */
-    button[kind="primary"], .stButton>button, .stDownloadButton>button, .stDownloadButton button {
-        background: linear-gradient(180deg,#007aff,#005ecb) !important;
-        color: #ffffff !important;
-        border: 1px solid #0051b8 !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
-        padding: 0.5rem 1rem !important;
-        box-shadow: 0 4px 10px rgba(0,122,255,0.35),
-                    inset 0 -1px 0 rgba(255,255,255,0.2) !important;
-        transition: all 0.25s ease-in-out !important;
-    }
-    button[kind="primary"]:hover, .stButton>button:hover, .stDownloadButton>button:hover {
-        background: linear-gradient(180deg,#339dff,#006ae6) !important;
-        box-shadow: 0 4px 14px rgba(0,122,255,0.45) !important;
-        transform: translateY(-1px) !important;
-    }
-    button[kind="primary"]:active, .stButton>button:active, .stDownloadButton>button:active {
-        background: linear-gradient(180deg,#004fc4,#0042a8) !important;
-        box-shadow: inset 0 2px 6px rgba(0,122,255,0.3) !important;
-        transform: translateY(0) !important;
-    }
-    .stButton button[disabled], .stDownloadButton button[disabled] {
-        background: #1e293b !important;
-        color: #64748b !important;
-        border: 1px solid #334155 !important;
-    }
-
-    /* ===============================================
-    🧠 INPUTS (Text, Select, Number) & FOCUS STATE
-    =============================================== */
-    .stTextInput>div>div>input,
-    .stSelectbox>div>div>div,
-    .stNumberInput input {
-        background: #111827 !important;
-        color: #f8fafc !important;
-        border: 1px solid #1e3a8a !important;
-        border-radius: 8px !important;
-        padding: 6px 10px !important;
-        transition: all 0.25s ease;
-    }
-    .stTextInput>div>div>input:focus,
-    .stSelectbox>div>div>div:focus-within,
-    .stNumberInput input:focus {
-        outline: none !important;
-        border-color: #007aff !important;
-        box-shadow: 0 0 0 2px rgba(0,122,255,0.4) !important;
-    }
-    ::placeholder {
-        color: #9ca3af !important;
-        opacity: 1 !important;
-    }
-    /* ===============================================
-   🎛 DROPDOWN MENUS
-    =============================================== */
-    [data-baseweb="popover"], [role="listbox"] {
-        background: #0f172a !important;
-        color: #f8fafc !important;
-        border: 1px solid #1e3a8a !important;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.6) !important;
-    }
-    [data-baseweb="menu-item"] {
-        background: #0f172a !important;
-        color: #f8fafc !important;
-    }
-    [data-baseweb="menu-item"]:hover {
-        background: #1e3a8a !important;
-        color: #ffffff !important;
-    }
-    /* ===============================================
-    🧭 SIDEBAR THEME
-    =============================================== */
-    [data-testid="stSidebar"] {
-        background: linear-gradient(180deg,#0d1320,#060a12) !important;
-        border-right: 1px solid #1e3a8a !important;
-        color: #f8fafc !important;
-    }
-
-    
-    /* ===============================================
-       ☑️ CHECKBOXES / RADIOS / SLIDERS
-    =============================================== */
-    input[type="checkbox"], input[type="radio"] {
-        accent-color: #007aff !important;
-    }
-    .stSlider [role="slider"] {
-        background-color: #007aff !important;
-    }
-
-    /* ===============================================
-       🗂️ TABS
-    =============================================== */
-    .stTabs [data-baseweb="tab-list"] button {
-        color: #e2e8f0 !important;
-        background: #111827 !important;
-        border: 1px solid #1e293b !important;
-        border-radius: 10px !important;
-        font-weight: 500 !important;
-        margin-right: 4px !important;
-    }
-    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
-        background: #007aff !important;
-        color: #ffffff !important;
-        box-shadow: 0 0 12px rgba(0,122,255,0.4) !important;
-    }
-
-    /* ===============================================
-       🧭 EXPANDERS / ACCORDIONS
-    =============================================== */
-    .streamlit-expanderHeader {
-        background: linear-gradient(90deg,#0d284d,#0a1f3a) !important;
-        color: #dbeafe !important;
-        border: 1px solid #1e3a5f !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
-    }
-    .streamlit-expanderContent {
-        background: #0f172a !important;
-        color: #e2e8f0 !important;
-        border: 1px solid #1e3a5f !important;
-        border-radius: 0 0 8px 8px !important;
-    }
-
-    /* ===============================================
-       📊 METRIC CARDS (st.metric)
-    =============================================== */
-    [data-testid="stMetric"] {
-        background: linear-gradient(180deg,#0b1220,#101a2c) !important;
-        border: 1px solid #1e3a8a !important;
-        border-radius: 10px !important;
-        box-shadow: inset 0 0 10px rgba(255,255,255,0.03),
-                    0 3px 10px rgba(0,0,0,0.6) !important;
-        padding: 10px 14px !important;
-        text-align: center !important;
-    }
-    div[data-testid="stMetricLabel"] {
-        color: #94a3b8 !important;
-        font-size: 0.85rem !important;
-        font-weight: 500 !important;
-    }
-    div[data-testid="stMetricValue"] {
-        color: #ffffff !important;
-        font-size: 1.3rem !important;
-        font-weight: 600 !important;
-    }
-
-    /* ===============================================
-       📊 METRIC COMPARISON TABLE — FINAL
-    =============================================== */
-    [data-testid="stDataFrame"] {
-        background: radial-gradient(circle at 50% 50%, #0b1220, #060a12 90%) !important;
-        border: 1px solid #1e3a8a !important;
-        border-radius: 12px !important;
-        box-shadow:
-            0 0 14px rgba(0,0,0,0.6) inset,
-            0 4px 18px rgba(0,0,0,0.7),
-            0 0 12px rgba(0,122,255,0.15) !important;
-        margin-top: 12px !important;
-        padding: 8px !important;
-    }
-    [data-testid="stDataFrame"] thead tr th {
-        background: linear-gradient(90deg,#004fc4,#007aff) !important;
-        color: #ffffff !important;
-        border-bottom: 2px solid #007aff !important;
-        font-weight: 700 !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.02em !important;
-        font-size: 0.92rem !important;
-        padding: 10px 14px !important;
-    }
-    [data-testid="stDataFrame"] tbody tr {
-        background-color: #0b1220 !important;
-        color: #ffffff !important;
-        transition: background 0.25s ease;
-    }
-    [data-testid="stDataFrame"] tbody tr:nth-child(even) {
-        background-color: #101a2c !important;
-    }
-    [data-testid="stDataFrame"] tbody tr:hover {
-        background-color: #112a52 !important;
-        box-shadow: 0 0 8px rgba(0,122,255,0.25) inset !important;
-    }
-    [data-testid="stDataFrame"] tbody td {
-        border-top: 1px solid #1e3a8a !important;
-        color: #ffffff !important;
-        padding: 9px 14px !important;
-        font-size: 0.95rem !important;
-        font-weight: 500 !important;
-    }
-    [data-testid="stDataFrame"] tbody td:last-child {
-        color: #60a5fa !important;
-        font-weight: 500 !important;
-    }
-
-    /* ===============================================
-       📁 FILE UPLOADER
-    =============================================== */
-    [data-testid="stFileUploaderDropzone"] {
-        background: rgba(255,255,255,0.03) !important;
-        border: 1px dashed #1e3a8a !important;
-        border-radius: 10px !important;
-        color: #cbd5e1 !important;
-        transition: all 0.25s ease;
-    }
-    [data-testid="stFileUploaderDropzone"]:hover {
-        border-color: #007aff !important;
-        background: rgba(0,122,255,0.1) !important;
-    }
-
-    /* ===============================================
-       ⚠️ ALERT BOXES
-    =============================================== */
-    [data-testid^="stAlert"] {
-        border-radius: 10px !important;
-        border: 1px solid #1e3a8a !important;
-        color: #e2e8f0 !important;
-        box-shadow: 0 3px 15px rgba(0,0,0,0.4) !important;
-    }
-    [data-testid="stAlertInfo"]    { background: linear-gradient(145deg,#0d1829,#10243d)!important; }
-    [data-testid="stAlertSuccess"] { background: linear-gradient(145deg,#0f2414,#183820)!important; }
-    [data-testid="stAlertError"]   { background: linear-gradient(145deg,#2b1617,#1a0c0d)!important; }
-    [data-testid="stAlertWarning"] { background: linear-gradient(145deg,#2f2a10,#1c1a0a)!important; }
-
-    </style>
-    """, unsafe_allow_html=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# def apply_theme(theme: str = "dark"):
-#     import streamlit as st
-
-#     # =======================
-#     # 🎨 COLOR PALETTE
-#     # =======================
-#     if theme == "light":
-#         bg, text, subtext = "#ffffff", "#0f172a", "#334155"
-#         card, border = "#f8fafc", "#e2e8f0"
-#         accent, accent2 = "#2563eb", "#22c55e"
-#         tab_bg, table_bg = "#eef2ff", "#ffffff"
-#         table_head_bg, table_head_tx = "#e2e8f0", "#0f172a"
-#     else:
-#         bg, text, subtext = "#0b0f16", "#f8fafc", "#cbd5e1"
-#         card, border = "#111827", "#1e293b"
-#         accent, accent2 = "#60a5fa", "#22c55e"
-#         tab_bg, table_bg = "#1e293b", "#111827"
-#         table_head_bg, table_head_tx = "#1f2937", "#f8fafc"
-
-#     # =======================
-#     # 💅 GLOBAL STYLES
-#     # =======================
-#     st.markdown(f"""
-#     <style>
-
-#     /* GLOBAL BACKGROUND */
-#     .stApp {{
-#         background: radial-gradient(circle at 20% 20%, {bg}, #090d13 90%) !important;
-#         color: {text} !important;
-#         font-family: 'Inter','Segoe UI',system-ui,sans-serif !important;
-#     }}
-
-#     /* HEADERS */
-#     h1,h2,h3,h4,h5,h6 {{
-#         color:{text}!important;
-#         font-weight:700!important;
-#         letter-spacing:-0.02em;
-#     }}
-
-#     /* LABELS & TEXT */
-#     label, .stMarkdown p, .stMarkdown li, span {{
-#         color:{subtext}!important;
-#         opacity:1!important;
-#     }}
-
-#     /* INPUTS */
-#     .stTextInput>div>div>input,
-#     .stSelectbox>div>div>div,
-#     .stNumberInput input {{
-#         background:{card}!important;
-#         color:{text}!important;
-#         border:1px solid {border}!important;
-#         border-radius:8px!important;
-#     }}
-
-#     /* PLACEHOLDERS / DISABLED TEXT */
-#     .stTextInput>div>div>input::placeholder,
-#     [disabled], .stCheckbox label, .stRadio label {{
-#         color:#9ca3af!important;
-#         opacity:1!important;
-#     }}
-
-#     /* BUTTONS */
-#     .stButton>button {{
-#         background:linear-gradient(90deg,{accent},#3b82f6)!important;
-#         color:#fff!important;
-#         border:none!important;
-#         border-radius:10px!important;
-#         font-weight:600!important;
-#         padding:0.5rem 1rem!important;
-#         box-shadow:0 3px 10px rgba(0,0,0,0.3)!important;
-#         transition:all .25s ease;
-#     }}
-#     .stButton>button:hover {{
-#         transform:translateY(-2px)!important;
-#         box-shadow:0 5px 15px rgba(96,165,250,0.4)!important;
-#     }}
-
-#     /* DOWNLOAD BUTTONS */
-#     a.stDownloadButton>button {{
-#         background:#1e3a8a!important;
-#         color:#fff!important;
-#         border:1px solid #3b82f6!important;
-#         border-radius:6px!important;
-#         font-weight:600!important;
-#     }}
-#     a.stDownloadButton>button:hover {{
-#         background:#2563eb!important;
-#         box-shadow:0 0 8px rgba(37,99,235,0.6)!important;
-#     }}
-
-#     /* METRIC BOXES */
-#     [data-testid="stMetric"] {{
-#         background:{card}!important;
-#         border:1px solid {border}!important;
-#         border-radius:10px!important;
-#         padding:10px 14px!important;
-#         color:{text}!important;
-#         box-shadow:inset 0 0 6px rgba(255,255,255,0.03),
-#                     0 3px 10px rgba(0,0,0,0.4)!important;
-#     }}
-#     div[data-testid="stMetricLabel"],
-#     div[data-testid="stMetricValue"] {{
-#         color:{text}!important;
-#         opacity:1!important;
-#         font-weight:600!important;
-#     }}
-
-#     /* TABS */
-#     .stTabs [data-baseweb="tab-list"] button {{
-#         color:{text}!important;
-#         background:{tab_bg}!important;
-#         border:1px solid {border}!important;
-#         border-radius:10px!important;
-#         font-weight:500!important;
-#     }}
-#     .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {{
-#         background:{accent}!important;
-#         color:#fff!important;
-#         box-shadow:0 0 10px rgba(96,165,250,0.4)!important;
-#     }}
-
-#     /* EXPANDERS (How-to panels) */
-#     .streamlit-expanderHeader {{
-#         background:linear-gradient(90deg,#10243d,#0e1b2b)!important;
-#         color:#dbeafe!important;
-#         font-weight:600!important;
-#         border:1px solid #1e3a5f!important;
-#         border-radius:8px!important;
-#     }}
-#     .streamlit-expanderContent {{
-#         background:#0d1624!important;
-#         color:#e2e8f0!important;
-#         border:1px solid #1a2d4a!important;
-#         border-radius:0 0 8px 8px!important;
-#     }}
-
-#     /* ALERT / INFO / SUCCESS PANELS */
-#     [data-testid^="stAlert"] {{
-#         border-radius:10px!important;
-#         border:1px solid {border}!important;
-#         color:{text}!important;
-#         box-shadow:0 4px 20px rgba(0,0,0,0.3)!important;
-#     }}
-#     [data-testid="stAlertInfo"]    {{ background:linear-gradient(145deg,#0d1829,#10243d)!important; }}
-#     [data-testid="stAlertSuccess"] {{ background:linear-gradient(145deg,#0e1f14,#153524)!important; }}
-#     [data-testid="stAlertWarning"] {{ background:linear-gradient(145deg,#2f2a10,#1c1a0a)!important; }}
-#     [data-testid="stAlertError"]   {{ background:linear-gradient(145deg,#2b1617,#1a0c0d)!important; }}
-
-#     /* TABLES */
-#     [data-testid="stDataFrame"] thead tr th {{
-#         background:{table_head_bg}!important;
-#         color:{table_head_tx}!important;
-#         border-bottom:2px solid {accent}!important;
-#         font-weight:700!important;
-#     }}
-
-#     /* DIVIDER */
-#     hr {{
-#         border:none!important;
-#         height:1px!important;
-#         background:linear-gradient(90deg,transparent,{accent},transparent)!important;
-#     }}
-
-#     </style>
-#     """, unsafe_allow_html=True)
-
-
-
-# # Custom pro  Theme 
-
-# def apply_theme(theme: str = "light"):
-#     """Apply Rackspace-class professional dark/light Streamlit theme."""
-
-#     # ─────────────────────────────────────────────
-#     # 🎨 COLOR PALETTE
-#     # ─────────────────────────────────────────────
-#     if theme == "light":
-#         bg, text, subtext = "#ffffff", "#0f172a", "#334155"
-#         card, border = "#f8fafc", "#e2e8f0"
-#         accent, accent2 = "#2563eb", "#22c55e"
-#         tab_bg, table_bg = "#eef2ff", "#ffffff"
-#         table_head_bg, table_head_tx = "#e2e8f0", "#0f172a"
-#         info_bg, success_bg, warn_bg, error_bg = "#f1f5f9", "#dcfce7", "#fef9c3", "#fee2e2"
-#     else:  # 🌙 DARK MODE — refined for clarity & elegance
-#         bg, text, subtext = "#0b0f16", "#f8fafc", "#cbd5e1"
-#         card, border = "#111827", "#1e293b"
-#         accent, accent2 = "#60a5fa", "#22c55e"
-#         tab_bg, table_bg = "#1e293b", "#111827"
-#         table_head_bg, table_head_tx = "#1f2937", "#f8fafc"
-#         info_bg, success_bg, warn_bg, error_bg = "#162130", "#10291c", "#2f2a10", "#2b1617"
-
-#     # ─────────────────────────────────────────────
-#     # 💅 CSS STYLE OVERRIDES
-#     # ─────────────────────────────────────────────
-#     st.markdown(f"""
-#     <style>
-
-#       /* GLOBAL APP BACKGROUND */
-#       .stApp {{
-#         background: radial-gradient(circle at 20% 20%, {bg}, #090d13 90%) !important;
-#         color: {text} !important;
-#         font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
-#       }}
-
-#       /* HEADERS & TITLES */
-#       h1, h2, h3, h4, h5, h6,
-#       .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {{
-#         color: {text} !important;
-#         font-weight: 700 !important;
-#         letter-spacing: -0.02em;
-#         text-shadow: 0 0 10px rgba(0,0,0,0.3);
-#       }}
-#       h1 {{ font-size: 1.8rem !important; }}
-#       h2 {{ font-size: 1.4rem !important; }}
-#       h3 {{ font-size: 1.15rem !important; }}
-
-#       /* TEXT & PARAGRAPHS */
-#       .stMarkdown p, .stMarkdown li, .stCaption, small {{
-#         color: {subtext} !important;
-#         opacity: 1 !important;
-#         font-size: 0.96rem !important;
-#       }}
-
-#       /* INFO / SUCCESS / WARNING / ERROR PANELS */
-#       [data-testid="stNotification"], .stAlert {{
-#         border-radius: 10px !important;
-#         border: 1px solid {border} !important;
-#         color: {text} !important;
-#         opacity: 1 !important;
-#         box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
-#         backdrop-filter: blur(6px);
-#       }}
-#       [data-testid="stAlertInfo"]    {{ background: linear-gradient(145deg,{info_bg},#111a27)!important; }}
-#       [data-testid="stAlertSuccess"] {{ background: linear-gradient(145deg,{success_bg},#0d2015)!important; }}
-#       [data-testid="stAlertWarning"] {{ background: linear-gradient(145deg,{warn_bg},#201c0d)!important; }}
-#       [data-testid="stAlertError"]   {{ background: linear-gradient(145deg,{error_bg},#1a0c0d)!important; }}
-#       [data-testid^="stAlert"] * {{ opacity:1!important; color:{text}!important; }}
-
-#       /* EMPHASIS / STEP NUMBERS */
-#       strong,b,span[style*="font-weight:700"],
-#       .stMarkdown ul li::marker, .stMarkdown ol li::marker {{
-#         color:{accent}!important;
-#         opacity:1!important;
-#       }}
-
-#       /* BUTTONS */
-#       .stButton>button {{
-#         background: linear-gradient(90deg,{accent},#3b82f6)!important;
-#         color:#fff!important;
-#         border:none!important;
-#         border-radius:10px!important;
-#         font-weight:600!important;
-#         padding:0.5rem 1rem!important;
-#         box-shadow:0 3px 10px rgba(0,0,0,0.3)!important;
-#         transition:all 0.25s ease;
-#       }}
-#       .stButton>button:hover {{
-#         transform:translateY(-2px)!important;
-#         box-shadow:0 5px 20px rgba(96,165,250,0.4)!important;
-#         filter:brightness(1.1)!important;
-#       }}
-
-#       /* INPUTS & SELECTBOXES */
-#       .stTextInput>div>div>input,
-#       .stSelectbox>div>div>div,
-#       .stNumberInput input {{
-#         background:{card}!important;
-#         color:{text}!important;
-#         border:1px solid {border}!important;
-#         border-radius:6px!important;
-#       }}
-#       .stSelectbox label, .stNumberInput label {{
-#         color:{subtext}!important;
-#       }}
-
-#       /* TABS */
-#       .stTabs [data-baseweb="tab-list"] button {{
-#         color:{text}!important;
-#         background:{tab_bg}!important;
-#         border:1px solid {border}!important;
-#         border-radius:10px!important;
-#         margin-right:4px!important;
-#         font-weight:500!important;
-#       }}
-#       .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {{
-#         background:{accent}!important;
-#         color:#fff!important;
-#         box-shadow:0 0 10px rgba(96,165,250,0.5)!important;
-#         font-weight:700!important;
-#       }}
-
-#       /* METRIC CARDS */
-#       [data-testid="stMetric"] {{
-#         background:{card}!important;
-#         border:1px solid {border}!important;
-#         border-radius:10px!important;
-#         color:{text}!important;
-#         padding:10px 14px!important;
-#         box-shadow:inset 0 0 6px rgba(255,255,255,0.03), 0 3px 10px rgba(0,0,0,0.4)!important;
-#       }}
-#       div[data-testid="stMetricLabel"],
-#       div[data-testid="stMetricValue"] {{
-#         color:{text}!important; opacity:1!important;
-#       }}
-
-#       /* DATAFRAMES / TABLES */
-#       [data-testid="stDataFrame"] {{
-#         background:{table_bg}!important;
-#         color:{text}!important;
-#         border:1px solid {border}!important;
-#         border-radius:10px!important;
-#         box-shadow:0 2px 15px rgba(0,0,0,0.3)!important;
-#       }}
-#       [data-testid="stDataFrame"] thead tr th {{
-#         background:{table_head_bg}!important;
-#         color:{table_head_tx}!important;
-#         border-bottom:2px solid {accent}!important;
-#         font-weight:700!important;
-#       }}
-
-#       /* DOWNLOAD BUTTONS */
-#       a.stDownloadButton>button {{
-#         background:{accent}!important;
-#         color:white!important;
-#         border-radius:8px!important;
-#         font-weight:600!important;
-#       }}
-#       a.stDownloadButton>button:hover {{
-#         filter:brightness(1.15)!important;
-#         box-shadow:0 0 10px rgba(96,165,250,0.6)!important;
-#       }}
-
-#       /* DIVIDERS & LABELS */
-#       hr,.stMarkdown hr {{ border-color:{border}!important; }}
-#       label[for*="Select"], label[for*="TextInput"] {{ color:{subtext}!important; }}
-
-#     </style>
-#     """, unsafe_allow_html=True)
-
-
-    
-
-
-# def apply_theme(theme: str = "light"):
-#     if theme == "light":
-#         bg      = "#ffffff"
-#         text    = "#0f172a"
-#         subtext = "#334155"
-#         card    = "#f8fafc"
-#         border  = "#e2e8f0"
-#         accent  = "#2563eb"
-#         accent2 = "#22c55e"
-#         tab_bg  = "#eef2ff"
-#         table_bg= "#ffffff"
-#         table_head_bg = "#e2e8f0"
-#         table_head_tx = "#0f172a"
-#     else:  # 🌙 dark mode — improved contrast
-#         bg      = "#0b0f16"      # slightly lighter than before
-#         text    = "#e2e8f0"      # main text bright
-#         subtext = "#cbd5e1"      # labels and muted text still visible
-#         card    = "#111827"      # panels/cards
-#         border  = "#1e293b"      # border contrast
-#         accent  = "#60a5fa"      # primary accent (bright blue)
-#         accent2 = "#22c55e"      # success green
-#         tab_bg  = "#1e293b"      # tab background
-#         table_bg= "#111827"
-#         table_head_bg = "#1f2937"
-#         table_head_tx = "#f8fafc"
-
-#     st.markdown(f"""
-#     <style>
-#       /* App bg + text */
-#       .stApp {{
-#         background-color: {bg} !important;
-#         color: {text} !important;
-#       }}
-
-#       /* Text elements (force clarity) */
-#       .stMarkdown, .stMarkdown p, .stMarkdown li, .stCaption, .st-emotion-cache-16idsys,
-#       div[data-testid="stMetricLabel"], div[data-testid="stMetricDelta"], div[data-testid="stMetricValue"] {{
-#         color: {text} !important;
-#         opacity: 1 !important;
-#       }}
-
-#       /* Subtext / captions */
-#       .st-emotion-cache-1v0mbdj, .stCaption, small {{
-#         color: {subtext} !important;
-#       }}
-
-#       /* Buttons */
-#       .stButton>button {{
-#         background-color: {accent} !important;
-#         color: white !important;
-#         border-radius: 8px !important;
-#         font-weight: 600 !important;
-#         border: 1px solid {border} !important;
-#       }}
-#       .stButton>button:hover {{
-#         filter: brightness(1.1);
-#       }}
-
-#       /* Tabs */
-#       .stTabs [data-baseweb="tab-list"] button {{
-#         color: {text} !important;
-#         background: {tab_bg} !important;
-#         border-radius: 10px !important;
-#         margin-right: 4px !important;
-#         border: 1px solid {border} !important;
-#       }}
-#       .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {{
-#         background-color: {accent} !important;
-#         color: #ffffff !important;
-#       }}
-
-#       /* DataFrames / Tables */
-#       [data-testid="stDataFrame"] {{
-#         background-color: {table_bg} !important;
-#         color: {text} !important;
-#         border-radius: 10px !important;
-#         border: 1px solid {border} !important;
-#         box-shadow: 0 4px 18px rgba(0,0,0,0.4) !important;
-#       }}
-#       [data-testid="stDataFrame"] thead tr th {{
-#         background: {table_head_bg} !important;
-#         color: {table_head_tx} !important;
-#         font-weight: 700 !important;
-#         border-bottom: 2px solid {accent} !important;
-#       }}
-#       [data-testid="stDataFrameCell"] {{
-#         background-color: {table_bg} !important;
-#         color: {text} !important;
-#         border-color: {border} !important;
-#       }}
-
-#       /* Metrics (make them readable) */
-#       [data-testid="stMetric"] {{
-#         background-color: {card} !important;
-#         padding: 8px 12px !important;
-#         border-radius: 8px !important;
-#         border: 1px solid {border} !important;
-#       }}
-
-#       /* Horizontal rules */
-#       hr, .stMarkdown hr {{
-#         border-color: {border} !important;
-#       }}
-#     </style>
-#     """, unsafe_allow_html=True)
-
-
-# #THEME SWITCHER
-
-# def apply_theme(theme: str = "light"):
-#     # Keep palette compact so it's easy to tune
-#     if theme == "light":
-#         bg      = "#ffffff"
-#         text    = "#0f172a"
-#         subtext = "#334155"
-#         card    = "#f8fafc"
-#         border  = "#e2e8f0"
-#         accent  = "#2563eb"
-#         accent2 = "#22c55e"
-#         tab_bg  = "#eef2ff"
-#         table_bg= "#ffffff"
-#         table_head_bg = "#e2e8f0"
-#         table_head_tx = "#0f172a"
-#     else:  # dark
-#         bg      = "#0E1117"
-#         text    = "#f1f5f9"
-#         subtext = "#93a4b8"
-#         card    = "#0f172a"
-#         border  = "#334155"
-#         accent  = "#3b82f6"
-#         accent2 = "#22c55e"
-#         tab_bg  = "#111418"
-#         table_bg= "#0f172a"
-#         table_head_bg = "#1e293b"
-#         table_head_tx = "#93c5fd"
-
-#     st.markdown(f"""
-#     <style>
-#       /* App bg + text */
-#       .stApp {{
-#         background: {bg} !important;
-#         color: {text} !important;
-#       }}
-#       .stCaption, .stMarkdown p, .stMarkdown li, .st-emotion-cache-16idsys {{
-#         color: {subtext} !important;
-#       }}
-
-#       /* Buttons */
-#       .stButton>button {{
-#         background-color: {accent} !important;
-#         color: white !important;
-#         border-radius: 8px !important;
-#         font-weight: 600 !important;
-#         border: 1px solid {border} !important;
-#       }}
-#       .stButton>button:hover {{
-#         filter: brightness(0.95);
-#       }}
-
-#       /* Tabs */
-#       .stTabs [data-baseweb="tab-list"] button {{
-#         color: {text} !important;
-#         background: {tab_bg} !important;
-#         border-radius: 10px !important;
-#         margin-right: 4px !important;
-#         border: 1px solid {border} !important;
-#       }}
-#       .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {{
-#         background-color: {accent} !important;
-#         color: #ffffff !important;
-#       }}
-
-#       /* Dataframe/Data Editor container */
-#       [data-testid="stDataFrame"] {{
-#         background-color: {table_bg} !important;
-#         color: {text} !important;
-#         border-radius: 10px !important;
-#         border: 1px solid {border} !important;
-#         box-shadow: 0 4px 18px rgba(0,0,0,0.2) !important;
-#       }}
-#       [data-testid="stDataFrame"] thead tr th {{
-#         background: {table_head_bg} !important;
-#         color: {table_head_tx} !important;
-#         font-weight: 700 !important;
-#         border-bottom: 2px solid {accent} !important;
-#       }}
-#       [data-testid="stDataFrameCell"]:not([data-testid="stDataFrameCellEditable"]) {{
-#         background-color: {table_bg} !important;
-#         color: {text} !important;
-#         border-color: {border} !important;
-#       }}
-#       [data-testid="stDataFrameCellEditable"] textarea {{
-#         background-color: {card} !important;
-#         color: {text} !important;
-#         border: 1px solid {border} !important;
-#         border-radius: 6px !important;
-#       }}
-#       [data-testid="stDataFrameCellEditable"]:focus-within textarea,
-#       [data-testid="stDataFrameCellEditable"]:hover textarea {{
-#         border-color: {accent2} !important;
-#         box-shadow: 0 0 0 2px rgba(34,197,94,0.35) !important;
-#       }}
-
-#       /* Horizontal rules */
-#       hr, .stMarkdown hr {{
-#         border-color: {border} !important;
-#       }}
-#     </style>
-#     """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
-# 🧭 THEME BOOTSTRAP — Default to DARK
+# PAGE CONFIG + THEME
 # ─────────────────────────────────────────────
 import streamlit as st
-
-# Define default session theme early
-if "ui_theme" not in st.session_state:
-    st.session_state["ui_theme"] = "dark"
-
-# Apply immediately before any Streamlit renders
-apply_theme(st.session_state["ui_theme"])
-
-# ✅ Then continue with Streamlit config
-st.set_page_config(page_title="Asset Appraisal Agent", layout="wide")
-
-
-# ─────────────────────────────────────────────
-# PAGE CONFIG — must be the first Streamlit call
-# ─────────────────────────────────────────────
 
 st.set_page_config(page_title="Asset Appraisal Agent", layout="wide")
 ss = st.session_state
@@ -904,9 +62,12 @@ ss = st.session_state
 # SESSION DEFAULTS (idempotent)
 # ─────────────────────────────────────────────
 def _init_defaults():
-    ss.setdefault("asset_logged_in", False)
-    ss.setdefault("asset_stage", "login")   # login → asset_flow
-    ss.setdefault("asset_user", {"name": "Guest", "email": None})
+    ss.setdefault("asset_logged_in", True)
+    ss.setdefault("asset_stage", "asset_flow")   # login → asset_flow
+    ss.setdefault("asset_user", {"name": "Operator", "email": "operator@demo.local"})
+    ss.setdefault("asset_pending_cases", 18)
+    ss.setdefault("asset_flagged_cases", 3)
+    ss.setdefault("asset_avg_time", "22 min")
     # Working tables/artifacts per our matrix (placeholders)
     ss.setdefault("asset_intake_df", None)
     ss.setdefault("asset_evidence_index", None)
@@ -921,9 +82,28 @@ def _init_defaults():
     ss.setdefault("asset_feedback_csv", None)
     ss.setdefault("asset_trained_model_meta", None)
     ss.setdefault("asset_gpu_profile", None)  # will be set only in C.4
+    ss.setdefault("asset_ai_performance", 0.88)
     os.makedirs("./.tmp_runs", exist_ok=True)
 
 _init_defaults()
+
+# Always bypass login step during operator demos
+ss["asset_logged_in"] = True
+if ss.get("asset_stage") == "login":
+    ss["asset_stage"] = "asset_flow"
+
+
+def _coerce_minutes(value, fallback: float = 0.0) -> float:
+    """Convert values like '22 min' to floats for gauge percentages."""
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        cleaned = "".join(ch for ch in value if ch.isdigit() or ch == ".")
+        try:
+            return float(cleaned)
+        except (TypeError, ValueError):
+            pass
+    return float(fallback)
 
 def render_nav_bar_app():
     st.markdown(
@@ -943,74 +123,7 @@ os.makedirs(RUNS_DIR, exist_ok=True)
 
 
 
-# # ─────────────────────────────────────────────
-# # THEME INJECTION (Dark + Sidebar hide, with MutationObserver)
-# # Run immediately on every script execution to avoid flicker on rerun
-# # ─────────────────────────────────────────────
-# import streamlit.components.v1 as components # <--- IMPORT IS HERE
-# # 1) CSS (global, persistent)
-# # Note: Removed the inject_dark_theme_once() function and session state check
-# st.markdown("""
-#     <style>
-#       :root { color-scheme: dark; } /* Hint built-ins */
-#       html, body, .stApp {
-#         background-color:#0f172a !important;
-#         color:#e5e7eb !important;
-#         font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-#       }
-#       /* Sidebar off + container padding */
-#       [data-testid="stSidebar"], section[data-testid="stSidebar"], nav[data-testid="stSidebarNav"] { display:none !important; }
-#       [data-testid="stAppViewContainer"] { margin-left:0 !important; padding-left:0 !important; }
-#       /* Headings */
-#       h1, h2, h3, h4, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 { color:#e5e7eb !important; }
-#       /* Tabs */
-#       .stTabs [data-baseweb="tab-list"] { gap:6px; border-bottom:1px solid #1f2937; }
-#       .stTabs [data-baseweb="tab"] {
-#         background:#0b1222; border:1px solid #1f2937; border-bottom:none;
-#         padding:10px 14px; border-top-left-radius:10px; border-top-right-radius:10px; color:#cbd5e1;
-#       }
-#       .stTabs [aria-selected="true"] { background:#111827 !important; color:#e5e7eb !important; }
-#       /* Inputs */
-#       .stTextInput input, .stNumberInput input, .stSelectbox [data-baseweb="select"] > div {
-#         background:#0b1222 !important; color:#e5e7eb !important; border:1px solid #1f2937 !important;
-#       }
-#       /* Buttons */
-#       .stButton button {
-#         background:linear-gradient(180deg,#1f3b57 0%,#0e1f33 100%) !important;
-#         color:#e6f3ff !important; border:1px solid #1d2b3a !important; border-radius:10px !important;
-#         box-shadow:0 0 10px rgba(56,189,248,.15);
-#       }
-#       .stButton button:hover { filter:brightness(1.05); box-shadow:0 0 16px rgba(56,189,248,.25); }
-#       /* Metrics */
-#       div[data-testid="stMetric"] { background:#0b1222; border:1px solid #1f2937; border-radius:12px; padding:10px 12px; }
-#       div[data-testid="stMetricValue"] { color:#38bdf8 !important; }
-#       /* Tables */
-#       .stDataFrame, .stTable { background:#0b1222 !important; border:1px solid #1f2937 !important; border-radius:10px !important; }
-#       /* Expanders */
-#       details { background:#0b1222 !important; border:1px solid #1f2937 !important; border-radius:10px !important; padding:6px 10px !important; }
-#       /* Plotly */
-#       .js-plotly-plot .plotly .main-svg { background-color:transparent !important; }
-#     </style>
-#     """, unsafe_allow_html=True)
 
-# # 2) JS observer to re-assert dark after Streamlit mutates
-# components.html("""
-#     <script>
-#       (function() {
-#         const apply = () => {
-#           try {
-#             const root = parent.document.documentElement;
-#             const app = parent.document.querySelector('.stApp');
-#             if (root) root.style.setProperty('color-scheme','dark');
-#             if (app) app.classList.add('dark-hold');
-#           } catch(e) {}
-#         };
-#         apply();
-#         const mo = new MutationObserver(apply);
-#         mo.observe(parent.document.documentElement, {childList:true, subtree:true});
-#       })();
-#     </script>
-#     """, height=0)
 
 # ─────────────────────────────────────────────
 # API CONFIG
@@ -1088,13 +201,11 @@ def render_nav_bar_app():
             st.stop()
 
     with c3:
-        is_dark = (ss.get("ui_theme", "dark") == "dark")
-        new_is_dark = st.toggle("🌙 Dark mode", value=is_dark, key="ui_theme_toggle", help="Switch theme")
-        new_theme = "dark" if new_is_dark else "light"
-        if new_theme != ss["ui_theme"]:
-            ss["ui_theme"] = new_theme
-            apply_theme(ss["ui_theme"])
-            st.rerun()
+        render_theme_toggle(
+            label="🌗 Dark mode",
+            key="asset_theme_toggle",
+            help="Switch theme",
+        )
 
     st.markdown("---")
 
@@ -1185,8 +296,6 @@ def geohash_decode(s: str) -> Optional[Tuple[float, float]]:
 # SESSION
 # ─────────────────────────────────────────────
 ss = st.session_state
-# Theme default
-ss.setdefault("ui_theme", "dark")   # "dark" or "light"
 ss.setdefault("asset_stage", "login")
 ss.setdefault("asset_logged_in", False)
 ss.setdefault("asset_user", None)
@@ -1362,37 +471,44 @@ def _normalize_for_agents(df: pd.DataFrame) -> pd.DataFrame:
 # ─────────────────────────────────────────────
 from textwrap import dedent
 
-THEME_VARS = {
+THEME_EXTRAS = {
     "light": {
-        "bg": "#FFFFFF",
-        "panel": "#F8FAFC",
-        "text": "#0F172A",
-        "muted": "#475569",
-        "primary": "#2563EB",
         "success": "#16A34A",
         "warn": "#D97706",
         "danger": "#DC2626",
-        "accent": "#0EA5E9",
         "stripe": "#F1F5F9",
         "shadow": "0 6px 24px rgba(15,23,42,0.08)",
     },
     "dark": {
-        "bg": "#0B1020",
-        "panel": "#101727",
-        "text": "#E5E7EB",
-        "muted": "#94A3B8",
-        "primary": "#60A5FA",
         "success": "#22C55E",
         "warn": "#FBBF24",
         "danger": "#F87171",
-        "accent": "#38BDF8",
         "stripe": "#111827",
         "shadow": "0 8px 30px rgba(0,0,0,0.35)",
     },
 }
 
+
+def _theme_tokens(theme: str) -> dict[str, str]:
+    pal = get_palette(theme)
+    extra = THEME_EXTRAS.get(theme, THEME_EXTRAS["dark"])
+    return {
+        "bg": pal["bg"],
+        "panel": pal["card"],
+        "text": pal["text"],
+        "muted": pal["subtext"],
+        "primary": pal["accent"],
+        "accent": pal["accent_alt"],
+        "success": extra["success"],
+        "warn": extra["warn"],
+        "danger": extra["danger"],
+        "stripe": extra["stripe"],
+        "shadow": extra["shadow"],
+    }
+
+
 def _theme_css(theme: str) -> str:
-    t = THEME_VARS[theme]
+    t = _theme_tokens(theme)
     return dedent(f"""
     <style>
       /* Fonts: Inter + JetBrains Mono */
@@ -1483,12 +599,14 @@ def _theme_css(theme: str) -> str:
     </style>
     """)
 
-def apply_theme(theme: str = None):
-    """Inject CSS theme; defaults to session theme."""
-    theme = theme or st.session_state.get("ui_theme", "light")
-    if theme not in THEME_VARS:
-        theme = "light"
+def apply_theme(theme: str | None = None):
+    """Inject shared Streamlit theme plus asset-specific tokens."""
+    theme = theme or get_theme()
+    apply_global_theme(theme)
     st.markdown(_theme_css(theme), unsafe_allow_html=True)
+
+
+apply_theme()
 
 
 
@@ -1515,7 +633,7 @@ def plotly_map_style() -> str:
     - Uses bright style in light mode even without a Mapbox token.
     - Falls back to CARTO 'positron' if Mapbox token not set.
     """
-    theme = st.session_state.get("ui_theme", "light")
+    theme = get_theme()
     token = get_mapbox_token()
     if token:
         return "light" if theme == "light" else "dark"
@@ -1529,7 +647,7 @@ def get_map_style() -> str:
     Return a Mapbox style URL (for pydeck only).
     Light → bright, Dark → dark. Defaults to light for safety.
     """
-    theme = st.session_state.get("ui_theme", "light")
+    theme = get_theme()
     return "mapbox://styles/mapbox/light-v11" if theme == "light" else "mapbox://styles/mapbox/dark-v11"
 
 
@@ -1551,54 +669,6 @@ def make_pydeck_view_state(lat=10.7769, lon=106.7009, zoom=10, pitch=0, bearing=
 def pydeck_map_style() -> str:
     """pydeck uses the same Mapbox style URLs when a token is available."""
     return get_map_style()
-
-
-# # ─────────────────────────────────────────────
-# # MAP THEME HELPERS (Mapbox style + token + adapters)
-# # ─────────────────────────────────────────────
-# import os
-
-# def get_mapbox_token() -> str | None:
-#     """Find a Mapbox token from secrets or env. Return None if not set."""
-#     # Prefer Streamlit secrets if present
-#     tok = None
-#     try:
-#         tok = st.secrets.get("MAPBOX_TOKEN")  # type: ignore[attr-defined]
-#     except Exception:
-#         pass
-#     if not tok:
-#         tok = os.environ.get("MAPBOX_TOKEN") or os.environ.get("MAPBOX_ACCESS_TOKEN")
-#     return tok or None
-
-# def get_map_style() -> str:
-#     """
-#     Return a Mapbox style URL matched to current theme.
-#     Light → bright, Dark → dark. Defaults to light for safety.
-#     """
-#     theme = st.session_state.get("ui_theme", "light")
-#     return "mapbox://styles/mapbox/light-v11" if theme == "light" else "mapbox://styles/mapbox/dark-v11"
-
-# # Optional: convenience adapters for Plotly + pydeck
-# def apply_plotly_mapbox_defaults():
-#     """
-#     Set Plotly's Mapbox token globally. Call once before creating px/scatter_mapbox etc.
-#     """
-#     import plotly.express as px  # local import to avoid hard dependency at import time
-#     token = get_mapbox_token()
-#     if token:
-#         px.set_mapbox_access_token(token)
-#     else:
-#         st.info("ℹ️ Mapbox token not set. Set MAPBOX_TOKEN in env or st.secrets to enable styled basemaps.")
-
-# def make_pydeck_view_state(lat=10.7769, lon=106.7009, zoom=10, pitch=0, bearing=0):
-#     import pydeck as pdk
-#     return pdk.ViewState(latitude=lat, longitude=lon, zoom=zoom, pitch=pitch, bearing=bearing)
-
-# def pydeck_map_style() -> str:
-#     """
-#     pydeck uses the same Mapbox style URLs when a token is available.
-#     """
-#     return get_map_style()
 
 
 
@@ -1829,11 +899,52 @@ if ss.get("asset_logged_in") and ss.get("asset_stage") in ("asset_flow", "asset_
         f"| 👋 {ss['asset_user']['name']}"
     )
 
+    asset_ai_minutes = _coerce_minutes(ss.get("asset_avg_time"), 22.0)
 
+    render_operator_banner(
+        operator_name=ss.get("asset_user", {}).get("name", "Operator"),
+        title="Asset Appraisal Command",
+        summary="Automate collateral intake, anonymization, valuation, and policy checks with AI copilots.",
+        bullets=[
+            "Unify intake sources (CSV, HF, Kaggle) and auto-enrich with geospatial context.",
+            "Apply FMV modeling + haircut & LTV policy thresholds before human review.",
+            "Capture reviewer feedback to retrain valuation models and improve reports.",
+        ],
+        metrics=[
+            {
+                "label": "Avg AI Turnaround",
+                "value": ss.get("asset_avg_time") or f"{asset_ai_minutes:.0f} min",
+                "delta": "-5 min vs last week",
+                "delta_color": "#60a5fa",
+                "color": "#60a5fa",
+                "percent": min(1.0, asset_ai_minutes / 50.0),
+                "context": "AI valuation cycle time",
+            },
+            {
+                "label": "Assets Pending Valuation",
+                "value": ss.get("asset_pending_cases"),
+                "delta": "+4 vs prior cycle",
+                "delta_color": "#34d399",
+                "color": "#34d399",
+                "percent": min(1.0, ss.get("asset_pending_cases", 0) / 40.0),
+                "context": "Manual backlog avg: 35",
+            },
+            {
+                "label": "Flagged Risk Cases",
+                "value": ss.get("asset_flagged_cases"),
+                "delta": "+1 escalation",
+                "delta_color": "#f87171",
+                "color": "#f87171",
+                "percent": min(1.0, ss.get("asset_flagged_cases", 0) / 12.0),
+                "context": "Human avg: 6 risk flags",
+            },
+        ],
+        icon="🏛️",
+    )
     # ─────────────────────────────────────────
     # TABS (How-To + A..H) — Live tabs
     # ─────────────────────────────────────────
-    tabHow, tabA, tabB, tabC, tabD, tabE, tabF, tabG, tabH = st.tabs([
+    tabHow, tabA, tabB, tabC, tabD, tabE, tabF, tabG, tabH, tabFeedback = st.tabs([
         "📘 How-To",
         "🟦 A) Intake & Evidence",
         "🟩 B) Privacy & Features",
@@ -1842,7 +953,8 @@ if ss.get("asset_logged_in") and ss.get("asset_stage") in ("asset_flow", "asset_
         "🟪 E) Human Review & Feedback",
         "🟫 F) Model Training & Promotion",
         "🟫 G) Deployment & Export 🚀",     # ✅ corrected label (was double F)
-        "⬜ H) Reporting & Handoff 🧾"      # ✅ make this Stage H
+        "⬜ H) Reporting & Handoff 🧾",
+        "🗣️ Feedback"
     ])
 
     with tabHow:
@@ -1878,6 +990,9 @@ To provide instant, data-driven, and consistent asset valuations for credit, ins
         "📘 Tip: Move sequentially from A→G or revisit individual stages. "
         "If a stage reports missing data, rerun the previous one or load demo data."
     )
+
+    with tabFeedback:
+        render_feedback_tab("🏦 Asset Appraisal Agent")
 
 else:
     st.warning("Please log in first to access the Asset Appraisal workflow.")
@@ -5367,3 +4482,280 @@ with tabH:
             mime="application/zip",
             use_container_width=True
         )
+
+
+# Legacy macOS blue theme (kept for optional reuse)
+LEGACY_ASSET_THEME_SNIPPET = '''
+def legacy_asset_theme(theme: str = "dark"):
+    import streamlit as st
+
+    st.markdown("""
+    <style>
+    /* ===============================================
+       🌙 MACOS BLUE DARK THEME — GLOBAL BASE
+    =============================================== */
+    html, body, [data-testid="stAppViewContainer"] {
+        background: radial-gradient(circle at 20% 20%, #0b0f16, #060a12 85%) !important;
+        color: #f8fafc !important;
+        font-family: "Inter","SF Pro Display","Segoe UI",system-ui,sans-serif !important;
+    }
+
+    h1,h2,h3,h4,h5,h6 {
+        color: #f8fafc !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.02em !important;
+    }
+
+    p, li, label, span, div {
+        color: #e2e8f0 !important;
+    }
+    small, .stCaption { color: #94a3b8 !important; }
+
+    a, a:link, a:visited { color: #339dff !important; }
+    a:hover { color: #60a5fa !important; text-decoration: underline; }
+
+    hr {
+        border: none !important;
+        height: 1px !important;
+        background: linear-gradient(90deg,transparent,#007aff,transparent) !important;
+    }
+
+    /* ===============================================
+       🧱 CONTAINERS & CARDS
+    =============================================== */
+    .stMarkdown, .stContainer, .stAlert, [class*="stCard"], [class*="block-container"] {
+        background: #0f172a !important;
+        border: 1px solid #1e3a8a !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
+    }
+
+    /* ===============================================
+       🔘 BUTTONS — macOS BLUE
+    =============================================== */
+    button[kind="primary"], .stButton>button, .stDownloadButton>button, .stDownloadButton button {
+        background: linear-gradient(180deg,#007aff,#005ecb) !important;
+        color: #ffffff !important;
+        border: 1px solid #0051b8 !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        padding: 0.5rem 1rem !important;
+        box-shadow: 0 4px 10px rgba(0,122,255,0.35),
+                    inset 0 -1px 0 rgba(255,255,255,0.2) !important;
+        transition: all 0.25s ease-in-out !important;
+    }
+    button[kind="primary"]:hover, .stButton>button:hover, .stDownloadButton>button:hover {
+        background: linear-gradient(180deg,#339dff,#006ae6) !important;
+        box-shadow: 0 4px 14px rgba(0,122,255,0.45) !important;
+        transform: translateY(-1px) !important;
+    }
+    button[kind="primary"]:active, .stButton>button:active, .stDownloadButton>button:active {
+        background: linear-gradient(180deg,#004fc4,#0042a8) !important;
+        box-shadow: inset 0 2px 6px rgba(0,122,255,0.3) !important;
+        transform: translateY(0) !important;
+    }
+    .stButton button[disabled], .stDownloadButton button[disabled] {
+        background: #1e293b !important;
+        color: #64748b !important;
+        border: 1px solid #334155 !important;
+    }
+
+    /* ===============================================
+    🧠 INPUTS (Text, Select, Number) & FOCUS STATE
+    =============================================== */
+    .stTextInput>div>div>input,
+    .stSelectbox>div>div>div,
+    .stNumberInput input {
+        background: #111827 !important;
+        color: #f8fafc !important;
+        border: 1px solid #1e3a8a !important;
+        border-radius: 8px !important;
+        padding: 6px 10px !important;
+        transition: all 0.25s ease;
+    }
+    .stTextInput>div>div>input:focus,
+    .stSelectbox>div>div>div:focus-within,
+    .stNumberInput input:focus {
+        outline: none !important;
+        border-color: #007aff !important;
+        box-shadow: 0 0 0 2px rgba(0,122,255,0.4) !important;
+    }
+    ::placeholder {
+        color: #9ca3af !important;
+        opacity: 1 !important;
+    }
+    /* ===============================================
+   🎛 DROPDOWN MENUS
+    =============================================== */
+    [data-baseweb="popover"], [role="listbox"] {
+        background: #0f172a !important;
+        color: #f8fafc !important;
+        border: 1px solid #1e3a8a !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.6) !important;
+    }
+    [data-baseweb="menu-item"] {
+        background: #0f172a !important;
+        color: #f8fafc !important;
+    }
+    [data-baseweb="menu-item"]:hover {
+        background: #1e3a8a !important;
+        color: #ffffff !important;
+    }
+    /* ===============================================
+    🧭 SIDEBAR THEME
+    =============================================== */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg,#0d1320,#060a12) !important;
+        border-right: 1px solid #1e3a8a !important;
+        color: #f8fafc !important;
+    }
+
+    
+    /* ===============================================
+       ☑️ CHECKBOXES / RADIOS / SLIDERS
+    =============================================== */
+    input[type="checkbox"], input[type="radio"] {
+        accent-color: #007aff !important;
+    }
+    .stSlider [role="slider"] {
+        background-color: #007aff !important;
+    }
+
+    /* ===============================================
+       🗂️ TABS
+    =============================================== */
+    .stTabs [data-baseweb="tab-list"] button {
+        color: #e2e8f0 !important;
+        background: #111827 !important;
+        border: 1px solid #1e293b !important;
+        border-radius: 10px !important;
+        font-weight: 500 !important;
+        margin-right: 4px !important;
+    }
+    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
+        background: #007aff !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 12px rgba(0,122,255,0.4) !important;
+    }
+
+    /* ===============================================
+       🧭 EXPANDERS / ACCORDIONS
+    =============================================== */
+    .streamlit-expanderHeader {
+        background: linear-gradient(90deg,#0d284d,#0a1f3a) !important;
+        color: #dbeafe !important;
+        border: 1px solid #1e3a5f !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+    }
+    .streamlit-expanderContent {
+        background: #0f172a !important;
+        color: #e2e8f0 !important;
+        border: 1px solid #1e3a5f !important;
+        border-radius: 0 0 8px 8px !important;
+    }
+
+    /* ===============================================
+       📊 METRIC CARDS (st.metric)
+    =============================================== */
+    [data-testid="stMetric"] {
+        background: linear-gradient(180deg,#0b1220,#101a2c) !important;
+        border: 1px solid #1e3a8a !important;
+        border-radius: 10px !important;
+        box-shadow: inset 0 0 10px rgba(255,255,255,0.03),
+                    0 3px 10px rgba(0,0,0,0.6) !important;
+        padding: 10px 14px !important;
+        text-align: center !important;
+    }
+    div[data-testid="stMetricLabel"] {
+        color: #94a3b8 !important;
+        font-size: 0.85rem !important;
+        font-weight: 500 !important;
+    }
+    div[data-testid="stMetricValue"] {
+        color: #ffffff !important;
+        font-size: 1.3rem !important;
+        font-weight: 600 !important;
+    }
+
+    /* ===============================================
+       📊 METRIC COMPARISON TABLE — FINAL
+    =============================================== */
+    [data-testid="stDataFrame"] {
+        background: radial-gradient(circle at 50% 50%, #0b1220, #060a12 90%) !important;
+        border: 1px solid #1e3a8a !important;
+        border-radius: 12px !important;
+        box-shadow:
+            0 0 14px rgba(0,0,0,0.6) inset,
+            0 4px 18px rgba(0,0,0,0.7),
+            0 0 12px rgba(0,122,255,0.15) !important;
+        margin-top: 12px !important;
+        padding: 8px !important;
+    }
+    [data-testid="stDataFrame"] thead tr th {
+        background: linear-gradient(90deg,#004fc4,#007aff) !important;
+        color: #ffffff !important;
+        border-bottom: 2px solid #007aff !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.02em !important;
+        font-size: 0.92rem !important;
+        padding: 10px 14px !important;
+    }
+    [data-testid="stDataFrame"] tbody tr {
+        background-color: #0b1220 !important;
+        color: #ffffff !important;
+        transition: background 0.25s ease;
+    }
+    [data-testid="stDataFrame"] tbody tr:nth-child(even) {
+        background-color: #101a2c !important;
+    }
+    [data-testid="stDataFrame"] tbody tr:hover {
+        background-color: #112a52 !important;
+        box-shadow: 0 0 8px rgba(0,122,255,0.25) inset !important;
+    }
+    [data-testid="stDataFrame"] tbody td {
+        border-top: 1px solid #1e3a8a !important;
+        color: #ffffff !important;
+        padding: 9px 14px !important;
+        font-size: 0.95rem !important;
+        font-weight: 500 !important;
+    }
+    [data-testid="stDataFrame"] tbody td:last-child {
+        color: #60a5fa !important;
+        font-weight: 500 !important;
+    }
+
+    /* ===============================================
+       📁 FILE UPLOADER
+    =============================================== */
+    [data-testid="stFileUploaderDropzone"] {
+        background: rgba(255,255,255,0.03) !important;
+        border: 1px dashed #1e3a8a !important;
+        border-radius: 10px !important;
+        color: #cbd5e1 !important;
+        transition: all 0.25s ease;
+    }
+    [data-testid="stFileUploaderDropzone"]:hover {
+        border-color: #007aff !important;
+        background: rgba(0,122,255,0.1) !important;
+    }
+
+    /* ===============================================
+       ⚠️ ALERT BOXES
+    =============================================== */
+    [data-testid^="stAlert"] {
+        border-radius: 10px !important;
+        border: 1px solid #1e3a8a !important;
+        color: #e2e8f0 !important;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.4) !important;
+    }
+    [data-testid="stAlertInfo"]    { background: linear-gradient(145deg,#0d1829,#10243d)!important; }
+    [data-testid="stAlertSuccess"] { background: linear-gradient(145deg,#0f2414,#183820)!important; }
+    [data-testid="stAlertError"]   { background: linear-gradient(145deg,#2b1617,#1a0c0d)!important; }
+    [data-testid="stAlertWarning"] { background: linear-gradient(145deg,#2f2a10,#1c1a0a)!important; }
+
+    </style>
+    """, unsafe_allow_html=True)
+
+'''

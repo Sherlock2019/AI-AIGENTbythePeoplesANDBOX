@@ -1,25 +1,30 @@
 {
   "💳 Credit Appraisal Agent": {
     "version": "1.4",
-    "rating": 4.9,
-    "users": 13,
+    "rating": 4.95,
+    "users": 15,
     "comments": [
       "Praise: Extremely accurate loan approval explanations!",
       "Feature Request: Please add multi-currency support for ASEAN banks.",
       "Bug Report: Sometimes misreads employment_length column from CSV.",
       "Feature Request: Allow retraining with anonymized data directly.",
-      "dgvSDgsdgs"
+      "dgvSDgsdgs",
+      "awesome",
+      "great doan"
     ]
   },
   "🏦 Asset Appraisal Agent": {
     "version": "1.1",
-    "rating": 4.75,
-    "users": 9,
+    "rating": 4.82,
+    "users": 12,
     "comments": [
       "Feature Request: Add API link to local land registry for collateral validation.",
       "Praise: Works fast with property market data.",
       "Feature Request: Add auto-sync with credit appraisal model outputs.",
-      "vdsfvSDvxsbxv"
+      "vdsfvSDvxsbxv",
+      "retetett",
+      "retetett",
+      "doan"
     ]
   },
   "🩺 Claims Triage Agent": {
@@ -66,6 +71,19 @@
       "Feature Request: Vietnamese language clause parsing.",
       "Praise: Excellent clause extraction accuracy.",
       "Bug Report: Occasionally misses indemnity clause in nested documents."
+    ]
+  },
+  "🛡️ Anti-Fraud & KYC Agent": {
+    "rating": 4.57,
+    "users": 7,
+    "comments": [
+      "rgedgders",
+      "rgedgders",
+      "rgedgders",
+      "rgedgders",
+      "rgedgders",
+      "rgedgders",
+      "test"
     ]
   }
 }
