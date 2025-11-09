@@ -1,0 +1,8 @@
+fastapi==0.115.5
+uvicorn==0.30.6
+pydantic==2.9.2
+scikit-learn==1.5.2
+numpy>=1.23
+scipy>=1.10
+orjson==3.10.7
+sentence-transformers==3.2.1

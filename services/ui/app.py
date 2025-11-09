@@ -230,7 +230,7 @@ def render_nav_bar_app():
     stage = st.session_state.get("stage", "landing")
 
     # visibility logic
-    show_home   = stage in ("agents", "credit_agent", "asset_agent")
+    show_home   = stage in ("agents", "credit_agent", "asset_agent", "troubleshooter_agent")
     show_agents = stage not in ("landing", "agents")
 
     # nothing on landing
@@ -431,6 +431,8 @@ AGENTS = [
      "Market-driven collateral valuation", "Available", "🏦"),
     ("🏦 Banking & Finance", "🛡️ Compliance", "🛡️ Anti-Fraud & KYC Agent",
      "Streamlined onboarding with fraud scoring", "Available", "🛡️"),
+    ("💻 Information Technology", "🧠 Troubleshooting", "🧠 IT Troubleshooter Agent",
+     "First-principles + case-memory incident solver", "Being Built", "🧠"),
     ("🏦 Banking & Finance", "🩺 Insurance", "🩺 Claims Triage Agent",
      "Automated claims prioritization", "Coming Soon", "🩺"),
     ("⚡ Energy & Sustainability", "🔋 EV & Charging", "⚡ EV Charger Optimizer",
@@ -560,11 +562,19 @@ if "launch" in qp or "agent" in qp:
             st.warning(f"Could not open anti-fraud agent page: {e}")
             st.session_state.stage = "landing"
             st.rerun()
+    elif agent in {"troubleshooter", "it_troubleshooter"}:
+        _clear_qp()
+        try:
+            st.switch_page("pages/troubleshooter_agent.py")
+        except Exception as e:
+            st.warning(f"Could not open troubleshooter agent page: {e}")
+            st.session_state.stage = "troubleshooter_agent"
+            st.rerun()
 
 # 2) Stage param (secondary)
 if "stage" in qp:
     target = qp["stage"]
-    if target in {"landing", "agents", "login", "credit_agent", "asset_agent"} and st.session_state.stage != target:
+    if target in {"landing", "agents", "login", "credit_agent", "asset_agent", "troubleshooter_agent"} and st.session_state.stage != target:
         st.session_state.stage = target
         _clear_qp()
         st.rerun()
@@ -853,6 +863,14 @@ if st.session_state.stage == "landing":
             transform: translateY(-2px) scale(1.05);
             text-shadow: 0 0 12px #ff66cc;
         }
+        .launchbtn.launch-disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            border-style: dashed;
+            box-shadow: none;
+            background: rgba(15,23,42,0.65);
+            color: #cbd5f5;
+        }
         .agent-comments details {
             cursor: pointer;
             color: #f9fafb;
@@ -898,6 +916,7 @@ if st.session_state.stage == "landing":
             "credit_appraisal": "http://localhost:8502/credit_appraisal",
             "asset_appraisal": "http://localhost:8502/asset_appraisal",
             "anti_fraud_kyc": "http://localhost:8502/anti_fraud_kyc",
+            "it_troubleshooter": "http://localhost:8502/troubleshooter_agent",
         }
         for sector, industry, agent, desc, status, emoji in AGENTS:
             # ----- status color mapping -----
@@ -905,6 +924,8 @@ if st.session_state.stage == "landing":
                 status_label = "✅ Available"; status_color = "#22c55e"
             elif status == "Coming Soon":
                 status_label = "⏳ Coming Soon"; status_color = "#f59e0b"
+            elif status == "Being Built":
+                status_label = "🛠️ Being Built"; status_color = "#f97316"
             else:
                 status_label = status; status_color = "#f1f5f9"
 
@@ -925,6 +946,14 @@ if st.session_state.stage == "landing":
             route_name = re.sub(r"[-\s]+", "_", clean_agent).replace("_agent", "")
             route_name = re.sub(r"_+", "_", route_name).strip("_")
             launch_url = launch_overrides.get(route_name, f"/{route_name}")
+            status_norm = status.strip().lower()
+            is_launchable = status_norm in {"available", "being built"}
+            button_label = "🔧 Preview?" if route_name == "it_troubleshooter" else "🚀 Launch"
+            action_html = (
+                f"<a class='launchbtn' href='{launch_url}'>{button_label}</a>"
+                if is_launchable
+                else "<span class='launchbtn launch-disabled'>🔒 Coming Soon</span>"
+            )
 
             # ----- append HTML for this agent card -----
             html_agents += f"""
@@ -948,7 +977,7 @@ if st.session_state.stage == "landing":
                         <div style="font-size:0.85rem;color:#c7d2fe;">{rating_text}</div>
                     </div>
                     <div style="flex:0.8;text-align:center;">
-                        <a class="launchbtn" href="{launch_url}">🚀 Launch</a>
+                        {action_html}
                     </div>
                 </div>
                 <div style="margin-top:0.35rem;font-size:0.85rem;color:#94a3b8;font-style:italic;">
@@ -1066,6 +1095,10 @@ if st.session_state.stage == "agents":
          "Description": "Onboard customers with automated KYC",
          "Status": "✅ Available",
          "Action": '<a class="macbtn" href="/anti_fraud_kyc">🚀 Launch</a>'},
+        {"Agent": "🧠 IT Troubleshooter Agent",
+         "Description": "First-principles + case-memory incident solver",
+         "Status": "🛠️ Being Built",
+         "Action": '<a class="macbtn" href="/troubleshooter_agent">🔧 Preview?</a>'},
     ])
 
     # Neon table frame
@@ -1162,3 +1195,10 @@ if  st.session_state.stage == "asset_agent":
     except Exception as e:
         st.error(f"Could not switch to asset appraisal page: {e}")
         st.info("Ensure file exists at services/ui/pages/asset_appraisal.py")
+
+if  st.session_state.stage == "troubleshooter_agent":
+    try:
+        st.switch_page("pages/troubleshooter_agent.py")
+    except Exception as e:
+        st.error(f"Could not switch to troubleshooter agent page: {e}")
+        st.info("Ensure file exists at services/ui/pages/troubleshooter_agent.py")
