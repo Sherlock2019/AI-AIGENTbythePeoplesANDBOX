@@ -3,17 +3,30 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import Any, Dict
 
 import streamlit as st
+
 st.set_page_config(page_title="Anti-Fraud & KYC Agent", layout="wide")
 from services.ui.components.operator_banner import render_operator_banner
 from services.ui.components.telemetry_dashboard import render_telemetry_dashboard
 from services.ui.components.feedback import render_feedback_tab
+from services.ui.components.chat_assistant import render_chat_assistant
 from services.ui.theme_manager import (
     apply_theme as apply_global_theme,
     get_palette,
     get_theme,
     render_theme_toggle,
+)
+
+st.markdown(
+    """
+    > **Unified Risk Checklist**  
+    > ✅ Is the borrower real & safe? (this agent)  
+    > ✅ Is the collateral worth enough? (Asset)  
+    > ✅ Can they afford the loan? (Credit)  
+    > ✅ Should the bank approve overall? (Unified agent)
+    """
 )
 
 BASE_DIR = Path(__file__).resolve().parents[3]
@@ -54,6 +67,24 @@ ss.setdefault("afk_ai_performance", 0.91)
 ss["afk_logged_in"] = True
 if not ss["afk_user"].get("name"):
     ss["afk_user"]["name"] = "Operator"
+
+
+def _build_chat_context() -> Dict[str, Any]:
+    ctx: Dict[str, Any] = {
+        "agent_type": "fraud_kyc",
+        "stage": ss.get("afk_stage") or ss.get("afk_active_tab"),
+        "user": (ss.get("afk_user") or {}).get("name"),
+        "pending_cases": ss.get("afk_pending"),
+        "flagged_cases": ss.get("afk_flagged"),
+        "avg_time": ss.get("afk_avg_time"),
+        "ai_performance": ss.get("afk_ai_performance"),
+        "run_id": ss.get("afk_last_run_id"),
+        "dataset_name": ss.get("afk_dataset_name"),
+        "selected_case": ss.get("afk_active_case"),
+        "last_error": ss.get("afk_last_error"),
+        "next_step": ss.get("afk_next_step"),
+    }
+    return {k: v for k, v in ctx.items() if v not in (None, "", [])}
 
 
 def _coerce_minutes(value, fallback: float = 0.0) -> float:
@@ -342,3 +373,14 @@ with tab_report:
 
 with tab_feedback:
     render_feedback_tab("🛡️ Anti-Fraud & KYC Agent")
+
+render_chat_assistant(
+    page_id="anti_fraud_kyc",
+    context=_build_chat_context(),
+    faq_questions=[
+        "How do I rerun the fraud rules for this borrower?",
+        "Show me the latest sanction hits.",
+        "Explain what the privacy scrub removed.",
+        "Generate a full KYC audit packet.",
+    ],
+)

@@ -28,6 +28,7 @@ from services.ui.theme_manager import (
 from services.ui.components.operator_banner import render_operator_banner
 from services.ui.components.telemetry_dashboard import render_telemetry_dashboard
 from services.ui.components.feedback import render_feedback_tab
+from services.ui.components.chat_assistant import render_chat_assistant
 
 
 
@@ -211,6 +212,16 @@ st.set_page_config(
 
 apply_theme()
 
+st.markdown(
+    """
+    > **Unified Risk Checklist**  
+    > ✅ Is the borrower real & safe? (Fraud/KYC)  
+    > ✅ Is the collateral worth enough? (Asset)  
+    > ✅ Can they afford the loan? (this agent)  
+    > ✅ Should the bank approve overall? (Unified agent)
+    """
+)
+
 
 
 # ────────────────────────────────
@@ -240,6 +251,31 @@ if not st.session_state.user_info.get("name"):
     st.session_state.user_info["name"] = st.session_state["credit_user"]["name"]
 if st.session_state.get("credit_logged_in", False):
     st.session_state.stage = "credit_agent"
+
+
+def _build_credit_chat_context() -> Dict[str, Any]:
+    ss_local = st.session_state
+    ctx = {
+        "agent_type": "credit",
+        "stage": ss_local.get("credit_stage") or ss_local.get("stage"),
+        "user": (ss_local.get("credit_user") or {}).get("name"),
+        "apps_in_review": ss_local.get("credit_apps_in_review"),
+        "flagged_cases": ss_local.get("credit_flagged_cases"),
+        "avg_decision_time": ss_local.get("credit_avg_decision_time"),
+        "ai_performance": ss_local.get("credit_ai_performance"),
+        "last_run_id": ss_local.get("credit_last_run_id"),
+        "last_error": ss_local.get("credit_last_error"),
+        "selected_model": ss_local.get("selected_model"),
+    }
+    return {k: v for k, v in ctx.items() if v not in (None, "", [])}
+
+
+CREDIT_FAQ = [
+    "Explain why this borrower was rejected.",
+    "Summarize rule breaches for this loan.",
+    "Compare PD vs NDI for this applicant.",
+    "How can I rerun Stage D – Policy?",
+]
 
 
 # ────────────────────────────────
@@ -1272,6 +1308,17 @@ with tab_run:
     st.subheader("🤖 Credit appraisal by AI assistant")
     # Anchor for loopback link from Training tab
     st.markdown('<a name="credit-appraisal-stage"></a>', unsafe_allow_html=True)
+    st.markdown(
+        """
+        **How to use this stage**
+
+        1. Pick a trained model (or promote a new one from Stage 5).
+        2. Set the Local LLM + host flavor so narratives run on the right hardware.
+        3. Choose your data source, then fine-tune rules and run the appraisal workflow.
+        4. Export results or loop back into Stage 4/5 for review and retraining.
+        """,
+        help="Quick reference so operators can move from Intake → Review → Training without leaving this tab.",
+    )
 
     # Production model banner (optional)
     try:
@@ -1323,12 +1370,28 @@ with tab_run:
     if models:
         models.sort(key=lambda x: os.path.getctime(x[1]), reverse=True)
         display_names = [f"{m[0]} — {m[2]}" for m in models]
+        preferred_display = st.session_state.get("credit_selected_display")
+        default_index = 0
+        if preferred_display in display_names:
+            default_index = display_names.index(preferred_display)
+        elif st.session_state.get("selected_trained_model"):
+            selected_path = st.session_state["selected_trained_model"]
+            for idx, (_, path, _) in enumerate(models):
+                if path == selected_path:
+                    default_index = idx
+                    break
 
-        selected_display = st.selectbox("📦 Select trained model to use", display_names)
+        selected_display = st.selectbox(
+            "📦 Select trained model to use",
+            display_names,
+            index=default_index,
+            key="credit_model_select",
+        )
         selected_model = models[display_names.index(selected_display)][1]
         st.success(f"✅ Using model: {os.path.basename(selected_model)}")
 
         st.session_state["selected_trained_model"] = selected_model
+        st.session_state["credit_selected_display"] = selected_display
 
         # ── Promote model
         if st.button("🚀 Promote this model to Production"):
@@ -1344,16 +1407,18 @@ with tab_run:
 
     # 1) Model + Hardware selection (UI hints)
     LLM_MODELS = [
-        ("Phi-3 Mini (3.8B) — CPU OK", "phi3:3.8b", "CPU 8GB RAM (fast)"),
-        ("Mistral 7B Instruct — CPU slow / GPU OK", "mistral:7b-instruct", "CPU 16GB (slow) or GPU ≥8GB"),
-        ("Gemma-2 7B — CPU slow / GPU OK", "gemma2:7b", "CPU 16GB (slow) or GPU ≥8GB"),
-        ("LLaMA-3 8B — GPU recommended", "llama3:8b-instruct", "GPU ≥12GB (CPU very slow)"),
-        ("Qwen2 7B — GPU recommended", "qwen2:7b-instruct", "GPU ≥12GB (CPU very slow)"),
-        ("Mixtral 8x7B — GPU only (big)", "mixtral:8x7b-instruct", "GPU 24–48GB"),
+        {"label": "💻 CPU Recommended — Phi-3 Mini (3.8B)", "value": "phi3:3.8b", "hint": "CPU 8GB RAM (fast)", "tier": "cpu"},
+        {"label": "💻 CPU Recommended — Mistral 7B Instruct", "value": "mistral:7b-instruct",
+         "hint": "CPU 16GB (slow) or GPU ≥8GB", "tier": "balanced"},
+        {"label": "💻 CPU Recommended — Gemma-2 7B", "value": "gemma2:7b",
+         "hint": "CPU 16GB (slow) or GPU ≥8GB", "tier": "balanced"},
+        {"label": "🧠 GPU Recommended — LLaMA-3 8B", "value": "llama3:8b-instruct",
+         "hint": "GPU ≥12GB (CPU very slow)", "tier": "gpu"},
+        {"label": "🧠 GPU Recommended — Qwen2 7B", "value": "qwen2:7b-instruct",
+         "hint": "GPU ≥12GB (CPU very slow)", "tier": "gpu"},
+        {"label": "🚀 GPU Heavy — Mixtral 8x7B", "value": "mixtral:8x7b-instruct",
+         "hint": "GPU 24–48GB", "tier": "gpu_large"},
     ]
-    LLM_LABELS = [l for (l, _, _) in LLM_MODELS]
-    LLM_VALUE_BY_LABEL = {l: v for (l, v, _) in LLM_MODELS}
-    LLM_HINT_BY_LABEL = {l: h for (l, _, h) in LLM_MODELS}
 
     OPENSTACK_FLAVORS = {
         "m4.medium": "4 vCPU / 8 GB RAM — CPU-only small",
@@ -1363,10 +1428,64 @@ with tab_run:
         "g2.a100.1": "24 vCPU / 128 GB RAM + 1×A100 80GB",
     }
 
+    # Determine dataset size to surface CPU/GPU-friendly LLMs first
+    possible_sources = ["credit_train_df", "credit_scored_df", "credit_decision_df", "last_merged_df"]
+    llm_row_count = None
+    for key in possible_sources:
+        df_candidate = st.session_state.get(key)
+        if isinstance(df_candidate, pd.DataFrame) and not df_candidate.empty:
+            llm_row_count = len(df_candidate)
+            break
+
+    def recommended_llms(row_count: int | None) -> list[str]:
+        if row_count is None:
+            return ["💻 CPU Recommended — Mistral 7B Instruct", "💻 CPU Recommended — Gemma-2 7B"]
+        if row_count <= 10_000:
+            return ["💻 CPU Recommended — Phi-3 Mini (3.8B)", "💻 CPU Recommended — Mistral 7B Instruct"]
+        if row_count <= 40_000:
+            return ["💻 CPU Recommended — Mistral 7B Instruct", "💻 CPU Recommended — Gemma-2 7B"]
+        return ["🚀 GPU Heavy — Mixtral 8x7B", "🧠 GPU Recommended — LLaMA-3 8B"]
+
+    rec_labels = recommended_llms(llm_row_count)
+    cpu_like = [m for m in LLM_MODELS if m["tier"] in {"cpu", "balanced"}]
+    gpu_like = [m for m in LLM_MODELS if m["tier"] in {"gpu", "gpu_large"}]
+
+    ordered_models = []
+    seen = set()
+
+    def append_unique(model):
+        if model["label"] not in seen:
+            ordered_models.append(model)
+            seen.add(model["label"])
+
+    for label in rec_labels:
+        match = next((m for m in LLM_MODELS if m["label"] == label), None)
+        if match:
+            append_unique(match)
+
+    for model in cpu_like:
+        append_unique(model)
+    for model in gpu_like:
+        append_unique(model)
+
+    ordered_labels = [m["label"] for m in ordered_models]
+    LLM_VALUE_BY_LABEL = {m["label"]: m["value"] for m in ordered_models}
+    LLM_HINT_BY_LABEL = {m["label"]: m["hint"] for m in ordered_models}
+
     with st.expander("🧠 Local LLM & Hardware Profile", expanded=True):
+        st.info("Use CPU recommended LLMs first for quick narratives. Switch to GPU picks only when you need deeper reasoning or longer context.", icon="⚡")
         c1, c2 = st.columns([1.2, 1])
         with c1:
-            model_label = st.selectbox("Local LLM (used for narratives/explanations)", LLM_LABELS, index=1)
+            saved_llm = st.session_state.get("credit_llm_model_label", ordered_labels[0])
+            if saved_llm not in ordered_labels:
+                saved_llm = ordered_labels[0]
+            model_label = st.selectbox(
+                "🔥 Local LLM (used for narratives/explanations)",
+                ordered_labels,
+                index=ordered_labels.index(saved_llm),
+                key="credit_llm_model_label",
+                help="Recommended models are pinned to the top of this menu.",
+            )
             llm_value = LLM_VALUE_BY_LABEL[model_label]
             st.caption(f"Hint: {LLM_HINT_BY_LABEL[model_label]}")
         with c2:
@@ -2149,16 +2268,88 @@ with tab_train:
 
     st.markdown("---")
 
- 
     # ---------------------------------------------------------
     # ✅ MODEL SELECTION
     # ---------------------------------------------------------
+    dataset_rows = len(train_df)
+    feature_count = len(train_df.columns)
+    numeric_cols = len(train_df.select_dtypes(include=["number"]).columns)
+
+    def score_model(name: str) -> tuple[int, str]:
+        """
+        Returns (score, reason) for the recommended-model cards.
+        Score is a simple heuristic driven by dataset size + feature mix.
+        """
+        reason = ""
+        score = 0
+
+        if name == "LogisticRegression":
+            score = 3 if dataset_rows <= 10_000 else 1
+            reason = "Best for <10k rows when regulators want fully explainable coefficients."
+        elif name == "RandomForest":
+            score = 4 if 10_000 < dataset_rows <= 60_000 else 2
+            reason = "Solid all-rounder for midsize datasets with mixed feature types."
+        elif name == "LightGBM":
+            score = 5 if dataset_rows > 40_000 else 3
+            reason = "Handles wide, imbalanced credit files efficiently — ideal for production retrains."
+        elif name == "XGBoost":
+            score = 4 if dataset_rows > 80_000 else 2
+            reason = "Max accuracy when you can afford longer training time and need granular splits."
+
+        # Small boost if we detected many numeric columns (helps tree boosters)
+        if name in {"LightGBM", "XGBoost", "RandomForest"} and numeric_cols > feature_count * 0.6:
+            score += 1
+            reason += " Abundant numeric features favour boosted trees."
+
+        return score, reason
+
+    model_profiles = []
+    for candidate in ["LightGBM", "RandomForest", "LogisticRegression", "XGBoost"]:
+        score, reason = score_model(candidate)
+        model_profiles.append(
+            {
+                "name": candidate,
+                "score": score,
+                "tagline": {
+                    "LightGBM": "Enterprise-ready EQACh default",
+                    "RandomForest": "Balanced accuracy + speed",
+                    "LogisticRegression": "Audit-friendly baseline",
+                    "XGBoost": "Max depth / max lift",
+                }[candidate],
+                "reason": reason,
+            }
+        )
+
+    model_profiles.sort(key=lambda x: x["score"], reverse=True)
+    top_profiles = model_profiles[:3]
+
+    st.markdown("#### ⭐ Recommended models (EQACh signal)")
+    st.caption(f"Based on {dataset_rows:,} rows · {feature_count} features · {numeric_cols} numeric")
+
+    rec_cols = st.columns(len(top_profiles))
+    for col, profile in zip(rec_cols, top_profiles):
+        with col:
+            st.markdown(f"**{profile['name']}**")
+            st.caption(profile["tagline"])
+            st.write(profile["reason"])
+            if st.button(f"Use {profile['name']}", key=f"use_{profile['name']}"):
+                st.session_state["credit_model_choice"] = profile["name"]
+
     st.subheader("🤖 Choose training model")
+
+    model_options = ["LogisticRegression", "RandomForest", "LightGBM", "XGBoost"]
+    default_choice = st.session_state.get("credit_model_choice")
+    if not default_choice:
+        default_choice = model_profiles[0]["name"]
+    if default_choice not in model_options:
+        default_choice = model_options[0]
 
     model_choice = st.selectbox(
         "Select model:",
-        ["LogisticRegression", "RandomForest", "LightGBM", "XGBoost"]
+        model_options,
+        index=model_options.index(default_choice)
     )
+    st.session_state["credit_model_choice"] = model_choice
 
     # ---------------------------------------------------------
     # ✅ Smart Target Auto-Detection (BEFORE training)
@@ -3360,3 +3551,9 @@ def legacy_credit_theme(theme: str = "dark"):
     """, unsafe_allow_html=True)
 
 '''
+
+render_chat_assistant(
+    page_id="credit_appraisal",
+    context=_build_credit_chat_context(),
+    faq_questions=CREDIT_FAQ,
+)

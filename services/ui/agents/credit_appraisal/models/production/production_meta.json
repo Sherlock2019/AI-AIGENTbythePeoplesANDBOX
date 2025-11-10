@@ -1,24 +1,24 @@
 {
-  "model_path": "agents/credit_appraisal/models/trained/LogisticRegression_20251109-084025.joblib",
-  "promoted_at": "2025-11-09T08:40:39.127307+00:00",
+  "model_path": "agents/credit_appraisal/models/trained/RandomForest_20251110-015500.joblib",
+  "promoted_at": "2025-11-10T01:55:08.810616+00:00",
   "metrics": {
-    "AUC": 0.9010416666666666,
-    "Accuracy": 0.775,
-    "Precision": 0.7586206896551724,
-    "Recall": 0.9166666666666666,
-    "F1": 0.8301886792452831
+    "AUC": 0.8736979166666667,
+    "Accuracy": 0.8,
+    "Precision": 0.8333333333333334,
+    "Recall": 0.8333333333333334,
+    "F1": 0.8333333333333334
   },
   "report": {
-    "timestamp": "20251109-084025",
-    "model_choice": "LogisticRegression",
+    "timestamp": "20251110-015500",
+    "model_choice": "RandomForest",
     "metrics": {
-      "AUC": 0.9010416666666666,
-      "Accuracy": 0.775,
-      "Precision": 0.7586206896551724,
-      "Recall": 0.9166666666666666,
-      "F1": 0.8301886792452831
+      "AUC": 0.8736979166666667,
+      "Accuracy": 0.8,
+      "Precision": 0.8333333333333334,
+      "Recall": 0.8333333333333334,
+      "F1": 0.8333333333333334
     },
-    "model_path": "agents/credit_appraisal/models/trained/LogisticRegression_20251109-084025.joblib",
+    "model_path": "agents/credit_appraisal/models/trained/RandomForest_20251110-015500.joblib",
     "features": [
       "application_id",
       "age",

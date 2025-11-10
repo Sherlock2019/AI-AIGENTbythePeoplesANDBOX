@@ -252,6 +252,39 @@ def apply_theme(theme: str | None = None) -> str:
         """,
         unsafe_allow_html=True,
     )
+
+    st.markdown(
+        """
+        <style>
+        /* Global selectbox/listbox color overrides */
+        div[data-baseweb="select"] > div {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+        }
+        div[data-baseweb="select"] input {
+            color: #000000 !important;
+        }
+        div[data-baseweb="select"] span {
+            color: #000000 !important;
+        }
+        ul[role="listbox"],
+        div[role="listbox"] {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
+        ul[role="listbox"] li,
+        div[role="option"],
+        div[role="listbox"] * {
+            color: #000000 !important;
+        }
+        [role="option"]:hover {
+            color: #000000 !important;
+            background-color: #f1f5f9 !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
     return normalized
 
 

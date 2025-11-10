@@ -67,6 +67,26 @@ Questions or improvements? Open an issue or mention it in review before editing 
 
 ---
 
+### 6. Unified Chat Assistant Panel
+
+- **Backend** – `services/api/routers/chat.py` exposes `POST /v1/chat`, which infers the active mode (asset, credit, fraud/KYC, supervisor) from `page_id` + context, streams the prompt through LLaMA, and returns optional orchestration actions (rerun stage, promote model, generate report, etc.).
+- **UI Component** – `services/ui/components/chat_assistant.py` renders the “Need chat bot assistant ?” drawer. It stores message history in the browser, shows live status, and supports FAQ chips (either passed from the page or returned by the backend).
+- **Embedding** – Call `render_chat_assistant(page_id=..., context=builder(), faq_questions=[...])` once per page. Context should contain short, sanitized fields (current stage, run id, dataset name, last error). Removing the assistant remains a one-line change per page.
+
+---
+
+### 7. Local Knowledge Store (RAG)
+
+- **Embeddings** – RAG now uses a local `sentence-transformers` model (default `all-MiniLM-L6-v2`). Override via `SENTENCE_TRANSFORMER_MODEL` if you want a different encoder.
+- **Seeding CSV outputs** – Run  
+  `python services/api/scripts/seed_local_rag_from_csv.py`  
+  to scan `services/ui/.tmp_runs`, `services/ui/exports`, and `anti-fraud-kyc-agent/.tmp_runs`, convert every CSV row into text, embed locally, and append it to the on-disk store. Use `--dirs`, `--max-rows`, and `--dry-run` as needed.
+- **Continuous sync** – Launch `python services/api/scripts/watch_local_rag.py` in a background process. It polls the CSV directories, ingests new/updated files (tracked via `.rag_ingest_state.json`), and keeps the local store aligned with production runs.
+- **Agent FAQs & docs** – Run `python services/api/scripts/seed_local_rag_agent_docs.py` to ingest each agent’s Streamlit source + curated FAQ answers (“Explain ai_adjusted vs FMV”, “How do I rerun fraud rules?”, etc.).
+- **Runtime** – `/v1/chat` queries the local store first; if nothing matches it falls back to the built-in TF‑IDF snippets so the assistant never goes silent.
+
+---
+
 ### Mercedes-Benz Style AI Dashboard (HTML + CSS)
 
 The snippet below is a copy/paste-ready static dashboard that recreates the Mercedes-Benz cockpit aesthetic with three neon gauges plus the half-dome performance meter. Drop it into any static host (or Streamlit `st.components.v1.html`) to render the exact experience described in the brief.

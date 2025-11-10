@@ -43,6 +43,7 @@ from services.ui.theme_manager import (
 from services.ui.components.operator_banner import render_operator_banner
 from services.ui.components.telemetry_dashboard import render_telemetry_dashboard
 from services.ui.components.feedback import render_feedback_tab
+from services.ui.components.chat_assistant import render_chat_assistant
 
 
 
@@ -57,6 +58,16 @@ import streamlit as st
 
 st.set_page_config(page_title="Asset Appraisal Agent", layout="wide")
 ss = st.session_state
+
+st.markdown(
+    """
+    > **Unified Risk Checklist**  
+    > ✅ Is the borrower real & safe? (handled by KYC/Fraud)  
+    > ✅ Is the collateral worth enough? (this agent)  
+    > ✅ Can they afford the loan? (Credit)  
+    > ✅ Should the bank approve overall? (Unified agent)
+    """
+)
 
 # ─────────────────────────────────────────────
 # SESSION DEFAULTS (idempotent)
@@ -86,6 +97,32 @@ def _init_defaults():
     os.makedirs("./.tmp_runs", exist_ok=True)
 
 _init_defaults()
+
+
+def _build_asset_chat_context() -> Dict[str, Any]:
+    ss_local = st.session_state
+    ctx = {
+        "agent_type": "asset",
+        "stage": ss_local.get("asset_stage"),
+        "user": (ss_local.get("asset_user") or {}).get("name"),
+        "pending_cases": ss_local.get("asset_pending_cases"),
+        "flagged_cases": ss_local.get("asset_flagged_cases"),
+        "avg_time": ss_local.get("asset_avg_time"),
+        "ai_performance": ss_local.get("asset_ai_performance"),
+        "last_run_id": ss_local.get("asset_last_run_id"),
+        "last_runner": ss_local.get("asset_last_runner"),
+        "last_error": ss_local.get("asset_last_error"),
+        "next_step": ss_local.get("asset_next_step"),
+    }
+    return {k: v for k, v in ctx.items() if v not in (None, "", [])}
+
+
+ASSET_FAQ = [
+    "Explain ai_adjusted vs FMV.",
+    "Show comps that drove the valuation.",
+    "What encumbrances were detected?",
+    "How do I rerun Stage C – Valuation?",
+]
 
 # Always bypass login step during operator demos
 ss["asset_logged_in"] = True
@@ -1990,16 +2027,21 @@ with tabC:
     st.dataframe(pd.DataFrame(HF_MODELS), use_container_width=True)
 
     LLM_MODELS = [
-        ("Phi-3 Mini (3.8B)", "phi3:3.8b", "CPU 8 GB RAM (fast)"),
-        ("Mistral 7B Instruct", "mistral:7b-instruct", "GPU ≥ 8 GB (fast)"),
-        ("Gemma-2 9B", "gemma2:9b", "GPU ≥ 12 GB (high accuracy)"),
-        ("LLaMA-3 8B", "llama3:8b-instruct", "GPU ≥ 12 GB (context heavy)"),
-        ("Qwen-2 7B", "qwen2:7b-instruct", "GPU ≥ 12 GB (multilingual)"),
-        ("Mixtral 8×7B", "mixtral:8x7b-instruct", "GPU 24-48 GB (batch)"),
+        {"label": "CPU Recommended — Phi-3 Mini (3.8B)", "value": "phi3:3.8b", "hint": "CPU 8 GB RAM (fast)", "tier": "cpu"},
+        {"label": "CPU Recommended — Mistral 7B Instruct", "value": "mistral:7b-instruct", "hint": "GPU ≥ 8 GB (fast)", "tier": "balanced"},
+        {"label": "GPU Recommended — Gemma-2 9B", "value": "gemma2:9b", "hint": "GPU ≥ 12 GB (high accuracy)", "tier": "gpu"},
+        {"label": "GPU Recommended — LLaMA-3 8B", "value": "llama3:8b-instruct", "hint": "GPU ≥ 12 GB (context heavy)", "tier": "gpu"},
+        {"label": "GPU Recommended — Qwen-2 7B", "value": "qwen2:7b-instruct", "hint": "GPU ≥ 12 GB (multilingual)", "tier": "gpu"},
+        {"label": "GPU Heavy — Mixtral 8×7B", "value": "mixtral:8x7b-instruct", "hint": "GPU 24-48 GB (batch)", "tier": "gpu_large"},
     ]
-    LLM_LABELS = [l for (l, _, _) in LLM_MODELS]
-    LLM_VALUE_BY_LABEL = {l: v for (l, v, _) in LLM_MODELS}
-    LLM_HINT_BY_LABEL  = {l: h for (l, _, h) in LLM_MODELS}
+
+    cpu_first = [m for m in LLM_MODELS if m["tier"] in {"cpu", "balanced"}]
+    gpu_first = [m for m in LLM_MODELS if m["tier"] not in {"cpu", "balanced"}]
+    ordered_models = cpu_first + gpu_first
+
+    LLM_LABELS = [m["label"] for m in ordered_models]
+    LLM_VALUE_BY_LABEL = {m["label"]: m["value"] for m in ordered_models}
+    LLM_HINT_BY_LABEL  = {m["label"]: m["hint"] for m in ordered_models}
 
     OPENSTACK_FLAVORS = {
         "m4.medium": "4 vCPU / 8 GB RAM (CPU-only small)",
@@ -2010,11 +2052,12 @@ with tabC:
     }
 
     with st.expander("🧠 Choose Model & Hardware Profile", expanded=True):
+        st.info("CPU picks land first so you can generate valuation narratives without waiting on GPUs. Jump to the GPU section only if you need deeper reasoning or longer context windows.", icon="⚙️")
         c1, c2 = st.columns([1.2, 1])
         with c1:
             model_label = st.selectbox(
-                "Select Local or HF LLM (for narratives / explanations)",
-                LLM_LABELS, index=1, key="asset_llm_label")
+                "🔥 Local/HF LLM for narratives & explanations",
+                LLM_LABELS, index=0, key="asset_llm_label")
             llm_value = LLM_VALUE_BY_LABEL[model_label]
             use_llm = st.checkbox("Use LLM narrative (explanations)",
                                   value=False, key="asset_use_llm")
@@ -2586,26 +2629,113 @@ with tabC:
                             # ─────────────────────────────────────────────
                             import plotly.express as px
                             apply_plotly_mapbox_defaults()
-                            style_name = plotly_map_style()
+                            # ============================================
+                            # ✅ CODEX INSTRUCTION — MAP IMPROVEMENTS
+                            # ============================================
+                            value_source = None
+                            for candidate in ["ai_adjusted", "realizable_value", "loan_amount"]:
+                                if candidate in map_df.columns:
+                                    value_source = candidate
+                                    break
 
-                            fig = px.scatter_mapbox(
-                                map_df,
-                                lat="lat",
-                                lon="lon",
-                                hover_name="asset_id" if "asset_id" in map_df.columns else "city",
-                                hover_data={c: True for c in ["asset_type","city","ai_adjusted","realizable_value","confidence"] if c in map_df.columns},
-                                color_discrete_sequence=["#38bdf8"],
-                                zoom=8,
-                                height=420,
+                            if value_source:
+                                value_metric = map_df[value_source]
+                            else:
+                                value_metric = pd.Series([0] * len(map_df), index=map_df.index)
+
+                            working_df = map_df.assign(
+                                city=map_df.get("city", "Unknown").fillna("Unknown"),
+                                value_metric=value_metric,
                             )
 
-                            fig.update_layout(
-                                mapbox_style=style_name,
-                                margin=dict(l=0, r=0, t=0, b=0),
-                                paper_bgcolor="rgba(0,0,0,0)",
-                                plot_bgcolor="rgba(0,0,0,0)",
+                            # Aggregate per city so bubble size reflects asset counts
+                            city_bubbles = (
+                                working_df.groupby("city", dropna=False)
+                                .agg(
+                                    lat=("lat", "mean"),
+                                    lon=("lon", "mean"),
+                                    n_assets=("city", "size"),
+                                    max_value=("value_metric", "max"),
+                                    min_value=("value_metric", "min"),
+                                )
+                                .reset_index()
                             )
-                            st.plotly_chart(fig, use_container_width=True)
+
+                            if not city_bubbles.empty:
+                                lat_min, lat_max = city_bubbles["lat"].min(), city_bubbles["lat"].max()
+                                lon_min, lon_max = city_bubbles["lon"].min(), city_bubbles["lon"].max()
+
+                                def _compute_zoom(lat_range: float, lon_range: float) -> float:
+                                    span = max(lat_range, lon_range)
+                                    if span <= 0.05:
+                                        return 11
+                                    if span <= 0.1:
+                                        return 10
+                                    if span <= 0.5:
+                                        return 8
+                                    if span <= 1.0:
+                                        return 7
+                                    if span <= 5.0:
+                                        return 6
+                                    return 5
+
+                                zoom = _compute_zoom(lat_max - lat_min, lon_max - lon_min)
+                                center = {
+                                    "lat": float((lat_min + lat_max) / 2.0),
+                                    "lon": float((lon_min + lon_max) / 2.0),
+                                }
+
+                                map_style = "carto-positron"
+
+                                fig = px.scatter_mapbox(
+                                    city_bubbles,
+                                    lat="lat",
+                                    lon="lon",
+                                    size="n_assets",
+                                    color="city",
+                                    hover_name="city",
+                                    hover_data={
+                                        "n_assets": True,
+                                        "max_value": value_source is not None,
+                                        "min_value": value_source is not None,
+                                    },
+                                    size_max=50,
+                                    height=420,
+                                    color_discrete_sequence=px.colors.qualitative.Bold,
+                                )
+
+                                def fmt_currency(value: float | int | None) -> str:
+                                    if value is None or (isinstance(value, float) and np.isnan(value)):
+                                        return "n/a"
+                                    return f"{value:,.0f}"
+
+                                city_bubbles["bubble_text"] = city_bubbles.apply(
+                                    lambda row: (
+                                        f"{row['city']} • {row['n_assets']} assets"
+                                        + (
+                                            f"\nTop: {fmt_currency(row['max_value'])} · Low: {fmt_currency(row['min_value'])}"
+                                            if value_source
+                                            else ""
+                                        )
+                                    ),
+                                    axis=1,
+                                )
+
+                                fig.update_traces(
+                                    text=city_bubbles["bubble_text"],
+                                    textposition="top center",
+                                )
+                                fig.update_layout(
+                                    mapbox_style=map_style,
+                                    mapbox_center=center,
+                                    mapbox_zoom=zoom,
+                                    margin=dict(l=0, r=0, t=0, b=0),
+                                    paper_bgcolor="rgba(0,0,0,0)",
+                                    plot_bgcolor="rgba(0,0,0,0)",
+                                )
+                                st.plotly_chart(fig, use_container_width=True)
+                            else:
+                                st.info("ℹ️ Unable to build city bubbles — no valid coordinates after grouping.")
 
                         except Exception as e:
                             # ─────────────────────────────────────────────
@@ -3815,6 +3945,9 @@ with tabF:
         st.error("No numeric features left after filtering. Please include numeric columns for training.")
         st.stop()
 
+    dataset_rows = len(df_train)
+    numeric_feature_count = len(num_cols)
+
     X = df_train[num_cols].copy()
     y = pd.to_numeric(df_train[target_col], errors="coerce")
 
@@ -3822,17 +3955,73 @@ with tabF:
     mask = pd.notna(y)
     X, y = X.loc[mask], y.loc[mask]
 
+    st.markdown("#### ⭐ Recommended models (EQACh signal)")
+    st.caption(f"{dataset_rows:,} labeled assets · {numeric_feature_count} numeric features")
+
+    def score_asset_model(name: str) -> tuple[int, str]:
+        """Coarse scoring so operators see why a regressor fits their data."""
+        reason = ""
+        score = 0
+
+        if name == "GradientBoostingRegressor":
+            score = 5 if dataset_rows > 5_000 else 3
+            reason = "Captures nonlinear patterns and handles wide appraisal signals."
+        elif name == "RandomForestRegressor":
+            score = 4 if 1_000 < dataset_rows <= 10_000 else 2
+            reason = "Stable when you have mixed-quality human feedback and want robustness."
+        elif name == "LinearRegression":
+            score = 3 if dataset_rows <= 2_000 else 1
+            reason = "Fast, fully explainable baseline for regulators or smoke tests."
+
+        if numeric_feature_count >= 8 and name != "LinearRegression":
+            score += 1
+            reason += " Extra numeric features boost tree ensembles."
+
+        return score, reason
+
+    model_profiles = []
+    for candidate in ["GradientBoostingRegressor", "RandomForestRegressor", "LinearRegression"]:
+        score, reason = score_asset_model(candidate)
+        model_profiles.append(
+            {
+                "name": candidate,
+                "score": score,
+                "tagline": {
+                    "GradientBoostingRegressor": "Enterprise-ready EQACh default",
+                    "RandomForestRegressor": "Resilient midsize option",
+                    "LinearRegression": "Audit-friendly baseline",
+                }[candidate],
+                "reason": reason,
+            }
+        )
+
+    model_profiles.sort(key=lambda x: x["score"], reverse=True)
+    rec_cols = st.columns(len(model_profiles))
+    for col, profile in zip(rec_cols, model_profiles):
+        with col:
+            st.markdown(f"**{profile['name']}**")
+            st.caption(profile["tagline"])
+            st.write(profile["reason"])
+            if st.button(f"Use {profile['name']}", key=f"use_asset_{profile['name']}"):
+                ss["asset_model_choice"] = profile["name"]
+
     # Train/Test split
     test_size = st.slider("Holdout size", 10, 40, 20, step=5) / 100.0
     Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=test_size, random_state=42)
 
     # ---------- model choice ----------
     st.markdown("#### 🤖 Choose model")
+    model_options = ["GradientBoostingRegressor", "RandomForestRegressor", "LinearRegression"]
+    default_choice = ss.get("asset_model_choice", model_profiles[0]["name"])
+    if default_choice not in model_options:
+        default_choice = model_options[0]
+
     model_choice = st.selectbox(
         "Select model algorithm",
-        ["GradientBoostingRegressor", "RandomForestRegressor", "LinearRegression"],
-        index=0
+        model_options,
+        index=model_options.index(default_choice)
     )
+    ss["asset_model_choice"] = model_choice
     ModelCls = {
         "GradientBoostingRegressor": GradientBoostingRegressor,
         "RandomForestRegressor": RandomForestRegressor,
@@ -4759,3 +4948,9 @@ def legacy_asset_theme(theme: str = "dark"):
     """, unsafe_allow_html=True)
 
 '''
+
+render_chat_assistant(
+    page_id="asset_appraisal",
+    context=_build_asset_chat_context(),
+    faq_questions=ASSET_FAQ,
+)

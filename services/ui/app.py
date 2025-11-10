@@ -425,12 +425,16 @@ def render_image_tag(agent_id: str, industry: str, emoji_fallback: str) -> str:
 # DATA
 # ────────────────────────────────
 AGENTS = [
+    ("🏦 Banking & Finance", "💰 Retail Banking", "🧩 Unified Risk Orchestration Agent",
+     "Compounds asset+credit+fraud into one decision", "Being Built", "🧩"),
     ("🏦 Banking & Finance", "💰 Retail Banking", "💳 Credit Appraisal Agent",
      "Explainable AI for loan decisioning", "Available", "💳"),
     ("🏦 Banking & Finance", "💰 Retail Banking", "🏦 Asset Appraisal Agent",
      "Market-driven collateral valuation", "Available", "🏦"),
-    ("🏦 Banking & Finance", "🛡️ Compliance", "🛡️ Anti-Fraud & KYC Agent",
+    ("🏦 Banking & Finance", "💰 Retail Banking", "🛡️ Anti-Fraud & KYC Agent",
      "Streamlined onboarding with fraud scoring", "Available", "🛡️"),
+    ("🏦 Banking & Finance", "💰 Retail Banking", "💬 Chatbot Assistant",
+     "Context-aware embedded assistant", "Being Built", "💬"),
     ("💻 Information Technology", "🧠 Troubleshooting", "🧠 IT Troubleshooter Agent",
      "First-principles + case-memory incident solver", "Being Built", "🧠"),
     ("🏦 Banking & Finance", "🩺 Insurance", "🩺 Claims Triage Agent",
@@ -832,6 +836,19 @@ if st.session_state.stage == "landing":
             box-shadow: 0 0 25px rgba(0,240,255,0.5);
         }
 
+        .agent-header-bar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 16px;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            margin-bottom: 14px;
+        }
+        
         .neon-header {
             background: linear-gradient(90deg, #ff0033, #ff3366);
             border-radius: 8px;
@@ -911,12 +928,26 @@ if st.session_state.stage == "landing":
         # ============================================================
         import re
 
+        header_bar = (
+            "<div class='agent-header-bar'>"
+            "<span>Industry</span>"
+            "<span>Agent Name</span>"
+            "<span>Role / Description</span>"
+            "<span>Users</span>"
+            "<span>Comments</span>"
+            "<span>Rating</span>"
+            "<span>Action</span>"
+            "</div>"
+        )
+
         html_agents = ""
         launch_overrides = {
             "credit_appraisal": "http://localhost:8502/credit_appraisal",
             "asset_appraisal": "http://localhost:8502/asset_appraisal",
             "anti_fraud_kyc": "http://localhost:8502/anti_fraud_kyc",
             "it_troubleshooter": "http://localhost:8502/troubleshooter_agent",
+            "unified_risk_orchestration": "http://localhost:8502/unified_risk",
+            "chatbot_assistant": "http://localhost:8502/chatbot_assistant",
         }
         for sector, industry, agent, desc, status, emoji in AGENTS:
             # ----- status color mapping -----
@@ -948,7 +979,12 @@ if st.session_state.stage == "landing":
             launch_url = launch_overrides.get(route_name, f"/{route_name}")
             status_norm = status.strip().lower()
             is_launchable = status_norm in {"available", "being built"}
-            button_label = "🔧 Preview?" if route_name == "it_troubleshooter" else "🚀 Launch"
+            if route_name == "it_troubleshooter":
+                button_label = "🔧 Preview?"
+            elif status_norm == "available":
+                button_label = "🚀 Launch"
+            else:
+                button_label = "🔧 Preview"
             action_html = (
                 f"<a class='launchbtn' href='{launch_url}'>{button_label}</a>"
                 if is_launchable
@@ -993,6 +1029,7 @@ if st.session_state.stage == "landing":
             f"""
             <div class="neon-header">📊 Global AI Agent Library</div>
             <div class="neon-frame">
+                {header_bar}
                 {html_agents}
             </div>
             <footer style="text-align:center;margin-top:2rem;color:#a3e8ff;">
@@ -1095,6 +1132,14 @@ if st.session_state.stage == "agents":
          "Description": "Onboard customers with automated KYC",
          "Status": "✅ Available",
          "Action": '<a class="macbtn" href="/anti_fraud_kyc">🚀 Launch</a>'},
+        {"Agent": "🧩 Unified Risk Orchestration Agent",
+         "Description": "Compounds asset+credit+fraud decisions",
+         "Status": "🛠️ Being Built",
+         "Action": '<a class="macbtn" href="/unified_risk">🧩 Preview</a>'},
+        {"Agent": "💬 Chatbot Assistant",
+         "Description": "Context-aware embedded assistant",
+         "Status": "🛠️ Being Built",
+         "Action": '<a class="macbtn" href="/chatbot_assistant">🔍 Preview</a>'},
         {"Agent": "🧠 IT Troubleshooter Agent",
          "Description": "First-principles + case-memory incident solver",
          "Status": "🛠️ Being Built",

@@ -432,7 +432,7 @@ def render_nav_bar_app():
 #     if new_theme != st.session_state.get("ui_theme", "dark"):
 #         st.session_state["ui_theme"] = new_theme
 #         apply_theme(new_theme)
-#         st.experimental_rerun()
+#         st.rerun()
 
 
 # # ─────────────────────────────────────────────
@@ -3554,5 +3554,4 @@ with tab_feedback:
             st.rerun()
         else:
             st.warning("Please enter a comment before submitting.")
-
 

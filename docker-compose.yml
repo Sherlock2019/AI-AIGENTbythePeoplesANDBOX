@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  ui:
+    image: ai-aigent-ui:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    env_file:
+      - .env
+    environment:
+      STREAMLIT_SERVER_PORT: 8080
+      STREAMLIT_SERVER_HEADLESS: "true"
+      STREAMLIT_SERVER_ADDRESS: "0.0.0.0"
+    volumes:
+      - ./agents:/app/agents
+      - ./exports:/app/exports
+    restart: unless-stopped

@@ -124,7 +124,79 @@ def render_train_tab(ss, runs_dir: Path) -> None:
 
     st.markdown("### 2. Select model & runtime")
     st.dataframe(pd.DataFrame(MODEL_TABLE), use_container_width=True)
-    model_label = st.selectbox("Model", [m["Model"] for m in MODEL_TABLE], key="afk_train_model")
+    dataset_rows = len(dataset)
+    fraud_series = pd.to_numeric(dataset.get("fraud_score"), errors="coerce")
+    fraud_series = fraud_series if isinstance(fraud_series, pd.Series) else pd.Series(dtype=float)
+    high_risk_rate = float((fraud_series >= 70).mean()) if not fraud_series.empty else None
+
+    st.markdown("#### ⭐ Recommended models (EQACh signal)")
+    hint = f"{dataset_rows:,} rows analysed"
+    if high_risk_rate is not None and not np.isnan(high_risk_rate):
+        hint += f" · {high_risk_rate*100:.1f}% high-risk cases"
+    st.caption(hint)
+
+    def score_afk_model(name: str) -> tuple[int, str]:
+        """Simple heuristic so operators see why a classifier is suggested."""
+        reason = ""
+        score = 0
+
+        if name == "Logistic Regression":
+            score = 3 if dataset_rows <= 5_000 else 1
+            reason = "Fast, explainable baseline for smaller review queues."
+        elif name == "Random Forest":
+            score = 4 if 5_000 < dataset_rows <= 25_000 else 2
+            reason = "Great when feedback mixes numeric+binary features and you want robustness."
+        elif name == "Gradient Boost":
+            score = 5 if dataset_rows > 15_000 else 3
+            reason = "Top accuracy on imbalanced fraud labels, especially with >15k rows."
+
+        if high_risk_rate is not None:
+            if high_risk_rate < 0.2 and name != "Logistic Regression":
+                score += 1
+                reason += " Handles rare-fraud imbalance."
+            elif high_risk_rate > 0.5 and name == "Logistic Regression":
+                score += 1
+                reason += " Balanced labels keep coefficients stable."
+
+        return score, reason
+
+    model_profiles = []
+    model_options = [m["Model"] for m in MODEL_TABLE]
+    for candidate in model_options:
+        score, reason = score_afk_model(candidate)
+        model_profiles.append(
+            {
+                "name": candidate,
+                "score": score,
+                "tagline": {
+                    "Logistic Regression": "Audit-friendly baseline",
+                    "Random Forest": "Ensemble stability",
+                    "Gradient Boost": "Enterprise default",
+                }[candidate],
+                "reason": reason,
+            }
+        )
+
+    model_profiles.sort(key=lambda x: x["score"], reverse=True)
+    rec_cols = st.columns(len(model_profiles))
+    for col, profile in zip(rec_cols, model_profiles):
+        with col:
+            st.markdown(f"**{profile['name']}**")
+            st.caption(profile["tagline"])
+            st.write(profile["reason"])
+            if st.button(f"Use {profile['name']}", key=f"use_afk_{profile['name']}"):
+                ss["afk_train_model"] = profile["name"]
+
+    default_choice = ss.get("afk_train_model", model_profiles[0]["name"])
+    if default_choice not in model_options:
+        default_choice = model_options[0]
+
+    model_label = st.selectbox(
+        "Model",
+        model_options,
+        index=model_options.index(default_choice),
+        key="afk_train_model"
+    )
     gpu_profile = st.selectbox("GPU profile", GPU_PROFILES, index=0, key="afk_train_gpu")
     st.caption(f"Running {model_label} on {gpu_profile} (UI placeholder).")
 
