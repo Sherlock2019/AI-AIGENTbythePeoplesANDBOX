@@ -10,6 +10,7 @@ import json
 import html
 from datetime import datetime, timezone
 from typing import Optional, Dict, List, Any
+from urllib.parse import urlparse
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -219,6 +220,28 @@ for d in (LANDING_IMG_DIR, RUNS_DIR, TMP_FEEDBACK_DIR):
     os.makedirs(d, exist_ok=True)
 
 API_URL = os.getenv("API_URL", "http://localhost:8090")
+
+LAUNCH_PORT = os.getenv("LAUNCH_PORT") or "8502"
+
+def _normalize_launch_base(raw_value: Optional[str]) -> str:
+    fallback = f"http://localhost:{LAUNCH_PORT}"
+    candidate = (raw_value or "").strip()
+    if not candidate:
+        return fallback
+    if not re.match(r"^https?://", candidate):
+        candidate = f"http://{candidate}"
+    candidate = candidate.rstrip("/")
+    parsed = urlparse(candidate)
+    if parsed.scheme and parsed.netloc:
+        host = f"{parsed.scheme}://{parsed.netloc}"
+        if parsed.port is None and LAUNCH_PORT:
+            host = f"{host}:{LAUNCH_PORT}"
+        return host
+    return fallback
+
+LAUNCH_BASE_URL = _normalize_launch_base(
+    os.getenv("LAUNCH_BASE_URL") or os.getenv("LAUNCH_HOST")
+)
 
 
 
@@ -941,13 +964,13 @@ if st.session_state.stage == "landing":
         )
 
         html_agents = ""
-        launch_overrides = {
-            "credit_appraisal": "http://localhost:8502/credit_appraisal",
-            "asset_appraisal": "http://localhost:8502/asset_appraisal",
-            "anti_fraud_kyc": "http://localhost:8502/anti_fraud_kyc",
-            "it_troubleshooter": "http://localhost:8502/troubleshooter_agent",
-            "unified_risk_orchestration": "http://localhost:8502/unified_risk",
-            "chatbot_assistant": "http://localhost:8502/chatbot_assistant",
+        launch_path_overrides = {
+            "credit_appraisal": "/credit_appraisal",
+            "asset_appraisal": "/asset_appraisal",
+            "anti_fraud_kyc": "/anti_fraud_kyc",
+            "it_troubleshooter": "/troubleshooter_agent",
+            "unified_risk_orchestration": "/unified_risk",
+            "chatbot_assistant": "/chatbot_assistant",
         }
         for sector, industry, agent, desc, status, emoji in AGENTS:
             # ----- status color mapping -----
@@ -976,7 +999,8 @@ if st.session_state.stage == "landing":
             clean_agent = re.sub(r"[^\w\s-]", "", agent).strip().lower()  # remove emojis/symbols
             route_name = re.sub(r"[-\s]+", "_", clean_agent).replace("_agent", "")
             route_name = re.sub(r"_+", "_", route_name).strip("_")
-            launch_url = launch_overrides.get(route_name, f"/{route_name}")
+            launch_path = launch_path_overrides.get(route_name, f"/{route_name}")
+            launch_url = f"{LAUNCH_BASE_URL}{launch_path}"
             status_norm = status.strip().lower()
             is_launchable = status_norm in {"available", "being built"}
             if route_name == "it_troubleshooter":
