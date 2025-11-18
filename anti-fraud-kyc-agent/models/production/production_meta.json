@@ -1,8 +1,8 @@
 {
-  "model_path": "logistic_regression_20251109-084345.joblib",
-  "promoted_at": "2025-11-09T08:43:45.831153",
+  "model_path": "logistic_regression_20251118-013556.joblib",
+  "promoted_at": "2025-11-18T01:35:56.679558",
   "report": {
-    "timestamp": "20251109-084345",
+    "timestamp": "20251118-013556",
     "model": "Logistic Regression",
     "gpu_profile": "CPU",
     "source": "Stage F human feedback",

@@ -19,13 +19,16 @@ import plotly.graph_objects as go
 import logging
 import sys
 
-from pandas import json_normalize  # ADD
+from services.ui.utils.pandas_compat import ensure_json_normalize
+
+json_normalize = ensure_json_normalize()
 from services.ui.theme_manager import (
     get_theme,
     init_theme,
     render_theme_toggle,
 )
 from services.ui.components.feedback import load_feedback_data
+from services.ui.components.global_chat import render_global_control_tower
 
 
 if "stage" not in st.session_state:
@@ -230,7 +233,14 @@ def render_nav_bar_app():
     stage = st.session_state.get("stage", "landing")
 
     # visibility logic
-    show_home   = stage in ("agents", "credit_agent", "asset_agent", "troubleshooter_agent")
+    show_home   = stage in (
+        "agents",
+        "credit_agent",
+        "asset_agent",
+        "troubleshooter_agent",
+        "credit_scoring_agent",
+        "legal_compliance_agent",
+    )
     show_agents = stage not in ("landing", "agents")
 
     # nothing on landing
@@ -337,6 +347,12 @@ if "timestamp" not in st.session_state.user_info:
 # ────────────────────────────────
 render_nav_bar_app()
 
+# Inject the global control tower chat so it's accessible from every page.
+try:
+    render_global_control_tower()
+except Exception:
+    pass
+
 # ────────────────────────────────
 # HELPERS
 # ────────────────────────────────
@@ -433,6 +449,10 @@ AGENTS = [
      "Market-driven collateral valuation", "Available", "🏦"),
     ("🏦 Banking & Finance", "💰 Retail Banking", "🛡️ Anti-Fraud & KYC Agent",
      "Streamlined onboarding with fraud scoring", "Available", "🛡️"),
+    ("🏦 Banking & Finance", "💰 Retail Banking", "📊 Credit Scoring Agent",
+     "Stage-only scoring pipeline (shared models)", "Being Built", "📊"),
+    ("🏦 Banking & Finance", "💰 Retail Banking", "⚖️ Legal Compliance Agent",
+     "Policy + sanctions guardrail feeding credit", "Being Built", "⚖️"),
     ("🏦 Banking & Finance", "💰 Retail Banking", "💬 Chatbot Assistant",
      "Context-aware embedded assistant", "Being Built", "💬"),
     ("💻 Information Technology", "🧠 Troubleshooting", "🧠 IT Troubleshooter Agent",
@@ -566,6 +586,30 @@ if "launch" in qp or "agent" in qp:
             st.warning(f"Could not open anti-fraud agent page: {e}")
             st.session_state.stage = "landing"
             st.rerun()
+    elif agent in {"credit_scoring", "scoring"}:
+        _clear_qp()
+        try:
+            st.switch_page("pages/credit_scoring.py")
+        except Exception as e:
+            st.warning(f"Could not open credit scoring page: {e}")
+            st.session_state.stage = "credit_scoring_agent"
+            st.rerun()
+    elif agent in {"legal_compliance", "compliance"}:
+        _clear_qp()
+        try:
+            st.switch_page("pages/legal_compliance.py")
+        except Exception as e:
+            st.warning(f"Could not open legal compliance page: {e}")
+            st.session_state.stage = "legal_compliance_agent"
+            st.rerun()
+    elif agent in {"persona_room", "persona_chatroom", "meeting_room"}:
+        _clear_qp()
+        try:
+            st.switch_page("pages/persona_chatroom.py")
+        except Exception as e:
+            st.warning(f"Could not open persona chatroom page: {e}")
+            st.session_state.stage = "persona_chatroom"
+            st.rerun()
     elif agent in {"troubleshooter", "it_troubleshooter"}:
         _clear_qp()
         try:
@@ -578,7 +622,17 @@ if "launch" in qp or "agent" in qp:
 # 2) Stage param (secondary)
 if "stage" in qp:
     target = qp["stage"]
-    if target in {"landing", "agents", "login", "credit_agent", "asset_agent", "troubleshooter_agent"} and st.session_state.stage != target:
+    if target in {
+        "landing",
+        "agents",
+        "login",
+        "credit_agent",
+        "asset_agent",
+        "troubleshooter_agent",
+        "credit_scoring_agent",
+        "legal_compliance_agent",
+        "persona_chatroom",
+    } and st.session_state.stage != target:
         st.session_state.stage = target
         _clear_qp()
         st.rerun()
@@ -1119,32 +1173,54 @@ if st.session_state.stage == "agents":
     st.markdown("<div class='neon-header'>🤖 Available AI Agents</div>", unsafe_allow_html=True)
 
     # Data
-    df = pd.DataFrame([
-        {"Agent": "💳 Credit Appraisal Agent",
+    agent_rows = [
+        {"Industry": "🏦 Banking & Finance",
+         "Agent": "💳 Credit Appraisal Agent",
          "Description": "Explainable AI for retail loan decisioning",
          "Status": "✅ Available",
          "Action": '<a class="macbtn" href="/credit_appraisal">🚀 Launch</a>'},
-        {"Agent": "🏦 Asset Appraisal Agent",
+        {"Industry": "🏦 Banking & Finance",
+         "Agent": "🏦 Asset Appraisal Agent",
          "Description": "Market-driven collateral valuation",
          "Status": "✅ Available",
          "Action": '<a class="macbtn" href="/asset_appraisal">🚀 Launch</a>'},
-        {"Agent": "🛡️ Anti-Fraud & KYC Agent",
+        {"Industry": "🏦 Banking & Finance",
+         "Agent": "🛡️ Anti-Fraud & KYC Agent",
          "Description": "Onboard customers with automated KYC",
          "Status": "✅ Available",
          "Action": '<a class="macbtn" href="/anti_fraud_kyc">🚀 Launch</a>'},
-        {"Agent": "🧩 Unified Risk Orchestration Agent",
+        {"Industry": "🏦 Banking & Finance",
+         "Agent": "📊 Credit Scoring Agent",
+         "Description": "Stage-only risk scoring fed by KYC",
+         "Status": "🛠️ Being Built",
+         "Action": '<a class="macbtn" href="/credit_scoring">🔍 Preview</a>'},
+        {"Industry": "🏦 Banking & Finance",
+         "Agent": "⚖️ Legal Compliance Agent",
+         "Description": "Policy + sanctions guardrail feeding credit",
+         "Status": "🛠️ Being Built",
+         "Action": '<a class="macbtn" href="/legal_compliance">🔍 Preview</a>'},
+        {"Industry": "🏦 Banking & Finance",
+         "Agent": "🧩 Unified Risk Orchestration Agent",
          "Description": "Compounds asset+credit+fraud decisions",
          "Status": "🛠️ Being Built",
          "Action": '<a class="macbtn" href="/unified_risk">🧩 Preview</a>'},
-        {"Agent": "💬 Chatbot Assistant",
+        {"Industry": "🏦 Banking & Finance",
+         "Agent": "💬 Chatbot Assistant",
          "Description": "Context-aware embedded assistant",
          "Status": "🛠️ Being Built",
          "Action": '<a class="macbtn" href="/chatbot_assistant">🔍 Preview</a>'},
-        {"Agent": "🧠 IT Troubleshooter Agent",
+        {"Industry": "🏦 Banking & Finance",
+         "Agent": "🧑‍🚀 Persona Strategy Room",
+         "Description": "Invite multiple personas to a live meeting",
+         "Status": "✅ Available",
+         "Action": '<a class="macbtn" href="/persona_chatroom">🪩 Convene</a>'},
+        {"Industry": "💻 Information Technology",
+         "Agent": "🧠 IT Troubleshooter Agent",
          "Description": "First-principles + case-memory incident solver",
          "Status": "🛠️ Being Built",
          "Action": '<a class="macbtn" href="/troubleshooter_agent">🔧 Preview?</a>'},
-    ])
+    ]
+    df = pd.DataFrame(agent_rows).sort_values(["Industry", "Agent"], ignore_index=True)
 
     # Neon table frame
     html_table = df.to_html(escape=False, index=False, classes="neon-table")

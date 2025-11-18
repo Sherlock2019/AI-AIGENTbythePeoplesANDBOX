@@ -221,6 +221,29 @@ with left_col:
     )
     st.info("⚙️ Uses local embeddings + CSV fallback. Ensure the API server is running on port 8090.")
 
+    uploaded = st.file_uploader(
+        "Upload file into RAG (csv/txt/md/html/pdf/json/py)",
+        type=["csv", "txt", "md", "html", "htm", "json", "pdf", "py", "log", "doc", "docx"],
+        key="chatbot_lab_upload",
+        help="Any file will be chunked and embedded into the selected persona namespace.",
+    )
+    if uploaded is not None and st.button("Embed file", key="chatbot_lab_embed"):
+        try:
+            resp = requests.post(
+                f"{API_URL}/chatbot/ingest/file",
+                files={"file": (uploaded.name, uploaded.getvalue(), uploaded.type or "application/octet-stream")},
+                params={"agent_id": selected_role},
+                timeout=120,
+            )
+            resp.raise_for_status()
+            meta = resp.json()
+            st.success(
+                f"Embedded {meta.get('rows_indexed', 0)} chunks from {uploaded.name} "
+                f"into `{selected_role}` namespace."
+            )
+        except requests.RequestException as exc:
+            st.error(f"Upload failed: {exc}")
+
     st.markdown("**Starter FAQs**")
     faqs: List[str] = role_key.get("faqs", [])
     for idx, question in enumerate(faqs):

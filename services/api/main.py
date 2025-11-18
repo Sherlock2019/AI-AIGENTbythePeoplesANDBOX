@@ -60,6 +60,7 @@ from services.api.routers.training import router as training_router
 # NEW: credit training endpoints
 from services.api.routers.training_credit import router as training_credit_router
 from services.api.routers.chat import router as chat_router
+from services.api.routers.chatbot import router as chatbot_router
 from services.api.routers.unified import router as unified_router
 
 app.include_router(system_router)
@@ -68,6 +69,7 @@ app.include_router(reports_router)
 app.include_router(training_router)
 app.include_router(training_credit_router)  # <-- IMPORTANT
 app.include_router(chat_router)
+app.include_router(chatbot_router)
 app.include_router(unified_router)
 
 # ─────────────────────────────────────────────────────────────

@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Dict
 import random
 from textwrap import dedent
 
@@ -16,6 +17,7 @@ from services.ui.theme_manager import (
     render_theme_toggle,
 )
 from services.ui.components.operator_banner import render_operator_banner
+from services.ui.components.chat_assistant import render_chat_assistant
 
 
 STAGE_KEYS = [
@@ -121,6 +123,35 @@ CASE_MEMORY = pd.DataFrame(
         },
     ]
 )
+
+TROUBLESHOOTER_FAQ = [
+    "List the last 10 incidents reviewed by the Troubleshooter agent.",
+    "Where do I find the latest .tmp_runs artifacts for troubleshooting?",
+    "Show the workflow stages A→F for this agent.",
+    "What are the standard questions for Situation Appraisal?",
+    "How do I escalate a ticket after Stage 9?",
+    "Summarize decision alternatives for the current ticket.",
+    "Show me the lessons learned from the last 10 resolved cases.",
+    "How do I rerun the AI troubleshooting plan?",
+    "Where are escalation packages stored after deployment?",
+    "What evidence is required before moving to Human Review?",
+]
+
+
+def _build_troubleshooter_chat_context() -> Dict[str, Any]:
+    ss = st.session_state
+    ticket = ss.get("ts_selected_ticket") or {}
+    ready_map = ss.get("ts_stage_ready", {})
+    context = {
+        "agent_type": "troubleshooter",
+        "stage": ss.get("stage"),
+        "active_ticket": ticket.get("id"),
+        "service": ticket.get("service"),
+        "severity": ticket.get("severity"),
+        "completed_stages": ", ".join(k for k, v in ready_map.items() if v),
+        "open_incidents": len(ss.get("ts_incidents", DEFAULT_INCIDENTS)),
+    }
+    return {k: v for k, v in context.items() if v not in (None, "", [])}
 
 
 def _set_query_params_safe(**kwargs):
@@ -992,6 +1023,12 @@ render_operator_banner(
 st.info(
     "Follow the KT questionnaires in order, capture AI feedback at each step, and finish with either a validated fix "
     "or an escalation package ready for Kira / eService."
+)
+
+render_chat_assistant(
+    page_id="troubleshooter_agent",
+    context=_build_troubleshooter_chat_context(),
+    faq_questions=TROUBLESHOOTER_FAQ,
 )
 
 stage_tabs = st.tabs(

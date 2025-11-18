@@ -18,6 +18,8 @@ import os
 import io
 import re
 import json
+import threading
+import time
 from datetime import datetime, timezone  # ✅ clean, safe, supports datetime.now()
 from pathlib import Path
 from textwrap import dedent
@@ -41,9 +43,11 @@ from services.ui.theme_manager import (
     render_theme_toggle,
 )
 from services.ui.components.operator_banner import render_operator_banner
-from services.ui.components.telemetry_dashboard import render_telemetry_dashboard
 from services.ui.components.feedback import render_feedback_tab
 from services.ui.components.chat_assistant import render_chat_assistant
+from services.common.model_registry import get_hf_models
+from services.common.personas import get_persona_for_agent
+from services.ui.utils.llm_selector import render_llm_selector
 
 
 
@@ -97,6 +101,7 @@ def _init_defaults():
     os.makedirs("./.tmp_runs", exist_ok=True)
 
 _init_defaults()
+ASSET_PERSONA = get_persona_for_agent("asset_appraisal")
 
 
 def _build_asset_chat_context() -> Dict[str, Any]:
@@ -122,6 +127,12 @@ ASSET_FAQ = [
     "Show comps that drove the valuation.",
     "What encumbrances were detected?",
     "How do I rerun Stage C – Valuation?",
+    "Show the last 10 assets approved with their FMV and AI-adjusted values.",
+    "List the last 10 assets flagged or declined and why.",
+    "What's the total asset value appraised this month?",
+    "Which assets were marked suspect over the past 30 days?",
+    "Where can I download the last 10 valuation_ai.csv artifacts?",
+    "How many appraisal runs are currently stored in .tmp_runs?",
 ]
 
 # Always bypass login step during operator demos
@@ -167,6 +178,22 @@ os.makedirs(RUNS_DIR, exist_ok=True)
 # ─────────────────────────────────────────────
 
 API_URL = os.getenv("API_URL", "http://localhost:8090")
+
+_CHATBOT_REFRESH_STATE = {"last_ts": 0.0}
+
+def _ping_chatbot_refresh(reason: str = "asset", *, min_interval: float = 300.0) -> None:
+    now = time.time()
+    if (now - _CHATBOT_REFRESH_STATE.get("last_ts", 0.0)) < min_interval:
+        return
+    _CHATBOT_REFRESH_STATE["last_ts"] = now
+
+    def _fire():
+        try:
+            requests.post(f"{API_URL}/chatbot/refresh", json={"reason": reason}, timeout=5)
+        except Exception:
+            pass
+
+    threading.Thread(target=_fire, daemon=True).start()
 
 # Default fallbacks (will be superseded by discovery)
 
@@ -894,7 +921,16 @@ def try_run_asset_agent(csv_bytes: bytes, form_fields: dict, timeout_sec: int = 
         else:
             errors.append(f"[{agent_id}] {resp.status_code} {resp.reason}\nBody:\n{resp.text[:2000]}")
 
-    return False, "All agent attempts failed (discovered=" + ", ".join(agent_ids) + "):\n" + "\n\n".join(errors)
+    combined = "All agent attempts failed (discovered=" + ", ".join(agent_ids) + "):\n" + "\n\n".join(errors)
+    if errors and all(
+        any(token in err.lower() for token in ("connection refused", "failed to establish", "errno 111"))
+        for err in errors
+    ):
+        combined += (
+            "\n\nHint: the backend API on port 8090 is not reachable. "
+            "Start your agent server (uvicorn/fastapi) and rerun this stage."
+        )
+    return False, combined
 
 
 # ─────────────────────────────────────────────
@@ -2001,47 +2037,7 @@ with tabC:
     # ─────────────────────────────────────────────
     st.markdown("### 🧠 LLM & Hardware Profile (Local + Hugging Face Models)")
 
-    HF_MODELS = [
-        {"Model": "mistralai/Mistral-7B-Instruct-v0.3",
-         "Type": "Reasoning / valuation narrative",
-         "GPU": "≥ 8 GB", "Notes": "Fast multilingual contextual LLM"},
-        {"Model": "google/gemma-2-9b-it",
-         "Type": "Instruction-tuned financial reports",
-         "GPU": "≥ 12 GB", "Notes": "Great for valuation explanations"},
-        {"Model": "meta-llama/Meta-Llama-3-8B-Instruct",
-         "Type": "Valuation summarization",
-         "GPU": "≥ 12 GB", "Notes": "High accuracy + low hallucination"},
-        {"Model": "Qwen/Qwen2-7B-Instruct",
-         "Type": "Multilingual reasoning (VN + EN)",
-         "GPU": "≥ 12 GB", "Notes": "Excellent for VN asset appraisal"},
-        {"Model": "microsoft/Phi-3-mini-4k-instruct",
-         "Type": "Compact instruction LLM",
-         "GPU": "≤ 8 GB", "Notes": "Fast lightweight valuation logic"},
-        {"Model": "mistralai/Mixtral-8x7B-Instruct-v0.1",
-         "Type": "MoE premium reasoning",
-         "GPU": "≥ 24 GB", "Notes": "Top-tier valuation model"},
-        {"Model": "LightAutoML/LightGBM",
-         "Type": "Tabular regression baseline",
-         "GPU": "CPU OK", "Notes": "Numeric FMV baseline"},
-    ]
-    st.dataframe(pd.DataFrame(HF_MODELS), use_container_width=True)
-
-    LLM_MODELS = [
-        {"label": "CPU Recommended — Phi-3 Mini (3.8B)", "value": "phi3:3.8b", "hint": "CPU 8 GB RAM (fast)", "tier": "cpu"},
-        {"label": "CPU Recommended — Mistral 7B Instruct", "value": "mistral:7b-instruct", "hint": "GPU ≥ 8 GB (fast)", "tier": "balanced"},
-        {"label": "GPU Recommended — Gemma-2 9B", "value": "gemma2:9b", "hint": "GPU ≥ 12 GB (high accuracy)", "tier": "gpu"},
-        {"label": "GPU Recommended — LLaMA-3 8B", "value": "llama3:8b-instruct", "hint": "GPU ≥ 12 GB (context heavy)", "tier": "gpu"},
-        {"label": "GPU Recommended — Qwen-2 7B", "value": "qwen2:7b-instruct", "hint": "GPU ≥ 12 GB (multilingual)", "tier": "gpu"},
-        {"label": "GPU Heavy — Mixtral 8×7B", "value": "mixtral:8x7b-instruct", "hint": "GPU 24-48 GB (batch)", "tier": "gpu_large"},
-    ]
-
-    cpu_first = [m for m in LLM_MODELS if m["tier"] in {"cpu", "balanced"}]
-    gpu_first = [m for m in LLM_MODELS if m["tier"] not in {"cpu", "balanced"}]
-    ordered_models = cpu_first + gpu_first
-
-    LLM_LABELS = [m["label"] for m in ordered_models]
-    LLM_VALUE_BY_LABEL = {m["label"]: m["value"] for m in ordered_models}
-    LLM_HINT_BY_LABEL  = {m["label"]: m["hint"] for m in ordered_models}
+    st.dataframe(pd.DataFrame(get_hf_models()), use_container_width=True)
 
     OPENSTACK_FLAVORS = {
         "m4.medium": "4 vCPU / 8 GB RAM (CPU-only small)",
@@ -2053,20 +2049,22 @@ with tabC:
 
     with st.expander("🧠 Choose Model & Hardware Profile", expanded=True):
         st.info("CPU picks land first so you can generate valuation narratives without waiting on GPUs. Jump to the GPU section only if you need deeper reasoning or longer context windows.", icon="⚙️")
-        c1, c2 = st.columns([1.2, 1])
-        with c1:
-            model_label = st.selectbox(
-                "🔥 Local/HF LLM for narratives & explanations",
-                LLM_LABELS, index=0, key="asset_llm_label")
-            llm_value = LLM_VALUE_BY_LABEL[model_label]
-            use_llm = st.checkbox("Use LLM narrative (explanations)",
-                                  value=False, key="asset_use_llm")
-            st.caption(f"Hint: {LLM_HINT_BY_LABEL[model_label]}")
-        with c2:
-            flavor = st.selectbox("OpenStack flavor / host profile",
-                                  list(OPENSTACK_FLAVORS.keys()), index=0,
-                                  key="asset_flavor")
-            st.caption(OPENSTACK_FLAVORS[flavor])
+        selected_llm = render_llm_selector(context="asset_appraisal")
+        st.session_state["asset_llm_label"] = selected_llm["model"]
+        st.session_state["asset_llm_model"] = selected_llm["value"]
+        llm_value = selected_llm["value"]
+        use_llm = st.checkbox(
+            "Use LLM narrative (explanations)",
+            value=st.session_state.get("asset_use_llm", False),
+            key="asset_use_llm",
+        )
+        flavor = st.selectbox(
+            "OpenStack flavor / host profile",
+            list(OPENSTACK_FLAVORS.keys()),
+            index=0,
+            key="asset_flavor",
+        )
+        st.caption(OPENSTACK_FLAVORS[flavor])
         st.caption("These parameters are passed to backend (Ollama / Flowise / RunAI).")
 
     # ─────────────────────────────────────────────
@@ -2129,6 +2127,13 @@ with tabC:
 
     # Run model button (runtime flavor + gpu_profile included)
     if st.button("🚀 Run AI Appraisal now", key="btn_run_ai"):
+        health_ok, health_payload = _safe_get_json(f"{API_URL}/v1/health")
+        if not health_ok:
+            st.error("Backend API is not reachable. Start your API server (port 8090) via newstart.sh and rerun.")
+            st.caption("Details from /v1/health probe:")
+            st.code(str(health_payload)[:2000])
+            st.stop()
+
         csv_bytes = df2.to_csv(index=False).encode("utf-8")
 
         form_fields = {
@@ -2165,6 +2170,8 @@ with tabC:
         # Persist valuation artifact
         val_path = os.path.join(RUNS_DIR, f"valuation_ai.{_ts()}.csv")
         df_app.to_csv(val_path, index=False)
+        
+        _ping_chatbot_refresh("asset_run")
         
         st.success(f"Saved valuation artifact → `{val_path}`")
 
@@ -4953,4 +4960,5 @@ render_chat_assistant(
     page_id="asset_appraisal",
     context=_build_asset_chat_context(),
     faq_questions=ASSET_FAQ,
+    persona=ASSET_PERSONA,
 )

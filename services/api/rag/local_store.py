@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Optional
 
 import numpy as np
 
@@ -38,6 +38,8 @@ class LocalVectorStore:
         meta_list = list(metadata)
         if not vector_list:
             return
+        if len(vector_list) != len(meta_list):
+            raise ValueError("Vectors and metadata must have the same length")
         arr = np.array(vector_list, dtype=np.float32)
         if arr.ndim != 2:
             raise ValueError("Vectors must have shape (n, dim)")
@@ -58,23 +60,50 @@ class LocalVectorStore:
         with self.metadata_path.open("w", encoding="utf-8") as f:
             json.dump(self._metadata, f, ensure_ascii=False, indent=2)
 
-    def query(self, vector: Iterable[float], top_k: int = 3) -> List[Dict[str, Any]]:
+    def query(self, vector: Iterable[float], top_k: int = 3, namespace: Optional[str] = None) -> List[Dict[str, Any]]:
         if not self.available:
             return []
         vec = np.array(vector, dtype=np.float32)
         if vec.ndim == 2:
             vec = vec[0]
         vec_norm = np.linalg.norm(vec)
-        if vec_norm == 0:
+        if vec_norm == 0 or self._embeddings is None:
             return []
-        matrix = self._embeddings  # type: ignore[assignment]
+
+        indices = list(range(len(self._metadata)))
+        if namespace:
+            indices = [idx for idx in indices if self._metadata[idx].get("namespace") == namespace]
+        if not indices:
+            return []
+
+        matrix = self._embeddings[indices]
         matrix_norms = np.linalg.norm(matrix, axis=1)
         denom = (matrix_norms * vec_norm) + 1e-10
         scores = (matrix @ vec) / denom
-        idx = np.argsort(scores)[::-1][:top_k]
+        ordering = np.argsort(scores)[::-1][:top_k]
+
         results = []
-        for i in idx:
-            meta = dict(self._metadata[i])
-            meta["score"] = float(scores[i])
+        for rank in ordering:
+            if scores[rank] <= 0:
+                continue
+            meta_index = indices[rank]
+            meta = dict(self._metadata[meta_index])
+            meta["score"] = float(scores[rank])
             results.append(meta)
         return results
+
+    def remove_namespace(self, namespace: str) -> None:
+        if self._embeddings is None or not self._metadata:
+            return
+        keep_indices = [idx for idx, meta in enumerate(self._metadata) if meta.get("namespace") != namespace]
+        if len(keep_indices) == len(self._metadata):
+            return
+        if keep_indices:
+            self._embeddings = self._embeddings[keep_indices]
+            self._metadata = [self._metadata[idx] for idx in keep_indices]
+        else:
+            self._embeddings = None
+            self._metadata = []
+
+    def namespace_present(self, namespace: str) -> bool:
+        return any(meta.get("namespace") == namespace for meta in self._metadata)

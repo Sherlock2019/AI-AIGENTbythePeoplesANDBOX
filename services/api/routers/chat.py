@@ -18,6 +18,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from services.api.rag.embeddings import embed_texts
 from services.api.rag.local_store import LocalVectorStore
+from services.api.rag.policies_seed import seed_policy_documents
+from services.api.rag.howto_loader import get_howto_snippet
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["chat"])
@@ -71,11 +73,28 @@ FAQ_ENTRIES: Dict[str, List[Dict[str, str]]] = {
 RAG_TOP_K = int(os.getenv("CHAT_RAG_TOP_K", "3"))
 _store_env = os.getenv("LOCAL_RAG_STORE")
 LOCAL_STORE = LocalVectorStore(Path(_store_env) if _store_env else None)
+seed_policy_documents(LOCAL_STORE)
 
 _VECTOR_CACHE: Dict[str, Any] = {"built_at": 0.0, "vectorizer": None, "matrix": None, "docs": []}
 
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "mistral")
+def _normalize_base(url: str) -> str:
+    from urllib.parse import urlsplit, urlunsplit
+
+    if not url:
+        return "http://localhost:11434"
+    parsed = urlsplit(url)
+    path = parsed.path or ""
+    if path.startswith("/api/"):
+        path = ""
+    elif "/api/" in path:
+        path = path.split("/api/", 1)[0]
+    rebuilt = parsed._replace(path=path, query="", fragment="")
+    base = urlunsplit(rebuilt).rstrip("/")
+    return base or "http://localhost:11434"
+
+
+OLLAMA_URL = _normalize_base(os.getenv("OLLAMA_URL", "http://localhost:11434"))
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma2:9b")
 USE_OLLAMA = os.getenv("CHAT_USE_MISTRAL", "1") not in {"0", "false", "False"}
 
 
@@ -225,6 +244,19 @@ def _infer_mode(page_id: str, context: Dict[str, Any]) -> str:
     return "Assistant"
 
 
+def _resolve_agent_key(page_id: str) -> str | None:
+    lowered = (page_id or "").lower()
+    if "asset" in lowered:
+        return "asset_appraisal"
+    if "credit" in lowered and "scoring" not in lowered:
+        return "credit_appraisal"
+    if "scoring" in lowered:
+        return "credit_scoring"
+    if "fraud" in lowered or "kyc" in lowered:
+        return "anti_fraud_kyc"
+    return None
+
+
 def _summarize_context(context: Dict[str, Any]) -> List[str]:
     summary: List[str] = []
     stage = context.get("stage") or context.get("asset_stage") or context.get("credit_stage")
@@ -255,20 +287,50 @@ def _retrieve_store_docs(question: str, context: Dict[str, Any]) -> List[Dict[st
     except Exception as exc:
         logger.warning("Failed to embed query for local store: %s", exc)
         return []
-    hits = LOCAL_STORE.query(vector, top_k=RAG_TOP_K)
-    results: List[Dict[str, Any]] = []
-    for hit in hits:
+    policy_hits = LOCAL_STORE.query(vector, top_k=RAG_TOP_K, namespace="policies")
+    general_hits = LOCAL_STORE.query(vector, top_k=RAG_TOP_K)
+
+    policy_entries: List[Dict[str, Any]] = []
+    merged: Dict[str, Dict[str, Any]] = {}
+
+    def _add_entry(hit: Dict[str, Any], boost: float = 1.0) -> Dict[str, Any]:
+        entry_id = hit.get("id") or hit.get("title") or hit.get("source") or f"local_doc_{len(merged)}"
+        score = float(hit.get("score") or 0.0) * boost
         snippet = hit.get("snippet") or hit.get("text", "")
-        results.append(
-            {
-                "id": hit.get("id"),
-                "title": hit.get("title") or hit.get("id", "match"),
-                "score": hit.get("score"),
-                "snippet": (snippet or "")[:600],
-                "source": hit.get("source"),
-                "metadata": hit,
-            }
+        record = {
+            "id": entry_id,
+            "title": hit.get("title") or hit.get("id") or "match",
+            "score": score,
+            "snippet": (snippet or "")[:600],
+            "source": hit.get("source"),
+            "metadata": hit,
+        }
+        existing = merged.get(entry_id)
+        if not existing or score > existing["score"]:
+            merged[entry_id] = record
+        return merged[entry_id]
+
+    for hit in policy_hits:
+        policy_entries.append(_add_entry(hit, boost=1.25))
+
+    for hit in general_hits:
+        if hit.get("namespace") == "policies":
+            continue
+        _add_entry(hit)
+
+    ranked = sorted(merged.values(), key=lambda item: item["score"], reverse=True)
+    results = ranked[:RAG_TOP_K]
+
+    if policy_entries and not any((entry and entry.get("metadata", {}).get("namespace") == "policies") for entry in results):
+        top_policy = max(
+            (entry for entry in policy_entries if entry),
+            key=lambda item: item["score"],
+            default=None,
         )
+        if top_policy:
+            results = [top_policy] + [item for item in results if item["id"] != top_policy["id"]]
+            results = results[:RAG_TOP_K]
+
     return results
 
 
@@ -303,6 +365,22 @@ def _retrieve_fallback_docs(question: str, context: Dict[str, Any], top_k: int =
             }
         )
     return results
+
+
+def _dedupe_docs(items: List[Dict[str, Any]], limit: int) -> List[Dict[str, Any]]:
+    deduped: List[Dict[str, Any]] = []
+    seen = set()
+    for doc in items:
+        doc_id = doc.get("id") or doc.get("title")
+        if not doc_id:
+            continue
+        if doc_id in seen:
+            continue
+        deduped.append(doc)
+        seen.add(doc_id)
+        if len(deduped) >= limit:
+            break
+    return deduped
 
 
 def _compose_lightweight_reply(payload: ChatRequest, retrieved: List[Dict[str, Any]], mode: str) -> str:
@@ -356,18 +434,38 @@ def _compose_lightweight_reply(payload: ChatRequest, retrieved: List[Dict[str, A
 
 
 def _maybe_generate_llm_reply(payload: ChatRequest, retrieved: List[Dict[str, Any]], mode: str) -> Optional[str]:
-    if not USE_OLLAMA or not OLLAMA_MODEL or not retrieved:
+    if not USE_OLLAMA or not OLLAMA_MODEL:
         return None
-    context_blocks = []
-    for idx, doc in enumerate(retrieved[:5], start=1):
+    context_blocks: List[str] = []
+    howto_added = 0
+    general_added = 0
+    for doc in retrieved:
         snippet = (doc.get("snippet") or doc.get("text") or "").strip()
-        title = doc.get("title") or doc.get("id", f"doc_{idx}")
-        context_blocks.append(f"[{title}]\n{snippet}")
+        title = doc.get("title") or doc.get("id", "match")
+        namespace = (doc.get("metadata") or {}).get("namespace")
+        if namespace == "howto":
+            if howto_added >= 2:
+                continue
+            context_blocks.append(f"[HOW-TO] {title}\n{snippet}")
+            howto_added += 1
+        else:
+            if general_added >= 5:
+                continue
+            context_blocks.append(f"[{title}]\n{snippet}")
+            general_added += 1
+        if general_added >= 5 and howto_added >= 2:
+            break
+    if not context_blocks:
+        context_blocks = ["No supporting documents were retrieved for this question."]
+    elif howto_added:
+        context_blocks.insert(0, "Refer to the agent workflow guide below:")
     context_blob = "\n\n".join(context_blocks)
     system_prompt = (
         "You are a banking AI assistant specialized in "
-        f"{mode}. Answer using only the supplied context. "
-        "Cite document titles inline where helpful and keep responses concise (2-4 sentences)."
+        f"{mode}. Answer strictly using the supplied context. "
+        "Cite document titles inline where helpful and keep responses concise (2-4 sentences). "
+        "If the context explicitly says none was retrieved, you must still answer using your base knowledge. "
+        "Do NOT reply that you cannot answer; instead provide a best-effort explanation and state that RAG had no matches."
     )
     user_prompt = (
         f"Question: {payload.message}\n\nContext:\n{context_blob}\n\n"
@@ -375,10 +473,13 @@ def _maybe_generate_llm_reply(payload: ChatRequest, retrieved: List[Dict[str, An
     )
     try:
         resp = requests.post(
-            f"{OLLAMA_URL.rstrip('/')}/api/generate",
+            f"{OLLAMA_URL.rstrip('/')}/api/chat",
             json={
                 "model": OLLAMA_MODEL,
-                "prompt": f"{system_prompt}\n\n{user_prompt}",
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
                 "stream": False,
                 "options": {"temperature": 0.2},
             },
@@ -386,9 +487,17 @@ def _maybe_generate_llm_reply(payload: ChatRequest, retrieved: List[Dict[str, An
         )
         resp.raise_for_status()
         data = resp.json()
-        text = data.get("response") or data.get("data")
-        if isinstance(text, str) and text.strip():
-            return text.strip()
+        message = data.get("message") or data.get("messages")
+        content = None
+        if isinstance(message, dict):
+            content = message.get("content")
+        elif isinstance(message, list):
+            for entry in reversed(message):
+                if isinstance(entry, dict) and entry.get("role") == "assistant":
+                    content = entry.get("content")
+                    break
+        if isinstance(content, str) and content.strip():
+            return content.strip()
     except Exception as exc:
         logger.warning("LLM generate failed: %s", exc)
     return None
@@ -434,9 +543,28 @@ def chat_endpoint(payload: ChatRequest) -> ChatResponse:
 
     mode = _infer_mode(payload.page_id, payload.context)
     context_summary = _summarize_context(payload.context)
-    retrieved = _retrieve_store_docs(payload.message, payload.context)
-    if not retrieved:
-        retrieved = _retrieve_fallback_docs(payload.message, payload.context)
+    agent_key = _resolve_agent_key(payload.page_id)
+    howto_snippet = get_howto_snippet(agent_key, payload.message)
+    howto_doc = (
+        {
+            "id": f"{agent_key or 'agent'}_howto",
+            "title": "Agent Workflow Guide",
+            "score": 1.35,
+            "snippet": howto_snippet,
+            "source": "howto",
+            "metadata": {"namespace": "howto", "agent": agent_key},
+        }
+        if howto_snippet
+        else None
+    )
+    store_docs = _retrieve_store_docs(payload.message, payload.context)
+    if not store_docs:
+        store_docs = _retrieve_fallback_docs(payload.message, payload.context)
+    combined: List[Dict[str, Any]] = []
+    if howto_doc:
+        combined.append(howto_doc)
+    combined.extend(store_docs)
+    retrieved = _dedupe_docs(combined, RAG_TOP_K)
     reply_text = _maybe_generate_llm_reply(payload, retrieved, mode) or _compose_lightweight_reply(payload, retrieved, mode)
 
     actions = _suggest_actions(payload)

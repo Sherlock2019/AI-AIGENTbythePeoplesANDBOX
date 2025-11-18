@@ -23,6 +23,10 @@ def render_chat_assistant(
     title: str = "Need chat bot assistant ?",
     default_open: bool = False,
     faq_questions: Optional[List[str]] = None,
+    persona: Optional[Dict[str, Any]] = None,
+    invited_personas: Optional[List[Dict[str, Any]]] = None,
+    pin_to_top: bool = False,
+    global_view: bool = False,
 ) -> None:
     """
     Inject the floating chat drawer into the parent Streamlit document.
@@ -34,6 +38,8 @@ def render_chat_assistant(
 
     context = context or {}
     faq_questions = faq_questions or []
+    persona = persona or {}
+    invited_personas = invited_personas or []
     api_url = (
         os.getenv("CHAT_API_URL")
         or os.getenv("API_URL")
@@ -46,12 +52,21 @@ def render_chat_assistant(
     open_state_key = f"{panel_id}-open"
     context_json = _safe_json(context)
     faq_json = json.dumps(faq_questions)
+    persona_json = _safe_json(persona)
+    invited_json = json.dumps(invited_personas)
+    position_class = " top-anchor" if pin_to_top else ""
     default_open_str = "true" if default_open else "false"
+    global_flag = "true" if global_view else "false"
 
     markup = f"""
-<div id="{panel_id}" class="chat-assistant-shell">
+<div id="{panel_id}" class="chat-assistant-shell{position_class}">
   <button class="chat-toggle">{escape(title)}</button>
   <div class="chat-window">
+    <div class="chat-persona">
+      <div class="persona-chip"></div>
+      <div class="persona-note"></div>
+    </div>
+    <div class="chat-invited"></div>
     <div class="chat-header">
       <div class="chat-header-left">
         <span class="chat-mode">Assistant</span>
@@ -82,6 +97,10 @@ def render_chat_assistant(
   max-width: 90vw;
   font-family: var(--font, "Inter", sans-serif);
   z-index: 9999;
+}}
+.chat-assistant-shell.top-anchor {{
+  top: 20px;
+  bottom: auto;
 }}
 .chat-assistant-shell .chat-toggle {{
   width: 100%;
@@ -129,6 +148,53 @@ def render_chat_assistant(
 .chat-status.offline {{
   background: #f87171;
   color: #450a0a;
+}}
+.chat-persona {{
+  display: none;
+  padding: 10px 16px 0;
+  flex-direction: column;
+  gap: 2px;
+}}
+.chat-persona.visible {{
+  display: flex;
+}}
+.chat-persona .persona-chip {{
+  font-weight: 600;
+  font-size: 0.9rem;
+}}
+.chat-persona .persona-chip span {{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(59,130,246,0.15);
+  border: 1px solid rgba(59,130,246,0.25);
+}}
+.chat-persona .persona-chip small {{
+  display: block;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}}
+.chat-persona .persona-note {{
+  font-size: 0.78rem;
+  color: #94a3b8;
+}}
+.chat-invited {{
+  display: none;
+  padding: 6px 16px 0;
+  gap: 6px;
+  flex-wrap: wrap;
+}}
+.chat-invited.visible {{
+  display: flex;
+}}
+.chat-invited span {{
+  font-size: 0.75rem;
+  border-radius: 999px;
+  padding: 2px 8px;
+  border: 1px solid rgba(148,163,184,0.35);
+  background: rgba(148,163,184,0.1);
 }}
 .chat-context {{
   padding: 10px 16px 0;
@@ -259,6 +325,9 @@ def render_chat_assistant(
   const defaultOpen = {default_open_str};
   const contextData = {context_json};
   const initialFaq = {faq_json};
+  const personaData = {persona_json};
+  const invitedDefault = {invited_json};
+  const isGlobal = {global_flag};
 
   const parentDoc = window.parent && window.parent.document ? window.parent.document : document;
   if (!parentDoc) return;
@@ -289,12 +358,20 @@ def render_chat_assistant(
   const modeEl = shell.querySelector(".chat-mode");
   const contextEl = shell.querySelector(".chat-context");
   const faqEl = shell.querySelector(".chat-faq");
+  const personaShell = shell.querySelector(".chat-persona");
+  const personaChip = personaShell ? personaShell.querySelector(".persona-chip") : null;
+  const personaNote = personaShell ? personaShell.querySelector(".persona-note") : null;
+  const invitedEl = shell.querySelector(".chat-invited");
 
   if (shell.__assistantInitialized) {{
     const state = shell.__assistantState;
     state.context = contextData;
+    state.persona = personaData;
+    state.invited = Array.isArray(invitedDefault) ? invitedDefault : [];
     state.renderContext();
     state.setFAQs(initialFaq);
+    state.renderPersona();
+    state.renderInvited();
     return;
   }}
 
@@ -302,8 +379,13 @@ def render_chat_assistant(
     history: [],
     context: contextData,
     faq: initialFaq || [],
+    persona: personaData,
+    invited: Array.isArray(invitedDefault) ? invitedDefault : [],
     renderContext: () => {{}},
     setFAQs: () => {{}},
+    renderPersona: () => {{}},
+    renderInvited: () => {{}},
+    globalView: isGlobal,
   }};
   shell.__assistantState = state;
 
@@ -331,6 +413,61 @@ def render_chat_assistant(
     contextEl.innerHTML = chips.slice(0, 5).join("");
   }};
 
+  const toPersonaIds = (items) => {{
+    if (!Array.isArray(items)) return [];
+    return items
+      .map((item) => {{
+        if (typeof item === "string") return item;
+        if (item && typeof item === "object" && item.id) return item.id;
+        return null;
+      }})
+      .filter(Boolean);
+  }};
+
+  state.renderPersona = () => {{
+    if (!personaShell || !state.persona || !state.persona.name) {{
+      if (personaShell) personaShell.classList.remove("visible");
+      return;
+    }}
+    personaShell.classList.add("visible");
+    if (personaChip) {{
+      const emoji = state.persona.emoji || "🤖";
+      const name = state.persona.name || "Assistant";
+      const title = state.persona.title || "";
+      const chipColor = state.persona.color || "#2563eb";
+      personaChip.innerHTML = `
+        <span style="border-color:${{chipColor}}; color:${{chipColor}}; background: rgba(37,99,246,0.12);">
+          ${{emoji}} ${{name}}
+        </span>
+        <small>${{title}}</small>
+      `;
+    }}
+    if (personaNote) {{
+      personaNote.textContent = state.persona.motto || state.persona.focus || "";
+    }}
+  }};
+
+  state.renderInvited = () => {{
+    if (!invitedEl) return;
+    const invitees = Array.isArray(state.invited) ? state.invited : [];
+    if (!invitees.length) {{
+      invitedEl.classList.remove("visible");
+      invitedEl.innerHTML = "";
+      return;
+    }}
+    invitedEl.classList.add("visible");
+    invitedEl.innerHTML = invitees
+      .map((p) => {{
+        if (typeof p === "string") {{
+          return `<span>${{p}}</span>`;
+        }}
+        const emoji = (p && p.emoji) || "🤝";
+        const name = (p && (p.name || p.title || p.id)) || "persona";
+        return `<span>${{emoji}} ${{name}}</span>`;
+      }})
+      .join("");
+  }};
+
   const renderMessages = () => {{
     messagesEl.innerHTML = state.history
       .map(msg => {{
@@ -344,7 +481,7 @@ def render_chat_assistant(
 
   const renderFAQ = () => {{
     if (!faqEl) return;
-    const items = (state.faq || []).slice(0, 6);
+    const items = (state.faq || []).slice(0, 10);
     if (!items.length) {{
       faqEl.style.display = "none";
       faqEl.innerHTML = "";
@@ -362,6 +499,8 @@ def render_chat_assistant(
   state.renderContext();
   renderMessages();
   state.setFAQs(initialFaq);
+  state.renderPersona();
+  state.renderInvited();
 
   const setStatus = (label, isOffline = false) => {{
     statusEl.textContent = label;
@@ -379,24 +518,25 @@ def render_chat_assistant(
     appendMessage("user", text);
     setStatus("thinking…");
     sendButton.disabled = true;
-    fetch(apiUrl + "/v1/chat", {{
+    const personaId = personaData && personaData.id ? personaData.id : null;
+    fetch(apiUrl + "/chatbot/chat", {{
       method: "POST",
       headers: {{ "Content-Type": "application/json" }},
       body: JSON.stringify({{
-        message: text,
-        page_id: pageId,
-        context: state.context,
-        history: state.history
+        question: text,
+        top_k: 5,
+        agent_id: personaId
       }})
     }})
       .then(resp => resp.json())
       .then(data => {{
-        const reply = data.reply || "No reply.";
-        appendMessage("assistant", reply, {{ actions: data.actions || [] }});
-        modeEl.textContent = data.mode || "Assistant";
-        if (data.faq_options) {{
-          state.setFAQs(data.faq_options);
-        }}
+        const reply = data.answer || data.reply || "No reply.";
+        const sources = Array.isArray(data.sources) ? data.sources : [];
+        const withSources = sources.length
+          ? reply + "\\n\\nSources:\\n" + sources.map(src => `- ${{src.file}} (score ${{src.score}})`).join("\\n")
+          : reply;
+        appendMessage("assistant", withSources, {{ actions: data.actions || [] }});
+        modeEl.textContent = data.mode || "Gemma RAG";
         setStatus("online");
       }})
       .catch(err => {{

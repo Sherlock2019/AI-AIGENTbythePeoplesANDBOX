@@ -6,6 +6,8 @@ import io
 import re
 import json
 import shutil
+import threading
+import time
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Optional, Dict, List, Any
@@ -18,7 +20,9 @@ import plotly.graph_objects as go
 import logging
 import sys
 
-from pandas import json_normalize  # ADD
+from services.ui.utils.pandas_compat import ensure_json_normalize
+
+json_normalize = ensure_json_normalize()
 
 from services.ui.theme_manager import (
     apply_theme as apply_global_theme,
@@ -29,6 +33,7 @@ from services.ui.components.operator_banner import render_operator_banner
 from services.ui.components.telemetry_dashboard import render_telemetry_dashboard
 from services.ui.components.feedback import render_feedback_tab
 from services.ui.components.chat_assistant import render_chat_assistant
+from services.ui.utils.llm_selector import render_llm_selector
 
 
 
@@ -275,6 +280,12 @@ CREDIT_FAQ = [
     "Summarize rule breaches for this loan.",
     "Compare PD vs NDI for this applicant.",
     "How can I rerun Stage D – Policy?",
+    "Show the last 10 loans approved with amount and stage notes.",
+    "List the last 10 loans declined and which policy failed.",
+    "What was the total loan volume approved in the past month?",
+    "What was the total declined volume during the past month?",
+    "List the last 10 manual overrides and their rationale.",
+    "Where are the artifacts for the last 10 runs stored in .tmp_runs?",
 ]
 
 
@@ -377,6 +388,24 @@ st.markdown(
 # ──────────────────────────────────────────────────────────────
 # You can point this to your FastAPI host
 API_URL = os.environ.get("AGENT_API_URL", "http://localhost:8090")
+
+_CHATBOT_REFRESH_STATE: Dict[str, float] = {"last_ts": 0.0}
+
+def _ping_chatbot_refresh(reason: str = "credit", *, min_interval: float = 300.0) -> None:
+    """Best-effort, throttled ping so the Gemma chatbot reindexes new CSV artifacts."""
+    now = time.time()
+    last_ts = _CHATBOT_REFRESH_STATE.get("last_ts", 0.0)
+    if (now - last_ts) < min_interval:
+        return
+    _CHATBOT_REFRESH_STATE["last_ts"] = now
+
+    def _fire():
+        try:
+            requests.post(f"{API_URL}/chatbot/refresh", json={"reason": reason}, timeout=5)
+        except Exception:
+            logging.getLogger(__name__).debug("Chatbot refresh skipped", exc_info=True)
+
+    threading.Thread(target=_fire, daemon=True).start()
 
 # Base & temp runs folder
 BASE_DIR = os.path.abspath(".")
@@ -1405,21 +1434,6 @@ with tab_run:
     else:
         st.warning("⚠️ No trained models found — train one in Step 5 first.")
 
-    # 1) Model + Hardware selection (UI hints)
-    LLM_MODELS = [
-        {"label": "💻 CPU Recommended — Phi-3 Mini (3.8B)", "value": "phi3:3.8b", "hint": "CPU 8GB RAM (fast)", "tier": "cpu"},
-        {"label": "💻 CPU Recommended — Mistral 7B Instruct", "value": "mistral:7b-instruct",
-         "hint": "CPU 16GB (slow) or GPU ≥8GB", "tier": "balanced"},
-        {"label": "💻 CPU Recommended — Gemma-2 7B", "value": "gemma2:7b",
-         "hint": "CPU 16GB (slow) or GPU ≥8GB", "tier": "balanced"},
-        {"label": "🧠 GPU Recommended — LLaMA-3 8B", "value": "llama3:8b-instruct",
-         "hint": "GPU ≥12GB (CPU very slow)", "tier": "gpu"},
-        {"label": "🧠 GPU Recommended — Qwen2 7B", "value": "qwen2:7b-instruct",
-         "hint": "GPU ≥12GB (CPU very slow)", "tier": "gpu"},
-        {"label": "🚀 GPU Heavy — Mixtral 8x7B", "value": "mixtral:8x7b-instruct",
-         "hint": "GPU 24–48GB", "tier": "gpu_large"},
-    ]
-
     OPENSTACK_FLAVORS = {
         "m4.medium": "4 vCPU / 8 GB RAM — CPU-only small",
         "m8.large": "8 vCPU / 16 GB RAM — CPU-only medium",
@@ -1427,70 +1441,22 @@ with tab_run:
         "g1.l40.1": "16 vCPU / 64 GB RAM + 1×L40 48GB",
         "g2.a100.1": "24 vCPU / 128 GB RAM + 1×A100 80GB",
     }
-
-    # Determine dataset size to surface CPU/GPU-friendly LLMs first
-    possible_sources = ["credit_train_df", "credit_scored_df", "credit_decision_df", "last_merged_df"]
-    llm_row_count = None
-    for key in possible_sources:
-        df_candidate = st.session_state.get(key)
-        if isinstance(df_candidate, pd.DataFrame) and not df_candidate.empty:
-            llm_row_count = len(df_candidate)
-            break
-
-    def recommended_llms(row_count: int | None) -> list[str]:
-        if row_count is None:
-            return ["💻 CPU Recommended — Mistral 7B Instruct", "💻 CPU Recommended — Gemma-2 7B"]
-        if row_count <= 10_000:
-            return ["💻 CPU Recommended — Phi-3 Mini (3.8B)", "💻 CPU Recommended — Mistral 7B Instruct"]
-        if row_count <= 40_000:
-            return ["💻 CPU Recommended — Mistral 7B Instruct", "💻 CPU Recommended — Gemma-2 7B"]
-        return ["🚀 GPU Heavy — Mixtral 8x7B", "🧠 GPU Recommended — LLaMA-3 8B"]
-
-    rec_labels = recommended_llms(llm_row_count)
-    cpu_like = [m for m in LLM_MODELS if m["tier"] in {"cpu", "balanced"}]
-    gpu_like = [m for m in LLM_MODELS if m["tier"] in {"gpu", "gpu_large"}]
-
-    ordered_models = []
-    seen = set()
-
-    def append_unique(model):
-        if model["label"] not in seen:
-            ordered_models.append(model)
-            seen.add(model["label"])
-
-    for label in rec_labels:
-        match = next((m for m in LLM_MODELS if m["label"] == label), None)
-        if match:
-            append_unique(match)
-
-    for model in cpu_like:
-        append_unique(model)
-    for model in gpu_like:
-        append_unique(model)
-
-    ordered_labels = [m["label"] for m in ordered_models]
-    LLM_VALUE_BY_LABEL = {m["label"]: m["value"] for m in ordered_models}
-    LLM_HINT_BY_LABEL = {m["label"]: m["hint"] for m in ordered_models}
-
     with st.expander("🧠 Local LLM & Hardware Profile", expanded=True):
-        st.info("Use CPU recommended LLMs first for quick narratives. Switch to GPU picks only when you need deeper reasoning or longer context.", icon="⚡")
-        c1, c2 = st.columns([1.2, 1])
-        with c1:
-            saved_llm = st.session_state.get("credit_llm_model_label", ordered_labels[0])
-            if saved_llm not in ordered_labels:
-                saved_llm = ordered_labels[0]
-            model_label = st.selectbox(
-                "🔥 Local LLM (used for narratives/explanations)",
-                ordered_labels,
-                index=ordered_labels.index(saved_llm),
-                key="credit_llm_model_label",
-                help="Recommended models are pinned to the top of this menu.",
-            )
-            llm_value = LLM_VALUE_BY_LABEL[model_label]
-            st.caption(f"Hint: {LLM_HINT_BY_LABEL[model_label]}")
-        with c2:
-            flavor = st.selectbox("OpenStack flavor / host profile", list(OPENSTACK_FLAVORS.keys()), index=0)
-            st.caption(OPENSTACK_FLAVORS[flavor])
+        st.info(
+            "Use CPU recommended LLMs first for quick narratives. Switch to GPU picks only when you need deeper reasoning or longer context.",
+            icon="⚡",
+        )
+        selected_llm = render_llm_selector(context="credit_appraisal")
+        st.session_state["credit_llm_model_label"] = selected_llm["model"]
+        st.session_state["credit_llm_model"] = selected_llm["value"]
+        llm_value = selected_llm["value"]
+        flavor = st.selectbox(
+            "OpenStack flavor / host profile",
+            list(OPENSTACK_FLAVORS.keys()),
+            index=0,
+            key="credit_flavor",
+        )
+        st.caption(OPENSTACK_FLAVORS[flavor])
         st.caption("These are passed to the API as hints; your API can choose Ollama/Flowise backends accordingly.")
 
     # 2) Data Source
@@ -1503,7 +1469,11 @@ with tab_run:
             "Upload manually",
         ],
     )
+    # Stash the LLM toggle + default selection for downstream payload
     use_llm = st.checkbox("Use LLM narrative", value=False)
+    if "credit_llm_model" not in st.session_state:
+        st.session_state["credit_llm_model"] = llm_value if "llm_value" in locals() else None
+    llm_value = st.session_state.get("credit_llm_model", llm_value if "llm_value" in locals() else None)
     agent_name = "credit_appraisal"
 
     if data_choice == "Upload manually":
@@ -1769,18 +1739,27 @@ with tab_run:
                 st.stop()
 
             # ---- RUN REQUEST ----
-            r = requests.post(
-                f"{API_URL}/v1/agents/{agent_name}/run",
-                data=data,
-                files=files,
-                timeout=180
-            )
+            try:
+                r = requests.post(
+                    f"{API_URL}/v1/agents/{agent_name}/run",
+                    data=data,
+                    files=files,
+                    timeout=180,
+                )
+            except requests.exceptions.RequestException as exc:
+                st.error(
+                    f"❌ Could not reach the agent API at {API_URL}. "
+                    "Make sure the backend service is running (port 8090) and try again."
+                )
+                st.caption(f"Details: {exc}")
+                st.stop()
 
             if r.status_code != 200:
                 st.error(f"Run failed ({r.status_code}): {r.text}")
                 st.stop()
 
             res = r.json()
+            _ping_chatbot_refresh("credit_run")
 
             # ---- Robust run_id + data extraction ----
             run_id = None
@@ -2492,7 +2471,16 @@ with tab_train:
 
                 model = RandomForestClassifier(n_estimators=300)
             elif model_choice == "LightGBM":
-                from lightgbm import LGBMClassifier
+                try:
+                    from lightgbm import LGBMClassifier
+                except ModuleNotFoundError:
+                    with st.expander("⚠️ Install LightGBM to use this model", expanded=True):
+                        st.error(
+                            "LightGBM is not installed in this environment. "
+                            "Install it with `pip install lightgbm` (inside the virtualenv) "
+                            "or choose RandomForest / LogisticRegression instead."
+                        )
+                    st.stop()
                 model = LGBMClassifier()
 
                 model = LGBMClassifier()
