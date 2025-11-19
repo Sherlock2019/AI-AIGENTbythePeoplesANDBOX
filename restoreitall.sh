@@ -40,6 +40,7 @@ fi
 
 echo "==> Restore root: $ROOT"
 
+<<<<<<< HEAD
 # Find both .bak files and directories ending with .bak
 mapfile -t BAK_FILES < <(find "$ROOT" -type f -name '*.bak' -print 2>/dev/null | sort)
 mapfile -t BAK_DIRS < <(find "$ROOT" -type d -name '*.bak' -print 2>/dev/null | sort)
@@ -57,6 +58,19 @@ declare -A SUFFIX_FILES=()
 declare -A SUFFIX_DIRS=()
 
 for bak in "${BAK_ITEMS[@]}"; do
+=======
+mapfile -t BAK_FILES < <(find "$ROOT" -type f -name '*.bak' -print 2>/dev/null | sort)
+
+if [[ ${#BAK_FILES[@]} -eq 0 ]]; then
+  echo "No .bak files found."
+  exit 0
+fi
+
+declare -A SUFFIX_COUNTS=()
+declare -A SUFFIX_FILES=()
+
+for bak in "${BAK_FILES[@]}"; do
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
   suffix=".bak"
   if [[ "$bak" =~ (\.dynamic\.ok\.[0-9-]+[^/]*)$ ]]; then
     suffix="${BASH_REMATCH[1]}"
@@ -64,11 +78,15 @@ for bak in "${BAK_ITEMS[@]}"; do
     suffix="${BASH_REMATCH[1]}"
   fi
   SUFFIX_COUNTS["$suffix"]=$(( ${SUFFIX_COUNTS["$suffix"]:-0} + 1 ))
+<<<<<<< HEAD
   if [[ -f "$bak" ]]; then
     SUFFIX_FILES["$suffix"]+="${bak}"$'\n'
   elif [[ -d "$bak" ]]; then
     SUFFIX_DIRS["$suffix"]+="${bak}"$'\n'
   fi
+=======
+  SUFFIX_FILES["$suffix"]+="${bak}"$'\n'
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 done
 
 echo
@@ -97,6 +115,7 @@ else
 fi
 
 declare -A RESTORE_DATA=()
+<<<<<<< HEAD
 declare -A RESTORE_DIR_DATA=()
 TOTAL_FILES=0
 TOTAL_DIRS=0
@@ -121,6 +140,24 @@ fi
 echo "About to restore ${#SELECTED_SUFFIXES[@]} backup set(s):"
 echo "  • Files: $TOTAL_FILES"
 echo "  • Directories: $TOTAL_DIRS"
+=======
+TOTAL_FILES=0
+for suffix in "${SELECTED_SUFFIXES[@]}"; do
+  IFS=$'\n' read -r -d '' -a tmp <<< "${SUFFIX_FILES[$suffix]}" || true
+  if [[ ${#tmp[@]} -eq 0 ]]; then
+    continue
+  fi
+  TOTAL_FILES=$((TOTAL_FILES + ${#tmp[@]}))
+  RESTORE_DATA["$suffix"]="$(printf "%s\n" "${tmp[@]}")"
+done
+
+if [[ $TOTAL_FILES -eq 0 ]]; then
+  echo "No files found for the selected backup set(s)."
+  exit 0
+fi
+
+echo "About to restore ${#SELECTED_SUFFIXES[@]} backup set(s) totaling $TOTAL_FILES file(s)."
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 read -rp "Proceed? [y/N] " confirm
 confirm="${confirm:-N}"
 [[ $confirm =~ ^[Yy]$ ]] || { echo "Aborted."; exit 0; }
@@ -128,6 +165,7 @@ confirm="${confirm:-N}"
 for suffix in "${SELECTED_SUFFIXES[@]}"; do
   echo
   echo "Restoring suffix: $suffix"
+<<<<<<< HEAD
   
   # Restore files
   if [[ -n "${RESTORE_DATA[$suffix]:-}" ]]; then
@@ -160,9 +198,25 @@ for suffix in "${SELECTED_SUFFIXES[@]}"; do
       cp -r "$bak_dir" "$original_dir"
     done
   fi
+=======
+  IFS=$'\n' read -r -d '' -a files <<< "${RESTORE_DATA[$suffix]}" || true
+  for bak in "${files[@]}"; do
+    [[ -n "$bak" ]] || continue
+    original="${bak%"$suffix"}"
+    if [[ -z "$original" ]]; then
+      echo "  ⚠️  Skipping malformed path: $bak"
+      continue
+    fi
+    echo "  ↩︎ $original"
+    cp -f "$bak" "$original"
+  done
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 done
 
 echo
 echo "✅ Restore complete."
+<<<<<<< HEAD
 echo "   • Files restored: $TOTAL_FILES"
 echo "   • Directories restored: $TOTAL_DIRS"
+=======
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2

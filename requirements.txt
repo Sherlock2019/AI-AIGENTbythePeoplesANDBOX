@@ -16,4 +16,8 @@ statsmodels>=0.14
 Pillow>=10.3
 gunicorn>=21.2
 sentence-transformers>=2.7.0
+<<<<<<< HEAD
 chromadb>=0.4.0
+=======
+chromadb>=0.5
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2

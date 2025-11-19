@@ -635,6 +635,7 @@ color_echo yellow "💡 Tip: Press Ctrl+C to stop all services and exit"
 echo "═══════════════════════════════════════════════════════════════"
 echo ""
 
+<<<<<<< HEAD
 # ---------- live log view ----------
 color_echo yellow "👁  Showing real-time logs (Ctrl+C to exit)…"
 echo ""
@@ -642,3 +643,37 @@ tail -n 50 -f "${COMBINED_LOG}" 2>/dev/null || {
   log_warn "Could not tail log file. Showing last 50 lines instead:"
   tail -n 50 "${COMBINED_LOG}" 2>/dev/null || true
 }
+=======
+# ---------- health/status probes ----------
+color_echo blue "🔎 Verifying service health..."
+API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${APIPORT}/v1/health" || true)
+if [[ "${API_STATUS}" == "200" ]]; then
+  color_echo green "API OK (HTTP 200 from /v1/health) → http://localhost:${APIPORT}"
+  color_echo blue "   ↪ Docs: http://localhost:${APIPORT}/docs"
+else
+  color_echo red "API check failed (status=${API_STATUS:-unreachable})"
+fi
+
+UI_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${UIPORT}" || true)
+if [[ "${UI_STATUS}" == "200" ]]; then
+  color_echo green "UI OK (HTTP 200 at /) → http://localhost:${UIPORT}"
+else
+  color_echo yellow "UI check returned status=${UI_STATUS:-unreachable} (Streamlit may still be booting)"
+fi
+
+# ---------- combined monitor (include existing + follow) ----------
+color_echo blue "🧩 Starting live log monitor..."
+nohup bash -c "tail -n +1 -F '${API_LOG}' '${UI_LOG}' \
+  | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[STREAM]\", \$0 }' \
+  | tee -a '${COMBINED_LOG}' \
+  | tee -a '${ERR_LOG}' >/dev/null" >/dev/null 2>&1 &
+LOG_MONITOR_PID=$!
+echo $LOG_MONITOR_PID > "${ROOT}/.pids/logmonitor.pid"
+color_echo green "✅ Live log monitor running (PID=${LOG_MONITOR_PID})"
+color_echo blue "📄 Combined → ${COMBINED_LOG}"
+color_echo blue "🧾 Unified  → ${ERR_LOG}"
+
+# ---------- live view (quiet stderr) ----------
+color_echo yellow "👁  Real-time ERROR view (Ctrl+C to exit)…"
+tail -n 50 -f "${ERR_LOG}" 2>/dev/null || true
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2

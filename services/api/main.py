@@ -63,11 +63,16 @@ from services.api.routers.training import router as training_router
 # NEW: credit training endpoints
 from services.api.routers.training_credit import router as training_credit_router
 from services.api.routers.chat import router as chat_router
+<<<<<<< HEAD
 from services.api.routers.unified import router as unified_router
 from services.api.routers.monitoring import router as monitoring_router
 from services.api.routers.credit_score_agents import router as credit_score_router
 from services.api.routers.legal_compliance_agents import router as legal_compliance_router
 from services.api.middleware.logging_middleware import LoggingMiddleware
+=======
+from services.api.routers.chatbot import router as chatbot_router
+from services.api.routers.unified import router as unified_router
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 app.include_router(system_router)
 app.include_router(agents_router)
@@ -75,6 +80,7 @@ app.include_router(reports_router)
 app.include_router(training_router)
 app.include_router(training_credit_router)  # <-- IMPORTANT
 app.include_router(chat_router)
+<<<<<<< HEAD
 app.include_router(unified_router)
 app.include_router(monitoring_router)
 app.include_router(credit_score_router, prefix="/v1/credit_score")
@@ -96,6 +102,10 @@ def preload_embeddings():
         logger.info("Embedding model pre-loaded successfully")
     except Exception as exc:
         logger.warning("Failed to pre-load embedding model: %s", exc)
+=======
+app.include_router(chatbot_router)
+app.include_router(unified_router)
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 # ─────────────────────────────────────────────────────────────
 # Root/health

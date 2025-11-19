@@ -14,7 +14,10 @@ import requests
 import plotly.express as px
 import plotly.graph_objects as go
 from services.ui.theme_manager import apply_theme, render_theme_toggle
+<<<<<<< HEAD
 from services.ui.components.chat_assistant import render_chat_assistant
+=======
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 st.set_page_config(page_title="🧩 Unified Risk Orchestration Agent", layout="wide")
 apply_theme()
@@ -141,9 +144,12 @@ ss.setdefault("selected_unified_index", 0)
 ss.setdefault("prefill_unified_form", None)
 if not ss.unified_runs:
     ss.unified_runs = deepcopy(SAMPLE_UNIFIED_RUNS)
+<<<<<<< HEAD
     ss["unified_demo_loaded"] = True
 else:
     ss.setdefault("unified_demo_loaded", False)
+=======
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 
 def _call_unified_api(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -276,10 +282,13 @@ st.caption(
     "Master coordinator that compounds Asset, Credit, and Anti-Fraud agents into a single bank-grade decision package."
 )
 
+<<<<<<< HEAD
 # Auto-show dashboard if demo data was loaded
 if ss.get("unified_demo_loaded") and ss.get("unified_runs"):
     st.info("💡 Demo data loaded automatically. Dashboard shows sample unified risk decisions.")
 
+=======
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 nav_cols = st.columns([1, 1, 1, 1, 1])
 with nav_cols[0]:
     if st.button("🏠 Home", use_container_width=True):
@@ -749,6 +758,7 @@ if st.button("↺ Re-run this borrower", key="btn_rerun_selected"):
     )
     st.info("Prefilled the submission form with this borrower's latest data. Complete the form below to finalize the rerun.")
     st.rerun()
+<<<<<<< HEAD
 
 
 def _build_unified_chat_context() -> Dict[str, Any]:
@@ -783,3 +793,5 @@ render_chat_assistant(
         "How do I rerun the unified decision?",
     ],
 )
+=======
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2

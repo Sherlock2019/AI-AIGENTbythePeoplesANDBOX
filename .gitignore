@@ -1,9 +1,7 @@
-
-# Ephemeral runtime state
+# =========================================
+# RUNTIME / STATE / ENV
+# =========================================
 **/.state/
-
-
-# Envs & caches
 .venv/
 venv/
 __pycache__/
@@ -14,52 +12,84 @@ tmp/
 *.swp
 *.swo
 
-# Logs & backups
+# =========================================
+# LOGS & BACKUPS
+# =========================================
 *.log
 *.bak
 *.ok.*.bak
-*~ 
+*~
 *-backup*.csv
 
-# Run artifacts (UI & API)
+# =========================================
+# RUN ARTIFACTS (UI & API)
+# =========================================
 services/ui/.tmp_runs/
 services/ui/.runs/
 services/api/.runs/
 services/api/.rag_store/
 
-# Local state / PIDs
+# =========================================
+# PID / LOCAL STATE
+# =========================================
 .pids/
 services/**/.state/
 
-# Large data outside samples
+# =========================================
+# LARGE DATA
+# =========================================
 data/
-data/** 
+data/**
 *.csv
 *.parquet
 *.feather
 *.orc
 *.arrow
 
-# Allow samples data
+# Allow sample datasets only
 !samples/**
 !agents/credit_appraisal/sample_data/**
 
-# Models
+# =========================================
+# MODEL OUTPUTS
+# =========================================
 agents/*/models/trained/**
-# keep production meta (and optionally small model)
 !agents/*/models/production/meta.json
-# if you want to keep a small baseline artifact:
 !agents/*/models/production/*.joblib
 
-# OS/editor junk
+# =========================================
+# OS / EDITOR TRASH
+# =========================================
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/
 
-# Secrets
+# =========================================
+# SECRETS
+# =========================================
 .env
 .env.*
 
-# Block all CSV artifacts
+# =========================================
+# BLOCK ALL CSV ARTIFACTS
+# =========================================
 *.csv
+
+# =========================================
+# 🔥 CRITICAL: IGNORE RAG VECTOR STORE
+# =========================================
+services/api/.rag_store/
+services/api/.rag_store/**
+.rag_store/
+.rag_store/**
+
+# Safety: block all numpy/embedding heavy files
+*.npy
+*.npz
+*.pt
+*.bin
+
+# Safety: block huge metadata/json dumps
+metadata.json
+*.large.json

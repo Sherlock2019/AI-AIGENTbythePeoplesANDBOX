@@ -1,0 +1,7 @@
+{
+  "required": [
+    "application_id","age","income","employment_years","debt_to_income",
+    "credit_history_length","num_delinquencies","current_loans",
+    "requested_amount","loan_term_months"
+  ]
+}

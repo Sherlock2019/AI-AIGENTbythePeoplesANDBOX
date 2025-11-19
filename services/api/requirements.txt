@@ -7,3 +7,10 @@ joblib==1.4.2
 fpdf==1.7.2
 python-multipart==0.0.9
 sentence-transformers==2.7.0
+<<<<<<< HEAD
+=======
+chromadb==0.5.11
+requests==2.32.3
+pydantic==2.9.2
+anyio==4.4.0
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2

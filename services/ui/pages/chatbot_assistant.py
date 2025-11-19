@@ -1,5 +1,9 @@
 import os
+<<<<<<< HEAD
 from typing import Dict, Any, List, Tuple
+=======
+from typing import Dict, Any, List
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 import requests
 import streamlit as st
@@ -7,6 +11,7 @@ from services.ui.theme_manager import apply_theme, render_theme_toggle
 
 API_URL = os.getenv("API_URL", "http://localhost:8090")
 
+<<<<<<< HEAD
 
 def check_api_health(api_url: str) -> Tuple[bool, str]:
     """Check if the API server is reachable and healthy."""
@@ -24,12 +29,15 @@ def check_api_health(api_url: str) -> Tuple[bool, str]:
         return False, f"Error checking API: {str(e)}"
     return False, "API health check failed"
 
+=======
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 ROLE_CONFIG: Dict[str, Dict[str, Any]] = {
     "credit": {
         "label": "💳 Credit Appraisal Agent",
         "page_id": "credit_appraisal",
         "context": {"agent_type": "credit", "stage": "credit_review"},
         "faqs": [
+<<<<<<< HEAD
             "Explain the lexical definitions for PD, DTI, LTV, and other credit terms.",
             "How does the Credit Appraisal agent work end-to-end?",
             "What are the step-by-step stages in this agent?",
@@ -74,6 +82,23 @@ ROLE_CONFIG: Dict[str, Dict[str, Any]] = {
             "What are the different compliance statuses (approved, review, rejected)?",
             "How are policy flags generated and what do they mean?",
             "What happens when a borrower fails compliance checks?",
+=======
+            "How does the Credit Appraisal agent work end-to-end?",
+            "What are the step-by-step stages in this agent?",
+            "Explain the lexical definitions for PD, DTI, LTV, and other credit terms.",
+            "What inputs and outputs does the credit agent expect?",
+            "What benefits do we get from using this AI credit agent?",
+            "How do I explain an approve vs review decision?",
+            "What credit score threshold are we using for SMEs?",
+            "Summarize PD, LTV, and DTI for the current borrower.",
+            "Which policy rules can trigger an automatic reject?",
+            "How do I export the credit decision narrative?",
+            "What inputs feed the probability of default model?",
+            "How do I rerun the credit model after adjusting collateral?",
+            "Where can I see recent manual overrides?",
+            "How do I share credit results with the Unified agent?",
+            "What datasets power the explainability section?",
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
         ],
     },
     "asset": {
@@ -85,12 +110,26 @@ ROLE_CONFIG: Dict[str, Dict[str, Any]] = {
             "What are the stage-by-stage steps in the asset workflow?",
             "Define the key terms (FMV, AI-adjusted, realizable, encumbrance).",
             "What inputs and outputs does the asset agent consume/produce?",
+<<<<<<< HEAD
             "How are AI-adjusted FMVs derived?",
             "What is the difference between FMV and realizable value?",
             "How does the agent handle different asset types (residential, commercial, industrial)?",
             "What factors affect the condition score and legal penalty?",
             "How are comparable properties (comps) used in valuation?",
             "What happens when an asset has encumbrances or liens?",
+=======
+            "What benefits do we gain from automating asset valuation with AI?",
+            "How are AI-adjusted FMVs derived?",
+            "List comps used to price construction equipment.",
+            "What encumbrance flags should I watch for?",
+            "How do I upload new evidence (images/PDFs)?",
+            "Where do I see anonymized vs raw intake data?",
+            "How does the agent detect secondary liens?",
+            "Can I export the appraisal report for auditors?",
+            "What asset types have custom models?",
+            "How do I sync FMV outputs with the Unified agent?",
+            "How is valuation confidence calculated?",
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
         ],
     },
     "anti_fraud": {
@@ -102,6 +141,7 @@ ROLE_CONFIG: Dict[str, Dict[str, Any]] = {
             "What are the detailed steps (Intake → Privacy → Verification → Fraud → Review → Reporting)?",
             "Define the key lexical terms (sanction hits, fraud_score, kyc_passed).",
             "What inputs and outputs does this fraud agent use?",
+<<<<<<< HEAD
             "How can I rerun the fraud rules for this application?",
             "What is the fraud risk score range and what do the tiers mean?",
             "How does the agent detect identity fraud and document verification?",
@@ -125,6 +165,19 @@ ROLE_CONFIG: Dict[str, Dict[str, Any]] = {
             "What are the three risk tiers (low, medium, high) and their thresholds?",
             "How does the unified agent handle conflicting signals from different agents?",
             "What is the difference between approve, review, and reject recommendations?",
+=======
+            "What benefits does this AI fraud/KYC agent provide?",
+            "Walk me through the fraud workflow A→H.",
+            "Where do sanction hits appear for the borrower?",
+            "How can I rerun the fraud rules for this application?",
+            "What does the privacy scrub remove?",
+            "How do I export the KYC audit packet?",
+            "How is the fraud risk score calculated?",
+            "Can the agent anonymize documents before sharing?",
+            "Where do I see verification status by stage?",
+            "How do I hand off a case to human review?",
+            "How do I refresh watchlist data?",
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
         ],
     },
     "chatbot": {
@@ -137,11 +190,24 @@ ROLE_CONFIG: Dict[str, Dict[str, Any]] = {
             "Define lexical terms like retrieved snippet, agent_type, context_summary.",
             "What inputs and outputs does the chatbot endpoint expect?",
             "What are the benefits of using this AI chatbot with local RAG?",
+<<<<<<< HEAD
             "How do I upload files to enhance the RAG knowledge base?",
             "What file types are supported for RAG ingestion?",
             "How does the chatbot prioritize RAG data vs general knowledge?",
             "What is the difference between banking and non-banking question handling?",
             "How can I test the chatbot with different agent personas?",
+=======
+            "What data sources are indexed in the chatbot?",
+            "How do I refresh the local RAG store?",
+            "Explain how the chatbot answers Unified Risk questions.",
+            "How do I switch personas (credit, asset, fraud)?",
+            "Where are chat logs stored?",
+            "Can I push chatbot answers into a report?",
+            "How do I update the FAQ entries?",
+            "How do I reset the embeddings cache?",
+            "How do I test from the command line?",
+            "How can I add more CSV sources?",
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
         ],
     },
 }
@@ -234,7 +300,11 @@ st.markdown(
     """
 )
 
+<<<<<<< HEAD
 st.success("✅ Preview available! Test the chatbot assistant below. You can select different agent personas and models to see how it responds.")
+=======
+st.success("Preview ready — wire this page into the nav once the full chat stack ships.")
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 st.markdown("---")
 st.subheader("Chatbot Test Bench")
@@ -243,7 +313,10 @@ left_col, right_col = st.columns([1, 1])
 
 st.session_state.setdefault("chatbot_test_runs", [])
 st.session_state.setdefault("chatbot_selected_role", "credit")
+<<<<<<< HEAD
 st.session_state.setdefault("chatbot_selected_model", None)
+=======
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 with left_col:
     st.subheader("Role & Shortcuts")
@@ -258,6 +331,7 @@ with left_col:
     )
     st.session_state["chatbot_selected_role"] = selected_role
     role_key = ROLE_CONFIG[selected_role]
+<<<<<<< HEAD
     
     # Model selection dropdown
     st.markdown("---")
@@ -347,6 +421,9 @@ with left_col:
                 except Exception as exc:
                     st.error(f"❌ Upload error: {str(exc)}")
     
+=======
+
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     st.markdown(
         """
         **How to test**
@@ -354,6 +431,7 @@ with left_col:
         - Reference agent files (`credit_appraisal.py`, `asset_appraisal.py`, etc.).
         - Ask follow ups like *"Show me the fraud workflow"*.
         - Responses on the right come directly from the local `/v1/chat` endpoint.
+<<<<<<< HEAD
         - Upload files above to add them to the RAG database.
         """
     )
@@ -367,6 +445,35 @@ with left_col:
     
     st.info("⚙️ Uses local embeddings + CSV fallback. Ensure the API server is running on port 8090.")
 
+=======
+        """
+    )
+    st.info("⚙️ Uses local embeddings + CSV fallback. Ensure the API server is running on port 8090.")
+
+    uploaded = st.file_uploader(
+        "Upload file into RAG (csv/txt/md/html/pdf/json/py)",
+        type=["csv", "txt", "md", "html", "htm", "json", "pdf", "py", "log", "doc", "docx"],
+        key="chatbot_lab_upload",
+        help="Any file will be chunked and embedded into the selected persona namespace.",
+    )
+    if uploaded is not None and st.button("Embed file", key="chatbot_lab_embed"):
+        try:
+            resp = requests.post(
+                f"{API_URL}/chatbot/ingest/file",
+                files={"file": (uploaded.name, uploaded.getvalue(), uploaded.type or "application/octet-stream")},
+                params={"agent_id": selected_role},
+                timeout=120,
+            )
+            resp.raise_for_status()
+            meta = resp.json()
+            st.success(
+                f"Embedded {meta.get('rows_indexed', 0)} chunks from {uploaded.name} "
+                f"into `{selected_role}` namespace."
+            )
+        except requests.RequestException as exc:
+            st.error(f"Upload failed: {exc}")
+
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     st.markdown("**Starter FAQs**")
     faqs: List[str] = role_key.get("faqs", [])
     for idx, question in enumerate(faqs):
@@ -390,6 +497,7 @@ with right_col:
         if not trimmed:
             st.warning("Enter a prompt before sending.")
         else:
+<<<<<<< HEAD
             # Check API health before making request
             api_healthy, health_msg = check_api_health(API_URL)
             if not api_healthy:
@@ -399,6 +507,12 @@ with right_col:
                 try:
                     # Include selected model in request
                     request_payload = {
+=======
+            try:
+                resp = requests.post(
+                    f"{API_URL}/v1/chat",
+                    json={
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
                         "message": trimmed,
                         "page_id": role_key["page_id"],
                         "context": role_key.get("context", {}),
@@ -406,6 +520,7 @@ with right_col:
                             {"role": "user", "content": run["prompt"]}
                             for run in st.session_state["chatbot_test_runs"][-3:]
                         ],
+<<<<<<< HEAD
                     }
                     # Add model if selected
                     selected_model = st.session_state.get("chatbot_selected_model")
@@ -438,6 +553,23 @@ with right_col:
                 except requests.RequestException as exc:
                     st.error(f"❌ Chat API error: {exc}")
                     st.info(f"💡 Check that the API server is running and accessible at {API_URL}")
+=======
+                    },
+                    timeout=30,
+                )
+                resp.raise_for_status()
+                data: Dict[str, Any] = resp.json()
+                st.session_state["chatbot_test_runs"].append(
+                    {
+                        "prompt": trimmed,
+                        "reply": data.get("reply", "(No reply)"),
+                        "retrieved": data.get("retrieved", []),
+                        "timestamp": data.get("timestamp"),
+                    }
+                )
+            except requests.RequestException as exc:
+                st.error(f"Chat API error: {exc}")
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
     if st.session_state["chatbot_test_runs"]:
         last = st.session_state["chatbot_test_runs"][-1]

@@ -69,14 +69,21 @@ Questions or improvements? Open an issue or mention it in review before editing 
 
 ### 6. Unified Chat Assistant Panel
 
+<<<<<<< HEAD
 - **Backend** – `services/api/routers/chat.py` exposes `POST /v1/chat`, which infers the active mode (asset, credit, fraud/KYC, supervisor) from `page_id` + context, streams the prompt through LLaMA, and returns optional orchestration actions (rerun stage, promote model, generate report, etc.).
 - **UI Component** – `services/ui/components/chat_assistant.py` renders the “Need chat bot assistant ?” drawer. It stores message history in the browser, shows live status, and supports FAQ chips (either passed from the page or returned by the backend).
 - **Embedding** – Call `render_chat_assistant(page_id=..., context=builder(), faq_questions=[...])` once per page. Context should contain short, sanitized fields (current stage, run id, dataset name, last error). Removing the assistant remains a one-line change per page.
+=======
+- **Backend** – `services/api/routers/chatbot.py` exposes `/chatbot/chat`, `/chatbot/refresh`, and `/chatbot/ingest*`. Every request is tagged with the active persona/namespace and written to `.logs/chatbot-events.log` for auditability.
+- **UI Component** – `services/ui/pages/chatbot.py` renders the dedicated Streamlit chat page. The sidebar now surfaces persona-aware uploads, Refresh/Hard Reset actions, and 10 quick FAQs per agent. FAQ clicks prefill the chat input and automatically scope retrieval to that persona.
+- **Embedding** – Each agent page still calls `render_chat_assistant(...)` if needed, but the chatbot page is now the canonical RAG-first experience. Use it to verify ingestion before embedding helper components elsewhere.
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 ---
 
 ### 7. Local Knowledge Store (RAG)
 
+<<<<<<< HEAD
 - **Embeddings** – RAG now uses a local `sentence-transformers` model (default `all-MiniLM-L6-v2`). Override via `SENTENCE_TRANSFORMER_MODEL` if you want a different encoder.
 - **Seeding CSV outputs** – Run  
   `python services/api/scripts/seed_local_rag_from_csv.py`  
@@ -84,6 +91,13 @@ Questions or improvements? Open an issue or mention it in review before editing 
 - **Continuous sync** – Launch `python services/api/scripts/watch_local_rag.py` in a background process. It polls the CSV directories, ingests new/updated files (tracked via `.rag_ingest_state.json`), and keeps the local store aligned with production runs.
 - **Agent FAQs & docs** – Run `python services/api/scripts/seed_local_rag_agent_docs.py` to ingest each agent’s Streamlit source + curated FAQ answers (“Explain ai_adjusted vs FMV”, “How do I rerun fraud rules?”, etc.).
 - **Runtime** – `/v1/chat` queries the local store first; if nothing matches it falls back to the built-in TF‑IDF snippets so the assistant never goes silent.
+=======
+- **RAG-first pipeline** – `query_rag()` always hits Chroma first inside the persona namespace. Chunks scoring ≥0.30 drive the response; otherwise the Gemma fallback answers while noting that no context matched.
+- **Rich ingestion** – `ingest_agent_pages.py`, `ingest_docs.py`, and `ingest_csv.py` cover Streamlit UI files, docs/ markdown, CSV artifacts, and any sidebar uploads. Everything is chunked, embedded with device-aware `sentence-transformers`, and tagged with `{agent, source, snippet}` metadata.
+- **Reset/rebuild UX** – Both “Refresh RAG DB” and “Hard Reset & Rebuild” wipe `rag_db`, prune `.tmp_runs` so only the five most recent runs per agent remain, and re-ingest the freshest CSV/doc/UI sources.
+- **Dynamic personas** – `services/common/personas.py` now scans the `/agents` directory in addition to Streamlit pages, so new personas show up in both the sidebar selector and the FAQ list without code edits.
+- **Observability** – `.logs/chatbot-events.log` records ingestion starts/finishes, namespace selections, upload ingests, and whether each answer used RAG or fell back. This makes it easy to trace why a response contained (or lacked) context.
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 ---
 

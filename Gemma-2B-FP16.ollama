@@ -1,0 +1,2 @@
+FROM gemma2:2b
+PARAMETER format fp16

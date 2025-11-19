@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "model_path": "agents/credit_appraisal/models/trained/RandomForest_20251117-002039.joblib",
   "promoted_at": "2025-11-17T00:21:03.829986+00:00",
   "metrics": {
@@ -19,6 +20,28 @@
       "F1": 1.0
     },
     "model_path": "agents/credit_appraisal/models/trained/RandomForest_20251117-002039.joblib",
+=======
+  "model_path": "agents/credit_appraisal/models/trained/LightGBM_20251118-100546.joblib",
+  "promoted_at": "2025-11-18T10:06:06.849658+00:00",
+  "metrics": {
+    "AUC": 0.9348958333333333,
+    "Accuracy": 0.825,
+    "Precision": 0.9047619047619048,
+    "Recall": 0.7916666666666666,
+    "F1": 0.8444444444444444
+  },
+  "report": {
+    "timestamp": "20251118-100546",
+    "model_choice": "LightGBM",
+    "metrics": {
+      "AUC": 0.9348958333333333,
+      "Accuracy": 0.825,
+      "Precision": 0.9047619047619048,
+      "Recall": 0.7916666666666666,
+      "F1": 0.8444444444444444
+    },
+    "model_path": "agents/credit_appraisal/models/trained/LightGBM_20251118-100546.joblib",
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     "features": [
       "application_id",
       "age",
@@ -49,6 +72,10 @@
       "requested_amount",
       "loan_term_months"
     ],
+<<<<<<< HEAD
     "threshold": 0.89455
+=======
+    "threshold": 0.60305
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
   }
 }

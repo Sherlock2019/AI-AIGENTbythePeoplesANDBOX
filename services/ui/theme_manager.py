@@ -248,6 +248,24 @@ def apply_theme(theme: str | None = None) -> str:
         [data-testid="stMetricLabel"], .metric-label {{
             color: {pal['annotation']} !important;
         }}
+<<<<<<< HEAD
+=======
+        .metric-title {{
+            font-size: 1.3rem !important;
+            font-weight: 700 !important;
+            margin-bottom: 0.5rem !important;
+        }}
+        .metric-explain {{
+            font-size: 0.95rem !important;
+            opacity: 0.85 !important;
+            margin-bottom: 1.4rem !important;
+        }}
+        ul[role="listbox"] li {{
+            font-size: 1.15rem !important;
+            line-height: 1.45rem !important;
+            white-space: pre-wrap !important;
+        }}
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
         </style>
         """,
         unsafe_allow_html=True,

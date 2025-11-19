@@ -38,7 +38,11 @@ else
   BACKUP_EXT=".ok.${TS}.bak"
 fi
 
+<<<<<<< HEAD
 echo "==> Starting curated backup for All Agents (Credit, Asset, Real Estate, etc.)"
+=======
+echo "==> Starting curated backup for Credit & Asset Appraisal Agent"
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 echo "==> Backup suffix: ${BACKUP_EXT}"
 echo
 
@@ -100,6 +104,7 @@ FILES=(
   "$ROOT/agents/asset_appraisal/agent.py"
   "$ROOT/agents/asset_appraisal/runner.py"
   "$ROOT/agents/asset_appraisal/agent.yaml"
+<<<<<<< HEAD
 
   # Real Estate Evaluator agent (core)
   "$ROOT/agents/real_estate_evaluator/__init__.py"
@@ -109,6 +114,8 @@ FILES=(
   "$ROOT/agents/real_estate_evaluator/agent.yaml"
   "$ROOT/agents/real_estate_evaluator/README.md"
   "$ROOT/agents/real_estate_evaluator/sample_data.csv"
+=======
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 )
 
 # Model directories (recursive copy)
@@ -124,7 +131,11 @@ MODEL_DIRS=(
 # ───────────────────────────────────────────────────────────────
 AGENT_BASE_DIRS=("$ROOT/agents")
 [[ -d "$ROOT/anti-fraud-kyc-agent" ]] && AGENT_BASE_DIRS+=("$ROOT/anti-fraud-kyc-agent")
+<<<<<<< HEAD
 AGENT_FILE_PATTERNS=("agent.py" "runner.py" "model_utils.py" "scraper.py" "__init__.py" "agent.yaml" "README.md" "*.yml" "*.csv")
+=======
+AGENT_FILE_PATTERNS=("agent.py" "runner.py" "model_utils.py" "__init__.py" "agent.yaml" "README.md" "*.yml")
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 declare -a AGENT_DYNAMIC_FILES=()
 declare -A seen_dyn=()
 
@@ -240,7 +251,11 @@ backup_directory() {
 }
 
 categorize_path() {
+<<<<<<< HEAD
   # Echo one of: app | anti_fraud | credit | asset | real_estate | common
+=======
+  # Echo one of: app | anti_fraud | credit | asset | common
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
   local p="$1"
   case "$p" in
     */services/ui/app*.py) echo "app"; return ;;
@@ -249,13 +264,19 @@ categorize_path() {
     */anti-fraud-kyc-agent/*|*/services/ui/pages/anti_fraud_*.py) echo "anti_fraud"; return ;;
     */agents/credit_appraisal/*) echo "credit"; return ;;
     */agents/asset_appraisal/*)  echo "asset";  return ;;
+<<<<<<< HEAD
     */agents/real_estate_evaluator/*) echo "real_estate"; return ;;
+=======
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     */services/ui/pages/credit_*.py) echo "credit"; return ;;
     */services/ui/pages/*credit*.py) echo "credit"; return ;;
     */services/ui/pages/asset_*.py)  echo "asset";  return ;;
     */services/ui/pages/*asset*.py)  echo "asset";  return ;;
+<<<<<<< HEAD
     */services/ui/pages/real_estate_*.py) echo "real_estate"; return ;;
     */services/ui/pages/*real_estate*.py) echo "real_estate"; return ;;
+=======
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     */services/train/train_credit.py) echo "credit"; return ;;
     */services/train/train_asset.py)  echo "asset";  return ;;
   esac
@@ -270,7 +291,10 @@ SKIPPED_COUNT=0
 COMMON_BACKUP=0
 CREDIT_BACKUP=0
 ASSET_BACKUP=0
+<<<<<<< HEAD
 REAL_ESTATE_BACKUP=0
+=======
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 APP_BACKUP=0
 ANTI_BACKUP=0
 
@@ -286,7 +310,10 @@ for file in "${EXISTING[@]}"; do
       anti_fraud) ((ANTI_BACKUP++)) || true ;;
       credit) ((CREDIT_BACKUP++)) || true ;;
       asset)  ((ASSET_BACKUP++))  || true ;;
+<<<<<<< HEAD
       real_estate) ((REAL_ESTATE_BACKUP++)) || true ;;
+=======
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
       *)      ((COMMON_BACKUP++)) || true ;;
     esac
   else
@@ -319,7 +346,10 @@ echo "     - App shell / theme: $APP_BACKUP"
 echo "     - Anti-fraud agent:  $ANTI_BACKUP"
 echo "     - Credit agent: $CREDIT_BACKUP"
 echo "     - Asset agent:  $ASSET_BACKUP"
+<<<<<<< HEAD
 echo "     - Real Estate agent: $REAL_ESTATE_BACKUP"
+=======
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 echo "     - Common:       $COMMON_BACKUP"
 echo "   • Files skipped:           $SKIPPED_COUNT"
 echo "   • Model directories copied: $MODEL_DIRS_BACKED / ${#MODEL_DIRS[@]}"

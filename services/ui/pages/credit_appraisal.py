@@ -6,6 +6,11 @@ import io
 import re
 import json
 import shutil
+<<<<<<< HEAD
+=======
+import threading
+import time
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Optional, Dict, List, Any
@@ -18,7 +23,13 @@ import plotly.graph_objects as go
 import logging
 import sys
 
+<<<<<<< HEAD
 from pandas import json_normalize  # ADD
+=======
+from services.ui.utils.pandas_compat import ensure_json_normalize
+
+json_normalize = ensure_json_normalize()
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 from services.ui.theme_manager import (
     apply_theme as apply_global_theme,
@@ -29,6 +40,10 @@ from services.ui.components.operator_banner import render_operator_banner
 from services.ui.components.telemetry_dashboard import render_telemetry_dashboard
 from services.ui.components.feedback import render_feedback_tab
 from services.ui.components.chat_assistant import render_chat_assistant
+<<<<<<< HEAD
+=======
+from services.ui.utils.llm_selector import render_llm_selector
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 
 
@@ -310,6 +325,36 @@ CREDIT_FAQ = [
     "How can I rerun Stage D – Policy?",
 ]
 
+def _build_credit_chat_context() -> Dict[str, Any]:
+    ss_local = st.session_state
+    ctx = {
+        "agent_type": "credit",
+        "stage": ss_local.get("credit_stage") or ss_local.get("stage"),
+        "user": (ss_local.get("credit_user") or {}).get("name"),
+        "apps_in_review": ss_local.get("credit_apps_in_review"),
+        "flagged_cases": ss_local.get("credit_flagged_cases"),
+        "avg_decision_time": ss_local.get("credit_avg_decision_time"),
+        "ai_performance": ss_local.get("credit_ai_performance"),
+        "last_run_id": ss_local.get("credit_last_run_id"),
+        "last_error": ss_local.get("credit_last_error"),
+        "selected_model": ss_local.get("selected_model"),
+    }
+    return {k: v for k, v in ctx.items() if v not in (None, "", [])}
+
+
+CREDIT_FAQ = [
+    "Explain why this borrower was rejected.",
+    "Summarize rule breaches for this loan.",
+    "Compare PD vs NDI for this applicant.",
+    "How can I rerun Stage D – Policy?",
+    "Show the last 10 loans approved with amount and stage notes.",
+    "List the last 10 loans declined and which policy failed.",
+    "What was the total loan volume approved in the past month?",
+    "What was the total declined volume during the past month?",
+    "List the last 10 manual overrides and their rationale.",
+    "Where are the artifacts for the last 10 runs stored in .tmp_runs?",
+]
+
 
 # ────────────────────────────────
 # HELPERS
@@ -411,6 +456,27 @@ st.markdown(
 # You can point this to your FastAPI host
 API_URL = os.environ.get("AGENT_API_URL", "http://localhost:8090")
 
+<<<<<<< HEAD
+=======
+_CHATBOT_REFRESH_STATE: Dict[str, float] = {"last_ts": 0.0}
+
+def _ping_chatbot_refresh(reason: str = "credit", *, min_interval: float = 300.0) -> None:
+    """Best-effort, throttled ping so the Gemma chatbot reindexes new CSV artifacts."""
+    now = time.time()
+    last_ts = _CHATBOT_REFRESH_STATE.get("last_ts", 0.0)
+    if (now - last_ts) < min_interval:
+        return
+    _CHATBOT_REFRESH_STATE["last_ts"] = now
+
+    def _fire():
+        try:
+            requests.post(f"{API_URL}/chatbot/refresh", json={"reason": reason}, timeout=5)
+        except Exception:
+            logging.getLogger(__name__).debug("Chatbot refresh skipped", exc_info=True)
+
+    threading.Thread(target=_fire, daemon=True).start()
+
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 # Base & temp runs folder
 BASE_DIR = os.path.abspath(".")
 RUNS_DIR = os.path.join(BASE_DIR, ".tmp_runs")
@@ -1455,6 +1521,7 @@ with tab_run:
     else:
         st.warning("⚠️ No trained models found — train one in Step 5 first.")
 
+<<<<<<< HEAD
     # 1) Model + Hardware selection (UI hints)
     LLM_MODELS = [
         {"label": "💻 CPU Recommended — Phi-3 Mini (3.8B)", "value": "phi3:3.8b", "hint": "CPU 8GB RAM (fast)", "tier": "cpu"},
@@ -1470,6 +1537,8 @@ with tab_run:
          "hint": "GPU 24–48GB", "tier": "gpu_large"},
     ]
 
+=======
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     OPENSTACK_FLAVORS = {
         "m4.medium": "4 vCPU / 8 GB RAM — CPU-only small",
         "m8.large": "8 vCPU / 16 GB RAM — CPU-only medium",
@@ -1477,6 +1546,7 @@ with tab_run:
         "g1.l40.1": "16 vCPU / 64 GB RAM + 1×L40 48GB",
         "g2.a100.1": "24 vCPU / 128 GB RAM + 1×A100 80GB",
     }
+<<<<<<< HEAD
 
     # Determine dataset size to surface CPU/GPU-friendly LLMs first
     possible_sources = ["credit_train_df", "credit_scored_df", "credit_decision_df", "last_merged_df"]
@@ -1541,6 +1611,24 @@ with tab_run:
         with c2:
             flavor = st.selectbox("OpenStack flavor / host profile", list(OPENSTACK_FLAVORS.keys()), index=0)
             st.caption(OPENSTACK_FLAVORS[flavor])
+=======
+    with st.expander("🧠 Local LLM & Hardware Profile", expanded=True):
+        st.info(
+            "Use CPU recommended LLMs first for quick narratives. Switch to GPU picks only when you need deeper reasoning or longer context.",
+            icon="⚡",
+        )
+        selected_llm = render_llm_selector(context="credit_appraisal")
+        st.session_state["credit_llm_model_label"] = selected_llm["model"]
+        st.session_state["credit_llm_model"] = selected_llm["value"]
+        llm_value = selected_llm["value"]
+        flavor = st.selectbox(
+            "OpenStack flavor / host profile",
+            list(OPENSTACK_FLAVORS.keys()),
+            index=0,
+            key="credit_flavor",
+        )
+        st.caption(OPENSTACK_FLAVORS[flavor])
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
         st.caption("These are passed to the API as hints; your API can choose Ollama/Flowise backends accordingly.")
 
     # 2) Data Source
@@ -1553,7 +1641,11 @@ with tab_run:
             "Upload manually",
         ],
     )
+    # Stash the LLM toggle + default selection for downstream payload
     use_llm = st.checkbox("Use LLM narrative", value=False)
+    if "credit_llm_model" not in st.session_state:
+        st.session_state["credit_llm_model"] = llm_value if "llm_value" in locals() else None
+    llm_value = st.session_state.get("credit_llm_model", llm_value if "llm_value" in locals() else None)
     agent_name = "credit_appraisal"
 
     if data_choice == "Upload manually":
@@ -1819,18 +1911,39 @@ with tab_run:
                 st.stop()
 
             # ---- RUN REQUEST ----
+<<<<<<< HEAD
             r = requests.post(
                 f"{API_URL}/v1/agents/{agent_name}/run",
                 data=data,
                 files=files,
                 timeout=180
             )
+=======
+            try:
+                r = requests.post(
+                    f"{API_URL}/v1/agents/{agent_name}/run",
+                    data=data,
+                    files=files,
+                    timeout=180,
+                )
+            except requests.exceptions.RequestException as exc:
+                st.error(
+                    f"❌ Could not reach the agent API at {API_URL}. "
+                    "Make sure the backend service is running (port 8090) and try again."
+                )
+                st.caption(f"Details: {exc}")
+                st.stop()
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
             if r.status_code != 200:
                 st.error(f"Run failed ({r.status_code}): {r.text}")
                 st.stop()
 
             res = r.json()
+<<<<<<< HEAD
+=======
+            _ping_chatbot_refresh("credit_run")
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
             # ---- Robust run_id + data extraction ----
             run_id = None
@@ -2546,7 +2659,20 @@ with tab_train:
 
                 model = RandomForestClassifier(n_estimators=300)
             elif model_choice == "LightGBM":
+<<<<<<< HEAD
                 from lightgbm import LGBMClassifier
+=======
+                try:
+                    from lightgbm import LGBMClassifier
+                except ModuleNotFoundError:
+                    with st.expander("⚠️ Install LightGBM to use this model", expanded=True):
+                        st.error(
+                            "LightGBM is not installed in this environment. "
+                            "Install it with `pip install lightgbm` (inside the virtualenv) "
+                            "or choose RandomForest / LogisticRegression instead."
+                        )
+                    st.stop()
+>>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
                 model = LGBMClassifier()
 
                 model = LGBMClassifier()
