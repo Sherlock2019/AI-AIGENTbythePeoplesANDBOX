@@ -25,6 +25,7 @@ tmp/
 services/ui/.tmp_runs/
 services/ui/.runs/
 services/api/.runs/
+services/api/.rag_store/
 
 # Local state / PIDs
 .pids/
