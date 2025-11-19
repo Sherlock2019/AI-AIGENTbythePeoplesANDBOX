@@ -40,17 +40,23 @@ fi
 
 echo "==> Restore root: $ROOT"
 
+# Find both .bak files and directories ending with .bak
 mapfile -t BAK_FILES < <(find "$ROOT" -type f -name '*.bak' -print 2>/dev/null | sort)
+mapfile -t BAK_DIRS < <(find "$ROOT" -type d -name '*.bak' -print 2>/dev/null | sort)
 
-if [[ ${#BAK_FILES[@]} -eq 0 ]]; then
-  echo "No .bak files found."
+if [[ ${#BAK_FILES[@]} -eq 0 ]] && [[ ${#BAK_DIRS[@]} -eq 0 ]]; then
+  echo "No .bak files or directories found."
   exit 0
 fi
 
+# Combine files and directories for suffix detection
+BAK_ITEMS=("${BAK_FILES[@]}" "${BAK_DIRS[@]}")
+
 declare -A SUFFIX_COUNTS=()
 declare -A SUFFIX_FILES=()
+declare -A SUFFIX_DIRS=()
 
-for bak in "${BAK_FILES[@]}"; do
+for bak in "${BAK_ITEMS[@]}"; do
   suffix=".bak"
   if [[ "$bak" =~ (\.dynamic\.ok\.[0-9-]+[^/]*)$ ]]; then
     suffix="${BASH_REMATCH[1]}"
@@ -58,7 +64,11 @@ for bak in "${BAK_FILES[@]}"; do
     suffix="${BASH_REMATCH[1]}"
   fi
   SUFFIX_COUNTS["$suffix"]=$(( ${SUFFIX_COUNTS["$suffix"]:-0} + 1 ))
-  SUFFIX_FILES["$suffix"]+="${bak}"$'\n'
+  if [[ -f "$bak" ]]; then
+    SUFFIX_FILES["$suffix"]+="${bak}"$'\n'
+  elif [[ -d "$bak" ]]; then
+    SUFFIX_DIRS["$suffix"]+="${bak}"$'\n'
+  fi
 done
 
 echo
@@ -87,22 +97,30 @@ else
 fi
 
 declare -A RESTORE_DATA=()
+declare -A RESTORE_DIR_DATA=()
 TOTAL_FILES=0
+TOTAL_DIRS=0
 for suffix in "${SELECTED_SUFFIXES[@]}"; do
-  IFS=$'\n' read -r -d '' -a tmp <<< "${SUFFIX_FILES[$suffix]}" || true
-  if [[ ${#tmp[@]} -eq 0 ]]; then
-    continue
+  IFS=$'\n' read -r -d '' -a tmp_files <<< "${SUFFIX_FILES[$suffix]:-}" || true
+  IFS=$'\n' read -r -d '' -a tmp_dirs <<< "${SUFFIX_DIRS[$suffix]:-}" || true
+  if [[ ${#tmp_files[@]} -gt 0 ]]; then
+    TOTAL_FILES=$((TOTAL_FILES + ${#tmp_files[@]}))
+    RESTORE_DATA["$suffix"]="$(printf "%s\n" "${tmp_files[@]}")"
   fi
-  TOTAL_FILES=$((TOTAL_FILES + ${#tmp[@]}))
-  RESTORE_DATA["$suffix"]="$(printf "%s\n" "${tmp[@]}")"
+  if [[ ${#tmp_dirs[@]} -gt 0 ]]; then
+    TOTAL_DIRS=$((TOTAL_DIRS + ${#tmp_dirs[@]}))
+    RESTORE_DIR_DATA["$suffix"]="$(printf "%s\n" "${tmp_dirs[@]}")"
+  fi
 done
 
-if [[ $TOTAL_FILES -eq 0 ]]; then
-  echo "No files found for the selected backup set(s)."
+if [[ $TOTAL_FILES -eq 0 ]] && [[ $TOTAL_DIRS -eq 0 ]]; then
+  echo "No files or directories found for the selected backup set(s)."
   exit 0
 fi
 
-echo "About to restore ${#SELECTED_SUFFIXES[@]} backup set(s) totaling $TOTAL_FILES file(s)."
+echo "About to restore ${#SELECTED_SUFFIXES[@]} backup set(s):"
+echo "  • Files: $TOTAL_FILES"
+echo "  • Directories: $TOTAL_DIRS"
 read -rp "Proceed? [y/N] " confirm
 confirm="${confirm:-N}"
 [[ $confirm =~ ^[Yy]$ ]] || { echo "Aborted."; exit 0; }
@@ -110,18 +128,41 @@ confirm="${confirm:-N}"
 for suffix in "${SELECTED_SUFFIXES[@]}"; do
   echo
   echo "Restoring suffix: $suffix"
-  IFS=$'\n' read -r -d '' -a files <<< "${RESTORE_DATA[$suffix]}" || true
-  for bak in "${files[@]}"; do
-    [[ -n "$bak" ]] || continue
-    original="${bak%"$suffix"}"
-    if [[ -z "$original" ]]; then
-      echo "  ⚠️  Skipping malformed path: $bak"
-      continue
-    fi
-    echo "  ↩︎ $original"
-    cp -f "$bak" "$original"
-  done
+  
+  # Restore files
+  if [[ -n "${RESTORE_DATA[$suffix]:-}" ]]; then
+    IFS=$'\n' read -r -d '' -a files <<< "${RESTORE_DATA[$suffix]}" || true
+    for bak in "${files[@]}"; do
+      [[ -n "$bak" ]] || continue
+      original="${bak%"$suffix"}"
+      if [[ -z "$original" ]]; then
+        echo "  ⚠️  Skipping malformed path: $bak"
+        continue
+      fi
+      echo "  ↩︎ $original (file)"
+      cp -f "$bak" "$original"
+    done
+  fi
+  
+  # Restore directories
+  if [[ -n "${RESTORE_DIR_DATA[$suffix]:-}" ]]; then
+    IFS=$'\n' read -r -d '' -a dirs <<< "${RESTORE_DIR_DATA[$suffix]}" || true
+    for bak_dir in "${dirs[@]}"; do
+      [[ -n "$bak_dir" ]] || continue
+      original_dir="${bak_dir%"$suffix"}"
+      if [[ -z "$original_dir" ]]; then
+        echo "  ⚠️  Skipping malformed path: $bak_dir"
+        continue
+      fi
+      echo "  ↩︎ $original_dir (directory)"
+      # Remove existing directory if it exists, then copy backup
+      [[ -d "$original_dir" ]] && rm -rf "$original_dir"
+      cp -r "$bak_dir" "$original_dir"
+    done
+  fi
 done
 
 echo
 echo "✅ Restore complete."
+echo "   • Files restored: $TOTAL_FILES"
+echo "   • Directories restored: $TOTAL_DIRS"

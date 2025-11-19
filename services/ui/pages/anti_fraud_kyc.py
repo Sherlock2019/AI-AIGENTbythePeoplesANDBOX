@@ -68,6 +68,12 @@ ss["afk_logged_in"] = True
 if not ss["afk_user"].get("name"):
     ss["afk_user"]["name"] = "Operator"
 
+# ─────────────────────────────────────────────
+# AUTO-LOAD DEMO DATA (if no results exist)
+# ─────────────────────────────────────────────
+# Anti-Fraud/KYC uses tabs from external pages module, demo data is loaded per tab
+ss.setdefault("afk_demo_loaded", True)  # Mark as having demo data available
+
 
 def _build_chat_context() -> Dict[str, Any]:
     ctx: Dict[str, Any] = {

@@ -205,6 +205,7 @@ def _init_state():
     _init_stage_tracker()
     ss.setdefault("ts_ticket_source", "ServiceNow")
     ss.setdefault("ts_selected_ticket", DEFAULT_INCIDENTS[0])
+    ss.setdefault("troubleshooter_demo_loaded", True)  # Demo data already loaded
     ss.setdefault(
         "ts_appraisal",
         {

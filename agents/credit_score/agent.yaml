@@ -1,0 +1,14 @@
+name: credit_score
+version: 0.1.0
+inputs:
+  - id: borrower_data_csv
+    type: file
+outputs:
+  - id: credit_scores
+    type: json
+  - id: score_details
+    type: json
+capabilities:
+  - uses_llm: false
+policy:
+  egress: none

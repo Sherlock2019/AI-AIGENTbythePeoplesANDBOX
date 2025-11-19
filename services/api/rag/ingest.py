@@ -11,6 +11,14 @@ import pandas as pd
 from .embeddings import embed_texts, embeddings_available
 from .local_store import LocalVectorStore
 
+# Try to import ChromaDB (optional)
+try:
+    from .chroma_store import ChromaVectorStore
+    CHROMADB_AVAILABLE = True
+except ImportError:
+    CHROMADB_AVAILABLE = False
+    ChromaVectorStore = None
+
 DEFAULT_MAX_ROWS = int(os.getenv("RAG_INGEST_MAX_ROWS", "500"))
 
 
@@ -41,12 +49,25 @@ def chunked(seq: Sequence, size: int):
 
 
 class LocalIngestor:
-    """Handles ingestion into the local vector store."""
+    """Handles ingestion into the local vector store (supports both LocalVectorStore and ChromaDB)."""
 
-    def __init__(self, store_path: Path | None = None):
+    def __init__(self, store_path: Path | None = None, use_chromadb: bool = True):
         if not embeddings_available():
             raise RuntimeError("SentenceTransformer embeddings unavailable (model download failed).")
-        self._store = LocalVectorStore(store_path)
+        
+        # Use ChromaDB if available and requested, otherwise fallback to LocalVectorStore
+        if use_chromadb and CHROMADB_AVAILABLE:
+            try:
+                chroma_path = Path(store_path).parent / ".chroma_store" if store_path else None
+                self._store = ChromaVectorStore(chroma_path)
+                self._using_chromadb = True
+            except Exception as exc:
+                print(f"Warning: ChromaDB initialization failed, using LocalVectorStore: {exc}")
+                self._store = LocalVectorStore(store_path)
+                self._using_chromadb = False
+        else:
+            self._store = LocalVectorStore(store_path)
+            self._using_chromadb = False
 
     def ingest_text_chunks(self, chunks: Sequence[Dict[str, Any]], *, dry_run: bool = False) -> int:
         if not chunks:

@@ -57,7 +57,10 @@ def render_chat_assistant(
         <span class="chat-mode">Assistant</span>
         <span class="chat-status">online</span>
       </div>
-      <button class="chat-reset" title="Clear conversation">↺</button>
+      <div class="chat-header-right">
+        <button class="chat-reset" title="Clear conversation">↺</button>
+        <button class="chat-close" title="Close chat">✕</button>
+      </div>
     </div>
     <div class="chat-context"></div>
     <div class="chat-faq"></div>
@@ -116,6 +119,11 @@ def render_chat_assistant(
   justify-content: space-between;
   border-bottom: 1px solid rgba(148,163,184,0.3);
   font-weight: 600;
+}}
+.chat-header-right {{
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }}
 .chat-status {{
   background: #10b981;
@@ -233,6 +241,65 @@ def render_chat_assistant(
   padding: 4px 10px;
   cursor: pointer;
 }}
+.chat-close {{
+  background: transparent;
+  border: 1px solid rgba(239,68,68,0.4);
+  color: #ef4444;
+  border-radius: 999px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-weight: bold;
+}}
+.chat-close:hover {{
+  background: rgba(239,68,68,0.2);
+}}
+.chat-confidence {{
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  padding: 4px 8px;
+  background: rgba(15,23,42,0.5);
+  border-radius: 6px;
+  display: inline-block;
+}}
+.chat-related {{
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(148,163,184,0.2);
+}}
+.chat-related strong {{
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  display: block;
+  margin-bottom: 6px;
+}}
+.chat-related-list {{
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}}
+.chat-related-list li {{
+  margin: 0;
+}}
+.chat-related-btn {{
+  background: rgba(37,99,235,0.2);
+  border: 1px solid rgba(59,130,246,0.3);
+  color: #cbd5ff;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: all 0.2s;
+}}
+.chat-related-btn:hover {{
+  background: rgba(37,99,235,0.35);
+  border-color: rgba(59,130,246,0.5);
+}}
 @media (max-width: 768px) {{
   .chat-assistant-shell {{
     width: calc(100vw - 32px);
@@ -282,6 +349,7 @@ def render_chat_assistant(
 
   const toggle = shell.querySelector(".chat-toggle");
   const resetButton = shell.querySelector(".chat-reset");
+  const closeButton = shell.querySelector(".chat-close");
   const sendButton = shell.querySelector(".chat-send");
   const textarea = shell.querySelector("textarea");
   const messagesEl = shell.querySelector(".chat-messages");
@@ -337,7 +405,28 @@ def render_chat_assistant(
         const actions = msg.actions && msg.actions.length
           ? '<div class="chat-actions">' + msg.actions.map(a => `<button data-command="${{a.command}}">${{a.label}}</button>`).join("") + "</div>"
           : "";
-        return `<div class="chat-message ${{msg.role}}"><div>${{msg.content}}</div>${{actions}}</div>`;
+        
+        // Add confidence indicator and related questions for assistant messages
+        let extraInfo = "";
+        if (msg.role === "assistant") {{
+          if (msg.confidence) {{
+            const confidenceEmoji = {{
+              "high": "✅",
+              "medium": "⚠️",
+              "low": "💡"
+            }}[msg.confidence] || "💡";
+            extraInfo += `<div class="chat-confidence">${{confidenceEmoji}} Confidence: ${{msg.confidence || "medium"}}</div>`;
+          }}
+          if (msg.related_questions && msg.related_questions.length > 0) {{
+            extraInfo += '<div class="chat-related"><strong>Related questions:</strong><ul class="chat-related-list">';
+            msg.related_questions.slice(0, 3).forEach(q => {{
+              extraInfo += `<li><button class="chat-related-btn" data-question="${{q}}">${{q}}</button></li>`;
+            }});
+            extraInfo += '</ul></div>';
+          }}
+        }}
+        
+        return `<div class="chat-message ${{msg.role}}"><div>${{msg.content}}</div>${{actions}}${{extraInfo}}</div>`;
       }}).join("");
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }};
@@ -369,7 +458,15 @@ def render_chat_assistant(
   }};
 
   const appendMessage = (role, content, extra = {{}}) => {{
-    state.history.push({{ role, content, actions: extra.actions || [] }});
+    state.history.push({{
+      role,
+      content,
+      actions: extra.actions || [],
+      confidence: extra.confidence,
+      confidence_score: extra.confidence_score,
+      related_questions: extra.related_questions || [],
+      source_type: extra.source_type
+    }});
     saveHistory();
     renderMessages();
   }};
@@ -379,20 +476,37 @@ def render_chat_assistant(
     appendMessage("user", text);
     setStatus("thinking…");
     sendButton.disabled = true;
+    const payload = {{
+      message: text,
+      page_id: pageId,
+      context: state.context,
+      history: state.history
+    }};
+    // Add model selection if available in session storage
+    const selectedModel = store.getItem("chatbot_selected_model");
+    if (selectedModel) {{
+      payload.model = selectedModel;
+    }}
     fetch(apiUrl + "/v1/chat", {{
       method: "POST",
       headers: {{ "Content-Type": "application/json" }},
-      body: JSON.stringify({{
-        message: text,
-        page_id: pageId,
-        context: state.context,
-        history: state.history
-      }})
+      body: JSON.stringify(payload)
     }})
-      .then(resp => resp.json())
+      .then(resp => {{
+        if (!resp.ok) {{
+          throw new Error(`HTTP ${{resp.status}}: ${{resp.statusText}}`);
+        }}
+        return resp.json();
+      }})
       .then(data => {{
         const reply = data.reply || "No reply.";
-        appendMessage("assistant", reply, {{ actions: data.actions || [] }});
+        appendMessage("assistant", reply, {{
+          actions: data.actions || [],
+          confidence: data.confidence,
+          confidence_score: data.confidence_score,
+          related_questions: data.related_questions || [],
+          source_type: data.source_type
+        }});
         modeEl.textContent = data.mode || "Assistant";
         if (data.faq_options) {{
           state.setFAQs(data.faq_options);
@@ -400,7 +514,15 @@ def render_chat_assistant(
         setStatus("online");
       }})
       .catch(err => {{
-        appendMessage("assistant", "⚠️ Assistant unavailable: " + err.message);
+        let errorMsg = "⚠️ Assistant unavailable";
+        if (err.message.includes("Failed to fetch") || err.message.includes("Connection refused")) {{
+          errorMsg = `❌ Cannot connect to API at ${{apiUrl}}. Make sure the API server is running on port 8090.`;
+        }} else if (err.message.includes("timeout")) {{
+          errorMsg = "⏱️ Request timeout. The API server may be overloaded.";
+        }} else {{
+          errorMsg = `⚠️ Error: ${{err.message}}`;
+        }}
+        appendMessage("assistant", errorMsg);
         setStatus("offline", true);
       }})
       .finally(() => {{
@@ -417,6 +539,13 @@ def render_chat_assistant(
     shell.classList.toggle("open", isOpen);
     store.setItem(openKey, isOpen ? "true" : "false");
   }};
+
+  if (closeButton) {{
+    closeButton.onclick = () => {{
+      shell.classList.remove("open");
+      store.setItem(openKey, "false");
+    }};
+  }}
 
   sendButton.onclick = () => {{
     const text = textarea.value;
@@ -453,6 +582,44 @@ def render_chat_assistant(
     const question = btn.getAttribute("data-faq") || "";
     sendMessage(question);
   }});
+
+  // Handle related question clicks
+  messagesEl.addEventListener("click", (event) => {{
+    const btn = event.target.closest("button.chat-related-btn");
+    if (!btn) return;
+    const question = btn.getAttribute("data-question") || "";
+    sendMessage(question);
+  }});
+
+  // Close chat when navigating away (detect page changes)
+  const originalPushState = history.pushState;
+  const originalReplaceState = history.replaceState;
+  
+  const closeChatOnNavigate = () => {{
+    shell.classList.remove("open");
+    store.setItem(openKey, "false");
+  }};
+  
+  history.pushState = function() {{
+    originalPushState.apply(history, arguments);
+    closeChatOnNavigate();
+  }};
+  
+  history.replaceState = function() {{
+    originalReplaceState.apply(history, arguments);
+    closeChatOnNavigate();
+  }};
+  
+  window.addEventListener("popstate", closeChatOnNavigate);
+  
+  // Also close when Streamlit navigation occurs (detect query param changes)
+  let lastUrl = window.location.href;
+  setInterval(() => {{
+    if (window.location.href !== lastUrl) {{
+      lastUrl = window.location.href;
+      closeChatOnNavigate();
+    }}
+  }}, 500);
 
   shell.__assistantInitialized = true;
 }})();

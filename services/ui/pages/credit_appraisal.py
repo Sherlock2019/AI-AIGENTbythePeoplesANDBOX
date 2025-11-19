@@ -252,6 +252,39 @@ if not st.session_state.user_info.get("name"):
 if st.session_state.get("credit_logged_in", False):
     st.session_state.stage = "credit_agent"
 
+# ─────────────────────────────────────────────
+# AUTO-LOAD DEMO DATA (if no results exist)
+# ─────────────────────────────────────────────
+if st.session_state.get("last_merged_df") is None and st.session_state.get("credit_scored_df") is None:
+    # Auto-generate demo data on first load
+    rng = np.random.default_rng(42)
+    demo_df = pd.DataFrame({
+        "application_id": [f"APP_{i:04d}" for i in range(1, 51)],
+        "customer_id": [f"CUST_{i:04d}" for i in range(1, 51)],
+        "income": rng.integers(20000, 150000, 50),
+        "DTI": rng.uniform(0.15, 0.65, 50).round(3),
+        "LTV": rng.uniform(0.50, 0.95, 50).round(3),
+        "credit_score": rng.integers(580, 820, 50),
+        "credit_history_length": rng.integers(0, 25, 50),
+        "num_delinquencies": rng.integers(0, 5, 50),
+        "current_loans": rng.integers(0, 8, 50),
+        "employment_years": rng.integers(0, 30, 50),
+        "loan_amount": rng.integers(20000, 300000, 50),
+    })
+    
+    # Run credit appraisal agent on demo data
+    try:
+        from agents.credit_appraisal.runner import run as run_credit_appraisal
+        scored_df = run_credit_appraisal(demo_df)
+        st.session_state["last_merged_df"] = scored_df
+        st.session_state["credit_scored_df"] = scored_df.copy()
+        st.session_state["credit_demo_loaded"] = True
+    except Exception as e:
+        # If runner fails, at least store the input data
+        st.session_state["credit_demo_loaded"] = False
+        import logging
+        logging.warning(f"Could not auto-run credit appraisal: {e}")
+
 
 def _build_credit_chat_context() -> Dict[str, Any]:
     ss_local = st.session_state
@@ -1305,6 +1338,23 @@ with tab_clean:
 # ─────────────────────────────────────────────
 # 🤖 TAB 3 — Credit appraisal by AI assistant
 with tab_run:
+    # Auto-display dashboard if demo data was loaded
+    if st.session_state.get("credit_demo_loaded") and st.session_state.get("last_merged_df") is not None:
+        merged_df = st.session_state["last_merged_df"]
+        st.markdown("### 📄 Credit AI Agent Decisions Table")
+        uniq_dec = sorted([d for d in merged_df.get("decision", pd.Series(dtype=str)).dropna().unique()]) \
+                if "decision" in merged_df.columns else []
+        chosen = st.multiselect("Filter decision", options=uniq_dec, default=uniq_dec, key="filter_decisions_auto")
+        df_view = merged_df.copy()
+        if "decision" in df_view.columns and chosen:
+            df_view = df_view[df_view["decision"].isin(chosen)]
+        st.dataframe(df_view, use_container_width=True)
+        
+        st.markdown("## 📊 Dashboard")
+        render_credit_dashboard(merged_df, st.session_state.get("currency_symbol", ""))
+        st.info("💡 Demo data loaded automatically. Dashboard shows results from auto-run.")
+        st.markdown("---")
+    
     st.subheader("🤖 Credit appraisal by AI assistant")
     # Anchor for loopback link from Training tab
     st.markdown('<a name="credit-appraisal-stage"></a>', unsafe_allow_html=True)
@@ -1894,6 +1944,10 @@ with tab_run:
             # ---- Dashboard ----
             st.markdown("## 📊 Dashboard")
             render_credit_dashboard(merged_df, st.session_state.get("currency_symbol", ""))
+            
+            # Auto-show dashboard if demo data was loaded
+            if st.session_state.get("credit_demo_loaded") and st.session_state.get("last_merged_df") is not None:
+                st.info("💡 Demo data loaded automatically. Dashboard shows results from auto-run.")
 
             # Add per-row metrics columns if present
             if "rule_reasons" in df_view.columns:

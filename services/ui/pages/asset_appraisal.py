@@ -129,6 +129,37 @@ ss["asset_logged_in"] = True
 if ss.get("asset_stage") == "login":
     ss["asset_stage"] = "asset_flow"
 
+# ─────────────────────────────────────────────
+# AUTO-LOAD DEMO DATA (if no results exist)
+# ─────────────────────────────────────────────
+if ss.get("asset_valued_df") is None and ss.get("asset_policy_df") is None:
+    # Auto-generate demo data on first load
+    rng = np.random.default_rng(42)
+    demo_df = pd.DataFrame({
+        "asset_id": [f"AST_{i:04d}" for i in range(1, 31)],
+        "asset_type": rng.choice(["Residential", "Commercial", "Industrial", "Multifamily"], 30),
+        "market_value": rng.integers(100000, 500000, 30),
+        "condition_score": rng.uniform(0.6, 1.0, 30).round(3),
+        "legal_penalty": rng.uniform(0.9, 1.0, 30).round(3),
+        "age_years": rng.integers(0, 50, 30),
+        "city": rng.choice(["San Jose", "Los Angeles", "Houston", "Chicago", "Miami"], 30),
+        "loan_amount": rng.integers(50000, 400000, 30),
+    })
+    
+    # Run asset appraisal agent on demo data
+    try:
+        from agents.asset_appraisal.runner import run as run_asset_appraisal
+        form_fields = {}
+        valued_df = run_asset_appraisal(demo_df, form_fields)
+        ss["asset_valued_df"] = valued_df
+        ss["asset_policy_df"] = valued_df.copy()
+        ss["asset_demo_loaded"] = True
+    except Exception as e:
+        # If runner fails, at least store the input data
+        ss["asset_demo_loaded"] = False
+        import logging
+        logging.warning(f"Could not auto-run asset appraisal: {e}")
+
 
 def _coerce_minutes(value, fallback: float = 0.0) -> float:
     """Convert values like '22 min' to floats for gauge percentages."""

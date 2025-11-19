@@ -1,0 +1,18 @@
+name: legal_compliance
+version: 0.1.0
+inputs:
+  - id: application_data_csv
+    type: file
+  - id: kyc_data_csv
+    type: file
+  - id: asset_data_csv
+    type: file
+outputs:
+  - id: compliance_verdicts
+    type: json
+  - id: policy_flags
+    type: json
+capabilities:
+  - uses_llm: true
+policy:
+  egress: none

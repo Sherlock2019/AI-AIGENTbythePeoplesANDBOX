@@ -14,6 +14,7 @@ import requests
 import plotly.express as px
 import plotly.graph_objects as go
 from services.ui.theme_manager import apply_theme, render_theme_toggle
+from services.ui.components.chat_assistant import render_chat_assistant
 
 st.set_page_config(page_title="🧩 Unified Risk Orchestration Agent", layout="wide")
 apply_theme()
@@ -140,6 +141,9 @@ ss.setdefault("selected_unified_index", 0)
 ss.setdefault("prefill_unified_form", None)
 if not ss.unified_runs:
     ss.unified_runs = deepcopy(SAMPLE_UNIFIED_RUNS)
+    ss["unified_demo_loaded"] = True
+else:
+    ss.setdefault("unified_demo_loaded", False)
 
 
 def _call_unified_api(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -271,6 +275,10 @@ st.title("🧩 Unified Risk Orchestration Agent")
 st.caption(
     "Master coordinator that compounds Asset, Credit, and Anti-Fraud agents into a single bank-grade decision package."
 )
+
+# Auto-show dashboard if demo data was loaded
+if ss.get("unified_demo_loaded") and ss.get("unified_runs"):
+    st.info("💡 Demo data loaded automatically. Dashboard shows sample unified risk decisions.")
 
 nav_cols = st.columns([1, 1, 1, 1, 1])
 with nav_cols[0]:
@@ -741,3 +749,37 @@ if st.button("↺ Re-run this borrower", key="btn_rerun_selected"):
     )
     st.info("Prefilled the submission form with this borrower's latest data. Complete the form below to finalize the rerun.")
     st.rerun()
+
+
+def _build_unified_chat_context() -> Dict[str, Any]:
+    """Build context for chat assistant on unified risk page."""
+    ss = st.session_state
+    context = {
+        "agent_type": "unified_risk",
+        "stage": "orchestration",
+    }
+    if hasattr(ss, "selected_unified_index") and ss.selected_unified_index is not None:
+        if ss.unified_runs and 0 <= ss.selected_unified_index < len(ss.unified_runs):
+            run = ss.unified_runs[ss.selected_unified_index]
+            context["run_id"] = run.get("run_id")
+            decision = run.get("decision", {})
+            if decision:
+                context["borrower_id"] = decision.get("borrower_id")
+                context["loan_id"] = decision.get("loan_id")
+                risk_summary = run.get("risk_summary", {})
+                if risk_summary:
+                    context["recommendation"] = risk_summary.get("recommendation")
+    return context
+
+
+# Render chat assistant for unified risk page
+render_chat_assistant(
+    page_id="unified_risk",
+    context=_build_unified_chat_context(),
+    faq_questions=[
+        "How does the Unified Risk agent combine fraud, credit, and asset data?",
+        "What is the final recommendation for this borrower?",
+        "Explain the risk summary calculation.",
+        "How do I rerun the unified decision?",
+    ],
+)

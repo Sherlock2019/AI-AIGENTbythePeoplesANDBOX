@@ -1,11 +1,14 @@
 # services/api/main.py
 from __future__ import annotations
 
+import logging
 import os
 import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, JSONResponse
+
+logger = logging.getLogger(__name__)
 
 APP_NAME = "Demo Agent API"
 APP_VERSION = "1.4.2"  # bump: adds credit-training router include
@@ -61,6 +64,10 @@ from services.api.routers.training import router as training_router
 from services.api.routers.training_credit import router as training_credit_router
 from services.api.routers.chat import router as chat_router
 from services.api.routers.unified import router as unified_router
+from services.api.routers.monitoring import router as monitoring_router
+from services.api.routers.credit_score_agents import router as credit_score_router
+from services.api.routers.legal_compliance_agents import router as legal_compliance_router
+from services.api.middleware.logging_middleware import LoggingMiddleware
 
 app.include_router(system_router)
 app.include_router(agents_router)
@@ -69,6 +76,26 @@ app.include_router(training_router)
 app.include_router(training_credit_router)  # <-- IMPORTANT
 app.include_router(chat_router)
 app.include_router(unified_router)
+app.include_router(monitoring_router)
+app.include_router(credit_score_router, prefix="/v1/credit_score")
+app.include_router(legal_compliance_router, prefix="/v1/legal_compliance")
+
+# Add logging middleware
+app.add_middleware(LoggingMiddleware)
+
+# ─────────────────────────────────────────────────────────────
+# Pre-load embedding model on startup (prevents 3.4s delay on first request)
+# ─────────────────────────────────────────────────────────────
+@app.on_event("startup")
+def preload_embeddings():
+    """Pre-load SentenceTransformer model to avoid first-request delay."""
+    try:
+        from services.api.rag.embeddings import _get_model
+        logger.info("Pre-loading embedding model...")
+        _get_model()  # Load model on startup
+        logger.info("Embedding model pre-loaded successfully")
+    except Exception as exc:
+        logger.warning("Failed to pre-load embedding model: %s", exc)
 
 # ─────────────────────────────────────────────────────────────
 # Root/health

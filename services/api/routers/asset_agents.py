@@ -1,9 +1,13 @@
 # services/api/routers/asset_agents.py
 from __future__ import annotations
 import io, os, json, time
+import logging
+from pathlib import Path
 from typing import Any, Dict, List
 import numpy as np, pandas as pd
 from fastapi import APIRouter, UploadFile, File, Request, HTTPException
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v1/agents/asset_appraisal", tags=["asset_agent"])
 
@@ -75,6 +79,49 @@ async def run_asset_agent(request: Request, file: UploadFile | None = File(None)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to persist merged.csv: {e}")
 
+    # Auto-ingest CSV into RAG store after each run
+    try:
+        from services.api.rag.ingest import LocalIngestor
+        ingestor = LocalIngestor()
+        ingestor.ingest_files([Path(merged_path)], max_rows=200, dry_run=False)
+        logger.info(f"Auto-ingested {merged_path} into RAG store")
+    except Exception as e:
+        logger.warning(f"Failed to auto-ingest CSV into RAG: {e}")
+
+    # Cleanup: Keep only last 10 CSV runs per agent
+    try:
+        _cleanup_old_asset_runs(RUNS_ROOT, AGENT_NAME, keep_last_n=10)
+    except Exception as e:
+        logger.warning(f"Failed to cleanup old CSV runs: {e}")
+
     # Return full rows; do NOT run through a json-sanitizer that strips data.
     data: List[Dict[str, Any]] = out_df.to_dict(orient="records")
     return {"run_id": run_id, "rows": len(data), "data": data}
+
+
+def _cleanup_old_asset_runs(runs_root: str, agent_name: str, keep_last_n: int = 10):
+    """Keep only the last N run directories per agent, delete older ones."""
+    agent_runs_dir = Path(runs_root) / agent_name
+    if not agent_runs_dir.exists():
+        return
+    
+    # Find all run directories
+    run_dirs = [d for d in agent_runs_dir.iterdir() if d.is_dir()]
+    run_dirs.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+    
+    if len(run_dirs) <= keep_last_n:
+        return
+    
+    # Keep the most recent N directories, delete the rest
+    dirs_to_delete = run_dirs[keep_last_n:]
+    deleted_count = 0
+    for run_dir in dirs_to_delete:
+        try:
+            import shutil
+            shutil.rmtree(run_dir)
+            deleted_count += 1
+        except Exception as e:
+            logger.warning(f"Failed to delete {run_dir}: {e}")
+    
+    if deleted_count > 0:
+        logger.info(f"Cleaned up {deleted_count} old run directories for agent {agent_name}, kept {keep_last_n} most recent")
