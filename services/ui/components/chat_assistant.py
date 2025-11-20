@@ -23,13 +23,10 @@ def render_chat_assistant(
     title: str = "Need chat bot assistant ?",
     default_open: bool = False,
     faq_questions: Optional[List[str]] = None,
-<<<<<<< HEAD
-=======
     persona: Optional[Dict[str, Any]] = None,
     invited_personas: Optional[List[Dict[str, Any]]] = None,
     pin_to_top: bool = False,
     global_view: bool = False,
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 ) -> None:
     """
     Inject the floating chat drawer into the parent Streamlit document.
@@ -41,11 +38,8 @@ def render_chat_assistant(
 
     context = context or {}
     faq_questions = faq_questions or []
-<<<<<<< HEAD
-=======
     persona = persona or {}
     invited_personas = invited_personas or []
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     api_url = (
         os.getenv("CHAT_API_URL")
         or os.getenv("API_URL")
@@ -58,14 +52,6 @@ def render_chat_assistant(
     open_state_key = f"{panel_id}-open"
     context_json = _safe_json(context)
     faq_json = json.dumps(faq_questions)
-<<<<<<< HEAD
-    default_open_str = "true" if default_open else "false"
-
-    markup = f"""
-<div id="{panel_id}" class="chat-assistant-shell">
-  <button class="chat-toggle">{escape(title)}</button>
-  <div class="chat-window">
-=======
     persona_json = _safe_json(persona)
     invited_json = json.dumps(invited_personas)
     position_class = " top-anchor" if pin_to_top else ""
@@ -81,20 +67,15 @@ def render_chat_assistant(
       <div class="persona-note"></div>
     </div>
     <div class="chat-invited"></div>
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     <div class="chat-header">
       <div class="chat-header-left">
         <span class="chat-mode">Assistant</span>
         <span class="chat-status">online</span>
       </div>
-<<<<<<< HEAD
       <div class="chat-header-right">
         <button class="chat-reset" title="Clear conversation">↺</button>
         <button class="chat-close" title="Close chat">✕</button>
       </div>
-=======
-      <button class="chat-reset" title="Clear conversation">↺</button>
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     </div>
     <div class="chat-context"></div>
     <div class="chat-faq"></div>
@@ -120,13 +101,10 @@ def render_chat_assistant(
   font-family: var(--font, "Inter", sans-serif);
   z-index: 9999;
 }}
-<<<<<<< HEAD
-=======
 .chat-assistant-shell.top-anchor {{
   top: 20px;
   bottom: auto;
 }}
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 .chat-assistant-shell .chat-toggle {{
   width: 100%;
   padding: 10px 14px;
@@ -161,14 +139,11 @@ def render_chat_assistant(
   border-bottom: 1px solid rgba(148,163,184,0.3);
   font-weight: 600;
 }}
-<<<<<<< HEAD
 .chat-header-right {{
   display: flex;
   gap: 8px;
   align-items: center;
 }}
-=======
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 .chat-status {{
   background: #10b981;
   color: #052e16;
@@ -182,8 +157,6 @@ def render_chat_assistant(
   background: #f87171;
   color: #450a0a;
 }}
-<<<<<<< HEAD
-=======
 .chat-persona {{
   display: none;
   padding: 10px 16px 0;
@@ -231,7 +204,6 @@ def render_chat_assistant(
   border: 1px solid rgba(148,163,184,0.35);
   background: rgba(148,163,184,0.1);
 }}
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 .chat-context {{
   padding: 10px 16px 0;
   display: flex;
@@ -335,7 +307,6 @@ def render_chat_assistant(
   padding: 4px 10px;
   cursor: pointer;
 }}
-<<<<<<< HEAD
 .chat-close {{
   background: transparent;
   border: 1px solid rgba(239,68,68,0.4);
@@ -395,8 +366,6 @@ def render_chat_assistant(
   background: rgba(37,99,235,0.35);
   border-color: rgba(59,130,246,0.5);
 }}
-=======
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 @media (max-width: 768px) {{
   .chat-assistant-shell {{
     width: calc(100vw - 32px);
@@ -423,12 +392,9 @@ def render_chat_assistant(
   const defaultOpen = {default_open_str};
   const contextData = {context_json};
   const initialFaq = {faq_json};
-<<<<<<< HEAD
-=======
   const personaData = {persona_json};
   const invitedDefault = {invited_json};
   const isGlobal = {global_flag};
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
   const parentDoc = window.parent && window.parent.document ? window.parent.document : document;
   if (!parentDoc) return;
@@ -452,10 +418,7 @@ def render_chat_assistant(
 
   const toggle = shell.querySelector(".chat-toggle");
   const resetButton = shell.querySelector(".chat-reset");
-<<<<<<< HEAD
   const closeButton = shell.querySelector(".chat-close");
-=======
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
   const sendButton = shell.querySelector(".chat-send");
   const textarea = shell.querySelector("textarea");
   const messagesEl = shell.querySelector(".chat-messages");
@@ -463,28 +426,20 @@ def render_chat_assistant(
   const modeEl = shell.querySelector(".chat-mode");
   const contextEl = shell.querySelector(".chat-context");
   const faqEl = shell.querySelector(".chat-faq");
-<<<<<<< HEAD
-=======
   const personaShell = shell.querySelector(".chat-persona");
   const personaChip = personaShell ? personaShell.querySelector(".persona-chip") : null;
   const personaNote = personaShell ? personaShell.querySelector(".persona-note") : null;
   const invitedEl = shell.querySelector(".chat-invited");
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
   if (shell.__assistantInitialized) {{
     const state = shell.__assistantState;
     state.context = contextData;
-<<<<<<< HEAD
-    state.renderContext();
-    state.setFAQs(initialFaq);
-=======
     state.persona = personaData;
     state.invited = Array.isArray(invitedDefault) ? invitedDefault : [];
     state.renderContext();
     state.setFAQs(initialFaq);
     state.renderPersona();
     state.renderInvited();
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     return;
   }}
 
@@ -492,10 +447,6 @@ def render_chat_assistant(
     history: [],
     context: contextData,
     faq: initialFaq || [],
-<<<<<<< HEAD
-    renderContext: () => {{}},
-    setFAQs: () => {{}},
-=======
     persona: personaData,
     invited: Array.isArray(invitedDefault) ? invitedDefault : [],
     renderContext: () => {{}},
@@ -503,7 +454,6 @@ def render_chat_assistant(
     renderPersona: () => {{}},
     renderInvited: () => {{}},
     globalView: isGlobal,
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
   }};
   shell.__assistantState = state;
 
@@ -531,8 +481,6 @@ def render_chat_assistant(
     contextEl.innerHTML = chips.slice(0, 5).join("");
   }};
 
-<<<<<<< HEAD
-=======
   const toPersonaIds = (items) => {{
     if (!Array.isArray(items)) return [];
     return items
@@ -588,14 +536,12 @@ def render_chat_assistant(
       .join("");
   }};
 
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
   const renderMessages = () => {{
     messagesEl.innerHTML = state.history
       .map(msg => {{
         const actions = msg.actions && msg.actions.length
           ? '<div class="chat-actions">' + msg.actions.map(a => `<button data-command="${{a.command}}">${{a.label}}</button>`).join("") + "</div>"
           : "";
-<<<<<<< HEAD
         
         // Add confidence indicator and related questions for assistant messages
         let extraInfo = "";
@@ -618,20 +564,13 @@ def render_chat_assistant(
         }}
         
         return `<div class="chat-message ${{msg.role}}"><div>${{msg.content}}</div>${{actions}}${{extraInfo}}</div>`;
-=======
-        return `<div class="chat-message ${{msg.role}}"><div>${{msg.content}}</div>${{actions}}</div>`;
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
       }}).join("");
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }};
 
   const renderFAQ = () => {{
     if (!faqEl) return;
-<<<<<<< HEAD
-    const items = (state.faq || []).slice(0, 6);
-=======
     const items = (state.faq || []).slice(0, 10);
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     if (!items.length) {{
       faqEl.style.display = "none";
       faqEl.innerHTML = "";
@@ -649,11 +588,8 @@ def render_chat_assistant(
   state.renderContext();
   renderMessages();
   state.setFAQs(initialFaq);
-<<<<<<< HEAD
-=======
   state.renderPersona();
   state.renderInvited();
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
   const setStatus = (label, isOffline = false) => {{
     statusEl.textContent = label;
@@ -661,7 +597,6 @@ def render_chat_assistant(
   }};
 
   const appendMessage = (role, content, extra = {{}}) => {{
-<<<<<<< HEAD
     state.history.push({{
       role,
       content,
@@ -671,9 +606,6 @@ def render_chat_assistant(
       related_questions: extra.related_questions || [],
       source_type: extra.source_type
     }});
-=======
-    state.history.push({{ role, content, actions: extra.actions || [] }});
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     saveHistory();
     renderMessages();
   }};
@@ -683,17 +615,27 @@ def render_chat_assistant(
     appendMessage("user", text);
     setStatus("thinking…");
     sendButton.disabled = true;
-<<<<<<< HEAD
     const payload = {{
       message: text,
       page_id: pageId,
       context: state.context,
       history: state.history
     }};
-    // Add model selection if available in session storage
+    // Use unified chatbot agent configuration - all agents use the same chatbot backend
+    // Always use chatbot_selected_model from session storage if available (set in chatbot_assistant.py)
     const selectedModel = store.getItem("chatbot_selected_model");
     if (selectedModel) {{
       payload.model = selectedModel;
+    }}
+    // Set agent_id to "chatbot" to ensure all agents use the same unified chatbot backend
+    // This ensures consistent behavior, model selection, and RAG configuration across all agents
+    payload.agent_id = "chatbot";
+    // Preserve persona information in context for page-specific context, but backend uses unified chatbot agent
+    const personaId = personaData && personaData.id ? personaData.id : null;
+    if (personaId) {{
+      // Store persona info in context for reference, but agent_id ensures unified chatbot backend
+      payload.context = payload.context || {{}};
+      payload.context.persona_id = personaId;
     }}
     fetch(apiUrl + "/v1/chat", {{
       method: "POST",
@@ -707,8 +649,12 @@ def render_chat_assistant(
         return resp.json();
       }})
       .then(data => {{
-        const reply = data.reply || "No reply.";
-        appendMessage("assistant", reply, {{
+        const reply = data.reply || data.answer || "No reply.";
+        const sources = Array.isArray(data.sources) ? data.sources : [];
+        const withSources = sources.length
+          ? reply + "\\n\\nSources:\\n" + sources.map(src => `- ${{src.file}} (score ${{src.score}})`).join("\\n")
+          : reply;
+        appendMessage("assistant", withSources, {{
           actions: data.actions || [],
           confidence: data.confidence,
           confidence_score: data.confidence_score,
@@ -731,31 +677,6 @@ def render_chat_assistant(
           errorMsg = `⚠️ Error: ${{err.message}}`;
         }}
         appendMessage("assistant", errorMsg);
-=======
-    const personaId = personaData && personaData.id ? personaData.id : null;
-    fetch(apiUrl + "/chatbot/chat", {{
-      method: "POST",
-      headers: {{ "Content-Type": "application/json" }},
-      body: JSON.stringify({{
-        question: text,
-        top_k: 5,
-        agent_id: personaId
-      }})
-    }})
-      .then(resp => resp.json())
-      .then(data => {{
-        const reply = data.answer || data.reply || "No reply.";
-        const sources = Array.isArray(data.sources) ? data.sources : [];
-        const withSources = sources.length
-          ? reply + "\\n\\nSources:\\n" + sources.map(src => `- ${{src.file}} (score ${{src.score}})`).join("\\n")
-          : reply;
-        appendMessage("assistant", withSources, {{ actions: data.actions || [] }});
-        modeEl.textContent = data.mode || "Gemma RAG";
-        setStatus("online");
-      }})
-      .catch(err => {{
-        appendMessage("assistant", "⚠️ Assistant unavailable: " + err.message);
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
         setStatus("offline", true);
       }})
       .finally(() => {{
@@ -773,7 +694,6 @@ def render_chat_assistant(
     store.setItem(openKey, isOpen ? "true" : "false");
   }};
 
-<<<<<<< HEAD
   if (closeButton) {{
     closeButton.onclick = () => {{
       shell.classList.remove("open");
@@ -781,8 +701,6 @@ def render_chat_assistant(
     }};
   }}
 
-=======
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
   sendButton.onclick = () => {{
     const text = textarea.value;
     textarea.value = "";
@@ -819,8 +737,6 @@ def render_chat_assistant(
     sendMessage(question);
   }});
 
-<<<<<<< HEAD
-  // Handle related question clicks
   messagesEl.addEventListener("click", (event) => {{
     const btn = event.target.closest("button.chat-related-btn");
     if (!btn) return;
@@ -832,34 +748,34 @@ def render_chat_assistant(
   const originalPushState = history.pushState;
   const originalReplaceState = history.replaceState;
   
-  const closeChatOnNavigate = () => {{
-    shell.classList.remove("open");
-    store.setItem(openKey, "false");
-  }};
-  
-  history.pushState = function() {{
-    originalPushState.apply(history, arguments);
-    closeChatOnNavigate();
-  }};
-  
-  history.replaceState = function() {{
-    originalReplaceState.apply(history, arguments);
-    closeChatOnNavigate();
-  }};
-  
-  window.addEventListener("popstate", closeChatOnNavigate);
-  
-  // Also close when Streamlit navigation occurs (detect query param changes)
-  let lastUrl = window.location.href;
-  setInterval(() => {{
-    if (window.location.href !== lastUrl) {{
-      lastUrl = window.location.href;
+    const closeChatOnNavigate = () => {{
+      shell.classList.remove("open");
+      store.setItem(openKey, "false");
+    }};
+    
+    history.pushState = function() {{
+      originalPushState.apply(history, arguments);
       closeChatOnNavigate();
-    }}
-  }}, 500);
+    }};
+    
+    history.replaceState = function() {{
+      originalReplaceState.apply(history, arguments);
+      closeChatOnNavigate();
+    }};
+    
+    window.addEventListener("popstate", closeChatOnNavigate);
+    window.addEventListener("beforeunload", closeChatOnNavigate);
+    window.addEventListener("pagehide", closeChatOnNavigate);
+    
+    // Also close when Streamlit navigation occurs (detect query param changes)
+    let lastUrl = window.location.href;
+    setInterval(() => {{
+      if (window.location.href !== lastUrl) {{
+        lastUrl = window.location.href;
+        closeChatOnNavigate();
+      }}
+    }}, 500);
 
-=======
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
   shell.__assistantInitialized = true;
 }})();
 </script>

@@ -1,9 +1,23 @@
 """Shared catalog of local + Hugging Face models for every agent."""
 from __future__ import annotations
 
+import os
+import sys
+from pathlib import Path
 from typing import Dict, List
+from services.common.llm_profiles_loader import get_llm_profiles
 
-from data.llm_profiles import model_full
+# Ensure project root is in Python path for data module imports
+try:
+    _PROJECT_ROOT = Path(__file__).resolve().parents[2]  # services/common -> project root
+except NameError:
+    # Fallback if __file__ is not available (shouldn't happen in normal execution)
+    _PROJECT_ROOT = Path.cwd()
+_PROJECT_ROOT_STR = str(_PROJECT_ROOT.resolve())
+if _PROJECT_ROOT_STR not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT_STR)
+
+model_full = get_llm_profiles()
 
 CPU_FRIENDLY_TIERS = {"cpu", "balanced"}
 HF_MODEL_TABLE: List[Dict[str, str]] = [

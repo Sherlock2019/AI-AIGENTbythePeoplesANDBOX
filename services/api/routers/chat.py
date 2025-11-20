@@ -4,36 +4,36 @@ from __future__ import annotations
 import logging
 import os
 import time
-<<<<<<< HEAD
 import tempfile
 import hashlib
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Tuple
 from collections import deque
-=======
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Tuple
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 import requests
 
 import pandas as pd
-<<<<<<< HEAD
 from fastapi import APIRouter, HTTPException, UploadFile, File
-=======
-from fastapi import APIRouter, HTTPException
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 from pydantic import BaseModel, Field
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-<<<<<<< HEAD
 from services.api.rag.embeddings import embed_texts, embeddings_available
 from services.api.rag.local_store import LocalVectorStore
 from services.api.rag.ingest import LocalIngestor
 from services.api.middleware.logging_middleware import add_log_entry
+
+# Try to import optional modules
+try:
+    from services.api.rag.policies_seed import seed_policy_documents
+except ImportError:
+    seed_policy_documents = None
+
+try:
+    from services.api.rag.howto_loader import get_howto_snippet
+except ImportError:
+    get_howto_snippet = None
 
 # Try to import ChromaDB and reranker (optional enhancements)
 try:
@@ -50,12 +50,6 @@ except ImportError:
     RERANKER_AVAILABLE = False
     rerank_documents = None
     reranker_available = lambda: False
-=======
-from services.api.rag.embeddings import embed_texts
-from services.api.rag.local_store import LocalVectorStore
-from services.api.rag.policies_seed import seed_policy_documents
-from services.api.rag.howto_loader import get_howto_snippet
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["chat"])
@@ -72,16 +66,12 @@ CSV_SOURCE_DIRS = [
 CSV_MAX_FILES = int(os.getenv("CHAT_CSV_MAX_FILES", "6"))
 CSV_MAX_ROWS = int(os.getenv("CHAT_CSV_MAX_ROWS", "200"))
 VECTOR_CACHE_TTL = int(os.getenv("CHAT_RAG_REFRESH_SECONDS", "60"))
-<<<<<<< HEAD
 RESPONSE_CACHE_TTL = int(os.getenv("CHAT_RESPONSE_CACHE_SECONDS", "300"))  # 5 minutes
 RAG_QUALITY_THRESHOLD = float(os.getenv("CHAT_RAG_THRESHOLD", "0.35"))  # Updated from 0.3 to 0.35
 MAX_CONVERSATION_HISTORY = int(os.getenv("CHAT_MAX_HISTORY", "10"))  # Last 10 turns
 
 # Response cache: {question_hash: (response, timestamp)}
 _response_cache: Dict[str, Tuple[Dict[str, Any], float]] = {}
-
-=======
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 STATIC_SNIPPETS = [
     {
         "id": "fraud_flow",
@@ -116,13 +106,26 @@ FAQ_ENTRIES: Dict[str, List[Dict[str, str]]] = {
     ],
 }
 
-<<<<<<< HEAD
 RAG_TOP_K = int(os.getenv("CHAT_RAG_TOP_K", "5"))  # Increased from 3 to 5 for better coverage
 USE_CHROMADB = os.getenv("USE_CHROMADB", "true").lower() in {"true", "1", "yes"}
 USE_RERANKING = os.getenv("USE_RERANKING", "true").lower() in {"true", "1", "yes"}
 RERANK_TOP_K = int(os.getenv("RERANK_TOP_K", "3"))  # After reranking, return top 3
 
 _store_env = os.getenv("LOCAL_RAG_STORE")
+
+def _normalize_base(url: str) -> str:
+    from urllib.parse import urlsplit, urlunsplit
+    if not url:
+        return "http://localhost:11434"
+    parsed = urlsplit(url)
+    path = parsed.path or ""
+    if path.startswith("/api/"):
+        path = ""
+    elif "/api/" in path:
+        path = path.split("/api/", 1)[0]
+    rebuilt = parsed._replace(path=path, query="", fragment="")
+    base = urlunsplit(rebuilt).rstrip("/")
+    return base or "http://localhost:11434"
 
 # Initialize vector store (ChromaDB preferred, fallback to LocalVectorStore)
 if USE_CHROMADB and CHROMADB_AVAILABLE:
@@ -139,43 +142,22 @@ else:
     if USE_CHROMADB:
         logger.info("ChromaDB not available, using LocalVectorStore. Install chromadb for metadata filtering.")
 
+# Seed policy documents if available
+if seed_policy_documents:
+    try:
+        seed_policy_documents(LOCAL_STORE)
+    except Exception as exc:
+        logger.warning(f"Failed to seed policy documents: {exc}")
+
 _VECTOR_CACHE: Dict[str, Any] = {"built_at": 0.0, "vectorizer": None, "matrix": None, "docs": []}
 
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma2:2b")  # Default to gemma2:2b - faster on CPU
+OLLAMA_URL = _normalize_base(os.getenv("OLLAMA_URL", "http://localhost:11434"))
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "phi3:latest")  # Default to phi3:latest - better instruction following
 USE_OLLAMA = os.getenv("CHAT_USE_OLLAMA", "1") not in {"0", "false", "False"}
 USE_GEMMA_FALLBACK = os.getenv("CHAT_USE_GEMMA_FALLBACK", "1") not in {"0", "false", "False"}
 
 # Recommended models in priority order (smaller/faster models first for CPU)
 RECOMMENDED_MODELS = ["gemma2:2b", "phi3", "mistral", "gemma2:9b"]
-=======
-RAG_TOP_K = int(os.getenv("CHAT_RAG_TOP_K", "3"))
-_store_env = os.getenv("LOCAL_RAG_STORE")
-LOCAL_STORE = LocalVectorStore(Path(_store_env) if _store_env else None)
-seed_policy_documents(LOCAL_STORE)
-
-_VECTOR_CACHE: Dict[str, Any] = {"built_at": 0.0, "vectorizer": None, "matrix": None, "docs": []}
-
-def _normalize_base(url: str) -> str:
-    from urllib.parse import urlsplit, urlunsplit
-
-    if not url:
-        return "http://localhost:11434"
-    parsed = urlsplit(url)
-    path = parsed.path or ""
-    if path.startswith("/api/"):
-        path = ""
-    elif "/api/" in path:
-        path = path.split("/api/", 1)[0]
-    rebuilt = parsed._replace(path=path, query="", fragment="")
-    base = urlunsplit(rebuilt).rstrip("/")
-    return base or "http://localhost:11434"
-
-
-OLLAMA_URL = _normalize_base(os.getenv("OLLAMA_URL", "http://localhost:11434"))
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma2:9b")
-USE_OLLAMA = os.getenv("CHAT_USE_MISTRAL", "1") not in {"0", "false", "False"}
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 
 class ChatMessage(BaseModel):
@@ -189,10 +171,8 @@ class ChatRequest(BaseModel):
     page_id: str = Field(..., min_length=2)
     context: Dict[str, Any] = Field(default_factory=dict)
     history: List[ChatMessage] = Field(default_factory=list)
-<<<<<<< HEAD
     model: Optional[str] = Field(default=None, description="Ollama model to use for generation")
-=======
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
+    agent_id: Optional[str] = Field(default=None, description="Agent ID to use (e.g., 'chatbot' for unified chatbot agent)")
 
 
 class ChatResponse(BaseModel):
@@ -203,13 +183,10 @@ class ChatResponse(BaseModel):
     context_summary: List[str] = Field(default_factory=list)
     retrieved: List[Dict[str, Any]] = Field(default_factory=list)
     faq_options: List[str] = Field(default_factory=list)
-<<<<<<< HEAD
     confidence: Optional[str] = Field(default=None, description="Confidence level: high, medium, low")
     confidence_score: Optional[float] = Field(default=None, description="Numeric confidence score (0-1)")
     related_questions: List[str] = Field(default_factory=list, description="Suggested follow-up questions")
     source_type: Optional[str] = Field(default=None, description="Source: rag, general_knowledge, cached")
-=======
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 
 def _load_documents() -> List[Dict[str, Any]]:
@@ -335,8 +312,6 @@ def _infer_mode(page_id: str, context: Dict[str, Any]) -> str:
     return "Assistant"
 
 
-<<<<<<< HEAD
-=======
 def _resolve_agent_key(page_id: str) -> str | None:
     lowered = (page_id or "").lower()
     if "asset" in lowered:
@@ -350,7 +325,6 @@ def _resolve_agent_key(page_id: str) -> str | None:
     return None
 
 
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 def _summarize_context(context: Dict[str, Any]) -> List[str]:
     summary: List[str] = []
     stage = context.get("stage") or context.get("asset_stage") or context.get("credit_stage")
@@ -372,7 +346,6 @@ def _summarize_context(context: Dict[str, Any]) -> List[str]:
 
 
 def _retrieve_store_docs(question: str, context: Dict[str, Any]) -> List[Dict[str, Any]]:
-<<<<<<< HEAD
     """Retrieve documents from vector store with optional metadata filtering and reranking."""
     if not LOCAL_STORE.available or not question:
         return []
@@ -380,18 +353,11 @@ def _retrieve_store_docs(question: str, context: Dict[str, Any]) -> List[Dict[st
     ctx_blob = " ".join(f"{k}:{v}" for k, v in context.items() if isinstance(v, (str, int, float)))
     query = f"{question}\n{ctx_blob}"
     
-=======
-    if not LOCAL_STORE.available or not question:
-        return []
-    ctx_blob = " ".join(f"{k}:{v}" for k, v in context.items() if isinstance(v, (str, int, float)))
-    query = f"{question}\n{ctx_blob}"
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     try:
         vector = embed_texts([query])[0]
     except Exception as exc:
         logger.warning("Failed to embed query for local store: %s", exc)
         return []
-<<<<<<< HEAD
     
     # Build metadata filter if using ChromaDB
     filter_dict = None
@@ -404,29 +370,61 @@ def _retrieve_store_docs(question: str, context: Dict[str, Any]) -> List[Dict[st
     # Query vector store (retrieve more for reranking if enabled)
     retrieve_k = RAG_TOP_K * 2 if USE_RERANKING and reranker_available() else RAG_TOP_K
     
+    # Try to query policies namespace if available, otherwise use general query
+    policy_hits = []
+    general_hits = []
+    
     if USE_CHROMADB and CHROMADB_AVAILABLE and isinstance(LOCAL_STORE, ChromaVectorStore):
-        hits = LOCAL_STORE.query(
+        # ChromaDB supports namespace filtering
+        try:
+            policy_hits = LOCAL_STORE.query(vector, top_k=RAG_TOP_K, namespace="policies", filter_dict=filter_dict, score_threshold=RAG_QUALITY_THRESHOLD)
+        except Exception:
+            pass
+        general_hits = LOCAL_STORE.query(
             vector,
             top_k=retrieve_k,
             filter_dict=filter_dict,
             score_threshold=RAG_QUALITY_THRESHOLD
         )
     else:
-        hits = LOCAL_STORE.query(vector, top_k=retrieve_k)
+        # LocalVectorStore - try namespace if supported
+        try:
+            policy_hits = LOCAL_STORE.query(vector, top_k=RAG_TOP_K, namespace="policies")
+        except Exception:
+            pass
+        general_hits = LOCAL_STORE.query(vector, top_k=retrieve_k)
     
-    results: List[Dict[str, Any]] = []
-    for hit in hits:
+    # Merge policy and general hits with boosting
+    merged: Dict[str, Dict[str, Any]] = {}
+    
+    def _add_entry(hit: Dict[str, Any], boost: float = 1.0) -> Dict[str, Any]:
+        entry_id = hit.get("id") or hit.get("title") or hit.get("source") or f"local_doc_{len(merged)}"
+        score = float(hit.get("score") or 0.0) * boost
         snippet = hit.get("snippet") or hit.get("text", "")
-        results.append(
-            {
-                "id": hit.get("id"),
-                "title": hit.get("title") or hit.get("id", "match"),
-                "score": hit.get("score", 0.0),
-                "snippet": (snippet or "")[:600],
-                "source": hit.get("source"),
-                "metadata": hit,
-            }
-        )
+        record = {
+            "id": entry_id,
+            "title": hit.get("title") or hit.get("id", "match"),
+            "score": score,
+            "snippet": (snippet or "")[:600],
+            "source": hit.get("source"),
+            "metadata": hit,
+        }
+        existing = merged.get(entry_id)
+        if not existing or score > existing["score"]:
+            merged[entry_id] = record
+        return merged[entry_id]
+    
+    # Add policy hits with boost
+    for hit in policy_hits:
+        _add_entry(hit, boost=1.25)
+    
+    # Add general hits (skip if already in policies)
+    for hit in general_hits:
+        if hit.get("namespace") == "policies":
+            continue
+        _add_entry(hit)
+    
+    results = sorted(merged.values(), key=lambda item: item["score"], reverse=True)
     
     # Apply reranking if enabled
     if USE_RERANKING and reranker_available() and results:
@@ -437,55 +435,18 @@ def _retrieve_store_docs(question: str, context: Dict[str, Any]) -> List[Dict[st
         except Exception as exc:
             logger.warning(f"Reranking failed, using original results: {exc}")
     
-    # Return top K results
-    return results[:RAG_TOP_K]
-=======
-    policy_hits = LOCAL_STORE.query(vector, top_k=RAG_TOP_K, namespace="policies")
-    general_hits = LOCAL_STORE.query(vector, top_k=RAG_TOP_K)
-
-    policy_entries: List[Dict[str, Any]] = []
-    merged: Dict[str, Dict[str, Any]] = {}
-
-    def _add_entry(hit: Dict[str, Any], boost: float = 1.0) -> Dict[str, Any]:
-        entry_id = hit.get("id") or hit.get("title") or hit.get("source") or f"local_doc_{len(merged)}"
-        score = float(hit.get("score") or 0.0) * boost
-        snippet = hit.get("snippet") or hit.get("text", "")
-        record = {
-            "id": entry_id,
-            "title": hit.get("title") or hit.get("id") or "match",
-            "score": score,
-            "snippet": (snippet or "")[:600],
-            "source": hit.get("source"),
-            "metadata": hit,
-        }
-        existing = merged.get(entry_id)
-        if not existing or score > existing["score"]:
-            merged[entry_id] = record
-        return merged[entry_id]
-
-    for hit in policy_hits:
-        policy_entries.append(_add_entry(hit, boost=1.25))
-
-    for hit in general_hits:
-        if hit.get("namespace") == "policies":
-            continue
-        _add_entry(hit)
-
-    ranked = sorted(merged.values(), key=lambda item: item["score"], reverse=True)
-    results = ranked[:RAG_TOP_K]
-
-    if policy_entries and not any((entry and entry.get("metadata", {}).get("namespace") == "policies") for entry in results):
+    # Ensure top policy is included if available
+    if policy_hits and not any((entry and entry.get("metadata", {}).get("namespace") == "policies") for entry in results[:RAG_TOP_K]):
         top_policy = max(
-            (entry for entry in policy_entries if entry),
+            (_add_entry(hit, boost=1.25) for hit in policy_hits),
             key=lambda item: item["score"],
             default=None,
         )
         if top_policy:
             results = [top_policy] + [item for item in results if item["id"] != top_policy["id"]]
-            results = results[:RAG_TOP_K]
-
-    return results
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
+    
+    # Return top K results
+    return results[:RAG_TOP_K]
 
 
 def _retrieve_fallback_docs(question: str, context: Dict[str, Any], top_k: int = RAG_TOP_K) -> List[Dict[str, Any]]:
@@ -521,7 +482,6 @@ def _retrieve_fallback_docs(question: str, context: Dict[str, Any], top_k: int =
     return results
 
 
-<<<<<<< HEAD
 def _clean_code_artifacts(text: str) -> str:
     """Remove code artifacts and extract clean text from snippets."""
     if not text:
@@ -622,18 +582,48 @@ def _extract_clean_answer(snippet: str, question: str) -> Optional[str]:
 
 
 def _compose_lightweight_reply(payload: ChatRequest, retrieved: List[Dict[str, Any]], mode: str) -> str:
-    """Compose a clean, readable reply based on retrieved documents."""
+    """Compose a clean, readable reply based on retrieved documents with banking knowledge fallback."""
+    question_lower = payload.message.lower()
+    is_banking_terms = any(term in question_lower for term in ["pd", "dti", "ltv", "ndi", "fmv", "probability of default", "debt to income", "loan to value"])
+    is_definition_question = any(term in question_lower for term in ["define", "definition", "what is", "what are", "explain", "lexical", "terms"])
+    
+    # Banking definitions to include if relevant
+    banking_defs = {}
+    if is_banking_terms:
+        banking_defs = {
+            "pd": "**PD (Probability of Default)**: The likelihood that a borrower will fail to repay a loan, typically expressed as a percentage (0-100%). Higher PD indicates higher risk.",
+            "dti": "**DTI (Debt-to-Income Ratio)**: A borrower's total monthly debt payments divided by their gross monthly income, expressed as a percentage. Formula: (Total Monthly Debt / Gross Monthly Income) × 100. Lower DTI is better (typically <43% for approval).",
+            "ltv": "**LTV (Loan-to-Value Ratio)**: The ratio of a loan amount to the appraised value of the collateral, expressed as a percentage. Formula: (Loan Amount / Collateral Value) × 100. Lower LTV is safer (typically <80% for conventional loans).",
+            "ndi": "**NDI (Net Disposable Income)**: Income remaining after all expenses and debt obligations. Used to assess repayment capacity.",
+            "fmv": "**FMV (Fair Market Value)**: The estimated market value of an asset based on comparable sales and market conditions.",
+        }
+    
     if not retrieved:
+        if is_banking_terms and is_definition_question:
+            definitions = [
+                banking_defs[term]
+                for term in ["pd", "dti", "ltv", "ndi", "fmv"]
+                if term in question_lower and term in banking_defs
+            ]
+            if definitions:
+                return (
+                    "**Executive Summary:** Core banking terms defined for your request.\n\n"
+                    "**Key Points:**\n"
+                    + "\n".join(f"- {definition}" for definition in definitions)
+                    + "\n\n📘 *Source: Assistant general knowledge base. Upload artifacts for richer, document-grounded answers.*"
+                )
         return (
-            f"I couldn't find specific information about '{payload.message}' in the knowledge base. "
-            "You can upload relevant documents to enhance the knowledge base for more accurate answers."
+            "**Executive Summary:** No documents matched your question in the current knowledge base.\n\n"
+            "**Key Points:**\n"
+            "- Upload additional PDFs, CSVs, or notes so I can cite them directly.\n"
+            "- Rephrase the prompt with more context (asset ID, borrower name, stage, etc.).\n"
+            "- Specify which agent or workflow you’d like me to reference.\n\n"
+            "📘 *Answer generated from the assistant’s core knowledge base.*"
         )
 
-    question_lower = payload.message.lower()
-    
     # Try to extract clean answers from retrieved documents
     clean_answers = []
-    for doc in retrieved[:3]:
+    for doc in retrieved[:5]:  # Check more docs
         snippet = (doc.get("snippet") or doc.get("text") or "").strip()
         if not snippet:
             continue
@@ -643,38 +633,59 @@ def _compose_lightweight_reply(payload: ChatRequest, retrieved: List[Dict[str, A
         if answer:
             clean_answers.append(answer)
     
-    if clean_answers:
-        # Combine clean answers into a coherent response
-        response = " ".join(clean_answers[:3])  # Max 3 answers
-        
-        # Ensure proper formatting
-        if not response.endswith("."):
-            response += "."
-        
-        return response
+    key_points: List[str] = []
+    summary_sentence = (
+        f"{mode} assistant found {len(retrieved)} high-confidence snippet(s) aligned with your question."
+    )
     
-    # Fallback: use cleaned snippets
+    if clean_answers:
+        for doc, answer in zip(retrieved[: len(clean_answers)], clean_answers):
+            label = doc.get("title") or doc.get("id", "Insight")
+            answer_clean = answer.strip().rstrip(".!?")
+            key_points.append(f"- **{label}** — {answer_clean}.")
+    elif cleaned_snippets:
+        for doc, snippet in zip(retrieved[: len(cleaned_snippets)], cleaned_snippets):
+            label = doc.get("title") or doc.get("id", "Insight")
+            snippet_clean = snippet.strip().rstrip(".!?")
+            key_points.append(f"- **{label}** — {snippet_clean}.")
+    
+    # Fallback: use cleaned snippets with better formatting
     cleaned_snippets = []
     for doc in retrieved[:3]:
         snippet = (doc.get("snippet") or doc.get("text") or "").strip()
         cleaned = _clean_code_artifacts(snippet)
         if cleaned and len(cleaned) > 30:
-            cleaned_snippets.append(cleaned[:300])  # Limit each snippet
+            cleaned_snippets.append(cleaned[:400])  # Increased limit
     
-    if cleaned_snippets:
-        response = " ".join(cleaned_snippets[:2])  # Max 2 snippets
-        if len(response) > 500:
-            response = response[:500] + "..."
-        return response
+    if not key_points:
+        for doc in retrieved[:3]:
+            snippet = _clean_code_artifacts((doc.get("snippet") or doc.get("text") or "")[:400])
+            if snippet:
+                label = doc.get("title") or doc.get("id", "Insight")
+                key_points.append(f"- **{label}** — {snippet.strip().rstrip('.!?')}." )
     
-    # Final fallback
-    return (
-        f"I found some information related to '{payload.message}', but couldn't extract a clear answer. "
-        "Please try rephrasing your question or upload more relevant documents to the knowledge base."
-    )
+    if is_banking_terms and is_definition_question:
+        for term, definition in banking_defs.items():
+            if term in question_lower:
+                key_points.append(f"- {definition}")
+    
+    if not key_points:
+        key_points.append("- No clean text fragments were available even though documents were retrieved. Consider uploading clearer notes or asking for a different angle.")
+    
+    source_lines = [
+        f"- {doc.get('title') or doc.get('id')} (score {float(doc.get('score') or 0.0):.2f})"
+        for doc in retrieved[:RAG_TOP_K]
+    ]
+    
+    response = f"**Executive Summary:** {summary_sentence}\n\n**Key Points:**\n" + "\n".join(key_points)
+    
+    if source_lines:
+        response += "\n\n**Source Highlights:**\n" + "\n".join(source_lines)
+    
+    return response[:1200] + ("..." if len(response) > 1200 else "")
 
 
-def _maybe_generate_llm_reply(payload: ChatRequest, retrieved: List[Dict[str, Any]], mode: str, model_name: Optional[str] = None, conversation_history: Optional[str] = None) -> Optional[str]:
+def _maybe_generate_llm_reply(payload: ChatRequest, retrieved: List[Dict[str, Any]], mode: str, model_name: Optional[str] = None, conversation_history: Optional[str] = None, initial_answer: Optional[str] = None) -> Optional[str]:
     """Generate LLM reply using RAG context. Prioritizes RAG data."""
     model_to_use = model_name or payload.model or OLLAMA_MODEL
     if not USE_OLLAMA or not model_to_use or not retrieved:
@@ -726,31 +737,81 @@ def _maybe_generate_llm_reply(payload: ChatRequest, retrieved: List[Dict[str, An
     if conversation_history is None:
         conversation_history = _build_conversation_context(payload.history if hasattr(payload, 'history') else [])
     
+    # Detect if question is asking for definitions
+    question_lower = payload.message.lower()
+    is_definition_question = any(term in question_lower for term in ["define", "definition", "what is", "what are", "explain", "lexical", "terms", "meaning"])
+    is_banking_terms = any(term in question_lower for term in ["pd", "dti", "ltv", "ndi", "fmv", "probability of default", "debt to income", "loan to value"])
+    
+    # Add banking definitions if relevant terms detected
+    banking_definitions = ""
+    if is_banking_terms:
+        banking_definitions = (
+            "\n\n**Banking Term Definitions (use these if context doesn't provide them):**\n"
+            "- **PD (Probability of Default)**: The likelihood that a borrower will fail to repay a loan, typically expressed as a percentage (0-100%). Higher PD indicates higher risk.\n"
+            "- **DTI (Debt-to-Income Ratio)**: A borrower's total monthly debt payments divided by their gross monthly income, expressed as a percentage. Formula: (Total Monthly Debt / Gross Monthly Income) × 100. Lower DTI is better (typically <43% for approval).\n"
+            "- **LTV (Loan-to-Value Ratio)**: The ratio of a loan amount to the appraised value of the collateral, expressed as a percentage. Formula: (Loan Amount / Collateral Value) × 100. Lower LTV is safer (typically <80% for conventional loans).\n"
+            "- **NDI (Net Disposable Income)**: Income remaining after all expenses and debt obligations. Used to assess repayment capacity.\n"
+            "- **FMV (Fair Market Value)**: The estimated market value of an asset based on comparable sales and market conditions.\n"
+        )
+    
     # Improved prompt that handles both documentation and code snippets, with conversation history
-    system_prompt = (
-        "You are a banking AI assistant specialized in "
-        f"{mode}. Your task is to answer the user's question clearly and accurately.\n\n"
-        "Instructions:\n"
-        "1. If the RAG context contains relevant information, use it to answer the question.\n"
-        "2. If the context contains code snippets, extract the conceptual information and definitions from them.\n"
-        "3. If the context doesn't directly answer the question, use your banking knowledge to provide a helpful answer.\n"
-        "4. Be specific, accurate, and directly address what was asked.\n"
-        "5. For definitions (like PD, DTI, LTV), provide clear, concise explanations with structured formatting:\n"
-        "   - Use **bold** for key terms\n"
-        "   - Use bullet points (-) for lists\n"
-        "   - Use numbered lists (1., 2., 3.) for steps\n"
-        "   - Use code blocks (```) for formulas or calculations\n"
-        "6. Keep responses informative but concise (3-5 sentences for definitions, 2-4 paragraphs for other questions).\n"
-        "7. If this is a follow-up question, reference the conversation history when relevant."
+    # If initial_answer is provided, enhance it with RAG context
+    if initial_answer:
+        system_prompt = (
+            "You are a knowledgeable banking AI assistant specialized in "
+            f"{mode}. Your task is to enhance an existing answer with additional context from the knowledge base.\n\n"
+            "**CRITICAL INSTRUCTIONS:**\n"
+            "1. **You already have an initial answer** - Use it as the foundation and enhance it with the Retrieved Context below.\n"
+            "2. **Supplement with RAG data** - The context below contains relevant information from the knowledge base. Add valuable details that complement your initial answer.\n"
+            "3. **Prioritize your knowledge** - Your initial answer comes first, then supplement with RAG context.\n"
+        )
+        user_prompt_prefix = f"**Initial Answer (use as foundation):**\n{initial_answer}\n\n**Retrieved Context from Knowledge Base:**\n"
+    else:
+        system_prompt = (
+            "You are a knowledgeable banking AI assistant specialized in "
+            f"{mode}. Your task is to provide clear, accurate, and well-structured answers.\n\n"
+            "**CRITICAL INSTRUCTIONS:**\n"
+            "1. **Use your knowledge base FIRST** - Answer the question using your built-in knowledge.\n"
+            "2. **Supplement with Retrieved Context** - The context below contains relevant information from the knowledge base. Use it to enhance your answer.\n"
+            "3. **Prioritize your knowledge** - Your knowledge comes first, then supplement with RAG context.\n"
+        )
+        user_prompt_prefix = "**Retrieved Context from Knowledge Base:**\n"
+    
+    # Add formatting requirements to system prompt
+    system_prompt += (
+        "\n4. **ALWAYS format with bullet points** - Structure your answer using bullet points (-) for key information. Break down complex answers into clear bullet points.\n"
+        "5. **Formatting requirements (MANDATORY):**\n"
+        "   - **ALWAYS start with a brief summary sentence, then use bullet points**\n"
+        "   - Use **bold** for key terms and acronyms\n"
+        "   - Use bullet points (-) for ALL key information, lists, and main points\n"
+        "   - Use numbered lists (1., 2., 3.) for steps or sequential information\n"
+        "   - Use code blocks (```) for formulas\n"
+        "   - Format example: 'Here's the answer:\n- **Key Point 1**: Explanation\n- **Key Point 2**: Explanation\n- **Key Point 3**: Explanation'\n"
+        "6. **Response structure:** Start with 1-2 sentences summary, then bullet points for details\n"
+        "7. **Be direct** - Answer the question immediately, don't say 'I'm a banking AI assistant' or similar.\n"
+        "8. **Use context** - Reference specific information from the retrieved context when available.\n"
+        "9. **IMPORTANT**: If your answer doesn't naturally have bullet points, break it down into bullet points anyway. Every answer MUST have bullet points."
     )
     
-    history_context = f"\n\nPrevious Conversation:\n{conversation_history}\n" if conversation_history else ""
+    history_context = f"\n\n**Previous Conversation:**\n{conversation_history}\n" if conversation_history else ""
     
     user_prompt = (
-        f"User Question: {payload.message}\n"
+        f"**User Question:** {payload.message}\n"
         f"{history_context}"
-        f"Retrieved Context:\n{context_blob}\n\n"
-        "Based on the context above (and your banking knowledge if needed), provide a clear, well-structured answer to the user's question:"
+        f"{user_prompt_prefix}{context_blob}\n"
+        f"{banking_definitions}\n"
+        f"\n**Your Task:** Provide a clear, well-structured answer that:\n"
+        f"- Starts with a brief 1-2 sentence summary\n"
+        f"- Uses bullet points (-) for ALL key information\n"
+        f"- Uses information from the Retrieved Context when relevant\n"
+        f"- Combines context with your banking knowledge for completeness\n"
+        f"- Formats key terms in **bold**\n"
+        f"\n**CRITICAL**: Your answer MUST include bullet points. Format like this:\n"
+        f"Brief summary sentence.\n\n"
+        f"- **Key Point 1**: Detailed explanation\n"
+        f"- **Key Point 2**: Detailed explanation\n"
+        f"- **Key Point 3**: Additional details\n"
+        f"\n**Answer:**"
     )
     
     try:
@@ -764,7 +825,7 @@ def _maybe_generate_llm_reply(payload: ChatRequest, retrieved: List[Dict[str, An
                 "stream": False,
                 "options": {"temperature": 0.1, "top_p": 0.9, "num_predict": 6000, "num_ctx": 6000},  # Lower temp (0.1) for precision, larger context (6000) for banking docs
             },
-            timeout=10,  # Reduced to 10s - fast fallback, lightweight reply already available
+            timeout=30,  # Increased timeout to allow model to generate complete answers
         )
         resp.raise_for_status()
         data = resp.json()
@@ -795,9 +856,19 @@ def _generate_gemma_fallback(payload: ChatRequest, mode: str, model_name: Option
     if conversation_history is None:
         conversation_history = _build_conversation_context(payload.history if hasattr(payload, 'history') else [])
     
-    # Enhanced prompt with banking knowledge (if banking mode)
+    # Enhanced prompt with banking knowledge (if banking mode AND banking question)
     question_lower = payload.message.lower()
-    is_banking_mode = "banking" in mode.lower() or "credit" in mode.lower() or "asset" in mode.lower() or "fraud" in mode.lower() or mode == "Assistant"
+    # Check if question is actually banking-related
+    is_banking_question = any(term in question_lower for term in [
+        "pd", "dti", "ltv", "credit", "loan", "mortgage", "borrower", "debt", "income", 
+        "default", "risk", "appraisal", "asset", "fraud", "kyc", "compliance", "banking",
+        "financial", "underwriting", "approval", "reject", "score", "probability"
+    ])
+    # Only use banking mode if both the context suggests banking AND the question is banking-related
+    is_banking_mode = is_banking_question and (
+        "banking" in mode.lower() or "credit" in mode.lower() or "asset" in mode.lower() or 
+        "fraud" in mode.lower() or "kyc" in mode.lower() or "compliance" in mode.lower()
+    )
     
     if is_banking_mode:
         # Add specific guidance for common banking terms
@@ -812,36 +883,80 @@ def _generate_gemma_fallback(payload: ChatRequest, mode: str, model_name: Option
         
         system_prompt = (
             f"You are a knowledgeable banking AI assistant specialized in {mode}. "
-            "You have expertise in credit risk assessment, loan underwriting, and financial analysis. "
-            "Provide accurate, clear answers to banking questions with structured formatting:\n"
-            "- Use **bold** for key terms\n"
-            "- Use bullet points (-) for lists\n"
-            "- Use numbered lists (1., 2., 3.) for steps\n"
-            "- Use code blocks (```) for formulas\n"
-            "For definitions, be precise and include examples when helpful. "
-            "Keep responses informative but concise (3-5 sentences for definitions, 2-4 paragraphs for other questions)."
+            "**CRITICAL: You MUST answer questions directly. NEVER give generic responses like 'I'm a banking AI assistant' or 'I can help with...'\n\n"
+            "**YOUR JOB:** When asked a question, provide the actual answer immediately.\n\n"
+            "**EXAMPLE - If asked 'Explain PD, DTI, LTV':**\n"
+            "DO THIS:\n"
+            "Here are the key credit risk terms:\n\n"
+            "- **PD (Probability of Default)**: The likelihood that a borrower will fail to repay a loan, typically expressed as a percentage (0-100%). Higher PD indicates higher risk.\n"
+            "- **DTI (Debt-to-Income Ratio)**: A borrower's total monthly debt payments divided by their gross monthly income, expressed as a percentage. Formula: (Total Monthly Debt / Gross Monthly Income) × 100. Lower DTI is better (typically <43% for approval).\n"
+            "- **LTV (Loan-to-Value Ratio)**: The ratio of a loan amount to the appraised value of the collateral, expressed as a percentage. Formula: (Loan Amount / Collateral Value) × 100. Lower LTV is safer (typically <80% for conventional loans).\n\n"
+            "DO NOT DO THIS:\n"
+            "'I'm a banking AI assistant. I can help with credit questions.'\n\n"
+            "**RULES:**\n"
+            "1. Answer the question directly - provide definitions, explanations, facts\n"
+            "2. Use bullet points (-) for ALL information\n"
+            "3. Use **bold** for key terms\n"
+            "4. Start with a brief summary sentence\n"
+            "5. NEVER say 'I'm a banking AI assistant' or similar\n"
         )
         
         history_context = f"\n\nPrevious Conversation:\n{conversation_history}\n" if conversation_history else ""
         user_prompt = (
-            f"Question: {payload.message}\n"
+            f"**User Question:** {payload.message}\n"
             f"{history_context}"
             f"{banking_guidance}"
-            "Provide a clear, accurate, well-structured answer to this banking question:"
+            "\n\n**YOUR TASK:** Answer the question above directly and completely.\n"
+            "**DO NOT** say 'I'm a banking AI assistant' or similar phrases.\n"
+            "**DO** provide the actual answer with definitions and explanations.\n"
+            "\n**CRITICAL FORMATTING:**\n"
+            "- Start with a brief 1-2 sentence summary\n"
+            "- Then use bullet points (-) for ALL key information\n"
+            "- Use **bold** for key terms and acronyms\n"
+            "- For definitions: provide clear, detailed explanations\n"
+            "\n**Example format:**\n"
+            "Here are the key credit terms:\n\n"
+            "- **PD (Probability of Default)**: Detailed explanation...\n"
+            "- **DTI (Debt-to-Income Ratio)**: Detailed explanation...\n"
+            "- **LTV (Loan-to-Value Ratio)**: Detailed explanation...\n"
+            "\n**Now answer the question:**"
         )
     else:
         # General-purpose mode for non-banking questions
         system_prompt = (
-            "You are a helpful AI assistant. Provide accurate, clear, and informative answers to questions. "
-            "Keep responses concise and well-structured. "
-            "If you don't know something, say so honestly."
+            "You are a helpful AI assistant with broad knowledge. "
+            "**YOUR PRIMARY JOB:** Answer questions directly and completely using your knowledge.\n\n"
+            "**CRITICAL INSTRUCTIONS:**\n"
+            "1. **ALWAYS answer the question** - Provide actual information and explanations\n"
+            "2. **NEVER say** 'I'm a banking AI assistant' or 'I can help with...' - Just answer the question\n"
+            "3. **Use your knowledge** - Draw from your training data to provide accurate answers\n"
+            "4. **ALWAYS use bullet points** - Format ALL information as bullet points\n"
+            "5. **Be comprehensive** - Provide detailed explanations when appropriate\n"
+            "\n**Formatting requirements:**\n"
+            "- Start with 1-2 sentence summary\n"
+            "- Then bullet points (-) for ALL key information\n"
+            "- Use **bold** for important terms\n"
+            "- Keep responses well-structured\n"
+            "\n**Example:**\n"
+            "Question: Why is the sky blue?\n"
+            "Answer: The sky appears blue due to how sunlight interacts with Earth's atmosphere.\n\n"
+            "- **Rayleigh Scattering**: Blue light has shorter wavelengths and scatters more than other colors\n"
+            "- **Atmospheric Particles**: Tiny particles in the air scatter blue light in all directions\n"
+            "- **Human Vision**: Our eyes are more sensitive to blue light\n"
         )
         
         history_context = f"\n\nPrevious Conversation:\n{conversation_history}\n" if conversation_history else ""
         user_prompt = (
-            f"Question: {payload.message}\n"
+            f"**User Question:** {payload.message}\n"
             f"{history_context}"
-            "Provide a clear, accurate answer:"
+            "\n\n**YOUR TASK:** Answer this question directly and completely using your knowledge.\n"
+            "**DO NOT** say 'I'm a banking AI assistant' or similar phrases.\n"
+            "**DO** provide the actual answer with explanations.\n"
+            "\n**CRITICAL FORMATTING:**\n"
+            "- Start with a brief 1-2 sentence summary\n"
+            "- Then use bullet points (-) for ALL key information\n"
+            "- Use **bold** for key terms\n"
+            "\n**Now answer the question:**"
         )
     
     try:
@@ -854,7 +969,7 @@ def _generate_gemma_fallback(payload: ChatRequest, mode: str, model_name: Option
                 "stream": False,
                 "options": {"temperature": 0.1, "top_p": 0.9, "num_predict": 6000, "num_ctx": 6000},  # Lower temp (0.1) for precision, larger context (6000)
             },
-            timeout=10,  # Reduced timeout for faster fallback
+            timeout=30,  # Increased timeout to allow model to generate complete answers
         )
         resp.raise_for_status()
         data = resp.json()
@@ -863,8 +978,11 @@ def _generate_gemma_fallback(payload: ChatRequest, mode: str, model_name: Option
             return text.strip()
     except Exception as exc:
         logger.warning("Generic model fallback failed: %s", exc)
-=======
+    return None
+
+
 def _dedupe_docs(items: List[Dict[str, Any]], limit: int) -> List[Dict[str, Any]]:
+    """Remove duplicate documents based on ID or title."""
     deduped: List[Dict[str, Any]] = []
     seen = set()
     for doc in items:
@@ -878,127 +996,6 @@ def _dedupe_docs(items: List[Dict[str, Any]], limit: int) -> List[Dict[str, Any]
         if len(deduped) >= limit:
             break
     return deduped
-
-
-def _compose_lightweight_reply(payload: ChatRequest, retrieved: List[Dict[str, Any]], mode: str) -> str:
-    if not retrieved:
-        return (
-            f"{mode} assistant couldn't find any matches for '{payload.message}'. "
-            "Ingest fresh agent docs or CSV outputs via the local RAG scripts "
-            "(seed_local_rag_from_csv.py / seed_local_rag_agent_docs.py) and try again."
-        )
-
-    intro = (
-        f"Here's what I can see from a {mode.lower()} perspective after checking {len(retrieved)} matching files. "
-        "I'm summarizing the most relevant snippets below:"
-    )
-
-    def _summarize_doc(doc: Dict[str, Any]) -> str:
-        title = doc.get("title") or doc.get("id", "match")
-        snippet = (doc.get("snippet") or "").replace("\n", " ").strip()
-        meta = doc.get("metadata") or {}
-        highlights = []
-        for field in ("application_id", "borrower", "decision", "score", "pd", "ltv", "dti"):
-            value = meta.get(field)
-            if value:
-                highlights.append(f"{field}={value}")
-        highlight_text = ", ".join(highlights)
-        pieces = []
-        if highlight_text:
-            pieces.append(highlight_text)
-        if snippet:
-            pieces.append(snippet)
-        detail = " — ".join(pieces) if pieces else "See linked document for details."
-        source = Path(doc["source"]).name if doc.get("source") else None
-        source_note = f" (source: {source})" if source else ""
-        return f"{title}: {detail[:400]}{source_note}"
-
-    detail_sentences = [
-        _summarize_doc(doc)
-        for doc in retrieved[:3]
-    ]
-    if len(retrieved) > 3:
-        detail_sentences.append(
-            f"There are {len(retrieved) - 3} more matches in the retrieval panel if you need deeper evidence."
-        )
-
-    closing = (
-        "Let me know if you want a deeper dive into any borrower, need another dataset ingested, "
-        "or want me to push this summary to another agent."
-    )
-
-    return " ".join([intro] + detail_sentences + [closing])
-
-
-def _maybe_generate_llm_reply(payload: ChatRequest, retrieved: List[Dict[str, Any]], mode: str) -> Optional[str]:
-    if not USE_OLLAMA or not OLLAMA_MODEL:
-        return None
-    context_blocks: List[str] = []
-    howto_added = 0
-    general_added = 0
-    for doc in retrieved:
-        snippet = (doc.get("snippet") or doc.get("text") or "").strip()
-        title = doc.get("title") or doc.get("id", "match")
-        namespace = (doc.get("metadata") or {}).get("namespace")
-        if namespace == "howto":
-            if howto_added >= 2:
-                continue
-            context_blocks.append(f"[HOW-TO] {title}\n{snippet}")
-            howto_added += 1
-        else:
-            if general_added >= 5:
-                continue
-            context_blocks.append(f"[{title}]\n{snippet}")
-            general_added += 1
-        if general_added >= 5 and howto_added >= 2:
-            break
-    if not context_blocks:
-        context_blocks = ["No supporting documents were retrieved for this question."]
-    elif howto_added:
-        context_blocks.insert(0, "Refer to the agent workflow guide below:")
-    context_blob = "\n\n".join(context_blocks)
-    system_prompt = (
-        "You are a banking AI assistant specialized in "
-        f"{mode}. Answer strictly using the supplied context. "
-        "Cite document titles inline where helpful and keep responses concise (2-4 sentences). "
-        "If the context explicitly says none was retrieved, you must still answer using your base knowledge. "
-        "Do NOT reply that you cannot answer; instead provide a best-effort explanation and state that RAG had no matches."
-    )
-    user_prompt = (
-        f"Question: {payload.message}\n\nContext:\n{context_blob}\n\n"
-        "Answer:"
-    )
-    try:
-        resp = requests.post(
-            f"{OLLAMA_URL.rstrip('/')}/api/chat",
-            json={
-                "model": OLLAMA_MODEL,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                "stream": False,
-                "options": {"temperature": 0.2},
-            },
-            timeout=120,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        message = data.get("message") or data.get("messages")
-        content = None
-        if isinstance(message, dict):
-            content = message.get("content")
-        elif isinstance(message, list):
-            for entry in reversed(message):
-                if isinstance(entry, dict) and entry.get("role") == "assistant":
-                    content = entry.get("content")
-                    break
-        if isinstance(content, str) and content.strip():
-            return content.strip()
-    except Exception as exc:
-        logger.warning("LLM generate failed: %s", exc)
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
-    return None
 
 
 def _suggest_actions(req: ChatRequest) -> List[Dict[str, Any]]:
@@ -1026,7 +1023,6 @@ def _suggest_actions(req: ChatRequest) -> List[Dict[str, Any]]:
 
 
 def _faq_for_page(page_id: str) -> List[str]:
-<<<<<<< HEAD
     """Return up to 10 FAQs for the given page_id, prioritizing agent-specific FAQs."""
     lowered = page_id.lower()
     
@@ -1365,63 +1361,77 @@ def _generate_related_questions(question: str, mode: str, retrieved: List[Dict[s
 
 
 def _format_response_with_structure(text: str, mode: str, confidence: str) -> str:
-    """Format response with structured markdown for better readability."""
-    # If already formatted, return as-is
-    if text.startswith("**") or text.startswith("#") or "**" in text[:50]:
+    """Format response with structured markdown for better readability. ALWAYS ensures bullet points."""
+    import re
+    
+    if not text or not text.strip():
         return text
     
-    # For definitions (PD, DTI, LTV, etc.)
-    text_lower = text.lower()
-    if any(term in text_lower for term in ["pd", "dti", "ltv", "fmv", "pep", "kyc"]):
-        # Try to structure as definition
-        lines = text.split("\n")
-        structured = []
-        current_section = None
-        
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-            
-            # Detect sections
-            if line.startswith(("PD", "DTI", "LTV", "FMV", "PEP", "KYC")) and ":" in line:
-                if current_section:
-                    structured.append("")
-                structured.append(f"**{line}**")
-                current_section = line.split(":")[0]
-            elif ":" in line and len(line) < 100:
-                # Likely a key-value pair
-                parts = line.split(":", 1)
-                if len(parts) == 2:
-                    structured.append(f"- **{parts[0].strip()}**: {parts[1].strip()}")
-                else:
-                    structured.append(line)
-            elif line.startswith(("-", "•", "1.", "2.", "3.")):
-                structured.append(line)
-            else:
-                structured.append(line)
-        
-        formatted = "\n\n".join(structured) if structured else text
-        
-        # Add confidence indicator
-        confidence_emoji = {"high": "✅", "medium": "⚠️", "low": "💡"}.get(confidence, "💡")
+    text = text.strip()
+    
+    # Check if already has bullet points
+    has_bullets = bool(re.search(r'^[\s]*[-•*]\s', text, re.MULTILINE)) or bool(re.search(r'^\d+[\.\)]\s', text, re.MULTILINE))
+    
+    # If already well-formatted with bullets, just add confidence if needed
+    if has_bullets and ("**" in text or text.startswith("#")):
         if confidence != "high":
-            formatted += f"\n\n{confidence_emoji} *Confidence: {confidence.title()}*"
+            confidence_emoji = {"high": "✅", "medium": "⚠️", "low": "💡"}.get(confidence, "💡")
+            text += f"\n\n{confidence_emoji} *Confidence: {confidence.title()}*"
+        return text
+    
+    # Convert to bullet points if missing
+    if not has_bullets:
+        # Split into sentences
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        sentences = [s.strip() for s in sentences if s.strip()]
         
-        return formatted
+        # If it's a short answer (1-2 sentences), convert to bullet format
+        if len(sentences) <= 2:
+            # Try to extract key points
+            formatted = sentences[0] if sentences else text
+            if len(sentences) > 1:
+                formatted += "\n\n**Key Points:**\n"
+                for i, sent in enumerate(sentences[1:], 1):
+                    # Extract key terms and format
+                    sent_clean = sent.rstrip('.!?')
+                    formatted += f"- {sent_clean}\n"
+            else:
+                # Single sentence - break it down if possible
+                if len(sentences[0]) > 100:
+                    # Try to split long sentence
+                    parts = re.split(r'[,;]\s+', sentences[0])
+                    if len(parts) > 1:
+                        formatted = parts[0] + "\n\n**Details:**\n"
+                        for part in parts[1:]:
+                            formatted += f"- {part.strip()}\n"
+                    else:
+                        formatted = f"{sentences[0]}\n\n**Summary:**\n- {sentences[0]}"
+                else:
+                    formatted = f"{sentences[0]}\n\n**Key Point:**\n- {sentences[0]}"
+        else:
+            # Multiple sentences - format as summary + bullets
+            summary = sentences[0] if len(sentences[0]) < 150 else sentences[0][:150] + "..."
+            formatted = f"{summary}\n\n**Key Points:**\n"
+            for sent in sentences[1:]:
+                sent_clean = sent.rstrip('.!?')
+                # Bold key terms if found
+                if any(term in sent_clean.lower() for term in ["pd", "dti", "ltv", "fmv", "ndi", "kyc", "pep"]):
+                    for term in ["PD", "DTI", "LTV", "FMV", "NDI", "KYC", "PEP"]:
+                        sent_clean = re.sub(rf'\b{term}\b', f'**{term}**', sent_clean, flags=re.IGNORECASE)
+                formatted += f"- {sent_clean}\n"
+    else:
+        # Has bullets but may need formatting improvements
+        formatted = text
+        # Ensure bold formatting for key terms
+        for term in ["PD", "DTI", "LTV", "FMV", "NDI", "KYC", "PEP", "Probability of Default", "Debt-to-Income", "Loan-to-Value"]:
+            formatted = re.sub(rf'\b{term}\b', f'**{term}**', formatted, flags=re.IGNORECASE)
     
-    # For general responses, add basic structure
-    if len(text) > 200:
-        # Split into paragraphs and add structure
-        paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
-        if len(paragraphs) > 1:
-            formatted = "\n\n".join(paragraphs)
-            if confidence != "high":
-                confidence_emoji = {"high": "✅", "medium": "⚠️", "low": "💡"}.get(confidence, "💡")
-                formatted += f"\n\n{confidence_emoji} *Confidence: {confidence.title()}*"
-            return formatted
+    # Add confidence indicator
+    if confidence != "high":
+        confidence_emoji = {"high": "✅", "medium": "⚠️", "low": "💡"}.get(confidence, "💡")
+        formatted += f"\n\n{confidence_emoji} *Confidence: {confidence.title()}*"
     
-    return text
+    return formatted.strip()
 
 
 def _check_response_cache(question: str, page_id: str) -> Optional[Dict[str, Any]]:
@@ -1504,19 +1514,79 @@ def _is_banking_related(question: str, page_id: str, context: Dict[str, Any]) ->
         return True
     
     return False
-=======
+
+
+def _faq_for_page(page_id: str) -> List[str]:
+    """Return up to 10 FAQs for the given page_id, prioritizing agent-specific FAQs."""
     lowered = page_id.lower()
+    
+    # Try to match agent-specific FAQs from chatbot_assistant.py ROLE_CONFIG
+    try:
+        from services.ui.pages.chatbot_assistant import ROLE_CONFIG
+        for role_key, role_data in ROLE_CONFIG.items():
+            if role_data.get("page_id", "").lower() == lowered:
+                faqs = role_data.get("faqs", [])
+                if faqs:
+                    return faqs[:10]  # Return up to 10 FAQs
+    except Exception:
+        pass
+    
+    # Fallback to legacy FAQ_ENTRIES
     if "fraud" in lowered or "kyc" in lowered:
         bucket = FAQ_ENTRIES.get("anti_fraud_kyc", [])
+    elif "credit_score" in lowered or "score" in lowered:
+        # Credit Score specific FAQs
+        return [
+            "How does the Credit Score agent calculate scores?",
+            "What factors are used in credit score calculation?",
+            "What is the scoring range (300-850)?",
+            "How do I export credit scores to Credit Appraisal Agent?",
+            "What data inputs does the Credit Score agent need?",
+        ]
+    elif "legal_compliance" in lowered or "compliance" in lowered:
+        # Legal Compliance specific FAQs
+        return [
+            "How does the Legal Compliance agent check sanctions?",
+            "What is PEP (Politically Exposed Person) detection?",
+            "How are licensing requirements verified?",
+            "What compliance scores indicate approval readiness?",
+            "How do compliance verdicts feed into Credit Appraisal?",
+        ]
+    elif "credit" in lowered and "appraisal" in lowered:
+        # Credit Appraisal specific FAQs
+        return [
+            "Explain the lexical definitions for PD, DTI, LTV, and other credit terms.",
+            "How does the Credit Appraisal agent work end-to-end?",
+            "What are the step-by-step stages in this agent?",
+            "What inputs and outputs does the credit agent expect?",
+            "How do I explain an approve vs review decision?",
+        ]
+    elif "asset" in lowered:
+        # Asset Appraisal specific FAQs
+        return [
+            "How does the Asset Appraisal agent work from intake to report?",
+            "What are the stage-by-stage steps in the asset workflow?",
+            "Define the key terms (FMV, AI-adjusted, realizable, encumbrance).",
+            "What inputs and outputs does the asset agent consume/produce?",
+            "How are AI-adjusted FMVs derived?",
+        ]
+    elif "unified" in lowered:
+        # Unified Risk specific FAQs
+        return [
+            "How does the Unified Risk Orchestration agent work?",
+            "What are the stages in unified risk decisioning?",
+            "How does it combine asset, credit, and fraud signals?",
+            "What is the final decision workflow?",
+            "How do I export unified risk reports?",
+        ]
     else:
         bucket = FAQ_ENTRIES.get("default", [])
-    return [entry["question"] for entry in bucket][:5]
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
+    
+    return [entry["question"] for entry in bucket][:10]  # Return up to 10 FAQs
 
 
 @router.post("/v1/chat", response_model=ChatResponse)
 def chat_endpoint(payload: ChatRequest) -> ChatResponse:
-<<<<<<< HEAD
     import time
     start_time = time.time()
     
@@ -1530,22 +1600,46 @@ def chat_endpoint(payload: ChatRequest) -> ChatResponse:
         return ChatResponse(**cached_response)
 
     # Log chat request
-    add_log_entry({
-        "type": "chat_request",
-        "message": payload.message[:100],
-        "page_id": payload.page_id,
-        "model": payload.model,
-    })
+    if add_log_entry:
+        add_log_entry({
+            "type": "chat_request",
+            "message": payload.message[:100],
+            "page_id": payload.page_id,
+            "model": payload.model,
+        })
 
     mode = _infer_mode(payload.page_id, payload.context)
     context_summary = _summarize_context(payload.context)
+    # Use unified chatbot agent if agent_id is provided and set to "chatbot"
+    # This ensures all agents use the same chatbot backend for consistent behavior
+    agent_id = getattr(payload, 'agent_id', None)
+    if agent_id == "chatbot":
+        agent_key = "chatbot_assistant"  # Use unified chatbot agent
+    else:
+        agent_key = _resolve_agent_key(payload.page_id)  # Fallback to page_id resolution
+    
+    # Try to get howto snippet if available
+    howto_doc = None
+    if get_howto_snippet:
+        try:
+            howto_snippet = get_howto_snippet(agent_key, payload.message)
+            if howto_snippet:
+                howto_doc = {
+                    "id": f"{agent_key or 'agent'}_howto",
+                    "title": "Agent Workflow Guide",
+                    "score": 1.35,
+                    "snippet": howto_snippet,
+                    "source": "howto",
+                    "metadata": {"namespace": "howto", "agent": agent_key},
+                }
+        except Exception:
+            pass
     
     # Check if question is banking-related
     is_banking = _is_banking_related(payload.message, payload.page_id, payload.context)
     
     model_to_use = payload.model or OLLAMA_MODEL
     llm_time = 0
-    retrieved = []
     rag_time = 0
     tfidf_time = 0
     reply_text = ""
@@ -1553,175 +1647,95 @@ def chat_endpoint(payload: ChatRequest) -> ChatResponse:
     confidence_score = 0.5
     source_type = "general_knowledge"
     related_questions = []
+    retrieved: List[Dict[str, Any]] = []
     
-    # PRIORITY STRATEGY: For banking questions, RAG FIRST, then general knowledge fallback
-    # For non-banking questions, use general knowledge only
+    conversation_history = _build_conversation_context(payload.history if hasattr(payload, 'history') else [])
     
-    if is_banking:
-        # BANKING QUESTIONS: Try RAG first, fall back to general knowledge if no RAG answer
-        logger.info("Banking question detected - prioritizing RAG data")
-        
-        # Step 1: Retrieve RAG data
-        rag_start = time.time()
-        retrieved = _retrieve_store_docs(payload.message, payload.context)
-        rag_time = (time.time() - rag_start) * 1000
-        
-        if not retrieved:
+    # ── Step 1: Retrieve from RAG (primary store first) ─────────────────────────
+    primary_hits: List[Dict[str, Any]] = []
+    if LOCAL_STORE.available:
+        try:
+            rag_start = time.time()
+            primary_hits = _retrieve_store_docs(payload.message, payload.context)
+            rag_time = (time.time() - rag_start) * 1000
+        except Exception as exc:
+            logger.warning("Vector store retrieval failed: %s", exc)
+    
+    if howto_doc:
+        primary_hits = [howto_doc] + primary_hits
+    
+    # Fallback to TF-IDF cache if no vector hits
+    if not primary_hits:
+        try:
             tfidf_start = time.time()
-            retrieved = _retrieve_fallback_docs(payload.message, payload.context)
+            fallback_hits = _retrieve_fallback_docs(payload.message, payload.context)
             tfidf_time = (time.time() - tfidf_start) * 1000
-        else:
-            tfidf_time = 0
+            primary_hits = fallback_hits
+        except Exception as exc:
+            logger.warning("TF-IDF fallback retrieval failed: %s", exc)
+    
+    retrieved = _dedupe_docs(primary_hits, RAG_TOP_K) if primary_hits else []
+    
+    if retrieved:
+        # Use RAG-derived answer first
+        source_type = "rag"
+        top_score = float(retrieved[0].get("score") or 0.0)
+        confidence, confidence_score = _get_confidence_level(top_score, "rag")
+        rag_answer = _compose_lightweight_reply(payload, retrieved, mode)
         
-        # Filter for high-quality matches (score >= RAG_QUALITY_THRESHOLD for banking questions)
-        high_quality_retrieved = []
-        if retrieved:
-            high_quality_retrieved = [doc for doc in retrieved if doc.get("score", 0.0) >= RAG_QUALITY_THRESHOLD]
-        
-        if high_quality_retrieved:
-            # We have RAG data - use it as primary answer
-            logger.info(f"Found {len(high_quality_retrieved)} high-quality RAG matches, using RAG as primary answer")
-            
-            # Calculate confidence from best match score
-            best_score = max(doc.get("score", 0.0) for doc in high_quality_retrieved)
-            confidence, confidence_score = _get_confidence_level(best_score, "rag")
-            source_type = "rag"
-            
-            # Generate answer from RAG context
-            conversation_history = _build_conversation_context(payload.history if hasattr(payload, 'history') else [])
-            if USE_OLLAMA and model_to_use:
-                try:
-                    llm_start = time.time()
-                    llm_rag_reply = _maybe_generate_llm_reply(payload, high_quality_retrieved, mode, model_to_use, conversation_history)
-                    llm_time = (time.time() - llm_start) * 1000
-                    
-                    if llm_rag_reply and len(llm_rag_reply) > 50:
-                        reply_text = llm_rag_reply
-                        # Format response with structure
-                        reply_text = _format_response_with_structure(reply_text, mode, confidence)
-                        reply_text += f"\n\n*Based on {len(high_quality_retrieved)} relevant document(s) from the knowledge base (relevance: {best_score:.2f}).*"
-                        logger.info("RAG-based answer generated successfully")
-                    else:
-                        # RAG LLM failed - fall back to lightweight RAG reply
-                        reply_text = _compose_lightweight_reply(payload, high_quality_retrieved, mode)
-                        reply_text = _format_response_with_structure(reply_text, mode, confidence)
-                        logger.info("Using lightweight RAG reply")
-                except Exception as exc:
-                    llm_time = (time.time() - llm_start) * 1000 if 'llm_start' in locals() else 0
-                    logger.debug("RAG LLM generation failed, using lightweight reply: %s", exc)
-                    reply_text = _compose_lightweight_reply(payload, high_quality_retrieved, mode)
-                    reply_text = _format_response_with_structure(reply_text, mode, confidence)
-            else:
-                # No LLM available - use lightweight RAG reply
-                reply_text = _compose_lightweight_reply(payload, high_quality_retrieved, mode)
-                reply_text = _format_response_with_structure(reply_text, mode, confidence)
-            
-            retrieved = high_quality_retrieved
-            # Generate related questions
-            related_questions = _generate_related_questions(payload.message, mode, high_quality_retrieved)
-        else:
-            # No RAG data available - fall back to general banking knowledge
-            logger.info("No RAG data found for banking question - using general banking knowledge")
-            confidence, confidence_score = _get_confidence_level(0.0, "general_knowledge")
-            source_type = "general_knowledge"
-            
-            if USE_OLLAMA and model_to_use:
-                try:
-                    llm_start = time.time()
-                    conversation_history = _build_conversation_context(payload.history if hasattr(payload, 'history') else [])
-                    generic_reply = _generate_gemma_fallback(payload, mode, model_to_use, conversation_history)
-                    
-                    llm_time = (time.time() - llm_start) * 1000
-                    
-                    if generic_reply and len(generic_reply) > 50:
-                        reply_text = generic_reply
-                        reply_text = _format_response_with_structure(reply_text, mode, confidence)
-                        reply_text += "\n\n*Answer based on general banking knowledge - no matching documents found in knowledge base.*"
-                        logger.info("General banking knowledge answer generated")
-                    else:
-                        reply_text = "I'm a banking AI assistant. I can help with credit, finance, and risk assessment questions. No specific information found in the knowledge base for this question."
-                        reply_text = _format_response_with_structure(reply_text, mode, confidence)
-                except Exception as exc:
-                    llm_time = (time.time() - llm_start) * 1000 if 'llm_start' in locals() else 0
-                    logger.debug("General banking knowledge generation failed: %s", exc)
-                    reply_text = "I'm a banking AI assistant. I can help with banking, credit, finance, and risk assessment questions. Unable to generate answer at this time."
-                    reply_text = _format_response_with_structure(reply_text, mode, confidence)
-            else:
-                reply_text = "I'm a banking AI assistant. No matching documents found in knowledge base and LLM is unavailable."
-            
-            # Generate related questions even without RAG
-            related_questions = _generate_related_questions(payload.message, mode, [])
-    else:
-        # NON-BANKING QUESTIONS: Use general knowledge only (skip RAG)
-        logger.info("Non-banking question detected - using general knowledge only")
-        confidence, confidence_score = _get_confidence_level(0.0, "general_knowledge")
-        source_type = "general_knowledge"
-        
+        # Enhance with LLM if available (still grounded in context)
+        llm_answer = None
         if USE_OLLAMA and model_to_use:
             try:
                 llm_start = time.time()
-                conversation_history = _build_conversation_context(payload.history if hasattr(payload, 'history') else [])
-                generic_reply = _generate_gemma_fallback(payload, "General Assistant", model_to_use, conversation_history)
-                
+                llm_answer = _maybe_generate_llm_reply(
+                    payload,
+                    retrieved,
+                    mode,
+                    model_name=model_to_use,
+                    conversation_history=conversation_history,
+                    initial_answer=rag_answer,
+                )
                 llm_time = (time.time() - llm_start) * 1000
-                
-                if generic_reply and len(generic_reply) > 50:
-                    reply_text = generic_reply
-                    reply_text = _format_response_with_structure(reply_text, "General Assistant", confidence)
-                    reply_text += "\n\n*Answer based on model knowledge.*"
-                    logger.info("General knowledge answer generated")
-                else:
-                    reply_text = "I'm a banking AI assistant. For general questions, I'll do my best to help, but I specialize in banking and finance topics."
-                    reply_text = _format_response_with_structure(reply_text, "General Assistant", confidence)
             except Exception as exc:
-                llm_time = (time.time() - llm_start) * 1000 if 'llm_start' in locals() else 0
-                logger.debug("General knowledge generation failed: %s", exc)
-                reply_text = "I'm a banking AI assistant. I specialize in banking and finance topics. Unable to generate answer at this time."
-                reply_text = _format_response_with_structure(reply_text, "General Assistant", confidence)
-        else:
-            reply_text = "I'm a banking AI assistant. LLM is unavailable at this time."
+                logger.debug("LLM enhancement failed: %s", exc)
+                llm_answer = None
         
-        # Generate generic related questions
-        related_questions = [
-            "Can you provide more details?",
-            "What are the key points to remember?",
-            "How does this relate to banking?"
-        ]
-=======
-    if not payload.message.strip():
-        raise HTTPException(status_code=400, detail="Message cannot be empty.")
-
-    mode = _infer_mode(payload.page_id, payload.context)
-    context_summary = _summarize_context(payload.context)
-    agent_key = _resolve_agent_key(payload.page_id)
-    howto_snippet = get_howto_snippet(agent_key, payload.message)
-    howto_doc = (
-        {
-            "id": f"{agent_key or 'agent'}_howto",
-            "title": "Agent Workflow Guide",
-            "score": 1.35,
-            "snippet": howto_snippet,
-            "source": "howto",
-            "metadata": {"namespace": "howto", "agent": agent_key},
-        }
-        if howto_snippet
-        else None
-    )
-    store_docs = _retrieve_store_docs(payload.message, payload.context)
-    if not store_docs:
-        store_docs = _retrieve_fallback_docs(payload.message, payload.context)
-    combined: List[Dict[str, Any]] = []
-    if howto_doc:
-        combined.append(howto_doc)
-    combined.extend(store_docs)
-    retrieved = _dedupe_docs(combined, RAG_TOP_K)
-    reply_text = _maybe_generate_llm_reply(payload, retrieved, mode) or _compose_lightweight_reply(payload, retrieved, mode)
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
+        reply_text = llm_answer.strip() if llm_answer else rag_answer
+        reply_text = _format_response_with_structure(reply_text, mode, confidence)
+        reply_text += "\n\n📚 *Answer grounded in your uploaded knowledge base.*"
+    else:
+        # ── Step 2: General-knowledge fallback via model ───────────────────────
+        logger.info("No RAG context available – falling back to model knowledge.")
+        source_type = "general_knowledge"
+        confidence, confidence_score = _get_confidence_level(0.0, "general_knowledge")
+        
+        kb_answer = None
+        if USE_OLLAMA and model_to_use:
+            try:
+                llm_start = time.time()
+                kb_answer = _generate_gemma_fallback(payload, mode, model_to_use, conversation_history)
+                llm_time = (time.time() - llm_start) * 1000
+            except Exception as exc:
+                logger.debug("General knowledge generation failed: %s", exc)
+                kb_answer = None
+        
+        if not kb_answer:
+            fallback_msg = (
+                f"I apologize, but I couldn't generate a complete answer for '{payload.message}'. "
+                "Please try rephrasing your question or upload relevant documents to the chat knowledge base."
+            )
+            reply_text = _format_response_with_structure(fallback_msg, mode, confidence)
+        else:
+            reply_text = _format_response_with_structure(kb_answer, mode, confidence)
+        
+        reply_text += "\n\n📘 *Answer generated from the assistant’s general knowledge base.*"
+    
+    related_questions = _generate_related_questions(payload.message, mode, retrieved)
 
     actions = _suggest_actions(payload)
     timestamp = datetime.now(timezone.utc).isoformat()
     faq_options = _faq_for_page(payload.page_id)
-<<<<<<< HEAD
     
     # Build response
     response_data = {
@@ -1743,29 +1757,18 @@ def chat_endpoint(payload: ChatRequest) -> ChatResponse:
         _store_response_cache(payload.message, payload.page_id, response_data)
     
     # Log chat response with performance metrics
-    total_time = (time.time() - start_time) * 1000
-    add_log_entry({
-        "type": "chat_response",
-        "duration_ms": total_time,
-        "rag_time_ms": rag_time,
-        "tfidf_time_ms": tfidf_time,
-        "llm_time_ms": llm_time,
-        "retrieved_count": len(retrieved),
-        "reply_length": len(reply_text),
-        "confidence": confidence,
-        "source_type": source_type,
-    })
+    if add_log_entry:
+        total_time = (time.time() - start_time) * 1000
+        add_log_entry({
+            "type": "chat_response",
+            "duration_ms": total_time,
+            "rag_time_ms": rag_time,
+            "tfidf_time_ms": tfidf_time,
+            "llm_time_ms": llm_time,
+            "retrieved_count": len(retrieved),
+            "reply_length": len(reply_text),
+            "confidence": confidence,
+            "source_type": source_type,
+        })
 
     return ChatResponse(**response_data)
-=======
-
-    return ChatResponse(
-        reply=reply_text,
-        mode=mode,
-        actions=actions,
-        timestamp=timestamp,
-        context_summary=context_summary,
-        retrieved=retrieved,
-        faq_options=faq_options,
-    )
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2

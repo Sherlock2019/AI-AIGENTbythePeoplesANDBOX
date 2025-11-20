@@ -6,10 +6,22 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV="${ROOT}/.venv"
 LOGDIR="${ROOT}/.logs"
+
+# Choose a writable tmp root (prefer secondary volume if available)
+if [[ -z "${TMPDIR:-}" ]]; then
+  if [[ -d "/mnt/D" && -w "/mnt/D" ]]; then
+    TMPDIR="/mnt/D/tmp/hugme"
+  else
+    TMPDIR="${ROOT}/.tmp"
+  fi
+fi
+TMP_ROOT="${TMPDIR}"
 APIPORT="${APIPORT:-8090}"
 UIPORT="${UIPORT:-8502}"
 OLLAMA_PORT="${OLLAMA_PORT:-11434}"
 OLLAMA_URL="${OLLAMA_URL:-http://localhost:${OLLAMA_PORT}}"
+# Allow power users to skip automatic Ollama pulls once models are preloaded
+NEWSTART_SKIP_MODEL_PULL="${NEWSTART_SKIP_MODEL_PULL:-1}"
 
 # Environment knobs that can be overridden before running `newstart.sh`:
 #  * APIPORT: API server port (default 8090)
@@ -136,6 +148,27 @@ free_port() {
   fi
 }
 
+stop_ollama() {
+  if pgrep -f "ollama serve" >/dev/null 2>&1; then
+    log_info "Stopping existing Ollama server..."
+    pkill -f "ollama serve" >/dev/null 2>&1 || true
+    sleep 2
+  fi
+  
+  local pid_file="${ROOT}/.pids/ollama.pid"
+  if [[ -f "${pid_file}" ]]; then
+    local existing_pid
+    existing_pid="$(cat "${pid_file}" 2>/dev/null || true)"
+    if [[ -n "${existing_pid}" ]] && kill -0 "${existing_pid}" 2>/dev/null; then
+      log_info "Terminating Ollama PID ${existing_pid} from previous run..."
+      kill "${existing_pid}" >/dev/null 2>&1 || true
+      sleep 1
+      kill -9 "${existing_pid}" >/dev/null 2>&1 || true
+    fi
+    rm -f "${pid_file}"
+  fi
+}
+
 wait_for_port() {
   local port="$1"
   local service_name="${2:-Service}"
@@ -229,10 +262,15 @@ fi
 mkdir -p "${LOGDIR}" \
          "${ROOT}/services/api/.runs" \
          "${ROOT}/agents/credit_appraisal/models/production" \
-         "${ROOT}/.pids"
+         "${ROOT}/.pids" \
+         "${TMP_ROOT}"
 
 ensure_writable "${LOGDIR}"
 ensure_writable "${ROOT}/.pids"
+ensure_writable "${TMP_ROOT}"
+export TMPDIR="${TMPDIR:-${TMP_ROOT}}"
+export TEMP="${TEMP:-${TMPDIR}}"
+export TMP="${TMP:-${TMPDIR}}"
 
 log_success "Preflight checks passed"
 
@@ -254,17 +292,20 @@ touch "${ERR_LOG}"
 log_info "Log files initialized"
 
 # ---------- free ports ----------
-log_info "Freeing ports ${APIPORT}, 8501, ${UIPORT}, ${OLLAMA_PORT}..."
-free_port "${APIPORT}"
-free_port 8501
-free_port "${UIPORT}"
+log_info "Restarting Ollama server (if running)..."
+stop_ollama
+log_info "Freeing Ollama port ${OLLAMA_PORT}..."
 free_port "${OLLAMA_PORT}"
-sleep 2
-log_success "Ports cleared"
+sleep 1
+log_success "Ollama port cleared"
 
 # ---------- Ollama server ----------
 ensure_ollama_models() {
-  local required_models=("phi3" "mistral" "gemma2:2b" "gemma2:9b")
+    if [[ "${NEWSTART_SKIP_MODEL_PULL}" == "1" ]]; then
+      log_info "Skipping Ollama model pull (NEWSTART_SKIP_MODEL_PULL=1)."
+      return 0
+    fi
+      local required_models=("phi3" "gemma2:2b")
   local missing_models=()
   local available_models=()
   
@@ -337,25 +378,24 @@ start_ollama() {
   PID_FILES+=("${pid_file}")
   
   # Check if Ollama command exists
-  if ! command -v ollama >/dev/null 2>&1; then
-    log_warn "Ollama command not found. Skipping Ollama startup."
-    log_warn "Please install Ollama from https://ollama.ai"
-    log_warn "After installation, run: ollama pull phi3 && ollama pull mistral && ollama pull gemma2:2b && ollama pull gemma2:9b"
-    return 1
-  fi
+    if ! command -v ollama >/dev/null 2>&1; then
+      log_warn "Ollama command not found. Skipping Ollama startup."
+      log_warn "Please install Ollama from https://ollama.ai"
+      log_warn "After installation, run: ollama pull phi3 && ollama pull gemma2:2b"
+      return 1
+    fi
   
   # Check if Ollama is already running
   if curl -sf "${OLLAMA_URL}/api/tags" >/dev/null 2>&1; then
-    log_info "Ollama is already running on ${OLLAMA_URL}"
-    ensure_ollama_models
-    return 0
+    log_warn "Ollama already running on ${OLLAMA_URL}; restarting per policy..."
+    stop_ollama
+    free_port "${OLLAMA_PORT}"
   fi
   
   # Check if already running (by PID file)
   if [[ -f "${pid_file}" ]] && kill -0 "$(cat "${pid_file}")" 2>/dev/null; then
-    log_info "Ollama already running (PID $(cat "${pid_file}"))"
-    ensure_ollama_models
-    return 0
+    log_warn "Existing Ollama PID $(cat "${pid_file}") found; restarting..."
+    stop_ollama
   fi
   
   log_info "Starting Ollama server on port ${OLLAMA_PORT}..."
@@ -381,6 +421,14 @@ start_ollama() {
 }
 
 start_ollama || log_warn "Ollama startup had issues (non-fatal - API/UI will still work)"
+
+# ---------- free remaining ports ----------
+log_info "Freeing ports ${APIPORT}, 8501, ${UIPORT}..."
+free_port "${APIPORT}"
+free_port 8501
+free_port "${UIPORT}"
+sleep 1
+log_success "API/UI ports cleared"
 
 # ---------- Python venv setup ----------
 log_info "Setting up Python virtual environment..."
@@ -473,11 +521,15 @@ start_ui() {
   log_info "Starting Streamlit UI on port ${UIPORT}..."
   cd "${ROOT}/services/ui" || { log_error "Failed to cd to UI directory"; exit 1; }
   
+  # Disable Streamlit telemetry to avoid capture() error
+  export STREAMLIT_TELEMETRY_DISABLED=true
+  export STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+  
   nohup "${VENV}/bin/streamlit" run "app.py" \
       --server.port "${UIPORT}" \
       --server.address 0.0.0.0 \
       --server.fileWatcherType none \
-      --logger.level debug \
+      --logger.level error \
       > "${UI_LOG}" 2>&1 &
   
   local ui_pid=$!
@@ -508,6 +560,7 @@ start_log_monitor() {
   
   nohup bash -c "
     tail -n +1 -F '${API_LOG}' '${UI_LOG}' '${OLLAMA_LOG}' 2>/dev/null \
+      | grep -v 'missing ScriptRunContext' \
       | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[STREAM]\", \$0 }' \
       | tee -a '${COMBINED_LOG}' \
       | tee -a '${ERR_LOG}' >/dev/null
@@ -539,7 +592,7 @@ test_all_services() {
     model_count="$(echo "${models_json}" | grep -o '"name"' | wc -l || echo "0")"
     
     # Check for required models
-    local required_models=("phi3" "mistral" "gemma2:2b" "gemma2:9b")
+    local required_models=("phi3" "gemma2:2b")
     local available_model_names
     available_model_names="$(echo "${models_json}" | grep -o '"name":"[^"]*"' | cut -d'"' -f4 || true)"
     local missing_required=()
@@ -635,15 +688,6 @@ color_echo yellow "💡 Tip: Press Ctrl+C to stop all services and exit"
 echo "═══════════════════════════════════════════════════════════════"
 echo ""
 
-<<<<<<< HEAD
-# ---------- live log view ----------
-color_echo yellow "👁  Showing real-time logs (Ctrl+C to exit)…"
-echo ""
-tail -n 50 -f "${COMBINED_LOG}" 2>/dev/null || {
-  log_warn "Could not tail log file. Showing last 50 lines instead:"
-  tail -n 50 "${COMBINED_LOG}" 2>/dev/null || true
-}
-=======
 # ---------- health/status probes ----------
 color_echo blue "🔎 Verifying service health..."
 API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${APIPORT}/v1/health" || true)
@@ -664,6 +708,7 @@ fi
 # ---------- combined monitor (include existing + follow) ----------
 color_echo blue "🧩 Starting live log monitor..."
 nohup bash -c "tail -n +1 -F '${API_LOG}' '${UI_LOG}' \
+  | grep -v 'missing ScriptRunContext' \
   | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[STREAM]\", \$0 }' \
   | tee -a '${COMBINED_LOG}' \
   | tee -a '${ERR_LOG}' >/dev/null" >/dev/null 2>&1 &
@@ -676,4 +721,3 @@ color_echo blue "🧾 Unified  → ${ERR_LOG}"
 # ---------- live view (quiet stderr) ----------
 color_echo yellow "👁  Real-time ERROR view (Ctrl+C to exit)…"
 tail -n 50 -f "${ERR_LOG}" 2>/dev/null || true
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
