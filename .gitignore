@@ -93,3 +93,14 @@ services/api/.rag_store/**
 # Safety: block huge metadata/json dumps
 metadata.json
 *.large.json
+
+# =========================================
+# LARGE ARCHIVES & DATABASES
+# =========================================
+*.tar.gz
+newsandbox.tar.gz
+**/.chroma_store/
+**/rag_db/
+**/chroma.sqlite3
+backups/*.tar.gz
+services/ui/exports/*.zip
