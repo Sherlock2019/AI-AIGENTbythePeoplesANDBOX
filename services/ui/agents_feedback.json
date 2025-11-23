@@ -2,7 +2,7 @@
   "💳 Credit Appraisal Agent": {
     "version": "1.4",
     "rating": 4.95,
-    "users": 15,
+    "users": 16,
     "comments": [
       "Praise: Extremely accurate loan approval explanations!",
       "Feature Request: Please add multi-currency support for ASEAN banks.",
@@ -10,13 +10,14 @@
       "Feature Request: Allow retraining with anonymized data directly.",
       "dgvSDgsdgs",
       "awesome",
-      "great doan"
+      "great doan",
+      "Nice !"
     ]
   },
   "🏦 Asset Appraisal Agent": {
     "version": "1.1",
-    "rating": 4.82,
-    "users": 12,
+    "rating": 4.85,
+    "users": 15,
     "comments": [
       "Feature Request: Add API link to local land registry for collateral validation.",
       "Praise: Works fast with property market data.",
@@ -24,7 +25,10 @@
       "vdsfvSDvxsbxv",
       "retetett",
       "retetett",
-      "doan"
+      "doan",
+      "great workflow , suggest a basci view mode and advanced view mode for expert users - Dzoan",
+      "great maps -B",
+      "great template"
     ]
   },
   "🩺 Claims Triage Agent": {
@@ -74,8 +78,8 @@
     ]
   },
   "🛡️ Anti-Fraud & KYC Agent": {
-    "rating": 4.57,
-    "users": 7,
+    "rating": 4.69,
+    "users": 10,
     "comments": [
       "rgedgders",
       "rgedgders",
@@ -83,7 +87,70 @@
       "rgedgders",
       "rgedgders",
       "rgedgders",
-      "test"
+      "test",
+      "wip . test .dzoan",
+      "to be tested fully",
+      "to be tested fully"
+    ]
+  },
+  "💳 Credit Score Agent": {
+    "rating": 5.0,
+    "users": 2,
+    "comments": [
+      "nice !",
+      "nice"
+    ]
+  },
+  "⚖️ Legal Compliance Agent": {
+    "rating": 5,
+    "users": 0,
+    "comments": []
+  },
+  "🧩 Unified Risk Orchestration Agent": {
+    "rating": 5.0,
+    "users": 2,
+    "comments": [
+      "nice !",
+      "nice !"
+    ]
+  },
+  "💬 Chatbot Assistant": {
+    "rating": 5.0,
+    "users": 1,
+    "comments": [
+      "need to be tested with real gpu env"
+    ]
+  },
+  "🏠 Real Estate Evaluator Agent": {
+    "rating": 5.0,
+    "users": 4,
+    "comments": [
+      "great map , add web data scrpaigin for all countries please - Dzoan",
+      "hello test",
+      "wow, this work for vietnam only ?",
+      "this can work world wide ? awesome !"
+    ]
+  },
+  "🧠 IT Troubleshooter Agent": {
+    "rating": 5.0,
+    "users": 1,
+    "comments": [
+      "to be test fully"
+    ]
+  },
+  "🧑‍🚀 Persona Strategy Room": {
+    "rating": 5.0,
+    "users": 1,
+    "comments": [
+      "wip"
+    ]
+  },
+  "⚖️ Legal & Compliance Agent": {
+    "rating": 5.0,
+    "users": 2,
+    "comments": [
+      "nice",
+      "bug fixed ! its working ! good job !"
     ]
   }
 }

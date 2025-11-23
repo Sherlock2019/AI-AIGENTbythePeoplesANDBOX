@@ -1,4 +1,4 @@
-"""Chatbot endpoints backed by Gemma via Ollama + Chroma RAG."""
+"""Chatbot endpoints backed by Phi-3 via Ollama + Chroma RAG."""
 from __future__ import annotations
 
 import logging
@@ -54,7 +54,7 @@ def _ensure_bootstrapped() -> None:
 def _build_prompt(context: str, question: str, *, rag_hit: bool) -> str:
     if rag_hit:
         guidance = (
-            "You are the AI Sandbox Assistant using Gemma via Ollama. "
+            "You are the AI Sandbox Assistant using Phi-3 via Ollama. "
             "Answer strictly from the CONTEXT provided below. "
             "Do not invent facts outside of that context. "
             "When an agent pipeline has multiple stages, summarize them in order "
@@ -63,7 +63,7 @@ def _build_prompt(context: str, question: str, *, rag_hit: bool) -> str:
         context_block = context
     else:
         guidance = (
-            "You are the AI Sandbox Assistant using Gemma via Ollama. "
+            "You are the AI Sandbox Assistant using Phi-3 via Ollama. "
             "No relevant documents were retrieved for this question. "
             "You still must answer using your general domain knowledge (credit, asset, fraud ops). "
             "Do NOT reply that you cannot answer. "
@@ -165,8 +165,8 @@ def chat_with_agent(payload: ChatbotRequest):
     try:
         answer = ollama_generate(prompt)
     except OllamaError as exc:
-        logger.error("Gemma request failed: %s", exc)
-        raise HTTPException(status_code=502, detail="Gemma/Ollama backend unavailable.") from exc
+        logger.error("Phi-3 request failed: %s", exc)
+        raise HTTPException(status_code=502, detail="Phi-3/Ollama backend unavailable.") from exc
     log_chatbot_event(
         "chat.answer",
         agent_id=payload.agent_id or "auto",

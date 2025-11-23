@@ -17,6 +17,11 @@ from services.api.middleware.logging_middleware import (
     clear_logs,
     get_recent_logs,
 )
+from services.api.middleware.visitor_tracker import (
+    get_all_visitors,
+    get_visitor_stats,
+    load_visitor_data,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["monitoring"])
@@ -248,3 +253,33 @@ def get_chat_performance() -> Dict[str, Any]:
             for e in chat_errors[-10:]
         ],
     }
+
+
+@router.get("/v1/monitoring/visitors")
+def get_visitors() -> Dict[str, Any]:
+    """Get all tracked visitors."""
+    visitors = get_all_visitors()
+    return {
+        "visitors": visitors,
+        "count": len(visitors),
+    }
+
+
+@router.get("/v1/monitoring/visitors/stats")
+def get_visitor_statistics() -> Dict[str, Any]:
+    """Get visitor statistics."""
+    return get_visitor_stats()
+
+
+@router.get("/v1/monitoring/visitors/{ip}")
+def get_visitor_details(ip: str) -> Dict[str, Any]:
+    """Get detailed information about a specific visitor IP."""
+    visitors = load_visitor_data()
+    
+    if ip not in visitors:
+        return {
+            "error": f"No data found for IP: {ip}",
+            "ip": ip,
+        }
+    
+    return visitors[ip]

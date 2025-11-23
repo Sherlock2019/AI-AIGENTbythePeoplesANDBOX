@@ -49,6 +49,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add visitor tracking middleware (tracks IPs and country origins)
+app.add_middleware(VisitorTrackingMiddleware)
+
 # ─────────────────────────────────────────────────────────────
 # Routers
 # ─────────────────────────────────────────────────────────────
@@ -63,16 +66,14 @@ from services.api.routers.training import router as training_router
 # NEW: credit training endpoints
 from services.api.routers.training_credit import router as training_credit_router
 from services.api.routers.chat import router as chat_router
-<<<<<<< HEAD
+from services.api.routers.chatbot import router as chatbot_router
 from services.api.routers.unified import router as unified_router
 from services.api.routers.monitoring import router as monitoring_router
 from services.api.routers.credit_score_agents import router as credit_score_router
 from services.api.routers.legal_compliance_agents import router as legal_compliance_router
+from services.api.routers.agent_manager_routes import router as agent_manager_router
 from services.api.middleware.logging_middleware import LoggingMiddleware
-=======
-from services.api.routers.chatbot import router as chatbot_router
-from services.api.routers.unified import router as unified_router
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
+from services.api.middleware.visitor_tracker import VisitorTrackingMiddleware
 
 app.include_router(system_router)
 app.include_router(agents_router)
@@ -80,11 +81,12 @@ app.include_router(reports_router)
 app.include_router(training_router)
 app.include_router(training_credit_router)  # <-- IMPORTANT
 app.include_router(chat_router)
-<<<<<<< HEAD
+app.include_router(chatbot_router)
 app.include_router(unified_router)
 app.include_router(monitoring_router)
 app.include_router(credit_score_router, prefix="/v1/credit_score")
 app.include_router(legal_compliance_router, prefix="/v1/legal_compliance")
+app.include_router(agent_manager_router, prefix="/agent")  # Agent Manager routes
 
 # Add logging middleware
 app.add_middleware(LoggingMiddleware)
@@ -102,10 +104,17 @@ def preload_embeddings():
         logger.info("Embedding model pre-loaded successfully")
     except Exception as exc:
         logger.warning("Failed to pre-load embedding model: %s", exc)
-=======
-app.include_router(chatbot_router)
-app.include_router(unified_router)
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
+
+@app.on_event("startup")
+def initialize_agent_manager():
+    """Initialize Agent Manager on startup."""
+    try:
+        from services.api.agent_manager import get_agent_manager
+        logger.info("Initializing Agent Manager...")
+        manager = get_agent_manager()
+        logger.info(f"Agent Manager initialized: models_loaded={manager.loaded_models}")
+    except Exception as exc:
+        logger.warning("Failed to initialize Agent Manager: %s", exc)
 
 # ─────────────────────────────────────────────────────────────
 # Root/health
@@ -123,6 +132,18 @@ def health():
 # ─────────────────────────────────────────────────────────────
 @app.get("/v1/health")
 def health_v1():
+    # Get agent manager status if available
+    agent_manager_status = {}
+    try:
+        from services.api.agent_manager import get_agent_manager
+        manager = get_agent_manager()
+        agent_manager_status = {
+            "models_loaded": manager.loaded_models,
+            "device": manager.device,
+        }
+    except Exception:
+        pass
+    
     return JSONResponse({
         "status": "ok",
         "version": APP_VERSION,
@@ -131,4 +152,5 @@ def health_v1():
         # Expose discovered agents and alias map so the UI Probe can display them
         "agents": [meta["id"] for meta in AGENT_REGISTRY.values()],
         "aliases": _ALIAS_TO_CANON,
+        "agent_manager": agent_manager_status,
     })

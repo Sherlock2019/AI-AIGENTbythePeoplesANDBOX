@@ -52,12 +52,14 @@ def render_nav_bar_app():
     """Home / Agents buttons + theme toggle identical across pages."""
     ss = st.session_state
     stage = ss.get("stage", "landing")
-    show_home   = stage in ("agents", "credit_agent", "asset_agent")
-    show_agents = stage not in ("landing", "agents")
+    
+    # Always show navigation buttons for better UX
+    show_home = True
+    show_agents = True
 
     c1, c2, c3 = st.columns([1, 1, 2.5])
     with c1:
-        if show_home and st.button("🏠 Back to Home", key=f"btn_home_{stage}"):
+        if show_home and st.button("🏠 Back to Home", key=f"btn_home_nav"):
             ss["stage"] = "landing"
             try:
                 st.switch_page("app.py")
@@ -65,7 +67,7 @@ def render_nav_bar_app():
                 st.rerun()
 
     with c2:
-        if show_agents and st.button("🤖 Back to Agents", key=f"btn_agents_{stage}"):
+        if show_agents and st.button("🤖 Back to Agents", key=f"btn_agents_nav"):
             ss["stage"] = "agents"
             try:
                 st.switch_page("app.py")

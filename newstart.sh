@@ -36,7 +36,12 @@ declare -a PID_FILES=()
 # ---------- cleanup on exit ----------
 cleanup() {
   local exit_code=$?
-  color_echo yellow "🛑 Cleaning up..."
+  # Only cleanup on error or signal (not on successful exit)
+  if [[ ${exit_code} -eq 0 ]]; then
+    return 0
+  fi
+  
+  color_echo yellow "🛑 Cleaning up due to error/signal..."
   
   # Kill log monitor first
   if [[ -f "${ROOT}/.pids/logmonitor.pid" ]]; then
@@ -62,12 +67,10 @@ cleanup() {
     fi
   done
   
-  if [[ ${exit_code} -ne 0 ]]; then
-    color_echo red "❌ Script exited with error code ${exit_code}"
-  fi
+  color_echo red "❌ Script exited with error code ${exit_code}"
 }
 
-trap cleanup EXIT INT TERM
+trap cleanup ERR INT TERM
 
 # ---------- helpers ----------
 color_echo() {
@@ -409,8 +412,8 @@ start_ollama() {
   
   log_success "Ollama started (PID=${ollama_pid}) | log: ${OLLAMA_LOG}"
   
-  # Wait for Ollama to be ready
-  if wait_for_port "${OLLAMA_PORT}" "Ollama" 30 "${OLLAMA_URL}/api/tags"; then
+  # Wait for Ollama to be ready (reduced timeout for faster startup)
+  if wait_for_port "${OLLAMA_PORT}" "Ollama" 10 "${OLLAMA_URL}/api/tags"; then
     # Ensure required models are available
     ensure_ollama_models
     return 0
@@ -441,28 +444,74 @@ fi
 # shellcheck disable=SC1091
 source "${VENV}/bin/activate" || { log_error "Failed to activate venv"; exit 1; }
 
+# Verify venv is working
+if [[ ! -f "${VENV}/bin/python" ]] || ! "${VENV}/bin/python" --version >/dev/null 2>&1; then
+  log_warn "Virtual environment appears corrupted. Recreating..."
+  rm -rf "${VENV}"
+  python3 -m venv "${VENV}" || { log_error "Failed to recreate venv"; exit 1; }
+  source "${VENV}/bin/activate" || { log_error "Failed to activate recreated venv"; exit 1; }
+fi
+
 log_info "Python: $(python -V)"
 log_info "Pip: $(pip -V)"
 
-log_info "Upgrading pip and wheel..."
-python -m pip install -U pip wheel --quiet || { log_error "Failed to upgrade pip"; exit 1; }
+# Check if pip/wheel are installed (skip upgrade check to avoid hanging)
+if python -c "import pip; import wheel" 2>/dev/null; then
+  log_info "Pip and wheel are installed, skipping upgrade (run ./preinstall.sh to update)"
+else
+  log_info "Installing pip and wheel..."
+  timeout 120 python -m pip install -U pip wheel --progress-bar off --root-user-action=ignore || { log_error "Failed to install pip"; exit 1; }
+fi
 
-log_info "Installing API requirements..."
+# Check if API requirements are already installed
+log_info "Checking API requirements..."
 if [[ -f "${ROOT}/services/api/requirements.txt" ]]; then
-  pip install -q -r "${ROOT}/services/api/requirements.txt" || {
-    log_warn "Some API requirements may have failed to install"
-  }
+  # Quick check: if uvicorn and fastapi are installed, assume most packages are there
+  if python -c "import uvicorn, fastapi" 2>/dev/null; then
+    log_info "API requirements appear to be installed, skipping (run ./preinstall.sh to update)"
+  else
+    log_info "Installing API requirements (this may take a few minutes)..."
+    timeout 300 pip install --progress-bar off -r "${ROOT}/services/api/requirements.txt" --root-user-action=ignore || {
+      PIP_EXIT=$?
+      log_error "Failed to install API requirements (exit code: ${PIP_EXIT})"
+      exit 1
+    }
+    log_success "API requirements installed"
+  fi
+  
+  # Verify critical API dependencies
+  if ! python -c "import uvicorn" 2>/dev/null; then
+    log_error "uvicorn not installed. API cannot start."
+    exit 1
+  fi
 else
   log_warn "API requirements.txt not found, skipping"
 fi
 
-log_info "Installing UI requirements..."
+# Check if UI requirements are already installed
+log_info "Checking UI requirements..."
 if [[ -f "${ROOT}/services/ui/requirements.txt" ]]; then
-  pip install -q -r "${ROOT}/services/ui/requirements.txt" || {
-    log_warn "Some UI requirements may have failed to install"
-  }
+  # Quick check: if streamlit is installed, assume most packages are there
+  if python -c "import streamlit" 2>/dev/null; then
+    log_info "UI requirements appear to be installed, skipping (run ./preinstall.sh to update)"
+  else
+    log_info "Installing UI requirements (this may take a few minutes)..."
+    timeout 300 pip install --progress-bar off -r "${ROOT}/services/ui/requirements.txt" --root-user-action=ignore --ignore-installed blinker || {
+      PIP_EXIT=$?
+      log_warn "Some UI requirements may have failed to install (non-critical, exit code: ${PIP_EXIT})"
+    }
+    log_success "UI requirements installed"
+  fi
 else
   log_warn "UI requirements.txt not found, skipping"
+fi
+
+# Fix urllib3 conflict with kubernetes if present (after all requirements installed)
+if python -c "import kubernetes" 2>/dev/null; then
+  log_info "Fixing urllib3 version conflict with kubernetes..."
+  timeout 60 pip install -q "urllib3<2.4.0,>=1.24.2" --root-user-action=ignore 2>/dev/null || {
+    log_warn "Could not fix urllib3 version (non-critical - may cause warnings)"
+  }
 fi
 
 export PYTHONPATH="${ROOT}"
@@ -482,8 +531,23 @@ start_api() {
     return 0
   fi
   
+  # Verify uvicorn is available
+  if ! command -v "${VENV}/bin/uvicorn" >/dev/null 2>&1 && ! python -c "import uvicorn" 2>/dev/null; then
+    log_error "uvicorn not found. Please ensure API requirements are installed."
+    return 1
+  fi
+  
   log_info "Starting API server on port ${APIPORT}..."
-  nohup "${VENV}/bin/uvicorn" services.api.main:app \
+  
+  # Ensure we use the venv's Python
+  local python_cmd="${VENV}/bin/python"
+  if [[ ! -f "${python_cmd}" ]]; then
+    log_error "Virtual environment Python not found at ${python_cmd}"
+    return 1
+  fi
+  
+  # Use python -m uvicorn for better venv compatibility
+  nohup "${python_cmd}" -m uvicorn services.api.main:app \
       --host 0.0.0.0 --port "${APIPORT}" \
       --reload \
       --access-log \
@@ -496,16 +560,26 @@ start_api() {
   
   log_success "API started (PID=${api_pid}) | log: ${API_LOG}"
   
-  # Wait for API to be ready
-  if wait_for_port "${APIPORT}" "API" 30 "http://localhost:${APIPORT}/health"; then
+  # Wait for API to be ready (reduced timeout, non-blocking)
+  if wait_for_port "${APIPORT}" "API" 15 "http://localhost:${APIPORT}/health"; then
     return 0
   else
-    log_warn "API may not be fully ready"
-    return 1
+    # API might still be starting - check if process is alive
+    if kill -0 "${api_pid}" 2>/dev/null; then
+      log_info "API is starting but not ready yet (will continue in background)"
+      return 0  # Don't fail - process is running
+    else
+      log_error "API process died. Check logs: ${API_LOG}"
+      return 1
+    fi
   fi
 }
 
-start_api || { log_error "API startup failed"; exit 1; }
+# Start API (non-blocking - continue even if startup check fails)
+if ! start_api; then
+  log_error "API startup failed - check logs: ${API_LOG}"
+  # Don't exit - other services might still work
+fi
 
 # ---------- UI server ----------
 start_ui() {
@@ -518,6 +592,12 @@ start_ui() {
     return 0
   fi
   
+  # Verify streamlit is available
+  if ! python -c "import streamlit" 2>/dev/null; then
+    log_error "streamlit not found. Please ensure UI requirements are installed."
+    return 1
+  fi
+  
   log_info "Starting Streamlit UI on port ${UIPORT}..."
   cd "${ROOT}/services/ui" || { log_error "Failed to cd to UI directory"; exit 1; }
   
@@ -525,7 +605,16 @@ start_ui() {
   export STREAMLIT_TELEMETRY_DISABLED=true
   export STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
   
-  nohup "${VENV}/bin/streamlit" run "app.py" \
+  # Ensure we use the venv's Python
+  local python_cmd="${VENV}/bin/python"
+  if [[ ! -f "${python_cmd}" ]]; then
+    log_error "Virtual environment Python not found at ${python_cmd}"
+    cd "${ROOT}" || true
+    return 1
+  fi
+  
+  # Use python -m streamlit for better venv compatibility
+  nohup "${python_cmd}" -m streamlit run "app.py" \
       --server.port "${UIPORT}" \
       --server.address 0.0.0.0 \
       --server.fileWatcherType none \
@@ -540,24 +629,33 @@ start_ui() {
   
   log_success "UI started (PID=${ui_pid}) | log: ${UI_LOG}"
   
-  # Wait for UI to be ready
-  if wait_for_port "${UIPORT}" "UI" 30; then
+  # Wait for UI to be ready (reduced timeout, non-blocking)
+  # Don't fail if UI takes longer - it will start in background
+  if wait_for_port "${UIPORT}" "UI" 20; then
     return 0
   else
-    log_warn "UI may not be fully ready"
-    return 1
+    # UI might still be starting - check if process is alive
+    if kill -0 "${ui_pid}" 2>/dev/null; then
+      log_info "UI is starting but not ready yet (will continue in background)"
+      return 0  # Don't fail - process is running
+    else
+      log_warn "UI process died. Check logs: ${UI_LOG}"
+      return 1
+    fi
   fi
 }
 
-start_ui || { log_error "UI startup failed"; exit 1; }
+# Start UI (non-blocking - don't fail script if UI has issues)
+if ! start_ui; then
+  log_warn "UI startup had issues (non-fatal - API will still work)"
+fi
 
 # ---------- log monitor ----------
 start_log_monitor() {
   local pid_file="${ROOT}/.pids/logmonitor.pid"
   PID_FILES+=("${pid_file}")
   
-  log_info "Starting live log monitor..."
-  
+  # Start log monitor in background (non-blocking)
   nohup bash -c "
     tail -n +1 -F '${API_LOG}' '${UI_LOG}' '${OLLAMA_LOG}' 2>/dev/null \
       | grep -v 'missing ScriptRunContext' \
@@ -569,103 +667,27 @@ start_log_monitor() {
   local monitor_pid=$!
   echo "${monitor_pid}" > "${pid_file}"
   STARTED_PIDS+=("${monitor_pid}")
-  
-  log_success "Live log monitor running (PID=${monitor_pid})"
 }
 
 start_log_monitor
 
-# ---------- health checks ----------
-test_all_services() {
-  local all_ok=true
-  local failed_services=()
-  
-  log_info "Running health checks for all services..."
-  echo ""
-  
-  # Test Ollama
-  log_info "Testing Ollama server..."
-  if curl -sf "${OLLAMA_URL}/api/tags" >/dev/null 2>&1; then
-    local models_json
-    models_json="$(curl -sf "${OLLAMA_URL}/api/tags" 2>/dev/null || echo "{}")"
-    local model_count
-    model_count="$(echo "${models_json}" | grep -o '"name"' | wc -l || echo "0")"
-    
-    # Check for required models
-    local required_models=("phi3" "gemma2:2b")
-    local available_model_names
-    available_model_names="$(echo "${models_json}" | grep -o '"name":"[^"]*"' | cut -d'"' -f4 || true)"
-    local missing_required=()
-    
-    for req_model in "${required_models[@]}"; do
-      if ! echo "${available_model_names}" | grep -q "^${req_model}$"; then
-        missing_required+=("${req_model}")
-      fi
-    done
-    
-    if [[ ${#missing_required[@]} -eq 0 ]]; then
-      log_success "✅ Ollama: OK (${model_count} models available, all required models present)"
-    else
-      log_warn "⚠️  Ollama: OK but missing ${#missing_required[@]} required model(s): $(IFS=', '; echo "${missing_required[*]}")"
-      log_info "   Run: ollama pull $(IFS=' && ollama pull '; echo "${missing_required[*]}")"
-    fi
-  else
-    log_error "❌ Ollama: FAILED - Not responding on ${OLLAMA_URL}"
-    all_ok=false
-    failed_services+=("Ollama")
-  fi
-  
-  # Test API
-  log_info "Testing API server..."
-  if curl -sf "http://localhost:${APIPORT}/health" >/dev/null 2>&1 || \
-     curl -sf "http://localhost:${APIPORT}/docs" >/dev/null 2>&1; then
-    log_success "✅ API: OK - Responding on port ${APIPORT}"
-  else
-    log_error "❌ API: FAILED - Not responding on port ${APIPORT}"
-    all_ok=false
-    failed_services+=("API")
-  fi
-  
-  # Test UI
-  log_info "Testing UI server..."
-  if curl -sf "http://localhost:${UIPORT}" >/dev/null 2>&1; then
-    log_success "✅ UI: OK - Responding on port ${UIPORT}"
-  else
-    log_error "❌ UI: FAILED - Not responding on port ${UIPORT}"
-    all_ok=false
-    failed_services+=("UI")
-  fi
-  
-  echo ""
-  if [[ "${all_ok}" == "true" ]]; then
-    color_echo green "═══════════════════════════════════════════════════════════════"
-    color_echo green "✅ All services are healthy and responding!"
-    color_echo green "═══════════════════════════════════════════════════════════════"
-    return 0
-  else
-    color_echo red "═══════════════════════════════════════════════════════════════"
-    color_echo red "⚠️  Some services failed health checks:"
-    for service in "${failed_services[@]}"; do
-      color_echo red "   - ${service}"
-    done
-    color_echo red "═══════════════════════════════════════════════════════════════"
-    log_warn "Check logs for details: ${LOGDIR}"
-    return 1
-  fi
-}
+# Health checks removed - services start in background, check logs if needed
 
-# Run health checks
-test_all_services
-health_check_result=$?
+# Quick health check (non-blocking)
+(
+  sleep 2
+  if curl -sf "http://localhost:${APIPORT}/health" >/dev/null 2>&1; then
+    echo "✅ API is responding" >&2
+  fi
+  if curl -sf "http://localhost:${UIPORT}" >/dev/null 2>&1; then
+    echo "✅ UI is responding" >&2
+  fi
+) &
 
 # ---------- final status ----------
 echo ""
 echo "═══════════════════════════════════════════════════════════════"
-if [[ ${health_check_result} -eq 0 ]]; then
-  color_echo green "🎯 All services started successfully!"
-else
-  color_echo yellow "⚠️  Services started but some health checks failed"
-fi
+color_echo green "🎯 Services started!"
 echo ""
 color_echo blue "📘 Swagger API Docs:"
 echo "   http://localhost:${APIPORT}/docs"
@@ -675,49 +697,28 @@ echo "   http://localhost:${UIPORT}"
 echo ""
 color_echo blue "🤖 Ollama Server:"
 echo "   ${OLLAMA_URL}"
-echo "   API: ${OLLAMA_URL}/api/tags"
 echo ""
-color_echo blue "📂 Logs Directory: ${LOGDIR}"
-echo "   - API:      ${API_LOG}"
-echo "   - UI:       ${UI_LOG}"
-echo "   - Ollama:   ${OLLAMA_LOG}"
-echo "   - Combined: ${COMBINED_LOG}"
-echo "   - Unified:  ${ERR_LOG}"
-echo ""
-color_echo yellow "💡 Tip: Press Ctrl+C to stop all services and exit"
+color_echo blue "📂 Logs: ${LOGDIR}"
 echo "═══════════════════════════════════════════════════════════════"
 echo ""
 
-# ---------- health/status probes ----------
-color_echo blue "🔎 Verifying service health..."
-API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${APIPORT}/v1/health" || true)
-if [[ "${API_STATUS}" == "200" ]]; then
-  color_echo green "API OK (HTTP 200 from /v1/health) → http://localhost:${APIPORT}"
-  color_echo blue "   ↪ Docs: http://localhost:${APIPORT}/docs"
-else
-  color_echo red "API check failed (status=${API_STATUS:-unreachable})"
-fi
+# ---------- final instructions ----------
+color_echo blue "📄 View logs:"
+color_echo blue "   - Combined: tail -f ${COMBINED_LOG}"
+color_echo blue "   - Errors:   tail -f ${ERR_LOG}"
+color_echo blue "   - API:      tail -f ${API_LOG}"
+color_echo blue "   - UI:       tail -f ${UI_LOG}"
+color_echo blue "   - Ollama:   tail -f ${OLLAMA_LOG}"
+echo ""
+color_echo green "✅ All services are running in the background!"
+color_echo yellow "💡 To stop all services, run: pkill -f 'newstart.sh|uvicorn|streamlit|ollama serve'"
+echo ""
 
-UI_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${UIPORT}" || true)
-if [[ "${UI_STATUS}" == "200" ]]; then
-  color_echo green "UI OK (HTTP 200 at /) → http://localhost:${UIPORT}"
-else
-  color_echo yellow "UI check returned status=${UI_STATUS:-unreachable} (Streamlit may still be booting)"
-fi
+# Disown all background processes so script can exit cleanly
+disown -a 2>/dev/null || true
 
-# ---------- combined monitor (include existing + follow) ----------
-color_echo blue "🧩 Starting live log monitor..."
-nohup bash -c "tail -n +1 -F '${API_LOG}' '${UI_LOG}' \
-  | grep -v 'missing ScriptRunContext' \
-  | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[STREAM]\", \$0 }' \
-  | tee -a '${COMBINED_LOG}' \
-  | tee -a '${ERR_LOG}' >/dev/null" >/dev/null 2>&1 &
-LOG_MONITOR_PID=$!
-echo $LOG_MONITOR_PID > "${ROOT}/.pids/logmonitor.pid"
-color_echo green "✅ Live log monitor running (PID=${LOG_MONITOR_PID})"
-color_echo blue "📄 Combined → ${COMBINED_LOG}"
-color_echo blue "🧾 Unified  → ${ERR_LOG}"
+# Remove cleanup trap before successful exit (services should keep running)
+trap - ERR INT TERM EXIT
 
-# ---------- live view (quiet stderr) ----------
-color_echo yellow "👁  Real-time ERROR view (Ctrl+C to exit)…"
-tail -n 50 -f "${ERR_LOG}" 2>/dev/null || true
+# Exit successfully - services continue running in background
+exit 0

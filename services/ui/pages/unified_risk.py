@@ -14,15 +14,49 @@ import requests
 import plotly.express as px
 import plotly.graph_objects as go
 from services.ui.theme_manager import apply_theme, render_theme_toggle
-<<<<<<< HEAD
-from services.ui.components.chat_assistant import render_chat_assistant
-=======
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
+from services.ui.components.feedback import render_feedback_tab
+# Try to import chat_assistant component if available
+try:
+    from services.ui.components.chat_assistant import render_chat_assistant
+except ImportError:
+    render_chat_assistant = None
 
 st.set_page_config(page_title="🧩 Unified Risk Orchestration Agent", layout="wide")
 apply_theme()
 
 API_URL = os.getenv("AGENT_API_URL", "http://localhost:8090")
+
+
+def _go_stage(target: str):
+    """Navigate to a different stage/page."""
+    try:
+        st.switch_page("app.py")
+    except Exception:
+        try:
+            st.query_params["stage"] = target
+        except Exception:
+            pass
+        st.rerun()
+
+
+def render_nav_bar():
+    """Top navigation bar with Home, Agents, and Theme switch."""
+    c1, c2, c3 = st.columns([1, 1, 2.5])
+    with c1:
+        if st.button("🏠 Back to Home", key="btn_home_unified_risk", use_container_width=True):
+            _go_stage("landing")
+            st.stop()
+    with c2:
+        if st.button("🤖 Back to Agents", key="btn_agents_unified_risk", use_container_width=True):
+            _go_stage("agents")
+            st.stop()
+    with c3:
+        render_theme_toggle(
+            label="🌗 Dark mode",
+            key="unified_risk_nav_theme",
+            help="Switch theme",
+        )
+    st.markdown("---")
 
 SAMPLE_UNIFIED_RUNS = [
     {
@@ -144,12 +178,9 @@ ss.setdefault("selected_unified_index", 0)
 ss.setdefault("prefill_unified_form", None)
 if not ss.unified_runs:
     ss.unified_runs = deepcopy(SAMPLE_UNIFIED_RUNS)
-<<<<<<< HEAD
     ss["unified_demo_loaded"] = True
 else:
     ss.setdefault("unified_demo_loaded", False)
-=======
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 
 def _call_unified_api(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -277,18 +308,17 @@ def _launch_page(target: str):
         pass
 
 
+render_nav_bar()
+
 st.title("🧩 Unified Risk Orchestration Agent")
 st.caption(
     "Master coordinator that compounds Asset, Credit, and Anti-Fraud agents into a single bank-grade decision package."
 )
 
-<<<<<<< HEAD
 # Auto-show dashboard if demo data was loaded
 if ss.get("unified_demo_loaded") and ss.get("unified_runs"):
     st.info("💡 Demo data loaded automatically. Dashboard shows sample unified risk decisions.")
 
-=======
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 nav_cols = st.columns([1, 1, 1, 1, 1])
 with nav_cols[0]:
     if st.button("🏠 Home", use_container_width=True):
@@ -305,51 +335,58 @@ with nav_cols[3]:
 with nav_cols[4]:
     render_theme_toggle(key="unified_theme_toggle")
 
-st.markdown(
-    """
-    > **Unified Risk Checklist**  
-    > ✅ Is the borrower real & safe? (KYC/Fraud)  
-    > ✅ Is the collateral worth enough? (Asset)  
-    > ✅ Can they afford the loan? (Credit)  
-    > ✅ Should the bank approve overall? (Unified agent)
-    """
-)
+# Add tabs for better organization
+tab_dashboard, tab_feedback = st.tabs([
+    "📊 Dashboard",
+    "🗣️ Feedback & Feature Requests"
+])
 
-with st.expander("ℹ️ How this agent works", expanded=False):
+with tab_dashboard:
     st.markdown(
         """
-        **Step 1 — Portfolio Triage**
-        * Start at **Global Portfolio Overview** to review high-risk cases, trendlines, and recommendation mix.
-        * Use **Open Case** on any flagged borrower to jump straight into their unified summary.
-
-        **Step 2 — Borrower Case Summary**
-        * Review the KPI row (recommendation, aggregated score, tier, credit approval, fraud tier, collateral status).
-        * Inspect the gauges (FMV, fraud score, credit score) and the mini status panels for asset, fraud/KYC, and credit.
-
-        **Step 3 — Drill-Down**
-        * Expand Asset / Fraud / Credit panels for detailed metrics, risk flags, and raw tables.
-        * Download the full `unified_risk_decision.json` if you need to attach it to credit committee notes.
-
-        **Step 4 — Take Action**
-        * Click **Re-run this borrower** to prefill the submission form with the current data.
-        * Scroll to **Submit A Unified Run**, adjust any values, and regenerate the unified decision.
+        > **Unified Risk Checklist**  
+        > ✅ Is the borrower real & safe? (KYC/Fraud)  
+        > ✅ Is the collateral worth enough? (Asset)  
+        > ✅ Can they afford the loan? (Credit)  
+        > ✅ Should the bank approve overall? (Unified agent)
         """
     )
 
-c1, c2, c3, c4 = st.columns(4)
-with c1:
-    st.metric("Identity", "KYC/Fraud", "Is borrower real & safe?")
-with c2:
-    st.metric("Collateral", "Asset", "Is the collateral worth enough?")
-with c3:
-    st.metric("Credit", "Loan", "Can they afford it?")
-with c4:
-    st.metric("Unified", "Decision", "Approve / Review / Reject")
+    with st.expander("ℹ️ How this agent works", expanded=False):
+        st.markdown(
+            """
+            **Step 1 — Portfolio Triage**
+            * Start at **Global Portfolio Overview** to review high-risk cases, trendlines, and recommendation mix.
+            * Use **Open Case** on any flagged borrower to jump straight into their unified summary.
 
-st.divider()
+            **Step 2 — Borrower Case Summary**
+            * Review the KPI row (recommendation, aggregated score, tier, credit approval, fraud tier, collateral status).
+            * Inspect the gauges (FMV, fraud score, credit score) and the mini status panels for asset, fraud/KYC, and credit.
 
-st.divider()
-st.header("Global Portfolio Overview")
+            **Step 3 — Drill-Down**
+            * Expand Asset / Fraud / Credit panels for detailed metrics, risk flags, and raw tables.
+            * Download the full `unified_risk_decision.json` if you need to attach it to credit committee notes.
+
+            **Step 4 — Take Action**
+            * Click **Re-run this borrower** to prefill the submission form with the current data.
+            * Scroll to **Submit A Unified Run**, adjust any values, and regenerate the unified decision.
+            """
+        )
+
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        st.metric("Identity", "KYC/Fraud", "Is borrower real & safe?")
+    with c2:
+        st.metric("Collateral", "Asset", "Is the collateral worth enough?")
+    with c3:
+        st.metric("Credit", "Loan", "Can they afford it?")
+    with c4:
+        st.metric("Unified", "Decision", "Approve / Review / Reject")
+
+    st.divider()
+
+    st.divider()
+    st.header("Global Portfolio Overview")
 if not ss.unified_runs:
     st.info("No unified runs yet. Submit the form above to generate your first decision.")
 else:
@@ -758,7 +795,6 @@ if st.button("↺ Re-run this borrower", key="btn_rerun_selected"):
     )
     st.info("Prefilled the submission form with this borrower's latest data. Complete the form below to finalize the rerun.")
     st.rerun()
-<<<<<<< HEAD
 
 
 def _build_unified_chat_context() -> Dict[str, Any]:
@@ -782,16 +818,18 @@ def _build_unified_chat_context() -> Dict[str, Any]:
     return context
 
 
-# Render chat assistant for unified risk page
-render_chat_assistant(
-    page_id="unified_risk",
-    context=_build_unified_chat_context(),
-    faq_questions=[
-        "How does the Unified Risk agent combine fraud, credit, and asset data?",
-        "What is the final recommendation for this borrower?",
-        "Explain the risk summary calculation.",
-        "How do I rerun the unified decision?",
-    ],
-)
-=======
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
+# Render chat assistant for unified risk page (if available)
+    if render_chat_assistant is not None:
+        render_chat_assistant(
+            page_id="unified_risk",
+            context=_build_unified_chat_context(),
+            faq_questions=[
+                "How does the Unified Risk agent combine fraud, credit, and asset data?",
+                "What is the final recommendation for this borrower?",
+                "Explain the risk summary calculation.",
+                "How do I rerun the unified decision?",
+            ],
+        )
+
+with tab_feedback:
+    render_feedback_tab("🧩 Unified Risk Orchestration Agent")

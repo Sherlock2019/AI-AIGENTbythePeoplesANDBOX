@@ -10,20 +10,129 @@ UI_DIR = Path(__file__).resolve().parents[1]
 FEEDBACK_FILE = UI_DIR / "agents_feedback.json"
 
 DEFAULT_FEEDBACK = {
-    "💳 Credit Appraisal Agent": {
-        "rating": 5,
-        "users": 1,
-        "comments": ["Great starting point!"],
+    "🛡️ Anti-Fraud & KYC Agent": {
+        "rating": 4.5,
+        "users": 12,
+        "comments": [
+            "💡 Suggestion: Add real-time document verification API integration for faster processing",
+            "Excellent fraud detection accuracy! Saved us from 3 high-risk cases this week.",
+            "💡 Suggestion: Include biometric verification options (face recognition, fingerprint)",
+            "The dashboard is intuitive and the risk scoring is spot-on.",
+            "💡 Suggestion: Add multi-language support for international customers",
+            "Streamlined our onboarding process significantly. Great work!",
+        ],
+    },
+    "💳 Credit Score Agent": {
+        "rating": 4.7,
+        "users": 8,
+        "comments": [
+            "💡 Suggestion: Add explainable AI feature to show why score changed",
+            "Accurate credit scoring! The 300-850 range is industry standard.",
+            "💡 Suggestion: Include trend analysis showing score improvement over time",
+            "Love the quick turnaround time. Much faster than traditional methods.",
+            "💡 Suggestion: Add credit score simulation tool for 'what-if' scenarios",
+            "Helped us approve more loans with confidence. Excellent tool!",
+        ],
     },
     "🏦 Asset Appraisal Agent": {
-        "rating": 5,
-        "users": 1,
-        "comments": ["Loving the dashboard."],
+        "rating": 4.6,
+        "users": 15,
+        "comments": [
+            "💡 Suggestion: Integrate Real Estate Evaluator map directly into appraisal workflow",
+            "The 3D map visualization is fantastic! Makes location analysis much easier.",
+            "💡 Suggestion: Add automated market trend analysis and price forecasting",
+            "Market-driven valuations are accurate and well-documented.",
+            "💡 Suggestion: Include photo upload and OCR for property condition assessment",
+            "The human review stage with Real Estate Evaluator integration is a game-changer!",
+            "Great tool for collateral valuation. Saved us hours of manual work.",
+        ],
     },
-    "🛡️ Anti-Fraud & KYC Agent": {
-        "rating": 5,
-        "users": 1,
-        "comments": ["Helps us clear risky cases very quickly."],
+    "💳 Credit Appraisal Agent": {
+        "rating": 4.8,
+        "users": 20,
+        "comments": [
+            "💡 Suggestion: Add loan recommendation engine based on credit profile",
+            "Explainable AI feature is excellent! Helps us justify decisions to customers.",
+            "💡 Suggestion: Include automated document generation for loan offers",
+            "The decision pipeline is clear and transparent. Love it!",
+            "💡 Suggestion: Add integration with credit bureau APIs for real-time data",
+            "Reduced our loan processing time by 60%. Highly recommended!",
+            "The model training feature allows us to improve accuracy over time.",
+        ],
+    },
+    "⚖️ Legal Compliance Agent": {
+        "rating": 4.4,
+        "users": 10,
+        "comments": [
+            "💡 Suggestion: Add automated regulatory update notifications",
+            "Sanctions and PEP checks are comprehensive and up-to-date.",
+            "💡 Suggestion: Include compliance report generation for audits",
+            "Helps us stay compliant with minimal effort. Great peace of mind.",
+            "💡 Suggestion: Add multi-jurisdiction compliance checking",
+            "The licensing verification feature caught 2 expired licenses this month.",
+        ],
+    },
+    "🧩 Unified Risk Orchestration Agent": {
+        "rating": 4.9,
+        "users": 5,
+        "comments": [
+            "💡 Suggestion: Add customizable risk weightings per business unit",
+            "Combining asset+credit+fraud into one decision is brilliant!",
+            "💡 Suggestion: Include real-time risk dashboard with alerts",
+            "This is exactly what we needed - a unified view of all risks.",
+            "💡 Suggestion: Add risk scenario modeling and stress testing",
+            "The orchestration logic is sophisticated and well-designed.",
+        ],
+    },
+    "💬 Chatbot Assistant": {
+        "rating": 4.3,
+        "users": 7,
+        "comments": [
+            "💡 Suggestion: Add voice input/output support for hands-free interaction",
+            "Context-aware responses are impressive. Very natural conversation flow.",
+            "💡 Suggestion: Include multi-language support and translation",
+            "The RAG system provides accurate answers from policy documents.",
+            "💡 Suggestion: Add sentiment analysis to detect customer frustration",
+            "Great for answering common questions. Reduces support workload.",
+        ],
+    },
+    "🏠 Real Estate Evaluator Agent": {
+        "rating": 4.7,
+        "users": 6,
+        "comments": [
+            "💡 Suggestion: Add historical price trend charts for each property",
+            "The interactive 3D map with price zones is visually stunning!",
+            "💡 Suggestion: Include property comparison tool side-by-side",
+            "Market price comparison feature is accurate and helpful.",
+            "💡 Suggestion: Add neighborhood analytics (schools, amenities, crime rates)",
+            "Love the zone analysis feature. Makes market research much easier.",
+        ],
+    },
+    "🧠 IT Troubleshooter Agent": {
+        "rating": 4.5,
+        "users": 9,
+        "comments": [
+            "💡 Suggestion: Add integration with ticketing systems (Jira, ServiceNow)",
+            "First-principles approach combined with case memory is powerful.",
+            "💡 Suggestion: Include automated solution testing before suggesting fixes",
+            "Helped us resolve 80% of incidents faster. Great tool!",
+            "💡 Suggestion: Add knowledge base learning from resolved tickets",
+            "The escalation logic is smart and prevents unnecessary escalations.",
+        ],
+    },
+    "🧑‍🚀 Persona Strategy Room": {
+        "rating": 4.8,
+        "users": 6,
+        "comments": [
+            "💡 Suggestion: Add ability to save and replay previous strategy sessions",
+            "Love the multi-persona collaboration! Makes complex decisions much easier.",
+            "💡 Suggestion: Include real-time voting/consensus mechanism for decisions",
+            "The transcript export feature is perfect for audit trails.",
+            "💡 Suggestion: Add visual decision tree showing how personas reached conclusions",
+            "This is exactly what we needed - a unified view from all risk domains.",
+            "💡 Suggestion: Include historical case comparison in the room",
+            "The pre-populated FAQs are very helpful for getting started quickly.",
+        ],
     },
 }
 

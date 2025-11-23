@@ -55,8 +55,8 @@ The chatbot agent is working correctly with all core components operational.
 
 #### Ollama Connection
 - ✅ **Status**: Connected
-- ✅ 4 models available: gemma2:2b, gemma2:9b, mistral:latest, phi3:latest
-- ✅ Default model: gemma2:2b
+- ✅ 4 models available: phi3:latest, gemma2:2b, gemma2:9b, mistral:latest
+- ✅ Default model: phi3:latest (Phi-3 via Ollama)
 - ✅ Fallback mechanism in place if Ollama unavailable
 
 ### 5. Features Verified

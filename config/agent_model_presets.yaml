@@ -1,0 +1,93 @@
+# Agent Model Presets Configuration
+# This file defines recommended models for each agent type
+# Models are preselected based on agent context and use case
+
+# Tabular ML Models (for credit scoring, asset valuation, fraud detection)
+tabular_models:
+  credit_appraisal:
+    primary: "LightGBM"  # Best for credit scoring with large datasets
+    fallback: "RandomForest"  # If LightGBM not available
+    alternatives: ["XGBoost", "LogisticRegression"]
+    reason: "LightGBM excels at credit risk with imbalanced data and mixed feature types"
+  
+  asset_appraisal:
+    primary: "LightGBM"  # Good for regression/valuation tasks
+    fallback: "RandomForest"
+    alternatives: ["XGBoost", "LogisticRegression"]
+    reason: "LightGBM handles numeric features well for asset valuation"
+  
+  anti_fraud_kyc:
+    primary: "RandomForest"  # Good for fraud detection (explainable)
+    fallback: "LogisticRegression"
+    alternatives: ["LightGBM", "XGBoost"]
+    reason: "RandomForest provides good explainability for fraud alerts"
+  
+  unified_risk:
+    primary: "LightGBM"  # Best overall performance
+    fallback: "RandomForest"
+    alternatives: ["XGBoost"]
+    reason: "LightGBM provides best accuracy for combined risk scoring"
+
+# LLM Models (for narratives, explanations, RAG)
+llm_models:
+  credit_appraisal:
+    primary: "mistral:7b-instruct"  # Balanced performance for credit narratives
+    fallback: "phi3:3.8b"  # CPU-friendly fallback
+    alternatives: ["gemma2:9b", "llama3:8b-instruct"]
+    reason: "Mistral 7B provides good balance of speed and quality for credit explanations"
+  
+  asset_appraisal:
+    primary: "mistral:7b-instruct"  # Good for valuation narratives
+    fallback: "phi3:3.8b"
+    alternatives: ["gemma2:9b", "llama3:8b-instruct", "qwen2:7b-instruct"]
+    reason: "Mistral handles financial narratives well with good context understanding"
+  
+  anti_fraud_kyc:
+    primary: "phi3:3.8b"  # Fast for real-time fraud alerts
+    fallback: "mistral:7b-instruct"
+    alternatives: ["gemma2:2b"]
+    reason: "Phi-3 Mini is fast enough for real-time fraud detection workflows"
+  
+  legal_compliance:
+    primary: "mistral:7b-instruct"  # Good for regulatory text understanding
+    fallback: "phi3:3.8b"
+    alternatives: ["llama3:8b-instruct"]
+    reason: "Mistral handles complex regulatory language well"
+  
+  chatbot_assistant:
+    primary: "mistral:7b-instruct"  # Best general-purpose chat
+    fallback: "phi3:3.8b"
+    alternatives: ["gemma2:9b", "llama3:8b-instruct"]
+    reason: "Mistral provides best conversational quality for banking chatbot"
+  
+  unified_risk:
+    primary: "mistral:7b-instruct"  # Good for combined risk narratives
+    fallback: "phi3:3.8b"
+    alternatives: ["gemma2:9b"]
+    reason: "Mistral handles complex multi-factor risk explanations"
+  
+  credit_scoring:
+    primary: "phi3:3.8b"  # Fast for score explanations
+    fallback: "mistral:7b-instruct"
+    alternatives: ["gemma2:2b"]
+    reason: "Phi-3 Mini is sufficient for quick score explanations"
+
+# Embedding Models (for RAG)
+embedding_models:
+  default: "BAAI/bge-small-en-v1.5"  # Better than all-MiniLM-L6-v2
+  multilingual: "intfloat/multilingual-e5-base"  # For VN/EN support
+  high_quality: "BAAI/bge-base-en-v1.5"  # When quality > speed
+  reason: "BGE models provide better semantic understanding for RAG"
+
+# Reranker Models (for improving RAG results)
+reranker_models:
+  default: "BAAI/bge-reranker-v2-base"  # Better than mini version
+  high_quality: "BAAI/bge-reranker-large"  # Best quality (needs GPU)
+  reason: "BGE reranker v2-base provides better relevance ranking"
+
+# Model Selection Priority
+# When selecting models, check availability in this order:
+# 1. primary
+# 2. fallback
+# 3. alternatives (first available)
+# 4. system default

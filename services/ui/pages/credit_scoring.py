@@ -29,6 +29,7 @@ from services.ui.theme_manager import (
 )
 from services.ui.components.operator_banner import render_operator_banner
 from services.ui.components.chat_assistant import render_chat_assistant
+from services.ui.components.feedback import render_feedback_tab
 from services.common.model_registry import get_hf_models, get_llm_lookup, get_llm_display_info
 from services.ui.utils.llm_selector import render_llm_selector
 from services.ui.utils.ai_insights import llm_generate_summary
@@ -439,8 +440,15 @@ flavor = st.selectbox(
 )
 st.caption(OPENSTACK_FLAVORS[flavor])
 
-st.markdown("### Stage-Only Flow")
-st.caption("Every control below corresponds to one stage in the risk ladder. Run them top-to-bottom to keep downstream agents in sync.")
+# Add tabs for better organization
+tab_stages, tab_feedback = st.tabs([
+    "📊 Stages",
+    "🗣️ Feedback & Feature Requests"
+])
+
+with tab_stages:
+    st.markdown("### Stage-Only Flow")
+    st.caption("Every control below corresponds to one stage in the risk ladder. Run them top-to-bottom to keep downstream agents in sync.")
 
 
 # ---------------------------------------------------------------------------
@@ -553,14 +561,16 @@ CHAT_FAQ = [
     "Show the last 10 loans the scoring model approved along with score bands.",
     "What volume of loans were scored in the past month?",
 ]
-render_chat_assistant(
-    page_id="credit_scoring",
-    context=_build_chat_context(),
-    title="💬 Shared LLM stage assistant",
-    default_open=False,
-    faq_questions=CHAT_FAQ,
-)
+    render_chat_assistant(
+        page_id="credit_scoring",
+        context=_build_chat_context(),
+        title="💬 Shared LLM stage assistant",
+        default_open=False,
+        faq_questions=CHAT_FAQ,
+    )
 
+with tab_feedback:
+    render_feedback_tab("💳 Credit Score Agent")
 
 # ---------------------------------------------------------------------------
 # FOOTER CONTROLS

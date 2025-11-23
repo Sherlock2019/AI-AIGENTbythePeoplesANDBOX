@@ -1,17 +1,23 @@
-<<<<<<< HEAD
 """ChromaDB vector store integration for improved RAG with metadata filtering."""
 from __future__ import annotations
 
 import logging
+import os
+import shutil
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
+
+# Disable noisy telemetry + remote capture by default.
+os.environ.setdefault("CHROMA_TELEMETRY_DISABLED", "true")
 
 try:
     import chromadb
     from chromadb.config import Settings
+    from chromadb.api.models import Collection
     CHROMADB_AVAILABLE = True
 except ImportError:
     CHROMADB_AVAILABLE = False
+    Collection = None
 
 logger = logging.getLogger(__name__)
 
@@ -123,10 +129,11 @@ class ChromaVectorStore:
         self,
         vector: Iterable[float],
         top_k: int = 5,
+        namespace: Optional[str] = None,
         filter_dict: Optional[Dict[str, Any]] = None,
         score_threshold: float = 0.0
     ) -> List[Dict[str, Any]]:
-        """Query the vector store with optional metadata filtering."""
+        """Query the vector store with optional metadata filtering and namespace support."""
         if not self.available:
             return []
         
@@ -134,10 +141,13 @@ class ChromaVectorStore:
         
         # Build where clause for filtering
         where = None
-        if filter_dict:
+        if filter_dict or namespace:
             where = {}
-            for key, value in filter_dict.items():
-                where[key] = value
+            if filter_dict:
+                for key, value in filter_dict.items():
+                    where[key] = value
+            if namespace:
+                where["namespace"] = namespace
         
         try:
             # Query ChromaDB
@@ -193,6 +203,46 @@ class ChromaVectorStore:
             logger.error("ChromaDB query failed: %s", exc)
             return []
     
+    def remove_namespace(self, namespace: str) -> None:
+        """Remove all documents with the specified namespace."""
+        if not self.available:
+            return
+        
+        try:
+            # Get all documents with this namespace
+            results = self.collection.get(
+                where={"namespace": namespace},
+                include=["metadatas"]
+            )
+            
+            if results["ids"] and len(results["ids"]) > 0:
+                # Delete documents by their IDs
+                self.collection.delete(ids=results["ids"])
+                logger.info(f"Removed {len(results['ids'])} documents with namespace '{namespace}'")
+        except Exception as exc:
+            logger.warning(f"Failed to remove namespace '{namespace}': {exc}")
+    
+    def namespace_present(self, namespace: str) -> bool:
+        """Check if any documents exist with the specified namespace."""
+        if not self.available:
+            return False
+        
+        try:
+            results = self.collection.get(
+                where={"namespace": namespace},
+                limit=1  # Only need to check if any exist
+            )
+            return len(results["ids"]) > 0 if results["ids"] else False
+        except Exception as exc:
+            logger.warning(f"Failed to check namespace '{namespace}': {exc}")
+            return False
+    
+    def save(self) -> None:
+        """Save changes (no-op for ChromaDB as it auto-persists)."""
+        # ChromaDB automatically persists changes, so this is a no-op
+        # Included for compatibility with LocalVectorStore interface
+        pass
+    
     def delete_collection(self) -> None:
         """Delete the collection (for testing/reset)."""
         try:
@@ -207,28 +257,18 @@ class ChromaVectorStore:
             return self.collection.count()
         except Exception:
             return 0
-=======
-"""ChromaDB helper utilities for the sandbox chatbot."""
-from __future__ import annotations
 
-import os
-import shutil
-from pathlib import Path
-from typing import Optional
 
-# Disable noisy telemetry + remote capture by default.
-os.environ.setdefault("CHROMA_TELEMETRY_DISABLED", "true")
-
-import chromadb
-from chromadb.api.models import Collection
-
+# ───────────────────────────────────────────────────────────────
+# Legacy helper functions for backwards compatibility
+# ───────────────────────────────────────────────────────────────
 DB_ROOT = Path(__file__).resolve().parent / "rag_db"
 DB_ROOT.mkdir(parents=True, exist_ok=True)
 
 COLLECTION_NAME = os.getenv("SANDBOX_RAG_COLLECTION", "sandbox_rag")
 
 _CLIENT: Optional[chromadb.PersistentClient] = None
-_COLLECTION: Optional[Collection.Collection] = None  # type: ignore[attr-defined]
+_COLLECTION: Optional[Collection] = None
 
 
 def reset_collection() -> None:
@@ -241,9 +281,12 @@ def reset_collection() -> None:
     DB_ROOT.mkdir(parents=True, exist_ok=True)
 
 
-def get_collection() -> Collection.Collection:  # type: ignore[attr-defined]
+def get_collection() -> Collection:
+    """Get or create the default ChromaDB collection (legacy helper)."""
     global _CLIENT, _COLLECTION
     if _COLLECTION is None:
+        if not CHROMADB_AVAILABLE:
+            raise RuntimeError("ChromaDB not available. Install with: pip install chromadb")
         _CLIENT = chromadb.PersistentClient(path=str(DB_ROOT))
         _COLLECTION = _CLIENT.get_or_create_collection(
             name=COLLECTION_NAME,
@@ -252,5 +295,11 @@ def get_collection() -> Collection.Collection:  # type: ignore[attr-defined]
     return _COLLECTION
 
 
-__all__ = ["get_collection", "reset_collection", "DB_ROOT", "COLLECTION_NAME"]
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
+__all__ = [
+    "ChromaVectorStore",
+    "CHROMADB_AVAILABLE",
+    "get_collection",
+    "reset_collection",
+    "DB_ROOT",
+    "COLLECTION_NAME",
+]

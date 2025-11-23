@@ -5,12 +5,18 @@ import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List
+from typing import TYPE_CHECKING, List, Union
 
 from services.api.rag.embeddings import embed_texts
 from services.api.rag.local_store import LocalVectorStore
 from services.api.rag.policies_text import CREDIT_ASSET_POLICY_TEXT
 from services.api.rag.utils import chunk_text
+
+if TYPE_CHECKING:
+    from services.api.rag.chroma_store import ChromaVectorStore
+
+# Type hint for store parameter (supports both LocalVectorStore and ChromaVectorStore)
+VectorStore = Union[LocalVectorStore, "ChromaVectorStore"]
 
 POLICY_NAMESPACE = "policies"
 POLICY_TITLE = "Unified Credit & Asset Appraisal Policy"
@@ -28,11 +34,11 @@ def _infer_section(chunk: str) -> str:
     return "Unified Credit & Asset Appraisal Policy"
 
 
-def _manifest_path(store: LocalVectorStore) -> Path:
+def _manifest_path(store: VectorStore) -> Path:
     return store.store_dir / "policies_manifest.json"
 
 
-def _load_manifest(store: LocalVectorStore) -> dict:
+def _load_manifest(store: VectorStore) -> dict:
     path = _manifest_path(store)
     if not path.exists():
         return {}
@@ -43,12 +49,12 @@ def _load_manifest(store: LocalVectorStore) -> dict:
         return {}
 
 
-def _save_manifest(store: LocalVectorStore, manifest: dict) -> None:
+def _save_manifest(store: VectorStore, manifest: dict) -> None:
     path = _manifest_path(store)
     path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def seed_policy_documents(store: LocalVectorStore) -> None:
+def seed_policy_documents(store: VectorStore) -> None:
     """Ensure unified policy text is embedded into the local vector store."""
     text = CREDIT_ASSET_POLICY_TEXT.strip()
     if not text:

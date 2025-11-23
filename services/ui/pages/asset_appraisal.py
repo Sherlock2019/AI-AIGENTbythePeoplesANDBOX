@@ -18,11 +18,8 @@ import os
 import io
 import re
 import json
-<<<<<<< HEAD
-=======
 import threading
 import time
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 from datetime import datetime, timezone  # ✅ clean, safe, supports datetime.now()
 from pathlib import Path
 from textwrap import dedent
@@ -46,17 +43,11 @@ from services.ui.theme_manager import (
     render_theme_toggle,
 )
 from services.ui.components.operator_banner import render_operator_banner
-<<<<<<< HEAD
-from services.ui.components.telemetry_dashboard import render_telemetry_dashboard
-from services.ui.components.feedback import render_feedback_tab
-from services.ui.components.chat_assistant import render_chat_assistant
-=======
 from services.ui.components.feedback import render_feedback_tab
 from services.ui.components.chat_assistant import render_chat_assistant
 from services.common.model_registry import get_hf_models
 from services.common.personas import get_persona_for_agent
 from services.ui.utils.llm_selector import render_llm_selector
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 
 
@@ -817,6 +808,531 @@ def make_pydeck_view_state(lat=10.7769, lon=106.7009, zoom=10, pitch=0, bearing=
 def pydeck_map_style() -> str:
     """pydeck uses the same Mapbox style URLs when a token is available."""
     return get_map_style()
+
+
+# ============================================================================
+# MAP GENERATION FUNCTIONS (from Real Estate Evaluator)
+# ============================================================================
+
+def _generate_ultra_3d_map(map_data, zone_data, assets_geojson, zones_geojson, theme="dark"):
+    """Generate Ultra 3D map HTML with advanced features and theme support"""
+    # Calculate center from data
+    if map_data:
+        avg_lat = sum(item["lat"] for item in map_data) / len(map_data)
+        avg_lon = sum(item["lon"] for item in map_data) / len(map_data)
+    else:
+        avg_lat, avg_lon = 16.0, 107.5
+    
+    # Calculate stats
+    total_properties = len(map_data)
+    avg_market_price = sum(item.get("market_price", 0) for item in map_data) / total_properties if total_properties > 0 else 0
+    zones_count = len(zone_data)
+    
+    # Theme colors - normalize theme to ensure it's "dark" or "light"
+    theme_normalized = str(theme).lower() if theme else "dark"
+    is_dark = theme_normalized == "dark"
+    palette = get_palette(theme_normalized)
+    
+    # Theme-specific styling
+    bg_gradient = "linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)" if is_dark else "linear-gradient(135deg, #f5f7fa 0%, #e2e8f0 50%, #cbd5e1 100%)"
+    panel_bg = "rgba(0,0,0,0.9)" if is_dark else "rgba(255,255,255,0.95)"
+    text_color = "#ffffff" if is_dark else "#000000"
+    map_style_url = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json" if is_dark else "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+    
+    return f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>🏗️ Asset Appraisal Map</title>
+        <script src='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js'></script>
+        <link href='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css' rel='stylesheet' />
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            body {{
+                font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+                background: {bg_gradient};
+                min-height: 100vh;
+                margin: 0;
+                color: {text_color};
+                overflow: hidden;
+            }}
+            #map-container {{
+                position: relative;
+                width: 100%;
+                height: 800px;
+                overflow: hidden;
+            }}
+            #map {{ width: 100%; height: 100%; }}
+            #control-panel {{
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                width: 280px;
+                background: {panel_bg};
+                backdrop-filter: blur(20px);
+                border-radius: 20px;
+                padding: 20px;
+                z-index: 1000;
+                box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+                max-height: calc(100% - 40px);
+                overflow-y: auto;
+                color: {text_color};
+            }}
+            #control-panel h1 {{
+                font-size: 20px;
+                margin-bottom: 10px;
+                color: #00ff88;
+                background: linear-gradient(90deg, #00ff88, #00d4ff);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }}
+            .layer-controls {{
+                background: {"rgba(255,255,255,0.05)" if is_dark else "rgba(0,0,0,0.05)"};
+                border-radius: 15px;
+                padding: 15px;
+                margin: 15px 0;
+            }}
+            .layer-toggle {{
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px 0;
+                border-bottom: 1px solid {"rgba(255,255,255,0.1)" if is_dark else "rgba(0,0,0,0.1)"};
+            }}
+            .layer-toggle:last-child {{ border-bottom: none; }}
+            .layer-toggle span {{
+                color: {text_color};
+            }}
+            .toggle-switch {{
+                width: 50px;
+                height: 26px;
+                background: {"#444" if is_dark else "#ccc"};
+                border-radius: 13px;
+                position: relative;
+                cursor: pointer;
+                transition: background 0.3s;
+            }}
+            .toggle-switch.active {{
+                background: #00ff88;
+            }}
+            .toggle-switch::after {{
+                content: '';
+                position: absolute;
+                top: 2px;
+                left: 2px;
+                width: 22px;
+                height: 22px;
+                background: white;
+                border-radius: 50%;
+                transition: transform 0.3s;
+            }}
+            .toggle-switch.active::after {{
+                transform: translateX(24px);
+            }}
+            #stats-dashboard {{
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                width: 280px;
+                background: {panel_bg};
+                border-radius: 20px;
+                padding: 20px;
+                backdrop-filter: blur(20px);
+                z-index: 1000;
+                color: {text_color};
+            }}
+            .stat-card {{
+                background: rgba(255,255,255,0.05);
+                border-radius: 12px;
+                padding: 15px;
+                margin: 10px 0;
+                border-left: 4px solid #00ff88;
+            }}
+            .stat-value {{
+                font-size: 24px;
+                font-weight: bold;
+                color: #00ff88;
+            }}
+            .stat-label {{
+                font-size: 12px;
+                opacity: 0.7;
+                margin-top: 5px;
+            }}
+            #legend {{
+                position: absolute;
+                bottom: 20px;
+                right: 20px;
+                background: {panel_bg};
+                border-radius: 20px;
+                padding: 20px;
+                backdrop-filter: blur(20px);
+                z-index: 1000;
+                color: {text_color};
+            }}
+            .legend-item {{
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 6px;
+                font-size: 12px;
+            }}
+            .legend-color {{
+                width: 16px;
+                height: 16px;
+                border-radius: 4px;
+            }}
+            .popup-content {{
+                font-family: inherit;
+                min-width: 250px;
+                color: #000;
+            }}
+            .popup-content h4 {{
+                margin-bottom: 8px;
+                color: #f5576c;
+                font-size: 16px;
+            }}
+            .popup-content p {{
+                margin: 4px 0;
+                font-size: 13px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div id="map-container">
+            <div id="map"></div>
+            
+            <!-- Control Panel -->
+            <div id="control-panel">
+                <h1>🏗️ Asset Appraisal Map</h1>
+                <p style="font-size: 12px; opacity: 0.7;">Interactive 3D map with asset locations</p>
+                
+                <div class="layer-controls">
+                    <h3 style="color: #00ff88; margin-bottom: 15px; font-size: 14px;">🎨 3D Layers</h3>
+                    <div class="layer-toggle">
+                        <span style="font-size: 12px;">3D District Zones</span>
+                        <div class="toggle-switch active" id="toggle-zones"></div>
+                    </div>
+                    <div class="layer-toggle">
+                        <span style="font-size: 12px;">Customer Assets</span>
+                        <div class="toggle-switch active" id="toggle-assets"></div>
+                    </div>
+                    <div class="layer-toggle">
+                        <span style="font-size: 12px;">Zone Labels</span>
+                        <div class="toggle-switch active" id="toggle-labels"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stats Dashboard -->
+            <div id="stats-dashboard">
+                <h3 style="color: #00ff88; margin-bottom: 15px; font-size: 16px;">📈 Asset Analytics</h3>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-total">{total_properties}</div>
+                    <div class="stat-label">Total Assets</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-avg">${avg_market_price:,.0f}</div>
+                    <div class="stat-label">Avg Value</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-zones">{zones_count}</div>
+                    <div class="stat-label">Price Zones</div>
+                </div>
+            </div>
+            
+            <!-- Price Legend -->
+            <div id="legend">
+                <h3 style="color: #00ff88; margin-bottom: 15px; font-size: 16px;">💰 Price Zones</h3>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #2d5016;"></div>
+                    <span>$1,000 - $2,000</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #73b504;"></div>
+                    <span>$2,000 - $3,000</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffcc00;"></div>
+                    <span>$3,000 - $4,000</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ff6600;"></div>
+                    <span>$4,000 - $5,000</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ff0000;"></div>
+                    <span>$5,000+</span>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            const assetsData = {json.dumps(assets_geojson)};
+            const zonesData = {json.dumps(zones_geojson)};
+            
+            // Calculate bounding box from assets
+            const calculateBounds = (features) => {{
+                if (!features || features.length === 0) return null;
+                let minLon = Infinity, maxLon = -Infinity;
+                let minLat = Infinity, maxLat = -Infinity;
+                features.forEach(f => {{
+                    const [lon, lat] = f.geometry.coordinates;
+                    minLon = Math.min(minLon, lon);
+                    maxLon = Math.max(maxLon, lon);
+                    minLat = Math.min(minLat, lat);
+                    maxLat = Math.max(maxLat, lat);
+                }});
+                return [[minLon, minLat], [maxLon, maxLat]];
+            }};
+            
+            // Map style based on theme
+            const mapStyleUrl = {json.dumps(map_style_url)};
+            const map = new maplibregl.Map({{
+                container: 'map',
+                style: mapStyleUrl,
+                center: [{avg_lon}, {avg_lat}],
+                zoom: 10,
+                pitch: 60,
+                bearing: -20,
+                antialias: true
+            }});
+            
+            map.addControl(new maplibregl.NavigationControl({{
+                visualizePitch: true,
+                showZoom: true,
+                showCompass: true
+            }}));
+            
+            map.on('load', () => {{
+                // Add terrain
+                map.addSource('terrain', {{
+                    type: 'raster-dem',
+                    url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                    tileSize: 256
+                }});
+                
+                map.addLayer({{
+                    id: 'terrain-layer',
+                    source: 'terrain',
+                    type: 'hillshade',
+                    paint: {{
+                        'hillshade-shadow-color': '#000',
+                        'hillshade-highlight-color': '#fff',
+                        'hillshade-illumination-anchor': 'viewport'
+                    }}
+                }});
+                
+                // Add price zone polygons
+                if (zonesData.features && zonesData.features.length > 0) {{
+                    map.addSource('price-zones', {{
+                        type: 'geojson',
+                        data: zonesData
+                    }});
+                    
+                    // 3D extruded zones
+                    map.addLayer({{
+                        id: 'district-zones',
+                        source: 'price-zones',
+                        type: 'fill-extrusion',
+                        paint: {{
+                            'fill-extrusion-color': ['get', 'color'],
+                            'fill-extrusion-height': [
+                                'interpolate',
+                                ['linear'],
+                                ['get', 'market_price'],
+                                1000, 50,
+                                2000, 100,
+                                3000, 150,
+                                4000, 200,
+                                5000, 250
+                            ],
+                            'fill-extrusion-base': 0,
+                            'fill-extrusion-opacity': 0.75,
+                            'fill-extrusion-vertical-gradient': true
+                        }}
+                    }});
+                    
+                    map.addLayer({{
+                        id: 'district-zone-outline',
+                        source: 'price-zones',
+                        type: 'line',
+                        paint: {{
+                            'line-color': '#ffffff',
+                            'line-width': 1.5,
+                            'line-opacity': 0.6
+                        }}
+                    }});
+                    
+                    // Zone labels
+                    map.addLayer({{
+                        id: 'zone-labels',
+                        source: 'price-zones',
+                        type: 'symbol',
+                        layout: {{
+                            'text-field': ['get', 'district'],
+                            'text-font': ['Open Sans Bold'],
+                            'text-size': 14,
+                            'text-transform': 'uppercase',
+                            'text-anchor': 'center',
+                            'text-pitch-alignment': 'viewport'
+                        }},
+                        paint: {{
+                            'text-color': '#ffffff',
+                            'text-halo-color': '#00ff88',
+                            'text-halo-width': 3,
+                            'text-opacity': 0.9
+                        }}
+                    }});
+                }}
+                
+                // Add customer assets
+                map.addSource('customer-assets', {{
+                    type: 'geojson',
+                    data: assetsData
+                }});
+                
+                // Load pin icon
+                map.loadImage('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png', (error, image) => {{
+                    if (error) {{
+                        // Fallback to circle if icon fails to load
+                        map.addLayer({{
+                            id: 'customer-pins',
+                            type: 'circle',
+                            source: 'customer-assets',
+                            paint: {{
+                                'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 15],
+                                'circle-color': '#ff0000',
+                                'circle-stroke-width': 3,
+                                'circle-stroke-color': '#ffffff',
+                                'circle-opacity': 0.9
+                            }}
+                        }});
+                    }} else {{
+                        map.addImage('red-pin', image);
+                        map.addLayer({{
+                            id: 'customer-pins',
+                            type: 'symbol',
+                            source: 'customer-assets',
+                            layout: {{
+                                'icon-image': 'red-pin',
+                                'icon-size': 0.5,
+                                'icon-anchor': 'bottom'
+                            }}
+                        }});
+                    }}
+                    
+                    // Add price labels below pins
+                    map.addLayer({{
+                        id: 'customer-price-labels',
+                        type: 'symbol',
+                        source: 'customer-assets',
+                        layout: {{
+                            'text-field': ['concat', '$', ['to-string', ['round', ['get', 'value']]], ''],
+                            'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                            'text-size': 11,
+                            'text-offset': [0, 2.5],
+                            'text-anchor': 'top'
+                        }},
+                        paint: {{
+                            'text-color': '#ff0000',
+                            'text-halo-color': '#ffffff',
+                            'text-halo-width': 2
+                        }}
+                    }});
+                    
+                    // Auto-fit bounds to show all customer properties
+                    const bounds = calculateBounds(assetsData.features);
+                    if (bounds) {{
+                        map.fitBounds(bounds, {{
+                            padding: {{top: 50, bottom: 50, left: 50, right: 50}},
+                            maxZoom: 12,
+                            duration: 1500
+                        }});
+                    }}
+                }});
+                
+                // Popups
+                map.on('click', ['customer-pins', 'customer-price-labels'], (e) => {{
+                    const props = e.features[0].properties;
+                    new maplibregl.Popup()
+                        .setLngLat([props.lon, props.lat])
+                        .setHTML(`
+                            <div class="popup-content">
+                                <h4>${{props.name || props.asset_id || 'Asset'}}</h4>
+                                <p style="color: #22c55e; font-weight: bold;">💰 Value: ${{props.value ? props.value.toLocaleString() : 'N/A'}}</p>
+                                <p>📍 ${{props.city || 'Unknown'}} • ${{props.district || 'N/A'}}</p>
+                                <p>🏘️ ${{props.asset_type || 'Unknown'}}</p>
+                                <p>🏠 Area: ${{props.area_sqm || 'N/A'}} sqm</p>
+                            </div>
+                        `)
+                        .addTo(map);
+                }});
+                
+                map.on('mouseenter', ['customer-pins', 'customer-price-labels'], () => {{
+                    map.getCanvas().style.cursor = 'pointer';
+                }});
+                
+                map.on('mouseleave', ['customer-pins', 'customer-price-labels'], () => {{
+                    map.getCanvas().style.cursor = '';
+                }});
+                
+                if (zonesData.features && zonesData.features.length > 0) {{
+                    map.on('click', 'district-zones', (e) => {{
+                        const props = e.features[0].properties;
+                        new maplibregl.Popup()
+                            .setLngLat(e.lngLat)
+                            .setHTML(`
+                                <div class="popup-content">
+                                    <h4>${{props.district}}</h4>
+                                    <p style="color: #22c55e; font-weight: bold;">💰 Market: ${{props.market_price ? props.market_price.toLocaleString() : 'N/A'}}/sqm</p>
+                                    <p>📍 ${{props.city}}</p>
+                                    <p>📊 Range: ${{props.price_range ? props.price_range.replace('_', ' ').toUpperCase() : 'N/A'}}</p>
+                                </div>
+                            `)
+                            .addTo(map);
+                    }});
+                }}
+                
+                // Toggle controls
+                const toggleZones = document.getElementById('toggle-zones');
+                if (toggleZones) {{
+                    toggleZones.onclick = function() {{
+                        const visibility = map.getLayoutProperty('district-zones', 'visibility');
+                        map.setLayoutProperty('district-zones', 'visibility', visibility === 'none' ? 'visible' : 'none');
+                        if (map.getLayer('district-zone-outline')) {{
+                            map.setLayoutProperty('district-zone-outline', 'visibility', visibility === 'none' ? 'visible' : 'none');
+                        }}
+                        this.classList.toggle('active');
+                    }};
+                }}
+                
+                const toggleAssets = document.getElementById('toggle-assets');
+                if (toggleAssets) {{
+                    toggleAssets.onclick = function() {{
+                        const visibility = map.getLayoutProperty('customer-pins', 'visibility');
+                        map.setLayoutProperty('customer-pins', 'visibility', visibility === 'none' ? 'visible' : 'none');
+                        map.setLayoutProperty('customer-price-labels', 'visibility', visibility === 'none' ? 'visible' : 'none');
+                        this.classList.toggle('active');
+                    }};
+                }}
+                
+                const toggleLabels = document.getElementById('toggle-labels');
+                if (toggleLabels) {{
+                    toggleLabels.onclick = function() {{
+                        if (map.getLayer('zone-labels')) {{
+                            const visibility = map.getLayoutProperty('zone-labels', 'visibility');
+                            map.setLayoutProperty('zone-labels', 'visibility', visibility === 'none' ? 'visible' : 'none');
+                            this.classList.toggle('active');
+                        }}
+                    }};
+                }}
+            }});
+        </script>
+    </body>
+    </html>
+    """
 
 
 
@@ -2121,7 +2637,6 @@ with tabC:
     # ─────────────────────────────────────────────
     st.markdown("### 🧠 LLM & Hardware Profile (Local + Hugging Face Models)")
 
-<<<<<<< HEAD
     HF_MODELS = [
         {"Model": "mistralai/Mistral-7B-Instruct-v0.3",
          "Type": "Reasoning / valuation narrative",
@@ -2163,9 +2678,7 @@ with tabC:
     LLM_LABELS = [m["label"] for m in ordered_models]
     LLM_VALUE_BY_LABEL = {m["label"]: m["value"] for m in ordered_models}
     LLM_HINT_BY_LABEL  = {m["label"]: m["hint"] for m in ordered_models}
-=======
     st.dataframe(pd.DataFrame(get_hf_models()), use_container_width=True)
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
     OPENSTACK_FLAVORS = {
         "m4.medium": "4 vCPU / 8 GB RAM (CPU-only small)",
@@ -2177,22 +2690,6 @@ with tabC:
 
     with st.expander("🧠 Choose Model & Hardware Profile", expanded=True):
         st.info("CPU picks land first so you can generate valuation narratives without waiting on GPUs. Jump to the GPU section only if you need deeper reasoning or longer context windows.", icon="⚙️")
-<<<<<<< HEAD
-        c1, c2 = st.columns([1.2, 1])
-        with c1:
-            model_label = st.selectbox(
-                "🔥 Local/HF LLM for narratives & explanations",
-                LLM_LABELS, index=0, key="asset_llm_label")
-            llm_value = LLM_VALUE_BY_LABEL[model_label]
-            use_llm = st.checkbox("Use LLM narrative (explanations)",
-                                  value=False, key="asset_use_llm")
-            st.caption(f"Hint: {LLM_HINT_BY_LABEL[model_label]}")
-        with c2:
-            flavor = st.selectbox("OpenStack flavor / host profile",
-                                  list(OPENSTACK_FLAVORS.keys()), index=0,
-                                  key="asset_flavor")
-            st.caption(OPENSTACK_FLAVORS[flavor])
-=======
         selected_llm = render_llm_selector(context="asset_appraisal")
         st.session_state["asset_llm_label"] = selected_llm["model"]
         st.session_state["asset_llm_model"] = selected_llm["value"]
@@ -2209,7 +2706,6 @@ with tabC:
             key="asset_flavor",
         )
         st.caption(OPENSTACK_FLAVORS[flavor])
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
         st.caption("These parameters are passed to backend (Ollama / Flowise / RunAI).")
 
     # ─────────────────────────────────────────────
@@ -2316,11 +2812,8 @@ with tabC:
         val_path = os.path.join(RUNS_DIR, f"valuation_ai.{_ts()}.csv")
         df_app.to_csv(val_path, index=False)
         
-<<<<<<< HEAD
-=======
         _ping_chatbot_refresh("asset_run")
         
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
         st.success(f"Saved valuation artifact → `{val_path}`")
 
         # # ✅ PATCH: Save Stage C valuation table for Stage H (use df_app, not ai_df)
@@ -2342,6 +2835,195 @@ with tabC:
 
         # Keep table for downstream steps
         ss["asset_ai_df"] = df_app
+
+        # ─────────────────────────────────────────
+        # ✅ Real Estate Evaluator Map (displayed on top of results)
+        # ─────────────────────────────────────────
+        # Check if coordinates are available and trigger map evaluation
+        has_coords = "lat" in df_app.columns and "lon" in df_app.columns
+        if has_coords:
+            eval_df = df_app.dropna(subset=["lat", "lon"]).copy()
+            
+            if not eval_df.empty:
+                with st.spinner("🗺️ Generating Real Estate Evaluator map..."):
+                    try:
+                        API_URL = os.getenv("API_URL", "http://localhost:8090")
+                        url = f"{API_URL}/v1/agents/real_estate_evaluator/run/json"
+                        
+                        # Prepare payload
+                        payload_data = []
+                        for idx, row in eval_df.iterrows():
+                            asset_id = str(row.get("asset_id", "")) if pd.notna(row.get("asset_id")) else ""
+                            address = asset_id if asset_id else str(row.get("city", "Unknown"))
+                            
+                            payload_data.append({
+                                "address": address,
+                                "asset_id": asset_id,
+                                "city": str(row.get("city", "Unknown")),
+                                "district": str(row.get("district", "")),
+                                "property_type": str(row.get("asset_type", "Unknown")),
+                                "customer_price": float(row.get("realizable_value", row.get("ai_adjusted", 0))) if pd.notna(row.get("realizable_value", row.get("ai_adjusted", 0))) else 0,
+                                "area_sqm": float(row.get("area_sqm", 0)) if pd.notna(row.get("area_sqm")) else 0,
+                                "lat": float(row["lat"]),
+                                "lon": float(row["lon"])
+                            })
+                        
+                        payload = {
+                            "df": payload_data,
+                            "params": {"use_scraper": True}
+                        }
+                        
+                        # Run evaluation
+                        resp = requests.post(url, json=payload, timeout=120)
+                        
+                        if resp.status_code == 200:
+                            result = resp.json()
+                            
+                            # Store evaluated data
+                            evaluated_df_data = result.get("evaluated_df", [])
+                            if isinstance(evaluated_df_data, list):
+                                ss["re_evaluated_df"] = pd.DataFrame(evaluated_df_data)
+                            else:
+                                ss["re_evaluated_df"] = pd.DataFrame([evaluated_df_data])
+                            
+                            ss["re_map_data"] = result.get("map_data", [])
+                            ss["re_zone_data"] = result.get("zone_data", [])
+                            ss["re_summary"] = result.get("summary", {})
+                            ss["asset_re_eval_hash"] = hash(tuple(sorted(df_app.get("asset_id", []).astype(str))))
+                            
+                            # Display map immediately
+                            if ss.get("re_map_data") and len(ss["re_map_data"]) > 0:
+                                st.markdown("### 🗺️ Real Estate Evaluator Map - Market Price Zones")
+                                
+                                map_data = ss["re_map_data"]
+                                zone_data = ss.get("re_zone_data", [])
+                                
+                                # Prepare GeoJSON for customer assets
+                                asset_features = []
+                                for item in map_data:
+                                    asset_features.append({
+                                        "type": "Feature",
+                                        "geometry": {
+                                            "type": "Point",
+                                            "coordinates": [item["lon"], item["lat"]]
+                                        },
+                                        "properties": item
+                                    })
+                                
+                                assets_geojson = {
+                                    "type": "FeatureCollection",
+                                    "features": asset_features
+                                }
+                                
+                                # Prepare GeoJSON for price zones
+                                zone_features = []
+                                for zone in zone_data:
+                                    zone_features.append({
+                                        "type": "Feature",
+                                        "geometry": {
+                                            "type": "Polygon",
+                                            "coordinates": [zone["polygon"]]
+                                        },
+                                        "properties": {
+                                            "city": zone["city"],
+                                            "district": zone["district"],
+                                            "market_price": zone["market_price"],
+                                            "color": zone["color"],
+                                            "price_range": zone["price_range"]
+                                        }
+                                    })
+                                
+                                zones_geojson = {
+                                    "type": "FeatureCollection",
+                                    "features": zone_features
+                                }
+                                
+                                # Get current theme
+                                current_theme = get_theme()
+                                
+                                # Generate and render map
+                                map_html = _generate_ultra_3d_map(map_data, zone_data, assets_geojson, zones_geojson, current_theme)
+                                components.html(map_html, height=800)
+                                
+                                # Display summary with calculated values from actual asset data
+                                summary = result.get("summary", {})
+                                
+                                # Calculate customer prices from df_app (the actual asset data from Stage C)
+                                customer_prices = []
+                                # Use df_app if available (from Stage C), otherwise try asset_ai_df
+                                asset_df = None
+                                if 'df_app' in locals() and df_app is not None:
+                                    asset_df = df_app
+                                elif "asset_ai_df" in ss and ss["asset_ai_df"] is not None:
+                                    asset_df = ss["asset_ai_df"]
+                                
+                                if asset_df is not None:
+                                    # Try to get customer price from various columns (prioritize customer-declared prices)
+                                    for col in ["realizable_value", "customer_price", "market_value", "ai_adjusted", "fmv"]:
+                                        if col in asset_df.columns:
+                                            prices = pd.to_numeric(asset_df[col], errors="coerce").dropna()
+                                            valid_prices = prices[prices > 0].tolist()
+                                            if valid_prices:
+                                                customer_prices.extend(valid_prices)
+                                                break
+                                
+                                # Also try to get customer prices from map_data (which was sent to the evaluator)
+                                if not customer_prices and map_data:
+                                    for item in map_data:
+                                        cust_price = item.get("customer_price", item.get("value", 0))
+                                        if cust_price and cust_price > 0:
+                                            customer_prices.append(cust_price)
+                                
+                                # Calculate market prices from map data (per sqm, need to convert to total if area available)
+                                market_prices_per_sqm = []
+                                market_prices_total = []
+                                if map_data:
+                                    for item in map_data:
+                                        market_price_per_sqm = item.get("market_price", item.get("market_price_per_sqm", 0))
+                                        if market_price_per_sqm and market_price_per_sqm > 0:
+                                            market_prices_per_sqm.append(market_price_per_sqm)
+                                            # Also calculate total if area is available
+                                            area = item.get("area_sqm", 0)
+                                            if area and area > 0:
+                                                market_prices_total.append(market_price_per_sqm * area)
+                                
+                                # Calculate averages
+                                total_assets = len(map_data) or summary.get("total_assets", 0)
+                                avg_market_price = np.mean(market_prices_per_sqm) if market_prices_per_sqm else summary.get("avg_market_price", 0)
+                                avg_customer_price = np.mean(customer_prices) if customer_prices else 0
+                                
+                                # If customer prices are total prices, compare with total market prices
+                                if not market_prices_per_sqm and market_prices_total:
+                                    avg_market_price = np.mean(market_prices_total)
+                                
+                                # Calculate price delta
+                                if avg_market_price > 0 and avg_customer_price > 0:
+                                    # If comparing total prices, use total; otherwise use per sqm
+                                    if market_prices_total and len(market_prices_total) > 0:
+                                        avg_price_delta = ((avg_customer_price - np.mean(market_prices_total)) / np.mean(market_prices_total)) * 100
+                                    else:
+                                        avg_price_delta = ((avg_customer_price - avg_market_price) / avg_market_price) * 100
+                                elif avg_market_price > 0:
+                                    avg_price_delta = -100.0  # Customer price is 0
+                                else:
+                                    avg_price_delta = 0.0
+                                
+                                st.markdown("#### 📊 Market Comparison Summary")
+                                col_a, col_b, col_c, col_d = st.columns(4)
+                                with col_a:
+                                    st.metric("Total Assets", total_assets)
+                                with col_b:
+                                    st.metric("Avg Market Price", f"${avg_market_price:,.0f}/sqm" if avg_market_price > 0 else "N/A")
+                                with col_c:
+                                    st.metric("Avg Customer Price", f"${avg_customer_price:,.0f}" + ("/sqm" if market_prices_per_sqm else "") if avg_customer_price > 0 else "N/A")
+                                with col_d:
+                                    delta_color = "normal" if abs(avg_price_delta) < 10 else "inverse"
+                                    st.metric("Avg Price Delta", f"{avg_price_delta:+.1f}%", delta=f"{abs(avg_price_delta):.1f}%", delta_color=delta_color)
+                                
+                                st.markdown("---")
+                    except Exception as e:
+                        # Silently fail - map will just not show if evaluation fails
+                        st.warning(f"⚠️ Could not generate map: {str(e)[:200]}")
 
         # Display minimal KPIs
         k1, k2, k3 = st.columns(3)
@@ -2758,171 +3440,6 @@ with tabC:
                                 [[c for c in ["application_id","asset_id","asset_type","value","loan_amount","confidence"] if c in df.columns]]
                                 .head(15))
                             st.dataframe(sub, use_container_width=True)
-
-
-            # ---- Optional Map (if lat/lon present)
-            st.markdown("### 🗺️ Map (optional)")
-            st.caption("Visualize asset locations — map color and style follow the current UI theme.")
-
-            map_cols = [("lat","lon"), ("latitude","longitude"), ("gps_lat","gps_lon")]
-            have_map = False
-
-            for la, lo in map_cols:
-                if la in df.columns and lo in df.columns:
-                    have_map = True
-                    map_df = df[[la, lo] + [
-                        c for c in ["asset_id","asset_type","city","ai_adjusted","realizable_value","confidence"]
-                        if c in df.columns
-                    ]].copy()
-                    map_df = map_df.rename(columns={la: "lat", lo: "lon"})
-                    map_df = map_df.dropna(subset=["lat", "lon"])
-
-                    if not map_df.empty:
-                        try:
-                            # ─────────────────────────────────────────────
-                            # Prefer Plotly (bright light / dark dark)
-                            # ─────────────────────────────────────────────
-                            import plotly.express as px
-                            apply_plotly_mapbox_defaults()
-                            # ============================================
-                            # ✅ CODEX INSTRUCTION — MAP IMPROVEMENTS
-                            # ============================================
-                            value_source = None
-                            for candidate in ["ai_adjusted", "realizable_value", "loan_amount"]:
-                                if candidate in map_df.columns:
-                                    value_source = candidate
-                                    break
-
-                            if value_source:
-                                value_metric = map_df[value_source]
-                            else:
-                                value_metric = pd.Series([0] * len(map_df), index=map_df.index)
-
-                            working_df = map_df.assign(
-                                city=map_df.get("city", "Unknown").fillna("Unknown"),
-                                value_metric=value_metric,
-                            )
-
-                            # Aggregate per city so bubble size reflects asset counts
-                            city_bubbles = (
-                                working_df.groupby("city", dropna=False)
-                                .agg(
-                                    lat=("lat", "mean"),
-                                    lon=("lon", "mean"),
-                                    n_assets=("city", "size"),
-                                    max_value=("value_metric", "max"),
-                                    min_value=("value_metric", "min"),
-                                )
-                                .reset_index()
-                            )
-
-                            if not city_bubbles.empty:
-                                lat_min, lat_max = city_bubbles["lat"].min(), city_bubbles["lat"].max()
-                                lon_min, lon_max = city_bubbles["lon"].min(), city_bubbles["lon"].max()
-
-                                def _compute_zoom(lat_range: float, lon_range: float) -> float:
-                                    span = max(lat_range, lon_range)
-                                    if span <= 0.05:
-                                        return 11
-                                    if span <= 0.1:
-                                        return 10
-                                    if span <= 0.5:
-                                        return 8
-                                    if span <= 1.0:
-                                        return 7
-                                    if span <= 5.0:
-                                        return 6
-                                    return 5
-
-                                zoom = _compute_zoom(lat_max - lat_min, lon_max - lon_min)
-                                center = {
-                                    "lat": float((lat_min + lat_max) / 2.0),
-                                    "lon": float((lon_min + lon_max) / 2.0),
-                                }
-
-                                map_style = "carto-positron"
-
-                                fig = px.scatter_mapbox(
-                                    city_bubbles,
-                                    lat="lat",
-                                    lon="lon",
-                                    size="n_assets",
-                                    color="city",
-                                    hover_name="city",
-                                    hover_data={
-                                        "n_assets": True,
-                                        "max_value": value_source is not None,
-                                        "min_value": value_source is not None,
-                                    },
-                                    size_max=50,
-                                    height=420,
-                                    color_discrete_sequence=px.colors.qualitative.Bold,
-                                )
-
-                                def fmt_currency(value: float | int | None) -> str:
-                                    if value is None or (isinstance(value, float) and np.isnan(value)):
-                                        return "n/a"
-                                    return f"{value:,.0f}"
-
-                                city_bubbles["bubble_text"] = city_bubbles.apply(
-                                    lambda row: (
-                                        f"{row['city']} • {row['n_assets']} assets"
-                                        + (
-                                            f"\nTop: {fmt_currency(row['max_value'])} · Low: {fmt_currency(row['min_value'])}"
-                                            if value_source
-                                            else ""
-                                        )
-                                    ),
-                                    axis=1,
-                                )
-
-                                fig.update_traces(
-                                    text=city_bubbles["bubble_text"],
-                                    textposition="top center",
-                                )
-                                fig.update_layout(
-                                    mapbox_style=map_style,
-                                    mapbox_center=center,
-                                    mapbox_zoom=zoom,
-                                    margin=dict(l=0, r=0, t=0, b=0),
-                                    paper_bgcolor="rgba(0,0,0,0)",
-                                    plot_bgcolor="rgba(0,0,0,0)",
-                                )
-                                st.plotly_chart(fig, use_container_width=True)
-                            else:
-                                st.info("ℹ️ Unable to build city bubbles — no valid coordinates after grouping.")
-
-                        except Exception as e:
-                            # ─────────────────────────────────────────────
-                            # Fallback to pydeck if Plotly unavailable
-                            # ─────────────────────────────────────────────
-                            import pydeck as pdk
-                            view_state = make_pydeck_view_state(
-                                lat=float(map_df["lat"].mean()),
-                                lon=float(map_df["lon"].mean()),
-                                zoom=8
-                            )
-                            layer = pdk.Layer(
-                                "ScatterplotLayer",
-                                data=map_df,
-                                get_position='[lon, lat]',
-                                get_color='[0, 128, 255, 200]',
-                                get_radius=120,
-                                pickable=True,
-                            )
-                            deck = pdk.Deck(
-                                map_style=pydeck_map_style(),
-                                initial_view_state=view_state,
-                                layers=[layer],
-                                tooltip={"text": "{asset_id} · {asset_type}\n{city}\nAI: {ai_adjusted}\nRealiz: {realizable_value}\nConf: {confidence}"}
-                            )
-                            st.pydeck_chart(deck)
-                    else:
-                        st.info("ℹ️ No valid coordinates found to display on the map.")
-                    break
-
-            if not have_map:
-                st.caption("No lat/lon columns found (lat/lon or latitude/longitude or gps_lat/gps_lon). Map hidden.")
 
 
             # ---- Exports of aggregates
@@ -3381,7 +3898,69 @@ with tabE:
     if "justification" not in df_ai.columns:
         df_ai["justification"] = ""
 
+    # ─────────────────────────────────────────
+    # ✅ Auto-run Real Estate Evaluator (if coordinates available)
+    # ─────────────────────────────────────────
+    # Check if we need to evaluate assets (if not already evaluated or if data changed)
+    has_coords = "lat" in df_ai.columns and "lon" in df_ai.columns
+    needs_evaluation = has_coords and (
+        ss.get("re_evaluated_df") is None or 
+        len(ss.get("re_evaluated_df", pd.DataFrame())) != len(df_ai) or
+        ss.get("asset_re_eval_hash") != hash(tuple(sorted(df_ai.get("asset_id", []).astype(str))))
+    )
     
+    if needs_evaluation and has_coords:
+        eval_df = df_ai.dropna(subset=["lat", "lon"]).copy()
+        
+        if not eval_df.empty:
+            # Auto-evaluate in background (non-blocking)
+            try:
+                API_URL = os.getenv("API_URL", "http://localhost:8090")
+                url = f"{API_URL}/v1/agents/real_estate_evaluator/run/json"
+                
+                # Prepare payload
+                payload_data = []
+                for idx, row in eval_df.iterrows():
+                    asset_id = str(row.get("asset_id", "")) if pd.notna(row.get("asset_id")) else ""
+                    address = asset_id if asset_id else str(row.get("city", "Unknown"))
+                    
+                    payload_data.append({
+                        "address": address,
+                        "asset_id": asset_id,
+                        "city": str(row.get("city", "Unknown")),
+                        "district": str(row.get("district", "")),
+                        "property_type": str(row.get("asset_type", "Unknown")),
+                        "customer_price": float(row.get("realizable_value", row.get("ai_adjusted", 0))) if pd.notna(row.get("realizable_value", row.get("ai_adjusted", 0))) else 0,
+                        "area_sqm": float(row.get("area_sqm", 0)) if pd.notna(row.get("area_sqm")) else 0,
+                        "lat": float(row["lat"]),
+                        "lon": float(row["lon"])
+                    })
+                
+                payload = {
+                    "df": payload_data,
+                    "params": {"use_scraper": True}
+                }
+                
+                # Run evaluation
+                resp = requests.post(url, json=payload, timeout=120)
+                
+                if resp.status_code == 200:
+                    result = resp.json()
+                    
+                    # Store evaluated data
+                    evaluated_df_data = result.get("evaluated_df", [])
+                    if isinstance(evaluated_df_data, list):
+                        ss["re_evaluated_df"] = pd.DataFrame(evaluated_df_data)
+                    else:
+                        ss["re_evaluated_df"] = pd.DataFrame([evaluated_df_data])
+                    
+                    ss["re_map_data"] = result.get("map_data", [])
+                    ss["re_zone_data"] = result.get("zone_data", [])
+                    ss["re_summary"] = result.get("summary", {})
+                    ss["asset_re_eval_hash"] = hash(tuple(sorted(df_ai.get("asset_id", []).astype(str))))
+            except Exception as e:
+                # Silently fail - map will just not show if evaluation fails
+                pass
 
     # ── Market Projections (safe)
     st.markdown("### 📈 Market Projections")
@@ -3405,89 +3984,1241 @@ with tabE:
 
 
     # ─────────────────────────────────────────
-    # ✅ Human Adjustment Table (LIVE + REFRESH SAFE)
+    # ✅ Real Estate Evaluator Map (INTEGRATED DIRECTLY)
     # ─────────────────────────────────────────
-    st.markdown("### ✏️ Human Adjustments & Justification")
-
+    st.markdown("### 🏠 Real Estate Evaluator - Market Price Map")
     
+    # Display Real Estate Evaluator map if available
+    if ss.get("re_map_data") and len(ss["re_map_data"]) > 0:
+        map_data = ss["re_map_data"]
+        zone_data = ss.get("re_zone_data", [])
+        
+        # Prepare GeoJSON for customer assets
+        asset_features = []
+        for item in map_data:
+            asset_features.append({
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [item["lon"], item["lat"]]
+                },
+                "properties": item
+            })
+        
+        assets_geojson = {
+            "type": "FeatureCollection",
+            "features": asset_features
+        }
+        
+        # Prepare GeoJSON for price zones
+        zone_features = []
+        for zone in zone_data:
+            zone_features.append({
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [zone["polygon"]]
+                },
+                "properties": {
+                    "city": zone["city"],
+                    "district": zone["district"],
+                    "market_price": zone["market_price"],
+                    "color": zone["color"],
+                    "price_range": zone["price_range"]
+                }
+            })
+        
+        zones_geojson = {
+            "type": "FeatureCollection",
+            "features": zone_features
+        }
+        
+        # Get current theme
+        current_theme = get_theme()
+        
+        # Generate and render map directly (no button needed)
+        map_html = _generate_ultra_3d_map(map_data, zone_data, assets_geojson, zones_geojson, current_theme)
+        components.html(map_html, height=800)
+        
+        # Display summary with calculated values from actual asset data
+        if ss.get("re_summary") or ss.get("re_map_data"):
+            summary = ss.get("re_summary", {})
+            
+            # Get customer prices from map_data (most reliable source - contains original customer_price)
+            # Also try asset_df as fallback
+            asset_df = None
+            if "asset_ai_df" in ss and ss["asset_ai_df"] is not None:
+                asset_df = ss["asset_ai_df"]
+            elif "last_merged_df" in ss and ss["last_merged_df"] is not None:
+                asset_df = ss["last_merged_df"]
+            customer_prices_per_sqm = []
+            customer_prices_total = []
+            if ss.get("re_map_data"):
+                for item in ss["re_map_data"]:
+                    # Customer price from map_data (this is what was sent to evaluator)
+                    cust_price = item.get("customer_price") or item.get("value") or item.get("price")
+                    if cust_price and cust_price > 0:
+                        cust_price_val = float(cust_price)
+                        # Check if it's per sqm or total by comparing with area
+                        area = item.get("area_sqm", 0)
+                        if area and area > 0:
+                            # If customer_price is much larger than area, it's likely total price
+                            if cust_price_val > area * 1000:  # Likely total price
+                                customer_prices_total.append(cust_price_val)
+                                # Convert to per sqm for comparison
+                                customer_prices_per_sqm.append(cust_price_val / area)
+                            else:
+                                # Likely per sqm already
+                                customer_prices_per_sqm.append(cust_price_val)
+                        else:
+                            # No area info, assume it's total price
+                            customer_prices_total.append(cust_price_val)
+            
+            # If we don't have customer prices from map_data, use asset_df
+            if not customer_prices_per_sqm and not customer_prices_total and asset_df is not None:
+                for col in ["realizable_value", "customer_price", "market_value", "ai_adjusted", "fmv", "human_value"]:
+                    if col in asset_df.columns:
+                        prices = pd.to_numeric(asset_df[col], errors="coerce").dropna()
+                        valid_prices = prices[prices > 0].tolist()
+                        if valid_prices:
+                            customer_prices_total.extend(valid_prices)
+                            break
+            
+            # Calculate market prices from map data (per sqm)
+            market_prices_per_sqm = []
+            if ss.get("re_map_data"):
+                for item in ss["re_map_data"]:
+                    # Market price per sqm from evaluator response
+                    market_price_per_sqm = item.get("market_price_per_sqm") or item.get("market_price", 0)
+                    if market_price_per_sqm and market_price_per_sqm > 0:
+                        market_prices_per_sqm.append(float(market_price_per_sqm))
+            
+            # Calculate averages
+            total_assets = len(ss.get("re_map_data", [])) or summary.get("total_assets", 0)
+            avg_market_price = np.mean(market_prices_per_sqm) if market_prices_per_sqm else summary.get("avg_market_price", 0)
+            
+            # Use per sqm customer prices if available, otherwise convert total to per sqm
+            if customer_prices_per_sqm:
+                avg_customer_price = np.mean(customer_prices_per_sqm)
+            elif customer_prices_total and market_prices_per_sqm:
+                # Convert total customer prices to per sqm using average area
+                if ss.get("re_map_data"):
+                    areas = [item.get("area_sqm", 0) for item in ss["re_map_data"] if item.get("area_sqm", 0) > 0]
+                    avg_area = np.mean(areas) if areas else 100  # Default 100 sqm
+                    avg_customer_price = np.mean(customer_prices_total) / avg_area if avg_area > 0 else 0
+                else:
+                    avg_customer_price = 0
+            else:
+                avg_customer_price = 0
+            
+            # Calculate price delta (both should be per sqm now)
+            if avg_market_price > 0 and avg_customer_price > 0:
+                avg_price_delta = ((avg_customer_price - avg_market_price) / avg_market_price) * 100
+            elif avg_market_price > 0:
+                avg_price_delta = -100.0  # Customer price is 0
+            else:
+                avg_price_delta = 0.0
+            
+            st.markdown("#### 📊 Market Comparison Summary")
+            col_a, col_b, col_c, col_d = st.columns(4)
+            with col_a:
+                st.metric("Total Assets", total_assets)
+            with col_b:
+                st.metric("Avg Market Price", f"${avg_market_price:,.0f}/sqm" if avg_market_price > 0 else "N/A")
+            with col_c:
+                st.metric("Avg Customer Price", f"${avg_customer_price:,.0f}/sqm" if avg_customer_price > 0 else "N/A")
+            with col_d:
+                delta_color = "normal" if abs(avg_price_delta) < 10 else "inverse"
+                st.metric("Avg Price Delta", f"{avg_price_delta:+.1f}%", delta=f"{abs(avg_price_delta):.1f}%", delta_color=delta_color)
+        
+        # ─────────────────────────────────────────
+        # ✅ Big Update Button (under the map)
+        # ─────────────────────────────────────────
+        st.markdown("---")
+        st.markdown("")
+        
+        # Create a large button using custom CSS for bigger size
+        st.markdown("""
+        <style>
+        /* Target the specific button by key */
+        div[data-testid="stButton"]:has(button[kind="primary"][data-baseweb="button"]) {
+            width: 100% !important;
+        }
+        button[kind="primary"][data-baseweb="button"] {
+            height: 90px !important;
+            font-size: 28px !important;
+            font-weight: 700 !important;
+            padding: 25px 50px !important;
+            width: 100% !important;
+            border-radius: 10px !important;
+            transition: all 0.3s ease !important;
+        }
+        button[kind="primary"][data-baseweb="button"]:hover {
+            transform: scale(1.02) !important;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3) !important;
+        }
+        /* Fallback selectors */
+        div[data-testid="stButton"] > button[kind="primary"] {
+            height: 90px !important;
+            font-size: 28px !important;
+            font-weight: 700 !important;
+            padding: 25px 50px !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        button_col1, button_col2, button_col3 = st.columns([0.5, 4, 0.5])
+        with button_col2:
+            # Create the button
+            button_clicked = st.button(
+                "🔄 UPDATE REVIEW TABLE WITH MARKET PRICES",
+                use_container_width=True,
+                type="primary",
+                key="btn_update_review_table_map"
+            )
+        
+        # Handle button click
+        if button_clicked:
+            # Get the current dataframe
+            df_ai_with_market = df_ai.copy()
+            
+            # Merge market prices if available
+            if ss.get("re_evaluated_df") is not None:
+                re_eval_df = ss["re_evaluated_df"]
+                
+                # Create a mapping from asset identifiers to market prices
+                market_price_map = {}
+                market_price_per_sqm_map = {}
+                
+                for _, re_row in re_eval_df.iterrows():
+                    market_price_per_sqm = float(re_row.get("market_price_per_sqm", 0))
+                    area_sqm = float(re_row.get("area_sqm", 0))
+                    market_price_total = market_price_per_sqm * area_sqm if area_sqm > 0 else 0
+                    
+                    asset_id = str(re_row.get("asset_id", "")).lower() if pd.notna(re_row.get("asset_id")) else ""
+                    address = str(re_row.get("address", "")).lower()
+                    city = str(re_row.get("city", "")).lower()
+                    district = str(re_row.get("district", "")).lower()
+                    
+                    keys = []
+                    if asset_id:
+                        keys.append(asset_id)
+                    if address:
+                        keys.append(address)
+                    if city and district:
+                        keys.append(f"{city}_{district}")
+                    if city:
+                        keys.append(city)
+                    
+                    for key in keys:
+                        if key:
+                            market_price_map[key] = market_price_total
+                            market_price_per_sqm_map[key] = market_price_per_sqm
+                
+                # Ensure columns exist
+                if "human_value" not in df_ai_with_market.columns:
+                    df_ai_with_market["human_value"] = pd.to_numeric(df_ai_with_market.get("fmv", np.nan), errors="coerce")
+                if "justification" not in df_ai_with_market.columns:
+                    df_ai_with_market["justification"] = ""
+                
+                # Update human_value with market prices where available
+                updated_count = 0
+                for idx, row in df_ai_with_market.iterrows():
+                    asset_id = str(row.get("asset_id", "")).lower() if pd.notna(row.get("asset_id")) else ""
+                    city_val = str(row.get("city", "")).lower() if pd.notna(row.get("city")) else ""
+                    district_val = str(row.get("district", "")).lower() if pd.notna(row.get("district")) else ""
+                    
+                    matched_price = None
+                    if asset_id and asset_id in market_price_map:
+                        matched_price = market_price_map[asset_id]
+                    elif city_val and district_val:
+                        city_district_key = f"{city_val}_{district_val}"
+                        if city_district_key in market_price_map:
+                            matched_price = market_price_map[city_district_key]
+                    elif city_val and city_val in market_price_map:
+                        matched_price = market_price_map[city_val]
+                    
+                    if matched_price:
+                        df_ai_with_market.at[idx, "human_value"] = matched_price
+                        existing_just = str(df_ai_with_market.at[idx, "justification"]) if pd.notna(df_ai_with_market.at[idx, "justification"]) else ""
+                        df_ai_with_market.at[idx, "justification"] = existing_just + " | Updated with market price from Real Estate Evaluator map"
+                        updated_count += 1
+                
+                # Save back to file to persist changes
+                ai_path = st.session_state.get("stage_c_selected_path")
+                if ai_path:
+                    try:
+                        df_ai_with_market.to_csv(ai_path, index=False, encoding="utf-8-sig")
+                    except Exception:
+                        pass
+                
+                # Update session state
+                ss["asset_ai_df"] = df_ai_with_market.copy()
+                ss["last_merged_df"] = df_ai_with_market.copy()
+                
+                st.success(f"✅ Review table updated! Applied market prices to {updated_count} assets.")
+                st.rerun()
+            else:
+                st.warning("⚠️ No market price data available. Please ensure the map has been generated.")
+        
+        st.markdown("")
+        st.markdown("---")
+        
+        # ─────────────────────────────────────────
+        # ✅ Car Price Depreciation Chart (Japanese Models)
+        # ─────────────────────────────────────────
+        st.markdown("### 🚗 Japanese Car Models - Market Price & Depreciation Analysis")
+        st.caption("Price depreciation trends for major Japanese car models over time")
+        
+        # Generate mockup data for major Japanese car models
+        japanese_cars = [
+            "Toyota Camry", "Toyota Corolla", "Toyota Prius", "Toyota RAV4", "Toyota Highlander",
+            "Honda Accord", "Honda Civic", "Honda CR-V", "Honda Pilot", "Honda Odyssey",
+            "Nissan Altima", "Nissan Sentra", "Nissan Rogue", "Nissan Pathfinder", "Nissan Maxima",
+            "Mazda CX-5", "Mazda CX-9", "Mazda3", "Mazda6", "Mazda MX-5",
+            "Subaru Outback", "Subaru Forester", "Subaru Impreza", "Subaru Legacy", "Subaru Ascent",
+            "Lexus RX", "Lexus ES", "Lexus NX", "Lexus GX", "Lexus LS",
+            "Acura MDX", "Acura RDX", "Acura TLX", "Acura ILX", "Acura NSX",
+            "Infiniti Q50", "Infiniti QX60", "Infiniti QX80", "Infiniti QX50", "Infiniti Q70"
+        ]
+        
+        # Create depreciation data (years 0-10, with realistic depreciation curves)
+        years = list(range(11))  # 0 to 10 years
+        car_data = []
+        
+        for car in japanese_cars[:15]:  # Show top 15 models
+            # Base price varies by car model (luxury vs economy)
+            if "Lexus" in car or "Acura" in car or "Infiniti" in car:
+                base_price = np.random.uniform(35000, 55000)
+            elif "Toyota" in car or "Honda" in car:
+                base_price = np.random.uniform(25000, 35000)
+            else:
+                base_price = np.random.uniform(20000, 30000)
+            
+            for year in years:
+                # Realistic depreciation: ~20% first year, ~15% second year, then ~10% annually
+                if year == 0:
+                    depreciation = 0
+                elif year == 1:
+                    depreciation = 0.20  # 20% first year
+                elif year == 2:
+                    depreciation = 0.32  # cumulative: 20% + 15% of remaining
+                else:
+                    # After year 2: ~10% annually of remaining value
+                    remaining_value = 0.68  # After 2 years
+                    annual_depreciation = 0.10
+                    for y in range(3, year + 1):
+                        remaining_value *= (1 - annual_depreciation)
+                    depreciation = 1 - remaining_value
+                
+                # Add some randomness per model
+                model_factor = hash(car) % 100 / 1000  # Consistent per model
+                depreciation += np.random.uniform(-0.01, 0.01) + model_factor
+                depreciation = max(0, min(0.90, depreciation))  # Cap at 90% depreciation
+                
+                current_price = base_price * (1 - depreciation)
+                car_data.append({
+                    "Model": car,
+                    "Year": year,
+                    "Market Price": current_price,
+                    "Depreciation %": depreciation * 100,
+                    "Base Price": base_price
+                })
+        
+        car_df = pd.DataFrame(car_data)
+        
+        # Create interactive chart
+        fig_cars = px.line(
+            car_df,
+            x="Year",
+            y="Market Price",
+            color="Model",
+            title="Japanese Car Models - Market Price Depreciation Over Time",
+            labels={"Market Price": "Market Price ($)", "Year": "Years Since Purchase"},
+            hover_data=["Depreciation %", "Base Price"]
+        )
+        fig_cars.update_layout(
+            height=600,
+            xaxis_title="Years Since Purchase",
+            yaxis_title="Market Price ($)",
+            legend=dict(
+                orientation="v",
+                yanchor="top",
+                y=1,
+                xanchor="left",
+                x=1.02
+            ),
+            hovermode='closest'
+        )
+        st.plotly_chart(fig_cars, use_container_width=True)
+        
+        # Summary statistics
+        st.markdown("#### 📊 Depreciation Summary by Model")
+        summary_stats = car_df.groupby("Model").agg({
+            "Market Price": ["min", "max", "mean"],
+            "Depreciation %": "max"
+        }).round(2)
+        summary_stats.columns = ["Min Price ($)", "Max Price ($)", "Avg Price ($)", "Max Depreciation (%)"]
+        st.dataframe(summary_stats, use_container_width=True)
+        
+        st.markdown("---")
+    else:
+        st.info("📍 Map will appear here once asset coordinates are available and evaluation is complete.")
 
+    # ─────────────────────────────────────────
+    # ✅ Human Review Table (LIVE + REFRESH SAFE)
+    # ─────────────────────────────────────────
+    st.markdown("### ✏️ Human review and justification table")
+    
+    # Merge Real Estate Evaluator market prices into the editable dataframe
+    df_ai_with_market = df_ai.copy()
+    
+    if ss.get("re_evaluated_df") is not None:
+        re_eval_df = ss["re_evaluated_df"]
+        
+        # Create a mapping from asset identifiers to market prices
+        market_price_map = {}
+        market_price_per_sqm_map = {}
+        price_delta_map = {}
+        evaluation_status_map = {}
+        
+        for _, re_row in re_eval_df.iterrows():
+            # Calculate total market price
+            market_price_per_sqm = float(re_row.get("market_price_per_sqm", 0))
+            area_sqm = float(re_row.get("area_sqm", 0))
+            market_price_total = market_price_per_sqm * area_sqm if area_sqm > 0 else 0
+            
+            # Use asset_id if available (for direct matching), otherwise use address
+            asset_id = str(re_row.get("asset_id", "")).lower() if pd.notna(re_row.get("asset_id")) else ""
+            address = str(re_row.get("address", "")).lower()
+            city = str(re_row.get("city", "")).lower()
+            district = str(re_row.get("district", "")).lower()
+            
+            # Create multiple keys for flexible matching
+            keys = []
+            if asset_id:
+                keys.append(asset_id)
+            if address:
+                keys.append(address)
+            if city and district:
+                keys.append(f"{city}_{district}")
+            if city:
+                keys.append(city)
+            
+            # Store market data with all keys
+            for key in keys:
+                if key:
+                    market_price_map[key] = market_price_total
+                    market_price_per_sqm_map[key] = market_price_per_sqm
+                    price_delta_map[key] = float(re_row.get("price_delta", 0))
+                    evaluation_status_map[key] = str(re_row.get("evaluation_status", ""))
+        
+        # Add market price columns to df_ai
+        df_ai_with_market["market_price"] = np.nan
+        df_ai_with_market["market_price_per_sqm"] = np.nan
+        df_ai_with_market["current_price_estimate"] = np.nan  # For cars and other non-real estate assets
+        df_ai_with_market["price_delta_pct"] = np.nan
+        df_ai_with_market["market_evaluation_status"] = ""
+        df_ai_with_market["human_vs_market_pct"] = np.nan
+        df_ai_with_market["ai_vs_market_pct"] = np.nan
+        
+        # Add customer_estimate_price column (from realizable_value, customer_price, or fmv)
+        if "customer_estimate_price" not in df_ai_with_market.columns:
+            df_ai_with_market["customer_estimate_price"] = np.nan
+        
+        # Add new columns: date of purchase, warranty status, price depreciation, years of usage
+        if "date_of_purchase" not in df_ai_with_market.columns:
+            df_ai_with_market["date_of_purchase"] = pd.NaT
+        if "warranty_status" not in df_ai_with_market.columns:
+            df_ai_with_market["warranty_status"] = ""
+        if "price_depreciation" not in df_ai_with_market.columns:
+            df_ai_with_market["price_depreciation"] = np.nan
+        if "nb_years_usage" not in df_ai_with_market.columns:
+            df_ai_with_market["nb_years_usage"] = np.nan
+        
+        # Match assets to market prices and calculate asset-specific fields
+        for idx, row in df_ai_with_market.iterrows():
+            asset_id = str(row.get("asset_id", "")).lower() if pd.notna(row.get("asset_id")) else ""
+            city_val = str(row.get("city", "")).lower() if pd.notna(row.get("city")) else ""
+            district_val = str(row.get("district", "")).lower() if pd.notna(row.get("district")) else ""
+            asset_type = str(row.get("asset_type", "")).lower() if pd.notna(row.get("asset_type")) else ""
+            
+            matched_price = None
+            matched_price_per_sqm = None
+            matched_delta = None
+            matched_status = None
+            
+            # Try matching by asset_id, then city+district, then city only
+            if asset_id and asset_id in market_price_map:
+                matched_price = market_price_map[asset_id]
+                matched_price_per_sqm = market_price_per_sqm_map[asset_id]
+                matched_delta = price_delta_map[asset_id]
+                matched_status = evaluation_status_map[asset_id]
+            elif city_val and district_val:
+                city_district_key = f"{city_val}_{district_val}"
+                if city_district_key in market_price_map:
+                    matched_price = market_price_map[city_district_key]
+                    matched_price_per_sqm = market_price_per_sqm_map[city_district_key]
+                    matched_delta = price_delta_map[city_district_key]
+                    matched_status = evaluation_status_map[city_district_key]
+            elif city_val and city_val in market_price_map:
+                matched_price = market_price_map[city_val]
+                matched_price_per_sqm = market_price_per_sqm_map[city_val]
+                matched_delta = price_delta_map[city_val]
+                matched_status = evaluation_status_map[city_val]
+            
+            # Asset-type-specific price handling
+            is_real_estate = any(term in asset_type for term in ["house", "apartment", "land", "property", "residential", "commercial", "industrial", "multifamily", "factory"])
+            is_car = any(term in asset_type for term in ["car", "vehicle", "automobile", "truck", "suv"])
+            
+            if is_real_estate:
+                # Real estate: use market_price_per_sqm and calculate total from area
+                if pd.isna(matched_price) and matched_price_per_sqm and pd.notna(row.get("area_sqm")):
+                    area = float(row.get("area_sqm", 0))
+                    if area > 0:
+                        matched_price = matched_price_per_sqm * area
+                # Don't set current_price_estimate for real estate
+                df_ai_with_market.at[idx, "current_price_estimate"] = np.nan
+            elif is_car or not is_real_estate:
+                # Cars and other assets: use current_price_estimate, not sqm price
+                if matched_price:
+                    df_ai_with_market.at[idx, "current_price_estimate"] = matched_price
+                # Don't set market_price_per_sqm for cars
+                df_ai_with_market.at[idx, "market_price_per_sqm"] = np.nan
+            
+            # Assign matched values
+            if matched_price:
+                if is_real_estate:
+                    df_ai_with_market.at[idx, "market_price"] = matched_price
+                else:
+                    df_ai_with_market.at[idx, "current_price_estimate"] = matched_price
+            if matched_price_per_sqm and is_real_estate:
+                df_ai_with_market.at[idx, "market_price_per_sqm"] = matched_price_per_sqm
+            if matched_delta is not None:
+                df_ai_with_market.at[idx, "price_delta_pct"] = matched_delta
+            if matched_status:
+                df_ai_with_market.at[idx, "market_evaluation_status"] = matched_status
+            
+            # Calculate date of purchase and years of usage
+            date_of_purchase = row.get("date_of_purchase")
+            if pd.isna(date_of_purchase) or date_of_purchase is None or date_of_purchase == "":
+                # Generate a random purchase date if not provided (between 0-15 years ago)
+                years_ago = np.random.uniform(0, 15)
+                date_of_purchase = datetime.now() - pd.Timedelta(days=years_ago * 365)
+                df_ai_with_market.at[idx, "date_of_purchase"] = date_of_purchase
+            
+            # Calculate years of usage
+            date_val = df_ai_with_market.at[idx, "date_of_purchase"]
+            if pd.notna(date_val) and date_val != "":
+                try:
+                    if isinstance(date_val, str):
+                        date_val = pd.to_datetime(date_val)
+                    elif not isinstance(date_val, (datetime, pd.Timestamp)):
+                        date_val = pd.to_datetime(date_val)
+                    years_usage = (datetime.now() - date_val.to_pydatetime()).days / 365.25
+                    df_ai_with_market.at[idx, "nb_years_usage"] = round(years_usage, 1)
+                except Exception as e:
+                    df_ai_with_market.at[idx, "nb_years_usage"] = np.nan
+            
+            # Set warranty status based on asset type and age
+            warranty_status = row.get("warranty_status", "")
+            if not warranty_status or warranty_status == "":
+                years_usage = df_ai_with_market.at[idx, "nb_years_usage"]
+                if pd.notna(years_usage):
+                    if is_car:
+                        # Cars: typically 3-5 year warranty
+                        warranty_status = "Active" if years_usage < 3 else ("Expiring Soon" if years_usage < 5 else "Expired")
+                    elif is_real_estate:
+                        # Real estate: structural warranty typically 10 years
+                        warranty_status = "Active" if years_usage < 10 else "Expired"
+                    else:
+                        # Other assets: default 2 year warranty
+                        warranty_status = "Active" if years_usage < 2 else "Expired"
+                else:
+                    warranty_status = "Unknown"
+                df_ai_with_market.at[idx, "warranty_status"] = warranty_status
+            
+            # Calculate price depreciation based on asset type and years of usage
+            years_usage = df_ai_with_market.at[idx, "nb_years_usage"]
+            if pd.notna(years_usage) and years_usage > 0:
+                if is_car:
+                    # Cars: ~20% first year, ~15% second year, then ~10% annually
+                    if years_usage <= 1:
+                        depreciation_pct = 20
+                    elif years_usage <= 2:
+                        depreciation_pct = 32
+                    else:
+                        remaining_value = 0.68
+                        for y in range(3, int(years_usage) + 1):
+                            remaining_value *= 0.90
+                        depreciation_pct = (1 - remaining_value) * 100
+                elif is_real_estate:
+                    # Real estate: much slower depreciation, ~2-3% annually
+                    depreciation_pct = min(years_usage * 2.5, 30)  # Cap at 30%
+                else:
+                    # Other assets: ~10% annually
+                    depreciation_pct = min(years_usage * 10, 80)  # Cap at 80%
+                
+                df_ai_with_market.at[idx, "price_depreciation"] = round(depreciation_pct, 1)
+            
+            # Set customer_estimate_price (from realizable_value, customer_price, or fmv)
+            customer_est_price = None
+            if "realizable_value" in df_ai_with_market.columns:
+                customer_est_price = pd.to_numeric(df_ai_with_market.at[idx, "realizable_value"], errors="coerce")
+            if (pd.isna(customer_est_price) or customer_est_price == 0) and "customer_price" in df_ai_with_market.columns:
+                customer_est_price = pd.to_numeric(df_ai_with_market.at[idx, "customer_price"], errors="coerce")
+            if (pd.isna(customer_est_price) or customer_est_price == 0) and "fmv" in df_ai_with_market.columns:
+                customer_est_price = pd.to_numeric(df_ai_with_market.at[idx, "fmv"], errors="coerce")
+            if pd.notna(customer_est_price) and customer_est_price > 0:
+                df_ai_with_market.at[idx, "customer_estimate_price"] = customer_est_price
+            
+            # Calculate AI recommended price = market_price - 10% (or current_price_estimate - 10% for non-real estate)
+            market_price_for_ai = matched_price if is_real_estate else df_ai_with_market.at[idx, "current_price_estimate"]
+            if pd.notna(market_price_for_ai) and market_price_for_ai > 0:
+                ai_recommended_price = market_price_for_ai * 0.9  # Market price - 10%
+                df_ai_with_market.at[idx, "ai_adjusted"] = ai_recommended_price
+                # Pre-populate human_value with AI recommended price if not already set
+                if "human_value" not in df_ai_with_market.columns or pd.isna(df_ai_with_market.at[idx, "human_value"]) or df_ai_with_market.at[idx, "human_value"] == 0:
+                    df_ai_with_market.at[idx, "human_value"] = ai_recommended_price
+            
+            # Calculate percentage above/below market for human_value and ai_adjusted
+            price_for_comparison = matched_price if is_real_estate else df_ai_with_market.at[idx, "current_price_estimate"]
+            if price_for_comparison and price_for_comparison > 0:
+                # Calculate for human_value if available
+                human_val = pd.to_numeric(df_ai_with_market.at[idx, "human_value"], errors="coerce")
+                if pd.notna(human_val) and human_val > 0:
+                    human_vs_market_pct = ((human_val - price_for_comparison) / price_for_comparison) * 100
+                    df_ai_with_market.at[idx, "human_vs_market_pct"] = human_vs_market_pct
+                else:
+                    df_ai_with_market.at[idx, "human_vs_market_pct"] = np.nan
+                
+                # Calculate for ai_adjusted if available
+                ai_adj = pd.to_numeric(df_ai_with_market.at[idx, "ai_adjusted"], errors="coerce")
+                if pd.notna(ai_adj) and ai_adj > 0:
+                    ai_vs_market_pct = ((ai_adj - price_for_comparison) / price_for_comparison) * 100
+                    df_ai_with_market.at[idx, "ai_vs_market_pct"] = ai_vs_market_pct
+                else:
+                    df_ai_with_market.at[idx, "ai_vs_market_pct"] = np.nan
+            else:
+                df_ai_with_market.at[idx, "human_vs_market_pct"] = np.nan
+                df_ai_with_market.at[idx, "ai_vs_market_pct"] = np.nan
+        
+        # Show market price comparison metrics
+        if "market_price" in df_ai_with_market.columns and df_ai_with_market["market_price"].notna().any():
+            st.markdown("#### 💰 Market Price Comparison")
+            
+            market_cols = st.columns(4)
+            with market_cols[0]:
+                avg_market = df_ai_with_market["market_price"].mean()
+                st.metric("Avg Market Price", f"${avg_market:,.0f}" if pd.notna(avg_market) else "N/A")
+            with market_cols[1]:
+                avg_ai = df_ai_with_market["ai_adjusted"].mean() if "ai_adjusted" in df_ai_with_market.columns else 0
+                st.metric("Avg AI Adjusted", f"${avg_ai:,.0f}" if pd.notna(avg_ai) else "N/A")
+            with market_cols[2]:
+                if pd.notna(avg_market) and pd.notna(avg_ai) and avg_market > 0:
+                    market_vs_ai_delta = ((avg_ai - avg_market) / avg_market * 100)
+                    delta_color = "normal" if abs(market_vs_ai_delta) < 10 else "inverse"
+                    st.metric("Market vs AI Delta", f"{market_vs_ai_delta:+.1f}%", delta=f"{abs(market_vs_ai_delta):.1f}% difference", delta_color=delta_color)
+            with market_cols[3]:
+                above_market_count = (df_ai_with_market["market_evaluation_status"] == "above_market").sum()
+                below_market_count = (df_ai_with_market["market_evaluation_status"] == "below_market").sum()
+                st.metric("Above/Below Market", f"{above_market_count} / {below_market_count}")
+            
+            # Single button to update review table with market prices
+            st.markdown("---")
+            update_col1, update_col2, update_col3 = st.columns([1, 2, 1])
+            with update_col2:
+                if st.button("🔄 Update Review Table with Market Prices", use_container_width=True, type="primary", key="btn_update_review_table"):
+                    # Update human_value with market prices where available
+                    market_price_mask = df_ai_with_market["market_price"].notna()
+                    df_ai_with_market.loc[market_price_mask, "human_value"] = df_ai_with_market.loc[market_price_mask, "market_price"]
+                    
+                    # Update justification
+                    existing_just = df_ai_with_market.loc[market_price_mask, "justification"].fillna("")
+                    df_ai_with_market.loc[market_price_mask, "justification"] = existing_just + " | Updated with market price from Real Estate Evaluator map"
+                    
+                    # Save back to file to persist changes
+                    ai_path = st.session_state.get("stage_c_selected_path")
+                    if ai_path:
+                        try:
+                            df_ai_with_market.to_csv(ai_path, index=False, encoding="utf-8-sig")
+                        except Exception:
+                            pass
+                    
+                    # Update session state
+                    ss["asset_ai_df"] = df_ai_with_market.copy()
+                    
+                    updated_count = market_price_mask.sum()
+                    st.success(f"✅ Review table updated! Applied market prices to {updated_count} assets.")
+                    st.rerun()
+    
+    # Use the enhanced dataframe
+    df_ai = df_ai_with_market
+    
+    # Clear persisted edited dataframe if the underlying data has changed significantly
+    # (e.g., new data loaded, market prices updated)
+    # We'll detect this by checking if the number of rows or key columns changed
+    if "human_review_edited_df" in ss and ss["human_review_edited_df"] is not None:
+        persisted_df = ss["human_review_edited_df"]
+        # If row count changed significantly or if this is a fresh load, reset persisted edits
+        if len(persisted_df) != len(df_ai) or "application_id" not in persisted_df.columns:
+            # Clear persisted edits to start fresh
+            if "human_review_edited_df" in ss:
+                del ss["human_review_edited_df"]
+            if "human_review_original_ai_values" in ss:
+                del ss["human_review_original_ai_values"]
 
-    # Ensure editable columns exist
+    # ─────────────────────────────────────────
+    # ✅ Ensure ALL columns are filled with default values
+    # ─────────────────────────────────────────
+    
+    # Core identification columns
+    for col in ["application_id", "asset_id", "asset_type", "city", "district"]:
+        if col not in df_ai.columns:
+            df_ai[col] = ""
+        else:
+            df_ai[col] = df_ai[col].fillna("")
+    
+    # Date and usage columns
+    if "date_of_purchase" not in df_ai.columns:
+        df_ai["date_of_purchase"] = pd.NaT
+    else:
+        # Fill missing dates with random dates (0-15 years ago)
+        missing_dates = df_ai["date_of_purchase"].isna()
+        if missing_dates.any():
+            for idx in df_ai[missing_dates].index:
+                years_ago = np.random.uniform(0, 15)
+                df_ai.at[idx, "date_of_purchase"] = datetime.now() - pd.Timedelta(days=years_ago * 365)
+    
+    # Calculate years of usage if missing
+    if "nb_years_usage" not in df_ai.columns:
+        df_ai["nb_years_usage"] = np.nan
+    
+    missing_usage = df_ai["nb_years_usage"].isna()
+    if missing_usage.any():
+        for idx in df_ai[missing_usage].index:
+            date_val = df_ai.at[idx, "date_of_purchase"]
+            if pd.notna(date_val) and date_val != "":
+                try:
+                    if isinstance(date_val, str):
+                        date_val = pd.to_datetime(date_val)
+                    years_usage = (datetime.now() - date_val.to_pydatetime()).days / 365.25
+                    df_ai.at[idx, "nb_years_usage"] = round(years_usage, 1)
+                except Exception:
+                    df_ai.at[idx, "nb_years_usage"] = np.random.uniform(0, 15)
+            else:
+                df_ai.at[idx, "nb_years_usage"] = np.random.uniform(0, 15)
+    
+    # Warranty status
+    if "warranty_status" not in df_ai.columns:
+        df_ai["warranty_status"] = ""
+    
+    missing_warranty = df_ai["warranty_status"].isna() | (df_ai["warranty_status"] == "")
+    if missing_warranty.any():
+        for idx in df_ai[missing_warranty].index:
+            asset_type = str(df_ai.at[idx, "asset_type"]).lower() if pd.notna(df_ai.at[idx, "asset_type"]) else ""
+            years_usage = df_ai.at[idx, "nb_years_usage"]
+            
+            is_car = any(term in asset_type for term in ["car", "vehicle", "automobile", "truck", "suv"])
+            is_real_estate = any(term in asset_type for term in ["house", "apartment", "land", "property", "residential", "commercial", "industrial", "multifamily", "factory"])
+            
+            if pd.notna(years_usage):
+                if is_car:
+                    warranty_status = "Active" if years_usage < 3 else ("Expiring Soon" if years_usage < 5 else "Expired")
+                elif is_real_estate:
+                    warranty_status = "Active" if years_usage < 10 else "Expired"
+                else:
+                    warranty_status = "Active" if years_usage < 2 else "Expired"
+            else:
+                warranty_status = "Unknown"
+            df_ai.at[idx, "warranty_status"] = warranty_status
+    
+    # Price depreciation
+    if "price_depreciation" not in df_ai.columns:
+        df_ai["price_depreciation"] = np.nan
+    
+    missing_depreciation = df_ai["price_depreciation"].isna()
+    if missing_depreciation.any():
+        for idx in df_ai[missing_depreciation].index:
+            asset_type = str(df_ai.at[idx, "asset_type"]).lower() if pd.notna(df_ai.at[idx, "asset_type"]) else ""
+            years_usage = df_ai.at[idx, "nb_years_usage"]
+            
+            is_car = any(term in asset_type for term in ["car", "vehicle", "automobile", "truck", "suv"])
+            is_real_estate = any(term in asset_type for term in ["house", "apartment", "land", "property", "residential", "commercial", "industrial", "multifamily", "factory"])
+            
+            if pd.notna(years_usage) and years_usage > 0:
+                if is_car:
+                    if years_usage <= 1:
+                        depreciation_pct = 20
+                    elif years_usage <= 2:
+                        depreciation_pct = 32
+                    else:
+                        remaining_value = 0.68
+                        for y in range(3, int(years_usage) + 1):
+                            remaining_value *= 0.90
+                        depreciation_pct = (1 - remaining_value) * 100
+                elif is_real_estate:
+                    depreciation_pct = min(years_usage * 2.5, 30)
+                else:
+                    depreciation_pct = min(years_usage * 10, 80)
+                df_ai.at[idx, "price_depreciation"] = round(depreciation_pct, 1)
+            else:
+                df_ai.at[idx, "price_depreciation"] = 0.0
+    
+    # Price columns
+    if "fmv" not in df_ai.columns:
+        df_ai["fmv"] = np.nan
+    else:
+        df_ai["fmv"] = pd.to_numeric(df_ai["fmv"], errors="coerce")
+    
+    if "ai_adjusted" not in df_ai.columns:
+        df_ai["ai_adjusted"] = df_ai["fmv"].copy() if "fmv" in df_ai.columns else np.nan
+    else:
+        df_ai["ai_adjusted"] = pd.to_numeric(df_ai["ai_adjusted"], errors="coerce")
+    
+    if "market_price" not in df_ai.columns:
+        df_ai["market_price"] = np.nan
+    else:
+        df_ai["market_price"] = pd.to_numeric(df_ai["market_price"], errors="coerce")
+    
+    if "market_price_per_sqm" not in df_ai.columns:
+        df_ai["market_price_per_sqm"] = np.nan
+    else:
+        df_ai["market_price_per_sqm"] = pd.to_numeric(df_ai["market_price_per_sqm"], errors="coerce")
+    
+    if "current_price_estimate" not in df_ai.columns:
+        df_ai["current_price_estimate"] = np.nan
+    else:
+        df_ai["current_price_estimate"] = pd.to_numeric(df_ai["current_price_estimate"], errors="coerce")
+    
+    # Percentage columns
+    if "human_vs_market_pct" not in df_ai.columns:
+        df_ai["human_vs_market_pct"] = np.nan
+    if "ai_vs_market_pct" not in df_ai.columns:
+        df_ai["ai_vs_market_pct"] = np.nan
+    if "price_delta_pct" not in df_ai.columns:
+        df_ai["price_delta_pct"] = np.nan
+    
+    # Status columns
+    if "market_evaluation_status" not in df_ai.columns:
+        df_ai["market_evaluation_status"] = ""
+    else:
+        df_ai["market_evaluation_status"] = df_ai["market_evaluation_status"].fillna("")
+    
+    if "confidence" not in df_ai.columns:
+        df_ai["confidence"] = 80.0
+    else:
+        df_ai["confidence"] = pd.to_numeric(df_ai["confidence"], errors="coerce").fillna(80.0)
+    
+    if "loan_amount" not in df_ai.columns:
+        df_ai["loan_amount"] = np.nan
+    else:
+        df_ai["loan_amount"] = pd.to_numeric(df_ai["loan_amount"], errors="coerce")
+    
+    # Ensure customer_estimate_price column exists
+    if "customer_estimate_price" not in df_ai.columns:
+        df_ai["customer_estimate_price"] = np.nan
+    
+    # Populate customer_estimate_price from realizable_value, customer_price, or fmv
+    for idx in df_ai.index:
+        customer_est_price = None
+        if "realizable_value" in df_ai.columns:
+            customer_est_price = pd.to_numeric(df_ai.at[idx, "realizable_value"], errors="coerce")
+        if (pd.isna(customer_est_price) or customer_est_price == 0) and "customer_price" in df_ai.columns:
+            customer_est_price = pd.to_numeric(df_ai.at[idx, "customer_price"], errors="coerce")
+        if (pd.isna(customer_est_price) or customer_est_price == 0) and "fmv" in df_ai.columns:
+            customer_est_price = pd.to_numeric(df_ai.at[idx, "fmv"], errors="coerce")
+        if pd.notna(customer_est_price) and customer_est_price > 0:
+            df_ai.at[idx, "customer_estimate_price"] = customer_est_price
+    
+    # Ensure market_price column exists (use market_price for real estate, current_price_estimate for others)
+    if "market_price" not in df_ai.columns:
+        df_ai["market_price"] = np.nan
+    if "current_price_estimate" not in df_ai.columns:
+        df_ai["current_price_estimate"] = np.nan
+    if "market_price_per_sqm" not in df_ai.columns:
+        df_ai["market_price_per_sqm"] = np.nan
+    if "area_sqm" not in df_ai.columns:
+        df_ai["area_sqm"] = np.nan
+    else:
+        df_ai["area_sqm"] = pd.to_numeric(df_ai["area_sqm"], errors="coerce")
+    
+    # Determine market price for each asset (real estate uses market_price, others use current_price_estimate)
+    for idx in df_ai.index:
+        asset_type = str(df_ai.at[idx, "asset_type"]).lower() if "asset_type" in df_ai.columns and pd.notna(df_ai.at[idx, "asset_type"]) else ""
+        is_real_estate = any(term in asset_type for term in ["house", "apartment", "land", "property", "residential", "commercial", "industrial", "multifamily", "factory"])
+        
+        if is_real_estate:
+            # For real estate, use market_price
+            if "market_price" in df_ai.columns:
+                market_price_val = df_ai.at[idx, "market_price"] if pd.notna(df_ai.at[idx, "market_price"]) else 0
+            else:
+                market_price_val = 0
+            
+            if pd.isna(market_price_val) or market_price_val == 0:
+                # Try to calculate from market_price_per_sqm if available
+                if "market_price_per_sqm" in df_ai.columns and "area_sqm" in df_ai.columns:
+                    market_price_per_sqm_val = df_ai.at[idx, "market_price_per_sqm"]
+                    area_sqm_val = df_ai.at[idx, "area_sqm"]
+                    if pd.notna(market_price_per_sqm_val) and pd.notna(area_sqm_val) and area_sqm_val > 0:
+                        df_ai.at[idx, "market_price"] = market_price_per_sqm_val * area_sqm_val
+        else:
+            # For non-real estate, use current_price_estimate as market price
+            if "current_price_estimate" in df_ai.columns:
+                current_price_val = df_ai.at[idx, "current_price_estimate"]
+                if pd.notna(current_price_val) and current_price_val > 0:
+                    df_ai.at[idx, "market_price"] = current_price_val
+    
+    # Ensure AI recommended price (ai_adjusted) exists
+    if "ai_adjusted" not in df_ai.columns:
+        df_ai["ai_adjusted"] = df_ai["fmv"].copy() if "fmv" in df_ai.columns else np.nan
+    else:
+        df_ai["ai_adjusted"] = pd.to_numeric(df_ai["ai_adjusted"], errors="coerce")
+    
+    # Calculate AI recommended price if not set (market_price - 10%)
+    for idx in df_ai.index:
+        if pd.isna(df_ai.at[idx, "ai_adjusted"]) or df_ai.at[idx, "ai_adjusted"] == 0:
+            market_price_val = df_ai.at[idx, "market_price"]
+            if pd.notna(market_price_val) and market_price_val > 0:
+                df_ai.at[idx, "ai_adjusted"] = market_price_val * 0.9  # Market price - 10%
+            elif pd.notna(df_ai.at[idx, "fmv"]) and df_ai.at[idx, "fmv"] > 0:
+                df_ai.at[idx, "ai_adjusted"] = df_ai.at[idx, "fmv"]
+    
+    # Human review columns - prepopulate human_value with AI recommended price
     if "human_value" not in df_ai.columns:
-        df_ai["human_value"] = pd.to_numeric(df_ai["fmv"], errors="coerce") if "fmv" in df_ai.columns else np.nan
+        df_ai["human_value"] = df_ai["ai_adjusted"].copy()
+    else:
+        df_ai["human_value"] = pd.to_numeric(df_ai["human_value"], errors="coerce")
+        # Fill missing human_value with ai_adjusted
+        missing_human = df_ai["human_value"].isna() | (df_ai["human_value"] == 0)
+        if missing_human.any():
+            df_ai.loc[missing_human, "human_value"] = df_ai.loc[missing_human, "ai_adjusted"]
+    
     if "justification" not in df_ai.columns:
         df_ai["justification"] = ""
-
-     # Editable columns for the reviewer
-    base_editable = ["application_id", "asset_id", "asset_type", "city", "fmv", "ai_adjusted", "confidence", "loan_amount", "human_value", "justification"]
-    editable_cols = [c for c in base_editable if c in df_ai.columns]  # filter to present
-    if not editable_cols:
-        editable_cols = df_ai.columns.tolist()  # last resort: allow full frame
-    
-    # Display the editable table for human review
-
-    edited = st.data_editor(df_ai[editable_cols], num_rows="dynamic", use_container_width=True)
-
-    # ── Agreement / Deviation Gauge + Mismatch list
-    st.markdown("### 🎯 Human vs AI Agreement / Deviation")
-
-    # Resolve decision columns if present
-    def _first_present(df, candidates):
-        return next((c for c in candidates if c in df.columns), None)
-
-    ai_dec_col = _first_present(edited, ["ai_decision", "ai_label", "ai_outcome", "decision_ai"])
-    human_dec_col = _first_present(edited, ["human_decision", "human_label", "final_decision", "decision_human"])
-
-    if ai_dec_col and human_dec_col:
-        # Agreement gauge (%)
-        a = edited[ai_dec_col].astype(str).str.strip().str.lower()
-        h = edited[human_dec_col].astype(str).str.strip().str.lower()
-        matches = (a == h)
-        agree_pct = float(matches.mean() * 100.0) if len(matches) else 0.0
-
-        fig = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=round(agree_pct, 2),
-            number={'suffix': '%'},
-            gauge={
-                'axis': {'range': [0, 100]},
-                'bar': {'thickness': 0.35},
-                'steps': [
-                    {'range': [0, 50], 'color': '#fee2e2'},
-                    {'range': [50, 80], 'color': '#fef9c3'},
-                    {'range': [80, 100], 'color': '#dcfce7'},
-                ],
-                'threshold': {'line': {'color': '#2563eb', 'width': 4}, 'thickness': 0.9, 'value': round(agree_pct, 2)}
-            },
-            title={'text': "AI ↔ Human Agreement"}
-        ))
-        st.plotly_chart(fig, use_container_width=True)
-
-        # Mismatch table (if any)
-        mis_df = edited.loc[~matches].copy()
-        key_cols = [c for c in ["application_id", "asset_id", "asset_type", "city"] if c in edited.columns]
-        value_ai = _first_present(edited, ["ai_adjusted", "fmv", "predicted_value"])
-        value_hu = _first_present(edited, ["human_value", "reviewed_value", "final_value"])
-
-        if not mis_df.empty:
-            show_cols = key_cols + [c for c in [ai_dec_col, human_dec_col, value_ai, value_hu, "justification"] if c]
-            show_cols = [c for c in show_cols if c in mis_df.columns]
-            st.markdown("#### 🔎 Mismatches — what did humans change?")
-            st.dataframe(mis_df[show_cols].head(300), use_container_width=True, hide_index=True)
-        else:
-            st.success("🎉 Perfect agreement — no mismatches.")
     else:
-        # Fall back to deviation score if decisions are not present
-        if all(c in edited.columns for c in ("human_value", "fmv")):
-            hv = pd.to_numeric(edited["human_value"], errors="coerce")
-            fmv = pd.to_numeric(edited["fmv"], errors="coerce").replace(0, np.nan)
-            deviation = (hv - fmv).abs() / fmv
-            score = max(0.0, 100.0 - float(np.nanmean(deviation) * 200.0)) if len(deviation) else 0.0
+        df_ai["justification"] = df_ai["justification"].fillna("")
+    
+    # Area columns (for real estate)
+    if "area_sqm" not in df_ai.columns:
+        df_ai["area_sqm"] = np.nan
+    else:
+        df_ai["area_sqm"] = pd.to_numeric(df_ai["area_sqm"], errors="coerce")
+    
+    # ─────────────────────────────────────────
+    # ✅ RECREATE HUMAN REVIEW TABLE WITH GROUPED PRICE COLUMNS
+    # ─────────────────────────────────────────
+    
+    # Calculate percentage comparisons before displaying
+    for idx in df_ai.index:
+        # Recalculate years of usage from date_of_purchase
+        date_val = df_ai.at[idx, "date_of_purchase"]
+        if pd.notna(date_val) and date_val != "":
+            try:
+                if isinstance(date_val, str):
+                    date_val = pd.to_datetime(date_val)
+                years_usage = (datetime.now() - date_val.to_pydatetime()).days / 365.25
+                df_ai.at[idx, "nb_years_usage"] = round(years_usage, 1)
+            except Exception:
+                pass
+        
+        # Recalculate warranty status
+        asset_type = str(df_ai.at[idx, "asset_type"]).lower() if pd.notna(df_ai.at[idx, "asset_type"]) else ""
+        years_usage = df_ai.at[idx, "nb_years_usage"]
+        is_car = any(term in asset_type for term in ["car", "vehicle", "automobile", "truck", "suv"])
+        is_real_estate = any(term in asset_type for term in ["house", "apartment", "land", "property", "residential", "commercial", "industrial", "multifamily", "factory"])
+        
+        if pd.notna(years_usage):
+            if is_car:
+                warranty_status = "Active" if years_usage < 3 else ("Expiring Soon" if years_usage < 5 else "Expired")
+            elif is_real_estate:
+                warranty_status = "Active" if years_usage < 10 else "Expired"
+            else:
+                warranty_status = "Active" if years_usage < 2 else "Expired"
+            df_ai.at[idx, "warranty_status"] = warranty_status
+        
+        # Recalculate price depreciation
+        if pd.notna(years_usage) and years_usage > 0:
+            if is_car:
+                if years_usage <= 1:
+                    depreciation_pct = 20
+                elif years_usage <= 2:
+                    depreciation_pct = 32
+                else:
+                    remaining_value = 0.68
+                    for y in range(3, int(years_usage) + 1):
+                        remaining_value *= 0.90
+                    depreciation_pct = (1 - remaining_value) * 100
+            elif is_real_estate:
+                depreciation_pct = min(years_usage * 2.5, 30)
+            else:
+                depreciation_pct = min(years_usage * 10, 80)
+            df_ai.at[idx, "price_depreciation"] = round(depreciation_pct, 1)
+        
+        # Recalculate percentage comparisons
+        asset_type_val = str(df_ai.at[idx, "asset_type"]).lower() if pd.notna(df_ai.at[idx, "asset_type"]) else ""
+        is_real_estate_val = any(term in asset_type_val for term in ["house", "apartment", "land", "property", "residential", "commercial", "industrial", "multifamily", "factory"])
+        
+        price_for_comparison = None
+        if is_real_estate_val and pd.notna(df_ai.at[idx, "market_price"]):
+            price_for_comparison = df_ai.at[idx, "market_price"]
+        elif pd.notna(df_ai.at[idx, "current_price_estimate"]):
+            price_for_comparison = df_ai.at[idx, "current_price_estimate"]
+        elif pd.notna(df_ai.at[idx, "market_price"]):
+            price_for_comparison = df_ai.at[idx, "market_price"]
+        
+        if price_for_comparison and price_for_comparison > 0:
+            human_val = pd.to_numeric(df_ai.at[idx, "human_value"], errors="coerce")
+            if pd.notna(human_val) and human_val > 0:
+                df_ai.at[idx, "human_vs_market_pct"] = ((human_val - price_for_comparison) / price_for_comparison) * 100
+            
+            ai_adj = pd.to_numeric(df_ai.at[idx, "ai_adjusted"], errors="coerce")
+            if pd.notna(ai_adj) and ai_adj > 0:
+                df_ai.at[idx, "ai_vs_market_pct"] = ((ai_adj - price_for_comparison) / price_for_comparison) * 100
+    
+    # Calculate human_vs_market_pct and ai_vs_market_pct
+    for idx in df_ai.index:
+        market_price_val = df_ai.at[idx, "market_price"]
+        if pd.notna(market_price_val) and market_price_val > 0:
+            human_val = pd.to_numeric(df_ai.at[idx, "human_value"], errors="coerce")
+            if pd.notna(human_val) and human_val > 0:
+                df_ai.at[idx, "human_vs_market_pct"] = ((human_val - market_price_val) / market_price_val) * 100
+            
+            ai_val = pd.to_numeric(df_ai.at[idx, "ai_adjusted"], errors="coerce")
+            if pd.notna(ai_val) and ai_val > 0:
+                df_ai.at[idx, "ai_vs_market_pct"] = ((ai_val - market_price_val) / market_price_val) * 100
+    
+    # Use persisted edited dataframe from session state if available, otherwise use df_ai
+    if "human_review_edited_df" in ss and ss["human_review_edited_df"] is not None:
+        persisted_edited = ss["human_review_edited_df"].copy()
+        # Ensure all columns exist
+        for col in df_ai.columns:
+            if col not in persisted_edited.columns:
+                if len(persisted_edited) == len(df_ai):
+                    persisted_edited[col] = df_ai[col].values
+                else:
+                    persisted_edited[col] = np.nan
+        # Update non-editable columns while preserving human edits
+        if len(persisted_edited) == len(df_ai):
+            for col in df_ai.columns:
+                if col not in ["human_value", "justification"]:
+                    persisted_edited[col] = df_ai[col].values
+        df_ai_for_editing = persisted_edited.copy()
+    else:
+        df_ai_for_editing = df_ai.copy()
+    
+    # Store original AI values for comparison
+    if "human_review_original_ai_values" not in ss:
+        if "ai_adjusted" in df_ai.columns:
+            ss["human_review_original_ai_values"] = df_ai["ai_adjusted"].copy()
+        else:
+            ss["human_review_original_ai_values"] = df_ai["fmv"].copy() if "fmv" in df_ai.columns else pd.Series(index=df_ai.index)
+    
+    original_ai_values = ss["human_review_original_ai_values"]
+    
+    # ─────────────────────────────────────────
+    # CREATE TABLE WITH GROUPED PRICE COLUMNS
+    # ─────────────────────────────────────────
+    
+    # Prepare display dataframe with grouped price columns
+    display_df = df_ai_for_editing.copy()
+    
+    # Ensure all required price columns exist
+    required_price_cols = ["customer_estimate_price", "market_price", "ai_adjusted", "human_value"]
+    for col in required_price_cols:
+        if col not in display_df.columns:
+            display_df[col] = np.nan
+    
+    # Create grouped column order: ID columns, then grouped price columns, then other columns
+    id_cols = []
+    for col in ["application_id", "asset_id", "asset_type", "city"]:
+        if col in display_df.columns:
+            id_cols.append(col)
+    
+    # Grouped price columns (in order: customer estimate, market price, AI recommend, human decision)
+    price_cols = ["customer_estimate_price", "market_price", "ai_adjusted", "human_value"]
+    price_cols = [col for col in price_cols if col in display_df.columns]
+    
+    # Other columns
+    other_cols = []
+    for col in ["justification", "human_vs_market_pct", "ai_vs_market_pct", "confidence", "loan_amount"]:
+        if col in display_df.columns:
+            other_cols.append(col)
+    
+    # Combine columns in order
+    display_cols = id_cols + price_cols + other_cols
+    
+    # Rename columns for better display
+    display_df_renamed = display_df[display_cols].copy()
+    column_rename_map = {
+        "customer_estimate_price": "💰 Customer Estimate Price",
+        "market_price": "📊 Market Price",
+        "ai_adjusted": "🤖 AI Recommend Price",
+        "human_value": "✏️ Human Decision (Editable)"
+    }
+    display_df_renamed = display_df_renamed.rename(columns=column_rename_map)
+    
+    # Display caption
+    st.caption("💡 **Review Guide:** Edit the '✏️ Human Decision (Editable)' column to set your final price. Changes will automatically update the gauge and changed rows table below.")
+    
+    # Display editable table with grouped price columns
+    edited_renamed = st.data_editor(
+        display_df_renamed,
+        num_rows="dynamic",
+        use_container_width=True,
+        key="human_review_data_editor"
+    )
+    
+    # Map back to original column names
+    reverse_rename_map = {v: k for k, v in column_rename_map.items()}
+    edited = edited_renamed.copy()
+    edited = edited.rename(columns=reverse_rename_map)
+    
+    # Ensure all original columns are present in edited dataframe
+    for col in df_ai_for_editing.columns:
+        if col not in edited.columns:
+            if col in display_cols:
+                # Column was in display, add it back
+                edited[col] = display_df[col].values if len(display_df) == len(edited) else np.nan
+            else:
+                # Column was not displayed, add from original
+                edited[col] = df_ai_for_editing[col].values if len(df_ai_for_editing) == len(edited) else np.nan
+    
+    # Detect if changes were made by comparing with stored dataframe
+    has_changes = False
+    if "human_review_edited_df" in ss and ss["human_review_edited_df"] is not None:
+        stored_df = ss["human_review_edited_df"]
+        # Check if human_value column changed
+        if "human_value" in edited.columns and "human_value" in stored_df.columns:
+            # Align indices for comparison
+            stored_aligned = stored_df["human_value"].reindex(edited.index)
+            edited_vals = pd.to_numeric(edited["human_value"], errors="coerce")
+            stored_vals = pd.to_numeric(stored_aligned, errors="coerce")
+            # Check for any differences (more than rounding error)
+            if not edited_vals.equals(stored_vals):
+                has_changes = True
+        else:
+            has_changes = True  # Column structure changed
+    else:
+        has_changes = True  # First time editing
+    
+    # Store edited dataframe in session state to persist changes (always update to latest)
+    ss["human_review_edited_df"] = edited.copy()
+    
+    # Store original human values before recalculation for change tracking
+    original_human_values = edited["human_value"].copy() if "human_value" in edited.columns else pd.Series(index=edited.index)
+    
+    # After editing, recalculate all fields (years of usage, warranty, depreciation, percentages)
+    # This ensures that when human_value is edited, all dependent fields (including human_vs_market_pct)
+    # are updated, which will then be reflected in the gauge and changed rows table below
+    for idx in edited.index:
+        # Recalculate years of usage from date_of_purchase if changed
+        date_val = edited.at[idx, "date_of_purchase"] if "date_of_purchase" in edited.columns else None
+        if pd.notna(date_val) and date_val != "":
+            try:
+                if isinstance(date_val, str):
+                    date_val = pd.to_datetime(date_val)
+                years_usage = (datetime.now() - date_val.to_pydatetime()).days / 365.25
+                edited.at[idx, "nb_years_usage"] = round(years_usage, 1)
+            except Exception:
+                pass
+        
+        # Recalculate warranty status
+        asset_type = str(edited.at[idx, "asset_type"]).lower() if "asset_type" in edited.columns and pd.notna(edited.at[idx, "asset_type"]) else ""
+        years_usage = edited.at[idx, "nb_years_usage"] if "nb_years_usage" in edited.columns else np.nan
+        is_car = any(term in asset_type for term in ["car", "vehicle", "automobile", "truck", "suv"])
+        is_real_estate = any(term in asset_type for term in ["house", "apartment", "land", "property", "residential", "commercial", "industrial", "multifamily", "factory"])
+        
+        if pd.notna(years_usage):
+            if is_car:
+                warranty_status = "Active" if years_usage < 3 else ("Expiring Soon" if years_usage < 5 else "Expired")
+            elif is_real_estate:
+                warranty_status = "Active" if years_usage < 10 else "Expired"
+            else:
+                warranty_status = "Active" if years_usage < 2 else "Expired"
+            if "warranty_status" in edited.columns:
+                edited.at[idx, "warranty_status"] = warranty_status
+        
+        # Recalculate price depreciation
+        if pd.notna(years_usage) and years_usage > 0:
+            if is_car:
+                if years_usage <= 1:
+                    depreciation_pct = 20
+                elif years_usage <= 2:
+                    depreciation_pct = 32
+                else:
+                    remaining_value = 0.68
+                    for y in range(3, int(years_usage) + 1):
+                        remaining_value *= 0.90
+                    depreciation_pct = (1 - remaining_value) * 100
+            elif is_real_estate:
+                depreciation_pct = min(years_usage * 2.5, 30)
+            else:
+                depreciation_pct = min(years_usage * 10, 80)
+            if "price_depreciation" in edited.columns:
+                edited.at[idx, "price_depreciation"] = round(depreciation_pct, 1)
+        
+        # Recalculate percentage comparisons using market_price
+        if "market_price" in edited.columns:
+            market_price_val = pd.to_numeric(edited.at[idx, "market_price"], errors="coerce")
+            
+            # Recalculate human_vs_market_pct (using CURRENT edited human_value)
+            if "human_value" in edited.columns:
+                human_val = pd.to_numeric(edited.at[idx, "human_value"], errors="coerce")
+                if pd.notna(human_val) and pd.notna(market_price_val) and market_price_val > 0:
+                    if "human_vs_market_pct" in edited.columns:
+                        edited.at[idx, "human_vs_market_pct"] = ((human_val - market_price_val) / market_price_val) * 100
+            
+            # Recalculate ai_vs_market_pct
+            if "ai_adjusted" in edited.columns:
+                ai_val = pd.to_numeric(edited.at[idx, "ai_adjusted"], errors="coerce")
+                if pd.notna(ai_val) and pd.notna(market_price_val) and market_price_val > 0:
+                    if "ai_vs_market_pct" in edited.columns:
+                        edited.at[idx, "ai_vs_market_pct"] = ((ai_val - market_price_val) / market_price_val) * 100
+    
+    # Update persisted edited dataframe with recalculated values (always use latest edited)
+    ss["human_review_edited_df"] = edited.copy()
+    
 
+    # ── Agreement / Deviation Gauge + Changed Rows List
+    st.markdown("### 🎯 Human vs AI Agreement / Deviation")
+    
+    # Use the CURRENT edited dataframe directly for calculations
+    # The 'edited' dataframe from st.data_editor contains the most recent user edits
+    # This ensures the gauge and changed rows list update immediately when values change
+    
+    # Calculate agreement based on human_value vs ai_adjusted from review table (using CURRENT edited values)
+    if "human_value" in edited.columns and "ai_adjusted" in edited.columns:
+        human_vals = pd.to_numeric(edited["human_value"], errors="coerce")
+        ai_vals = pd.to_numeric(edited["ai_adjusted"], errors="coerce")
+        
+        # Calculate agreement: consider values "agreeing" if within 5% of each other
+        valid_mask = (human_vals.notna()) & (ai_vals.notna()) & (ai_vals != 0)
+        
+        if valid_mask.any():
+            # Calculate percentage difference for all valid rows (using CURRENT edited values)
+            pct_diff_series = pd.Series(index=edited.index, dtype=float)
+            pct_diff_series[valid_mask] = ((human_vals[valid_mask] - ai_vals[valid_mask]).abs() / ai_vals[valid_mask].abs() * 100).values
+            
+            # Consider agreement if within 5% difference
+            agreements = (pct_diff_series[valid_mask] <= 5.0)
+            agree_pct = float(agreements.mean() * 100.0) if len(agreements) > 0 else 0.0
+            
+            # Count changed rows (compare CURRENT edited human_value with original AI values)
+            changed_count = 0
+            if len(original_ai_values) > 0:
+                original_ai_aligned = original_ai_values.reindex(edited.index)
+                changes_mask = (human_vals.notna()) & (original_ai_aligned.notna()) & (original_ai_aligned != 0)
+                if changes_mask.any():
+                    change_pct = ((human_vals[changes_mask] - original_ai_aligned[changes_mask]).abs() / original_ai_aligned[changes_mask].abs() * 100)
+                    has_changes = (change_pct > 0.01)  # More than 0.01% change
+                    changed_count = has_changes.sum()
+            
+            # Create agreement gauge (updates dynamically based on CURRENT edited values)
             fig = go.Figure(go.Indicator(
                 mode="gauge+number",
-                value=round(score, 1),
-                number={'suffix': ' / 100'},
+                value=round(agree_pct, 2),
+                number={'suffix': '%'},
                 gauge={
                     'axis': {'range': [0, 100]},
                     'bar': {'thickness': 0.35},
@@ -3496,13 +5227,117 @@ with tabE:
                         {'range': [50, 80], 'color': '#fef9c3'},
                         {'range': [80, 100], 'color': '#dcfce7'},
                     ],
-                    'threshold': {'line': {'color': '#2563eb', 'width': 4}, 'thickness': 0.9, 'value': round(score, 1)}
+                    'threshold': {'line': {'color': '#2563eb', 'width': 4}, 'thickness': 0.9, 'value': round(agree_pct, 2)}
                 },
-                title={'text': "Alignment Score (by value deviation)"}
+                title={'text': f"Human ↔ AI Agreement (within 5%) | {changed_count} rows changed"}
             ))
             st.plotly_chart(fig, use_container_width=True)
+            
+            # Find ALL changed rows (where CURRENT human_value differs from original AI by any amount)
+            changed_rows_indices = []
+            if len(original_ai_values) > 0:
+                original_ai_aligned = original_ai_values.reindex(edited.index)
+                for idx in edited.index:
+                    human_val = pd.to_numeric(edited.at[idx, "human_value"], errors="coerce") if "human_value" in edited.columns else np.nan
+                    original_ai_val = pd.to_numeric(original_ai_aligned.at[idx], errors="coerce") if idx in original_ai_aligned.index else np.nan
+                    
+                    if pd.notna(human_val) and pd.notna(original_ai_val) and original_ai_val != 0:
+                        change_pct = abs((human_val - original_ai_val) / original_ai_val * 100)
+                        if change_pct > 0.01:  # Any change more than 0.01%
+                            changed_rows_indices.append(idx)
+            
+            # Combine with rows that differ from current AI by more than 5%
+            changed_mask = valid_mask & (pct_diff_series > 5.0)
+            all_changed_indices = list(set(changed_rows_indices + edited.loc[changed_mask].index.tolist()))
+            changed_df = edited.loc[all_changed_indices].copy() if all_changed_indices else pd.DataFrame()
+            
+            if not changed_df.empty:
+                st.markdown("#### 📝 Changed Rows — Human Adjustments from AI Recommendations")
+                st.caption(f"Showing {len(changed_df)} rows where human decision differs from AI recommendations (updated from adjustment table)")
+                
+                # Prepare display columns
+                display_cols = []
+                key_cols = ["application_id", "asset_id", "asset_type", "city"]
+                display_cols.extend([c for c in key_cols if c in changed_df.columns])
+                
+                # Add original AI value column
+                if len(original_ai_values) > 0:
+                    original_ai_aligned = original_ai_values.reindex(changed_df.index)
+                    changed_df = changed_df.copy()
+                    changed_df["original_ai_value"] = original_ai_aligned
+                    display_cols.append("original_ai_value")
+                
+                # Add price comparison columns
+                if "ai_adjusted" in changed_df.columns:
+                    display_cols.append("ai_adjusted")
+                if "human_value" in changed_df.columns:
+                    display_cols.append("human_value")
+                if "market_price" in changed_df.columns:
+                    display_cols.append("market_price")
+                if "current_price_estimate" in changed_df.columns:
+                    display_cols.append("current_price_estimate")
+                if "human_vs_market_pct" in changed_df.columns:
+                    display_cols.append("human_vs_market_pct")
+                if "ai_vs_market_pct" in changed_df.columns:
+                    display_cols.append("ai_vs_market_pct")
+                if "justification" in changed_df.columns:
+                    display_cols.append("justification")
+                
+                # Calculate differences for display
+                changed_display = changed_df[display_cols].copy()
+                
+                if "ai_adjusted" in changed_display.columns and "human_value" in changed_display.columns:
+                    ai_adj_vals = pd.to_numeric(changed_display["ai_adjusted"], errors="coerce")
+                    human_vals_display = pd.to_numeric(changed_display["human_value"], errors="coerce")
+                    
+                    # Difference from current AI
+                    diff_vals = human_vals_display - ai_adj_vals
+                    diff_pct = ((diff_vals / ai_adj_vals) * 100).round(1)
+                    changed_display["difference"] = diff_vals.round(2)
+                    changed_display["difference_pct"] = diff_pct
+                    
+                    # Change from original AI
+                    if "original_ai_value" in changed_display.columns:
+                        orig_ai_vals = pd.to_numeric(changed_display["original_ai_value"], errors="coerce")
+                        change_from_orig = human_vals_display - orig_ai_vals
+                        change_from_orig_pct = ((change_from_orig / orig_ai_vals) * 100).round(1)
+                        changed_display["change_from_ai"] = change_from_orig.round(2)
+                        changed_display["change_from_ai_pct"] = change_from_orig_pct
+                    
+                    # Reorder columns: key cols, original_ai_value, ai_adjusted, human_value, change_from_ai, change_from_ai_pct, difference, difference_pct, ...
+                    new_cols = []
+                    for col in ["application_id", "asset_id", "asset_type", "city"]:
+                        if col in display_cols:
+                            new_cols.append(col)
+                    if "original_ai_value" in changed_display.columns:
+                        new_cols.append("original_ai_value")
+                    if "ai_adjusted" in changed_display.columns:
+                        new_cols.append("ai_adjusted")
+                    if "human_value" in changed_display.columns:
+                        new_cols.append("human_value")
+                    if "change_from_ai" in changed_display.columns:
+                        new_cols.extend(["change_from_ai", "change_from_ai_pct"])
+                    if "difference" in changed_display.columns:
+                        new_cols.extend(["difference", "difference_pct"])
+                    # Add remaining columns
+                    for col in display_cols:
+                        if col not in new_cols:
+                            new_cols.append(col)
+                    display_cols = [c for c in new_cols if c in changed_display.columns]
+                
+                # Rename human_value for display
+                if "human_value" in changed_display.columns:
+                    changed_display = changed_display.rename(columns={"human_value": "Human decision with market price base line"})
+                    # Update display_cols list
+                    display_cols = ["Human decision with market price base line" if c == "human_value" else c for c in display_cols]
+                
+                st.dataframe(changed_display[display_cols], use_container_width=True, hide_index=True)
+            else:
+                st.success("🎉 Perfect agreement — no rows changed (all within 5% of AI recommendations).")
         else:
-            st.info("Provide decision columns (ai_decision / human_decision) for agreement gauge, or both FMV and human_value for deviation.")
+            st.info("⚠️ No valid data for comparison. Ensure both 'human_value' and 'ai_adjusted' columns have numeric values.")
+    else:
+        st.info("⚠️ Missing required columns. The agreement gauge requires both 'human_value' and 'ai_adjusted' columns from the review table.")
 
     
         # ── Human Changes Only (colored)
@@ -3624,8 +5459,10 @@ with tabE:
     train_cols_base = ["application_id", "asset_id", "asset_type", "city"]
     ai_val_col = _first_present(edited, ["ai_adjusted", "fmv", "predicted_value"])
     hu_val_col = _first_present(edited, ["human_value", "reviewed_value", "final_value"])
+    ai_dec_col = _first_present(edited, ["ai_decision", "ai_label", "ai_outcome", "decision_ai"])
+    human_dec_col = _first_present(edited, ["human_decision", "human_label", "final_decision", "decision_human"])
     keep_cols = [c for c in train_cols_base if c in edited.columns] + \
-                [c for c in [ai_dec_col, human_dec_col, ai_val_col, hu_val_col, "confidence", "loan_amount", "justification"] if c in edited.columns]
+                [c for c in [ai_dec_col, human_dec_col, ai_val_col, hu_val_col, "confidence", "loan_amount", "justification"] if c and c in edited.columns]
     export_df = edited[keep_cols].copy() if keep_cols else edited.copy()
 
     ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
@@ -4167,9 +6004,51 @@ with tabF:
     # ---------- model choice ----------
     st.markdown("#### 🤖 Choose model")
     model_options = ["GradientBoostingRegressor", "RandomForestRegressor", "LinearRegression"]
-    default_choice = ss.get("asset_model_choice", model_profiles[0]["name"])
-    if default_choice not in model_options:
-        default_choice = model_options[0]
+    
+    # Get recommended model from presets (map preset names to sklearn names)
+    def _get_recommended_asset_model() -> str | None:
+        """Get recommended tabular model for asset appraisal."""
+        try:
+            import yaml
+            from pathlib import Path
+            config_path = Path(__file__).resolve().parents[3] / "config" / "agent_model_presets.yaml"
+            if config_path.exists():
+                with open(config_path, "r") as f:
+                    presets = yaml.safe_load(f)
+                    if presets and "tabular_models" in presets:
+                        agent_config = presets["tabular_models"].get("asset_appraisal")
+                        if agent_config:
+                            # Map preset names to sklearn model names
+                            preset_to_sklearn = {
+                                "LightGBM": "GradientBoostingRegressor",  # Closest equivalent
+                                "RandomForest": "RandomForestRegressor",
+                                "XGBoost": "GradientBoostingRegressor",  # Closest equivalent
+                                "LogisticRegression": "LinearRegression",  # Closest equivalent
+                            }
+                            primary = agent_config.get("primary")
+                            if primary:
+                                mapped = preset_to_sklearn.get(primary)
+                                if mapped and mapped in model_options:
+                                    return mapped
+                            fallback = agent_config.get("fallback")
+                            if fallback:
+                                mapped = preset_to_sklearn.get(fallback)
+                                if mapped and mapped in model_options:
+                                    return mapped
+        except Exception:
+            pass
+        return None
+    
+    recommended_model = _get_recommended_asset_model()
+    default_choice = ss.get("asset_model_choice")
+    if not default_choice or default_choice not in model_options:
+        # Priority: recommended > first available
+        if recommended_model and recommended_model in model_options:
+            default_choice = recommended_model
+            ss["asset_model_choice"] = recommended_model
+            st.info(f"✅ **Recommended for asset appraisal**: {recommended_model} (auto-selected)", icon="⭐")
+        else:
+            default_choice = model_profiles[0]["name"] if model_profiles else model_options[0]
 
     model_choice = st.selectbox(
         "Select model algorithm",
@@ -5108,8 +6987,5 @@ render_chat_assistant(
     page_id="asset_appraisal",
     context=_build_asset_chat_context(),
     faq_questions=ASSET_FAQ,
-<<<<<<< HEAD
-=======
     persona=ASSET_PERSONA,
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 )

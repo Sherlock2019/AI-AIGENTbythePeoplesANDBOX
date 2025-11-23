@@ -9,10 +9,6 @@ import streamlit as st
 
 st.set_page_config(page_title="Anti-Fraud & KYC Agent", layout="wide")
 from services.ui.components.operator_banner import render_operator_banner
-<<<<<<< HEAD
-from services.ui.components.telemetry_dashboard import render_telemetry_dashboard
-=======
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 from services.ui.components.feedback import render_feedback_tab
 from services.ui.components.chat_assistant import render_chat_assistant
 from services.ui.theme_manager import (
@@ -21,10 +17,7 @@ from services.ui.theme_manager import (
     get_theme,
     render_theme_toggle,
 )
-<<<<<<< HEAD
-=======
 from services.ui.utils.llm_selector import render_llm_selector
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 st.markdown(
     """
@@ -75,15 +68,11 @@ ss["afk_logged_in"] = True
 if not ss["afk_user"].get("name"):
     ss["afk_user"]["name"] = "Operator"
 
-<<<<<<< HEAD
 # ─────────────────────────────────────────────
 # AUTO-LOAD DEMO DATA (if no results exist)
 # ─────────────────────────────────────────────
 # Anti-Fraud/KYC uses tabs from external pages module, demo data is loaded per tab
 ss.setdefault("afk_demo_loaded", True)  # Mark as having demo data available
-
-=======
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 def _build_chat_context() -> Dict[str, Any]:
     ctx: Dict[str, Any] = {
@@ -237,8 +226,6 @@ _, theme_col = st.columns([5, 1])
 with theme_col:
     render_theme_toggle("🌗 Dark mode", key="afk_theme_toggle_main")
 
-<<<<<<< HEAD
-=======
 OPENSTACK_FLAVORS = {
     "m4.medium": "4 vCPU / 8 GB RAM — CPU-only small",
     "m8.large": "8 vCPU / 16 GB RAM — CPU-only medium",
@@ -256,8 +243,6 @@ afk_flavor = st.selectbox(
     key="afk_flavor",
 )
 st.caption(OPENSTACK_FLAVORS[afk_flavor])
-
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 st.markdown(
     """
     <style>
@@ -419,14 +404,11 @@ render_chat_assistant(
         "Show me the latest sanction hits.",
         "Explain what the privacy scrub removed.",
         "Generate a full KYC audit packet.",
-<<<<<<< HEAD
-=======
         "Show the last 10 loans flagged for fraud review.",
         "List the last 10 borrowers cleared with no exceptions.",
         "What is the total number of suspect loans this month?",
         "Summarize recently declined assets due to KYC or AML findings.",
         "Where are the latest .tmp_runs artifacts for KYC stored?",
         "List the last 10 privacy scrub outputs generated.",
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     ],
 )

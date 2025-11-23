@@ -1,4 +1,4 @@
-"""Lightweight Ollama client for Gemma CPU inference."""
+"""Lightweight Ollama client for Phi-3 (Ollama) inference."""
 from __future__ import annotations
 
 import json
@@ -31,7 +31,7 @@ def _normalize_base(url: str) -> str:
 
 
 OLLAMA_URL = _normalize_base(os.getenv("OLLAMA_URL", "http://localhost:11434"))
-OLLAMA_MODEL = os.getenv("SANDBOX_CHATBOT_MODEL", os.getenv("OLLAMA_MODEL", "gemma2:9b"))
+OLLAMA_MODEL = os.getenv("SANDBOX_CHATBOT_MODEL", os.getenv("OLLAMA_MODEL", "phi3:latest"))
 OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT_SECONDS", "120"))
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 LOG_DIR = PROJECT_ROOT / ".logs"

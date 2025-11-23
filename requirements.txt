@@ -16,8 +16,11 @@ statsmodels>=0.14
 Pillow>=10.3
 gunicorn>=21.2
 sentence-transformers>=2.7.0
-<<<<<<< HEAD
-chromadb>=0.4.0
-=======
 chromadb>=0.5
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
+lightgbm>=4.6.0
+xgboost>=3.1.0
+accelerate>=1.11.0
+bitsandbytes>=0.48.0
+huggingface-hub>=0.24.0
+datasets>=2.19.0
+pyyaml>=6.0

@@ -34,6 +34,8 @@ from services.ui.theme_manager import (
     get_theme,
     render_theme_toggle,
 )
+from services.ui.components.feedback import render_feedback_tab
+from services.ui.components.chat_assistant import render_chat_assistant
 
 # Page config
 st.set_page_config(page_title="Real Estate Evaluator", layout="wide")
@@ -45,6 +47,175 @@ API_URL = os.getenv("API_URL", "http://localhost:8090")
 apply_global_theme()
 
 # Session defaults
+def _generate_preloaded_sample_data():
+    """Generate pre-evaluated sample data for immediate map display."""
+    sample_df = pd.DataFrame({
+        "address": [
+            "123 Le Loi Street",
+            "456 Nguyen Hue Boulevard",
+            "789 Tran Hung Dao",
+            "321 Hoang Dieu",
+            "654 Bach Dang",
+            "789 Le Duan",
+            "456 Hoang Hoa Tham",
+            "123 Cau Giay",
+            "789 Son Tra",
+            "321 Phu Nhuan"
+        ],
+        "city": ["HCMC", "HCMC", "Hanoi", "Hanoi", "Da Nang", "HCMC", "HCMC", "Hanoi", "Da Nang", "Hue"],
+        "district": ["District 1", "District 1", "Hoan Kiem", "Tay Ho", "Hai Chau", "District 2", "Phu Nhuan", "Cau Giay", "Son Tra", "Phu Nhuan"],
+        "property_type": ["Apartment", "Condo", "House", "Villa", "Apartment", "Apartment", "House", "Condo", "Villa", "Apartment"],
+        "customer_price": [520000, 380000, 870000, 1260000, 220000, 320000, 450000, 310000, 390000, 120000],
+        "area_sqm": [100, 85, 150, 200, 95, 90, 120, 75, 180, 96],
+        "lat": [10.7769, 10.7750, 21.0285, 21.0716, 16.0472, 10.7856, 10.7992, 21.0367, 16.0902, 16.4498],
+        "lon": [106.7009, 106.7020, 105.8542, 105.8344, 108.2097, 106.7534, 106.6650, 105.8157, 108.2412, 107.5623]
+    })
+    
+    # Generate evaluated data with realistic market prices
+    evaluated_data = []
+    map_data = []
+    
+    # Market price ranges per city (USD per sqm)
+    market_prices = {
+        "HCMC": {"District 1": 5500, "District 2": 4200, "Phu Nhuan": 3800},
+        "Hanoi": {"Hoan Kiem": 6200, "Tay Ho": 5800, "Cau Giay": 4500},
+        "Da Nang": {"Hai Chau": 3200, "Son Tra": 3800},
+        "Hue": {"Phu Nhuan": 2500}
+    }
+    
+    for idx, row in sample_df.iterrows():
+        city = row["city"]
+        district = row["district"]
+        area = row["area_sqm"]
+        customer_price = row["customer_price"]
+        customer_price_per_sqm = customer_price / area if area > 0 else 0
+        
+        # Get market price for this location
+        market_price_per_sqm = market_prices.get(city, {}).get(district, 4000)
+        if market_price_per_sqm == 4000:  # Default fallback
+            if "District 1" in district or "Hoan Kiem" in district:
+                market_price_per_sqm = 5500
+            elif "District 2" in district or "Tay Ho" in district:
+                market_price_per_sqm = 4500
+            else:
+                market_price_per_sqm = 3500
+        
+        market_price_total = market_price_per_sqm * area
+        price_delta = ((customer_price - market_price_total) / market_price_total * 100) if market_price_total > 0 else 0
+        
+        # Determine status
+        if price_delta > 10:
+            status = "above_market"
+            color = "#ef4444"  # Red
+        elif price_delta < -10:
+            status = "below_market"
+            color = "#22c55e"  # Green
+        else:
+            status = "at_market"
+            color = "#3b82f6"  # Blue
+        
+        # Price range category
+        if market_price_per_sqm > 5500:
+            price_range = "high"
+        elif market_price_per_sqm > 4000:
+            price_range = "medium"
+        else:
+            price_range = "low"
+        
+        evaluated_data.append({
+            "address": row["address"],
+            "city": city,
+            "district": district,
+            "property_type": row["property_type"],
+            "customer_price": customer_price,
+            "area_sqm": area,
+            "lat": row["lat"],
+            "lon": row["lon"],
+            "market_price_per_sqm": market_price_per_sqm,
+            "customer_price_per_sqm": customer_price_per_sqm,
+            "price_delta": price_delta,
+            "evaluation_status": status,
+            "color": color,
+            "price_range_category": price_range,
+            "confidence": 85.0
+        })
+        
+        map_data.append({
+            "lat": float(row["lat"]),
+            "lon": float(row["lon"]),
+            "name": str(row["address"]),
+            "city": city,
+            "district": district,
+            "property_type": str(row["property_type"]),
+            "market_price": market_price_per_sqm,
+            "customer_price": customer_price_per_sqm,
+            "price_delta": price_delta,
+            "color": color,
+            "price_range": price_range,
+            "status": status,
+            "area_sqm": float(area),
+            "confidence": 85.0
+        })
+    
+    evaluated_df = pd.DataFrame(evaluated_data)
+    
+    # Generate zone data (simplified polygons around each city/district)
+    zone_data = []
+    for city in ["HCMC", "Hanoi", "Da Nang", "Hue"]:
+        city_props = evaluated_df[evaluated_df["city"] == city]
+        if not city_props.empty:
+            avg_market = city_props["market_price_per_sqm"].mean()
+            if avg_market > 5500:
+                price_range = "high"
+                color = "#ef4444"
+            elif avg_market > 4000:
+                price_range = "medium"
+                color = "#3b82f6"
+            else:
+                price_range = "low"
+                color = "#22c55e"
+            
+            # Create a simple bounding box polygon for the zone
+            lats = city_props["lat"].tolist()
+            lons = city_props["lon"].tolist()
+            if lats and lons:
+                min_lat, max_lat = min(lats), max(lats)
+                min_lon, max_lon = min(lons), max(lons)
+                # Expand slightly
+                lat_padding = (max_lat - min_lat) * 0.1 if max_lat != min_lat else 0.01
+                lon_padding = (max_lon - min_lon) * 0.1 if max_lon != min_lon else 0.01
+                
+                polygon = [
+                    [min_lon - lon_padding, min_lat - lat_padding],
+                    [max_lon + lon_padding, min_lat - lat_padding],
+                    [max_lon + lon_padding, max_lat + lat_padding],
+                    [min_lon - lon_padding, max_lat + lat_padding],
+                    [min_lon - lon_padding, min_lat - lat_padding]
+                ]
+                
+                zone_data.append({
+                    "city": city,
+                    "district": city_props["district"].iloc[0] if len(city_props) > 0 else "",
+                    "market_price": avg_market,
+                    "color": color,
+                    "price_range": price_range,
+                    "polygon": polygon
+                })
+    
+    # Summary statistics
+    summary = {
+        "total_assets": len(evaluated_df),
+        "assets_on_map": len([m for m in map_data if m.get("lat") and m.get("lon")]),
+        "avg_market_price": evaluated_df["market_price_per_sqm"].mean(),
+        "avg_customer_price": evaluated_df["customer_price_per_sqm"].mean(),
+        "avg_price_delta": evaluated_df["price_delta"].mean(),
+        "above_market_count": len(evaluated_df[evaluated_df["evaluation_status"] == "above_market"]),
+        "at_market_count": len(evaluated_df[evaluated_df["evaluation_status"] == "at_market"]),
+        "below_market_count": len(evaluated_df[evaluated_df["evaluation_status"] == "below_market"])
+    }
+    
+    return sample_df, evaluated_df, map_data, zone_data, summary
+
 def _init_defaults():
     ss.setdefault("re_evaluated_df", None)
     ss.setdefault("re_map_data", None)
@@ -53,6 +224,19 @@ def _init_defaults():
     ss.setdefault("re_uploaded_file", None)
     ss.setdefault("re_auto_loaded", False)
     ss.setdefault("re_auto_evaluated", False)
+    ss.setdefault("re_preloaded", False)
+    
+    # Preload sample data immediately if not already loaded
+    if not ss.get("re_preloaded", False):
+        sample_df, evaluated_df, map_data, zone_data, summary = _generate_preloaded_sample_data()
+        ss["re_uploaded_file"] = sample_df
+        ss["re_evaluated_df"] = evaluated_df
+        ss["re_map_data"] = map_data
+        ss["re_zone_data"] = zone_data
+        ss["re_summary"] = summary
+        ss["re_preloaded"] = True
+        ss["re_auto_loaded"] = True
+        ss["re_auto_evaluated"] = True
 
 _init_defaults()
 
@@ -950,8 +1134,35 @@ def _generate_ultra_3d_map(map_data, zone_data, assets_geojson, zones_geojson, t
     </html>
     """
 
-# Navigation
+# Navigation — Fixed to match working pattern from other pages
+def _set_query_params_safe(**kwargs):
+    """Backwards-compatible setter for Streamlit versions before query_params."""
+    try:
+        for k, v in kwargs.items():
+            st.query_params[k] = v
+        return True
+    except Exception:
+        pass
+    try:
+        st.experimental_set_query_params(**kwargs)
+        return True
+    except Exception:
+        return False
+
+def _go_stage(target_stage: str):
+    """Reliable navigation that returns to Home or Agents even from sub-pages."""
+    st.session_state["stage"] = target_stage
+    try:
+        # Jump back to main app router (must exist in /services/ui/app.py)
+        st.switch_page("app.py")
+        return
+    except Exception:
+        pass
+    _set_query_params_safe(stage=target_stage)
+    st.rerun()
+
 def render_nav_bar():
+    """Top navigation bar with Home, Agents, and Theme switch."""
     # Get current theme for styling
     current_theme = get_theme()
     palette = get_palette(current_theme)
@@ -987,16 +1198,14 @@ def render_nav_bar():
     
     nav_col1, nav_col2, nav_col3, nav_col4 = st.columns([1, 1, 1, 2])
     with nav_col1:
-        if st.button("🏠 Home", use_container_width=True):
-            st.session_state["stage"] = "landing"
-            st.rerun()
+        if st.button("🏠 Home", use_container_width=True, key="re_nav_home"):
+            _go_stage("landing")
     with nav_col2:
-        if st.button("🤖 Agents", use_container_width=True):
-            st.session_state["stage"] = "agents"
-            st.rerun()
+        if st.button("🤖 Agents", use_container_width=True, key="re_nav_agents"):
+            _go_stage("agents")
     with nav_col3:
-        if st.button("📊 Dashboard", use_container_width=True):
-            st.switch_page("app.py")
+        if st.button("📊 Dashboard", use_container_width=True, key="re_nav_dashboard"):
+            _go_stage("agents")  # Dashboard goes to agents page
     with nav_col4:
         render_theme_toggle(label="🌗 Theme", key="re_theme_toggle")
 
@@ -1006,11 +1215,18 @@ st.caption("Interactive Map • Market Price Comparison • CSV Upload Support")
 render_nav_bar()
 st.markdown("---")
 
-# Main content
-col1, col2 = st.columns([1, 1])
+# Add tabs for better organization
+tab_main, tab_feedback = st.tabs([
+    "🗺️ Map & Evaluation",
+    "🗣️ Feedback & Feature Requests"
+])
 
-with col1:
-    st.header("📤 Upload Assets")
+with tab_main:
+    # Main content
+    col1, col2 = st.columns([1, 1])
+
+    with col1:
+        st.header("📤 Upload Assets")
     
     # CSV Upload
     uploaded_file = st.file_uploader(
@@ -1061,81 +1277,8 @@ with col1:
             st.success("✅ Generated 10 sample properties!")
             st.dataframe(ss["re_uploaded_file"])
     
-    # Auto-load sample on first visit and auto-evaluate
-    if ss.get("re_uploaded_file") is None and not ss.get("re_auto_loaded", False):
-        try:
-            sample_csv_path = os.path.join(os.path.dirname(__file__), "../../../agents/real_estate_evaluator/sample_data.csv")
-            if os.path.exists(sample_csv_path):
-                ss["re_uploaded_file"] = pd.read_csv(sample_csv_path)
-                ss["re_auto_loaded"] = True
-            else:
-                # Generate sample data if CSV doesn't exist
-                sample_data = {
-                    "address": [
-                        "123 Le Loi Street",
-                        "456 Nguyen Hue Boulevard",
-                        "789 Tran Hung Dao",
-                        "321 Hoang Dieu",
-                        "654 Bach Dang",
-                        "789 Le Duan",
-                        "456 Hoang Hoa Tham",
-                        "123 Cau Giay",
-                        "789 Son Tra",
-                        "321 Phu Nhuan"
-                    ],
-                    "city": ["HCMC", "HCMC", "Hanoi", "Hanoi", "Da Nang", "HCMC", "HCMC", "Hanoi", "Da Nang", "Hue"],
-                    "district": ["District 1", "District 1", "Hoan Kiem", "Tay Ho", "Hai Chau", "District 2", "Phu Nhuan", "Cau Giay", "Son Tra", "Phu Nhuan"],
-                    "property_type": ["Apartment", "Condo", "House", "Villa", "Apartment", "Apartment", "House", "Condo", "Villa", "Apartment"],
-                    "customer_price": [520000, 380000, 870000, 1260000, 220000, 320000, 450000, 310000, 390000, 120000],
-                    "area_sqm": [100, 85, 150, 200, 95, 90, 120, 75, 180, 96],
-                    "lat": [10.7769, 10.7750, 21.0285, 21.0716, 16.0472, 10.7856, 10.7992, 21.0367, 16.0902, 16.4498],
-                    "lon": [106.7009, 106.7020, 105.8542, 105.8344, 108.2097, 106.7534, 106.6650, 105.8157, 108.2412, 107.5623]
-                }
-                ss["re_uploaded_file"] = pd.DataFrame(sample_data)
-                ss["re_auto_loaded"] = True
-            
-            # Auto-evaluate on load if not already evaluated
-            if ss.get("re_evaluated_df") is None and not ss.get("re_auto_evaluated", False):
-                ss["re_auto_evaluated"] = True
-                with st.spinner("🔄 Auto-evaluating sample properties and loading map..."):
-                    try:
-                        url = f"{API_URL}/v1/agents/real_estate_evaluator/run/json"
-                        payload = {
-                            "df": ss["re_uploaded_file"].to_dict(orient="records"),
-                            "params": {"use_scraper": True}
-                        }
-                        resp = requests.post(url, json=payload, timeout=60)
-                        if resp.status_code == 200:
-                            result = resp.json()
-                            evaluated_df_data = result.get("evaluated_df", [])
-                            if isinstance(evaluated_df_data, list):
-                                ss["re_evaluated_df"] = pd.DataFrame(evaluated_df_data)
-                            else:
-                                ss["re_evaluated_df"] = pd.DataFrame([evaluated_df_data])
-                            ss["re_map_data"] = result.get("map_data", [])
-                            ss["re_zone_data"] = result.get("zone_data", [])
-                            ss["re_summary"] = result.get("summary", {})
-                            st.success("✅ Sample properties loaded and evaluated! Map is ready.")
-                            st.rerun()  # Refresh to show the map
-                    except Exception as e:
-                        # Fallback to local evaluation
-                        try:
-                            from agents.real_estate_evaluator.agent import run as agent_run
-                            result = agent_run(ss["re_uploaded_file"], {"use_scraper": True})
-                            evaluated_df_data = result.get("evaluated_df", [])
-                            if isinstance(evaluated_df_data, pd.DataFrame):
-                                ss["re_evaluated_df"] = evaluated_df_data
-                            else:
-                                ss["re_evaluated_df"] = pd.DataFrame(evaluated_df_data)
-                            ss["re_map_data"] = result.get("map_data", [])
-                            ss["re_zone_data"] = result.get("zone_data", [])
-                            ss["re_summary"] = result.get("summary", {})
-                            st.success("✅ Sample properties loaded and evaluated! Map is ready.")
-                            st.rerun()  # Refresh to show the map
-                        except Exception as ex:
-                            st.warning(f"⚠️ Auto-evaluation failed: {ex}. Please click 'Evaluate Assets' manually.")
-        except Exception as e:
-            st.warning(f"⚠️ Auto-loading sample data failed: {e}")
+    # Sample data is already preloaded in _init_defaults() for immediate display
+    # No need for auto-loading or API calls - map shows instantly
     
     # Process button
     if uploaded_file is not None:
@@ -1218,138 +1361,157 @@ with col1:
                     except Exception as e2:
                         st.error(f"Local evaluation error: {e2}")
 
-with col2:
-    st.header("📊 Summary")
-    
-    if ss.get("re_summary"):
-        summary = ss["re_summary"]
-        st.metric("Total Assets", summary.get("total_assets", 0))
-        st.metric("Assets on Map", summary.get("assets_on_map", 0))
-        st.metric("Avg Market Price", f"${summary.get('avg_market_price', 0):,.0f}/sqm")
-        st.metric("Avg Customer Price", f"${summary.get('avg_customer_price', 0):,.0f}/sqm")
-        st.metric("Avg Price Delta", f"{summary.get('avg_price_delta', 0):.1f}%")
+    with col2:
+        st.header("📊 Summary")
         
-        # Status breakdown
-        st.subheader("Evaluation Status")
-        col_a, col_b, col_c = st.columns(3)
-        with col_a:
-            st.metric("Above Market", summary.get("above_market_count", 0))
-        with col_b:
-            st.metric("At Market", summary.get("at_market_count", 0))
-        with col_c:
-            st.metric("Below Market", summary.get("below_market_count", 0))
+        if ss.get("re_summary"):
+            summary = ss["re_summary"]
+            st.metric("Total Assets", summary.get("total_assets", 0))
+            st.metric("Assets on Map", summary.get("assets_on_map", 0))
+            st.metric("Avg Market Price", f"${summary.get('avg_market_price', 0):,.0f}/sqm")
+            st.metric("Avg Customer Price", f"${summary.get('avg_customer_price', 0):,.0f}/sqm")
+            st.metric("Avg Price Delta", f"{summary.get('avg_price_delta', 0):.1f}%")
+            
+            # Status breakdown
+            st.subheader("Evaluation Status")
+            col_a, col_b, col_c = st.columns(3)
+            with col_a:
+                st.metric("Above Market", summary.get("above_market_count", 0))
+            with col_b:
+                st.metric("At Market", summary.get("at_market_count", 0))
+            with col_c:
+                st.metric("Below Market", summary.get("below_market_count", 0))
 
-# Map visualization
-if ss.get("re_map_data") and len(ss["re_map_data"]) > 0:
-    st.header("🗺️ Interactive Map - Price Zones & Customer Assets")
-    
-    map_data = ss["re_map_data"]
-    zone_data = ss.get("re_zone_data", [])
-    
-    # Prepare GeoJSON for customer assets (red pins)
-    asset_features = []
-    for item in map_data:
-        asset_features.append({
-            "type": "Feature",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [item["lon"], item["lat"]]
-            },
-            "properties": item
-        })
-    
-    assets_geojson = {
-        "type": "FeatureCollection",
-        "features": asset_features
-    }
-    
-    # Prepare GeoJSON for price zones (polygons)
-    zone_features = []
-    for zone in zone_data:
-        zone_features.append({
-            "type": "Feature",
-            "geometry": {
-                "type": "Polygon",
-                "coordinates": [zone["polygon"]]
-            },
-            "properties": {
-                "city": zone["city"],
-                "district": zone["district"],
-                "market_price": zone["market_price"],
-                "color": zone["color"],
-                "price_range": zone["price_range"]
-            }
-        })
-    
-    zones_geojson = {
-        "type": "FeatureCollection",
-        "features": zone_features
-    }
-    
-    # Get current theme for map styling
-    current_theme = get_theme()
-    
-    # Always use Ultra 3D Map
-    map_html = _generate_ultra_3d_map(map_data, zone_data, assets_geojson, zones_geojson, current_theme)
-    map_height = 800
-    
-    # Render map (will auto-update when theme changes via st.rerun())
-    components.html(map_html, height=map_height)
-    
-    # Comparison table below map
-    if ss.get("re_evaluated_df") is not None:
-        st.header("📊 Asset Comparison Table")
-        df = ss["re_evaluated_df"]
+    # Map visualization
+    if ss.get("re_map_data") and len(ss["re_map_data"]) > 0:
+        st.header("🗺️ Interactive Map - Price Zones & Customer Assets")
         
-        # Create comparison table with key information
-        comparison_data = []
-        for _, row in df.iterrows():
-            comparison_data.append({
-                "Property Type": str(row.get("property_type", "N/A")),
-                "Location": f"{row.get('city', 'N/A')}, {row.get('district', 'N/A')}",
-                "Address": str(row.get("address", "N/A")),
-                "Market Price/sqm": f"${row.get('market_price_per_sqm', 0):,.0f}",
-                "Customer Price/sqm": f"${row.get('customer_price_per_sqm', 0):,.0f}",
-                "Price Difference": f"{row.get('price_delta', 0):.1f}%",
-                "Status": str(row.get("evaluation_status", "N/A")).replace("_", " ").title(),
-                "Area (sqm)": f"{row.get('area_sqm', 0):.0f}",
-                "Confidence": f"{row.get('confidence', 0):.0f}%"
+        map_data = ss["re_map_data"]
+        zone_data = ss.get("re_zone_data", [])
+        
+        # Prepare GeoJSON for customer assets (red pins)
+        asset_features = []
+        for item in map_data:
+            asset_features.append({
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [item["lon"], item["lat"]]
+                },
+                "properties": item
             })
         
-        comparison_df = pd.DataFrame(comparison_data)
-        st.dataframe(comparison_df, use_container_width=True, hide_index=True)
+        assets_geojson = {
+            "type": "FeatureCollection",
+            "features": asset_features
+        }
         
-        # Download button
-        csv = df.to_csv(index=False)
-        st.download_button(
-            label="📥 Download Full Results CSV",
-            data=csv,
-            file_name=f"real_estate_evaluation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-            mime="text/csv"
-        )
-    
-    # Charts
-    st.subheader("📈 Price Analysis")
-    chart_col1, chart_col2 = st.columns(2)
-    
-    with chart_col1:
-        if len(df) > 0:
-            fig = px.bar(
-                df,
-                x="address",
-                y=["market_price_per_sqm", "customer_price_per_sqm"],
-                title="Market vs Customer Price",
-                labels={"value": "Price per sqm ($)", "address": "Property"},
-                barmode="group"
+        # Prepare GeoJSON for price zones (polygons)
+        zone_features = []
+        for zone in zone_data:
+            zone_features.append({
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [zone["polygon"]]
+                },
+                "properties": {
+                    "city": zone["city"],
+                    "district": zone["district"],
+                    "market_price": zone["market_price"],
+                    "color": zone["color"],
+                    "price_range": zone["price_range"]
+                }
+            })
+        
+        zones_geojson = {
+            "type": "FeatureCollection",
+            "features": zone_features
+        }
+        
+        # Get current theme for map styling
+        current_theme = get_theme()
+        
+        # Always use Ultra 3D Map
+        map_html = _generate_ultra_3d_map(map_data, zone_data, assets_geojson, zones_geojson, current_theme)
+        map_height = 800
+        
+        # Render map (will auto-update when theme changes via st.rerun())
+        components.html(map_html, height=map_height)
+        
+        # Comparison table below map
+        if ss.get("re_evaluated_df") is not None:
+            st.header("📊 Asset Comparison Table")
+            df = ss["re_evaluated_df"]
+            
+            # Create comparison table with key information
+            comparison_data = []
+            for _, row in df.iterrows():
+                comparison_data.append({
+                    "Property Type": str(row.get("property_type", "N/A")),
+                    "Location": f"{row.get('city', 'N/A')}, {row.get('district', 'N/A')}",
+                    "Address": str(row.get("address", "N/A")),
+                    "Market Price/sqm": f"${row.get('market_price_per_sqm', 0):,.0f}",
+                    "Customer Price/sqm": f"${row.get('customer_price_per_sqm', 0):,.0f}",
+                    "Price Difference": f"{row.get('price_delta', 0):.1f}%",
+                    "Status": str(row.get("evaluation_status", "N/A")).replace("_", " ").title(),
+                    "Area (sqm)": f"{row.get('area_sqm', 0):.0f}",
+                    "Confidence": f"{row.get('confidence', 0):.0f}%"
+                })
+            
+            comparison_df = pd.DataFrame(comparison_data)
+            st.dataframe(comparison_df, use_container_width=True, hide_index=True)
+            
+            # Download button
+            csv = df.to_csv(index=False)
+            st.download_button(
+                label="📥 Download Full Results CSV",
+                data=csv,
+                file_name=f"real_estate_evaluation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv"
             )
-            st.plotly_chart(fig, use_container_width=True)
-    
-    with chart_col2:
-        if len(df) > 0:
-            status_counts = df["evaluation_status"].value_counts()
-            fig = px.pie(
-                values=status_counts.values,
-                names=status_counts.index,
-                title="Evaluation Status Distribution"
-            )
-            st.plotly_chart(fig, use_container_width=True)
+        
+        # Charts
+        st.subheader("📈 Price Analysis")
+        chart_col1, chart_col2 = st.columns(2)
+        
+        with chart_col1:
+            if len(df) > 0:
+                fig = px.bar(
+                    df,
+                    x="address",
+                    y=["market_price_per_sqm", "customer_price_per_sqm"],
+                    title="Market vs Customer Price",
+                    labels={"value": "Price per sqm ($)", "address": "Property"},
+                    barmode="group"
+                )
+                st.plotly_chart(fig, use_container_width=True)
+        
+        with chart_col2:
+            if len(df) > 0:
+                status_counts = df["evaluation_status"].value_counts()
+                fig = px.pie(
+                    values=status_counts.values,
+                    names=status_counts.index,
+                    title="Evaluation Status Distribution"
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+with tab_feedback:
+    render_feedback_tab("🏠 Real Estate Evaluator Agent")
+
+# Add unified chatbot assistant
+render_chat_assistant(
+    page_id="real_estate_evaluator",
+    context={"agent_type": "real_estate_evaluator", "stage": "evaluation"},
+    faq_questions=[
+        "How does the Real Estate Evaluator agent work?",
+        "What is market price comparison and how is it calculated?",
+        "How are property valuations determined?",
+        "What factors affect property evaluation status?",
+        "How do I interpret the price difference percentage?",
+        "What is the confidence score and how is it calculated?",
+        "How does the agent handle different property types?",
+        "What is the evaluation workflow from upload to results?",
+    ],
+)

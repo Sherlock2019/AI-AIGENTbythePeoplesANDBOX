@@ -12,6 +12,7 @@ import streamlit as st
 from services.common.personas import get_persona, list_personas
 from services.ui.theme_manager import apply_theme as apply_global_theme, get_theme, render_theme_toggle
 from services.ui.components.operator_banner import render_operator_banner
+from services.ui.components.feedback import render_feedback_tab
 
 API_URL = os.getenv("API_URL", "http://localhost:8090")
 
@@ -23,8 +24,58 @@ ss.setdefault("stage", "persona_chatroom")
 ss.setdefault("persona_chat_history", [])
 ss.setdefault("persona_case_summary", "")
 
+# Pre-populated FAQs for Persona Strategy Room (10 ready-to-use questions)
+PERSONA_ROOM_FAQS = [
+    "Should we approve this loan application? Provide a unified risk assessment from all invited personas.",
+    "What are the key blockers preventing approval? Each persona should highlight their concerns.",
+    "What is the overall risk profile combining asset, credit, fraud, and compliance signals?",
+    "Compare the asset FMV with the requested loan amount. Is the LTV acceptable?",
+    "What compliance flags exist that might delay or block approval?",
+    "How does the credit score align with the fraud risk assessment?",
+    "What is the recommended decision (approve/review/reject) and why?",
+    "What additional information or documentation is needed from each domain?",
+    "What are the key strengths and weaknesses of this application from each persona's perspective?",
+    "If we approve, what are the recommended loan terms (amount, rate, term) based on risk?",
+]
+
 all_personas = list_personas()
 persona_lookup: Dict[str, Dict[str, str]] = {p["id"]: p for p in all_personas}
+
+# ─────────────────────────────────────────────
+# NAVIGATION BAR
+# ─────────────────────────────────────────────
+def _go_stage(target: str):
+    """Navigate to a stage/page."""
+    ss["stage"] = target
+    try:
+        st.switch_page("app.py")
+    except Exception:
+        try:
+            st.query_params["stage"] = target
+        except Exception:
+            pass
+        st.rerun()
+
+def render_nav_bar():
+    """Top navigation bar with Home, Agents, and Theme switch."""
+    c1, c2, c3 = st.columns([1, 1, 2.5])
+    with c1:
+        if st.button("🏠 Back to Home", key="btn_home_persona_chatroom", use_container_width=True):
+            _go_stage("landing")
+            st.stop()
+    with c2:
+        if st.button("🤖 Back to Agents", key="btn_agents_persona_chatroom", use_container_width=True):
+            _go_stage("agents")
+            st.stop()
+    with c3:
+        render_theme_toggle(
+            label="🌗 Dark mode",
+            key="persona_chatroom_nav_theme",
+            help="Switch theme",
+        )
+    st.markdown("---")
+
+render_nav_bar()
 
 render_operator_banner(
     operator_name=ss.get("user_info", {}).get("name", "Operator"),
@@ -67,10 +118,33 @@ with col_settings:
         st.success("Cleared meeting transcript.")
 
 st.markdown("### Drive the conversation")
+
+# Pre-populated FAQs section (10 ready-to-use questions)
+with st.expander("💡 Quick Start FAQs - 10 Ready-to-Use Questions", expanded=True):
+    st.caption("Select a FAQ to automatically populate the question field below")
+    faq_cols = st.columns(2)
+    faq_count = 0
+    for faq in PERSONA_ROOM_FAQS[:10]:  # Show exactly 10 FAQs
+        col_idx = faq_count % 2
+        with faq_cols[col_idx]:
+            if st.button(
+                faq,
+                key=f"faq_btn_{faq_count}",
+                use_container_width=True,
+                help="Click to use this question",
+            ):
+                ss["persona_room_prompt"] = faq
+                st.rerun()
+        faq_count += 1
+
+st.markdown("---")
+
 meeting_prompt = st.text_area(
     "Ask a question or set the agenda",
+    value=ss.get("persona_room_prompt", ""),
     placeholder="e.g. 'Should we approve SME-4481 today? Highlight blockers from each agent.'",
     key="persona_room_prompt",
+    height=100,
 )
 
 def _record_message(role: str, speaker: str, content: str) -> None:
@@ -129,13 +203,33 @@ if st.button("🚀 Ask the room", use_container_width=True, disabled=send_disabl
         except Exception as exc:
             st.error(f"Meeting call failed: {exc}")
 
-st.markdown("### Transcript")
-chat_history = ss.get("persona_chat_history", [])
-if not chat_history:
-    st.info("No messages yet. Invite personas and start the discussion.")
-else:
-    for item in chat_history:
-        role = item.get("role", "user")
-        speaker = item.get("speaker") or ("Operator" if role == "user" else "Control Tower")
-        with st.chat_message("assistant" if role != "user" else "user"):
-            st.markdown(f"**{speaker}:** {item.get('content')}")
+# Add tabs for Transcript and Feedback
+tab_transcript, tab_feedback = st.tabs(["💬 Transcript", "🗣️ Feedback & Reviews"])
+
+with tab_transcript:
+    st.markdown("### Transcript")
+    chat_history = ss.get("persona_chat_history", [])
+    if not chat_history:
+        st.info("No messages yet. Invite personas and start the discussion.")
+    else:
+        for item in chat_history:
+            role = item.get("role", "user")
+            speaker = item.get("speaker") or ("Operator" if role == "user" else "Control Tower")
+            with st.chat_message("assistant" if role != "user" else "user"):
+                st.markdown(f"**{speaker}:** {item.get('content')}")
+        
+        # Export transcript button
+        st.markdown("---")
+        if st.button("📥 Export Transcript", use_container_width=True):
+            import json
+            transcript_json = json.dumps(chat_history, indent=2, ensure_ascii=False)
+            st.download_button(
+                label="⬇️ Download Transcript (JSON)",
+                data=transcript_json.encode("utf-8"),
+                file_name=f"persona_strategy_room_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                mime="application/json",
+                use_container_width=True,
+            )
+
+with tab_feedback:
+    render_feedback_tab("🧑‍🚀 Persona Strategy Room")

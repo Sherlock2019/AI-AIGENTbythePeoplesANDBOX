@@ -32,15 +32,24 @@ models:
 recommendations:
   credit_appraisal:
     scoring_tabular:
+      primary: LightGBM
+      fallback: RandomForest
       models:
-      - credit:lr-baseline
+      - LightGBM
+      - RandomForest
+      - XGBoost
+      - LogisticRegression
       datasets:
       - loan:synthetic
       - kaggle:credit_risk
     narratives_llm:
+      primary: mistral:7b-instruct
+      fallback: phi3:3.8b
       models:
-      - phi3:3.8b
       - mistral:7b-instruct
+      - phi3:3.8b
+      - gemma2:9b
+      - llama3:8b-instruct
       datasets: []
     explain_rerank:
       models:
@@ -48,8 +57,12 @@ recommendations:
       datasets: []
   asset_appraisal:
     valuation_tabular:
+      primary: LightGBM
+      fallback: RandomForest
       models:
-      - credit:lr-baseline
+      - LightGBM
+      - RandomForest
+      - XGBoost
       datasets:
       - loan:synthetic
     evidence_ocr:
@@ -59,7 +72,75 @@ recommendations:
       models: []
       datasets: []
     narratives_llm:
+      primary: mistral:7b-instruct
+      fallback: phi3:3.8b
+      models:
+      - mistral:7b-instruct
+      - phi3:3.8b
+      - gemma2:9b
+      - llama3:8b-instruct
+      - qwen2:7b-instruct
+      datasets: []
+  anti_fraud_kyc:
+    scoring_tabular:
+      primary: RandomForest
+      fallback: LogisticRegression
+      models:
+      - RandomForest
+      - LogisticRegression
+      - LightGBM
+      - XGBoost
+      datasets: []
+    narratives_llm:
+      primary: phi3:3.8b
+      fallback: mistral:7b-instruct
       models:
       - phi3:3.8b
       - mistral:7b-instruct
+      - gemma2:2b
+      datasets: []
+  legal_compliance:
+    narratives_llm:
+      primary: mistral:7b-instruct
+      fallback: phi3:3.8b
+      models:
+      - mistral:7b-instruct
+      - phi3:3.8b
+      - llama3:8b-instruct
+      datasets: []
+  chatbot_assistant:
+    narratives_llm:
+      primary: mistral:7b-instruct
+      fallback: phi3:3.8b
+      models:
+      - mistral:7b-instruct
+      - phi3:3.8b
+      - gemma2:9b
+      - llama3:8b-instruct
+      datasets: []
+  unified_risk:
+    scoring_tabular:
+      primary: LightGBM
+      fallback: RandomForest
+      models:
+      - LightGBM
+      - RandomForest
+      - XGBoost
+      datasets: []
+    narratives_llm:
+      primary: mistral:7b-instruct
+      fallback: phi3:3.8b
+      models:
+      - mistral:7b-instruct
+      - phi3:3.8b
+      - gemma2:9b
+      datasets: []
+  credit_scoring:
+    narratives_llm:
+      primary: phi3:3.8b
+      fallback: mistral:7b-instruct
+      models:
+      - phi3:3.8b
+      - mistral:7b-instruct
+      - gemma2:2b
       datasets: []

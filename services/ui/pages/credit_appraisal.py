@@ -6,11 +6,8 @@ import io
 import re
 import json
 import shutil
-<<<<<<< HEAD
-=======
 import threading
 import time
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Optional, Dict, List, Any
@@ -23,13 +20,17 @@ import plotly.graph_objects as go
 import logging
 import sys
 
-<<<<<<< HEAD
-from pandas import json_normalize  # ADD
-=======
-from services.ui.utils.pandas_compat import ensure_json_normalize
-
-json_normalize = ensure_json_normalize()
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
+# Try to use pandas json_normalize, fallback to compatibility wrapper
+try:
+    from pandas import json_normalize
+except ImportError:
+    try:
+        from services.ui.utils.pandas_compat import ensure_json_normalize
+        json_normalize = ensure_json_normalize()
+    except ImportError:
+        # Final fallback
+        import pandas as pd
+        json_normalize = pd.json_normalize
 
 from services.ui.theme_manager import (
     apply_theme as apply_global_theme,
@@ -40,10 +41,11 @@ from services.ui.components.operator_banner import render_operator_banner
 from services.ui.components.telemetry_dashboard import render_telemetry_dashboard
 from services.ui.components.feedback import render_feedback_tab
 from services.ui.components.chat_assistant import render_chat_assistant
-<<<<<<< HEAD
-=======
-from services.ui.utils.llm_selector import render_llm_selector
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
+# Try to import LLM selector if available
+try:
+    from services.ui.utils.llm_selector import render_llm_selector
+except ImportError:
+    render_llm_selector = None
 
 
 
@@ -456,8 +458,6 @@ st.markdown(
 # You can point this to your FastAPI host
 API_URL = os.environ.get("AGENT_API_URL", "http://localhost:8090")
 
-<<<<<<< HEAD
-=======
 _CHATBOT_REFRESH_STATE: Dict[str, float] = {"last_ts": 0.0}
 
 def _ping_chatbot_refresh(reason: str = "credit", *, min_interval: float = 300.0) -> None:
@@ -476,7 +476,6 @@ def _ping_chatbot_refresh(reason: str = "credit", *, min_interval: float = 300.0
 
     threading.Thread(target=_fire, daemon=True).start()
 
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 # Base & temp runs folder
 BASE_DIR = os.path.abspath(".")
 RUNS_DIR = os.path.join(BASE_DIR, ".tmp_runs")
@@ -1521,24 +1520,6 @@ with tab_run:
     else:
         st.warning("⚠️ No trained models found — train one in Step 5 first.")
 
-<<<<<<< HEAD
-    # 1) Model + Hardware selection (UI hints)
-    LLM_MODELS = [
-        {"label": "💻 CPU Recommended — Phi-3 Mini (3.8B)", "value": "phi3:3.8b", "hint": "CPU 8GB RAM (fast)", "tier": "cpu"},
-        {"label": "💻 CPU Recommended — Mistral 7B Instruct", "value": "mistral:7b-instruct",
-         "hint": "CPU 16GB (slow) or GPU ≥8GB", "tier": "balanced"},
-        {"label": "💻 CPU Recommended — Gemma-2 7B", "value": "gemma2:7b",
-         "hint": "CPU 16GB (slow) or GPU ≥8GB", "tier": "balanced"},
-        {"label": "🧠 GPU Recommended — LLaMA-3 8B", "value": "llama3:8b-instruct",
-         "hint": "GPU ≥12GB (CPU very slow)", "tier": "gpu"},
-        {"label": "🧠 GPU Recommended — Qwen2 7B", "value": "qwen2:7b-instruct",
-         "hint": "GPU ≥12GB (CPU very slow)", "tier": "gpu"},
-        {"label": "🚀 GPU Heavy — Mixtral 8x7B", "value": "mixtral:8x7b-instruct",
-         "hint": "GPU 24–48GB", "tier": "gpu_large"},
-    ]
-
-=======
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     OPENSTACK_FLAVORS = {
         "m4.medium": "4 vCPU / 8 GB RAM — CPU-only small",
         "m8.large": "8 vCPU / 16 GB RAM — CPU-only medium",
@@ -1546,56 +1527,76 @@ with tab_run:
         "g1.l40.1": "16 vCPU / 64 GB RAM + 1×L40 48GB",
         "g2.a100.1": "24 vCPU / 128 GB RAM + 1×A100 80GB",
     }
-<<<<<<< HEAD
-
-    # Determine dataset size to surface CPU/GPU-friendly LLMs first
-    possible_sources = ["credit_train_df", "credit_scored_df", "credit_decision_df", "last_merged_df"]
-    llm_row_count = None
-    for key in possible_sources:
-        df_candidate = st.session_state.get(key)
-        if isinstance(df_candidate, pd.DataFrame) and not df_candidate.empty:
-            llm_row_count = len(df_candidate)
-            break
-
-    def recommended_llms(row_count: int | None) -> list[str]:
-        if row_count is None:
-            return ["💻 CPU Recommended — Mistral 7B Instruct", "💻 CPU Recommended — Gemma-2 7B"]
-        if row_count <= 10_000:
-            return ["💻 CPU Recommended — Phi-3 Mini (3.8B)", "💻 CPU Recommended — Mistral 7B Instruct"]
-        if row_count <= 40_000:
-            return ["💻 CPU Recommended — Mistral 7B Instruct", "💻 CPU Recommended — Gemma-2 7B"]
-        return ["🚀 GPU Heavy — Mixtral 8x7B", "🧠 GPU Recommended — LLaMA-3 8B"]
-
-    rec_labels = recommended_llms(llm_row_count)
-    cpu_like = [m for m in LLM_MODELS if m["tier"] in {"cpu", "balanced"}]
-    gpu_like = [m for m in LLM_MODELS if m["tier"] in {"gpu", "gpu_large"}]
-
-    ordered_models = []
-    seen = set()
-
-    def append_unique(model):
-        if model["label"] not in seen:
-            ordered_models.append(model)
-            seen.add(model["label"])
-
-    for label in rec_labels:
-        match = next((m for m in LLM_MODELS if m["label"] == label), None)
-        if match:
-            append_unique(match)
-
-    for model in cpu_like:
-        append_unique(model)
-    for model in gpu_like:
-        append_unique(model)
-
-    ordered_labels = [m["label"] for m in ordered_models]
-    LLM_VALUE_BY_LABEL = {m["label"]: m["value"] for m in ordered_models}
-    LLM_HINT_BY_LABEL = {m["label"]: m["hint"] for m in ordered_models}
 
     with st.expander("🧠 Local LLM & Hardware Profile", expanded=True):
-        st.info("Use CPU recommended LLMs first for quick narratives. Switch to GPU picks only when you need deeper reasoning or longer context.", icon="⚡")
-        c1, c2 = st.columns([1.2, 1])
-        with c1:
+        st.info(
+            "Use CPU recommended LLMs first for quick narratives. Switch to GPU picks only when you need deeper reasoning or longer context.",
+            icon="⚡",
+        )
+        # Use render_llm_selector if available, otherwise fall back to manual selection
+        if render_llm_selector is not None:
+            selected_llm = render_llm_selector(context="credit_appraisal")
+            st.session_state["credit_llm_model_label"] = selected_llm["model"]
+            st.session_state["credit_llm_model"] = selected_llm["value"]
+            llm_value = selected_llm["value"]
+        else:
+            # Fallback: manual LLM selection
+            LLM_MODELS = [
+                {"label": "💻 CPU Recommended — Phi-3 Mini (3.8B)", "value": "phi3:3.8b", "hint": "CPU 8GB RAM (fast)", "tier": "cpu"},
+                {"label": "💻 CPU Recommended — Mistral 7B Instruct", "value": "mistral:7b-instruct",
+                 "hint": "CPU 16GB (slow) or GPU ≥8GB", "tier": "balanced"},
+                {"label": "💻 CPU Recommended — Gemma-2 7B", "value": "gemma2:7b",
+                 "hint": "CPU 16GB (slow) or GPU ≥8GB", "tier": "balanced"},
+                {"label": "🧠 GPU Recommended — LLaMA-3 8B", "value": "llama3:8b-instruct",
+                 "hint": "GPU ≥12GB (CPU very slow)", "tier": "gpu"},
+                {"label": "🧠 GPU Recommended — Qwen2 7B", "value": "qwen2:7b-instruct",
+                 "hint": "GPU ≥12GB (CPU very slow)", "tier": "gpu"},
+                {"label": "🚀 GPU Heavy — Mixtral 8x7B", "value": "mixtral:8x7b-instruct",
+                 "hint": "GPU 24–48GB", "tier": "gpu_large"},
+            ]
+            possible_sources = ["credit_train_df", "credit_scored_df", "credit_decision_df", "last_merged_df"]
+            llm_row_count = None
+            for key in possible_sources:
+                df_candidate = st.session_state.get(key)
+                if isinstance(df_candidate, pd.DataFrame) and not df_candidate.empty:
+                    llm_row_count = len(df_candidate)
+                    break
+
+            def recommended_llms(row_count: int | None) -> list[str]:
+                if row_count is None:
+                    return ["💻 CPU Recommended — Mistral 7B Instruct", "💻 CPU Recommended — Gemma-2 7B"]
+                if row_count <= 10_000:
+                    return ["💻 CPU Recommended — Phi-3 Mini (3.8B)", "💻 CPU Recommended — Mistral 7B Instruct"]
+                if row_count <= 40_000:
+                    return ["💻 CPU Recommended — Mistral 7B Instruct", "💻 CPU Recommended — Gemma-2 7B"]
+                return ["🚀 GPU Heavy — Mixtral 8x7B", "🧠 GPU Recommended — LLaMA-3 8B"]
+
+            rec_labels = recommended_llms(llm_row_count)
+            cpu_like = [m for m in LLM_MODELS if m["tier"] in {"cpu", "balanced"}]
+            gpu_like = [m for m in LLM_MODELS if m["tier"] in {"gpu", "gpu_large"}]
+
+            ordered_models = []
+            seen = set()
+
+            def append_unique(model):
+                if model["label"] not in seen:
+                    ordered_models.append(model)
+                    seen.add(model["label"])
+
+            for label in rec_labels:
+                match = next((m for m in LLM_MODELS if m["label"] == label), None)
+                if match:
+                    append_unique(match)
+
+            for model in cpu_like:
+                append_unique(model)
+            for model in gpu_like:
+                append_unique(model)
+
+            ordered_labels = [m["label"] for m in ordered_models]
+            LLM_VALUE_BY_LABEL = {m["label"]: m["value"] for m in ordered_models}
+            LLM_HINT_BY_LABEL = {m["label"]: m["hint"] for m in ordered_models}
+
             saved_llm = st.session_state.get("credit_llm_model_label", ordered_labels[0])
             if saved_llm not in ordered_labels:
                 saved_llm = ordered_labels[0]
@@ -1608,19 +1609,7 @@ with tab_run:
             )
             llm_value = LLM_VALUE_BY_LABEL[model_label]
             st.caption(f"Hint: {LLM_HINT_BY_LABEL[model_label]}")
-        with c2:
-            flavor = st.selectbox("OpenStack flavor / host profile", list(OPENSTACK_FLAVORS.keys()), index=0)
-            st.caption(OPENSTACK_FLAVORS[flavor])
-=======
-    with st.expander("🧠 Local LLM & Hardware Profile", expanded=True):
-        st.info(
-            "Use CPU recommended LLMs first for quick narratives. Switch to GPU picks only when you need deeper reasoning or longer context.",
-            icon="⚡",
-        )
-        selected_llm = render_llm_selector(context="credit_appraisal")
-        st.session_state["credit_llm_model_label"] = selected_llm["model"]
-        st.session_state["credit_llm_model"] = selected_llm["value"]
-        llm_value = selected_llm["value"]
+        
         flavor = st.selectbox(
             "OpenStack flavor / host profile",
             list(OPENSTACK_FLAVORS.keys()),
@@ -1628,7 +1617,6 @@ with tab_run:
             key="credit_flavor",
         )
         st.caption(OPENSTACK_FLAVORS[flavor])
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
         st.caption("These are passed to the API as hints; your API can choose Ollama/Flowise backends accordingly.")
 
     # 2) Data Source
@@ -1911,14 +1899,6 @@ with tab_run:
                 st.stop()
 
             # ---- RUN REQUEST ----
-<<<<<<< HEAD
-            r = requests.post(
-                f"{API_URL}/v1/agents/{agent_name}/run",
-                data=data,
-                files=files,
-                timeout=180
-            )
-=======
             try:
                 r = requests.post(
                     f"{API_URL}/v1/agents/{agent_name}/run",
@@ -1933,17 +1913,13 @@ with tab_run:
                 )
                 st.caption(f"Details: {exc}")
                 st.stop()
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
             if r.status_code != 200:
                 st.error(f"Run failed ({r.status_code}): {r.text}")
                 st.stop()
 
             res = r.json()
-<<<<<<< HEAD
-=======
             _ping_chatbot_refresh("credit_run")
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
             # ---- Robust run_id + data extraction ----
             run_id = None
@@ -2470,8 +2446,24 @@ with tab_train:
 
         return score, reason
 
+    # Check which models are available
+    available_models = ["RandomForest", "LogisticRegression"]  # Always available
+    try:
+        import lightgbm
+        available_models.append("LightGBM")
+    except ImportError:
+        pass
+    try:
+        import xgboost
+        available_models.append("XGBoost")
+    except ImportError:
+        pass
+    
     model_profiles = []
     for candidate in ["LightGBM", "RandomForest", "LogisticRegression", "XGBoost"]:
+        # Skip if model is not available
+        if candidate not in available_models:
+            continue
         score, reason = score_model(candidate)
         model_profiles.append(
             {
@@ -2504,18 +2496,71 @@ with tab_train:
 
     st.subheader("🤖 Choose training model")
 
-    model_options = ["LogisticRegression", "RandomForest", "LightGBM", "XGBoost"]
+    # Filter model options to only include available models
+    model_options = [m["name"] for m in model_profiles]  # Only show available models
+    if not model_options:
+        st.error("❌ No models available. Please install at least one ML library (scikit-learn is required).")
+        st.stop()
+    
+    # Get recommended model from presets
+    def _get_recommended_tabular_model(agent_context: str) -> str | None:
+        """Get recommended tabular model for agent context."""
+        try:
+            import yaml
+            from pathlib import Path
+            config_path = Path(__file__).resolve().parents[3] / "config" / "agent_model_presets.yaml"
+            if config_path.exists():
+                with open(config_path, "r") as f:
+                    presets = yaml.safe_load(f)
+                    if presets and "tabular_models" in presets:
+                        agent_config = presets["tabular_models"].get(agent_context)
+                        if agent_config:
+                            primary = agent_config.get("primary")
+                            if primary and primary in available_models:
+                                return primary
+                            fallback = agent_config.get("fallback")
+                            if fallback and fallback in available_models:
+                                return fallback
+        except Exception:
+            pass
+        return None
+    
+    recommended_model = _get_recommended_tabular_model("credit_appraisal")
+    
     default_choice = st.session_state.get("credit_model_choice")
-    if not default_choice:
-        default_choice = model_profiles[0]["name"]
-    if default_choice not in model_options:
-        default_choice = model_options[0]
+    if not default_choice or default_choice not in model_options:
+        # Priority: recommended > first available
+        if recommended_model and recommended_model in model_options:
+            default_choice = recommended_model
+            st.session_state["credit_model_choice"] = recommended_model
+            st.info(f"✅ **Recommended for credit appraisal**: {recommended_model} (auto-selected)", icon="⭐")
+        else:
+            default_choice = model_options[0]  # Use first available model
 
     model_choice = st.selectbox(
         "Select model:",
         model_options,
-        index=model_options.index(default_choice)
+        index=model_options.index(default_choice) if default_choice in model_options else 0
     )
+    
+    # Show info if LightGBM/XGBoost are not available
+    missing_models = []
+    if "LightGBM" not in available_models:
+        missing_models.append("LightGBM")
+    if "XGBoost" not in available_models:
+        missing_models.append("XGBoost")
+    
+    if missing_models:
+        with st.expander("💡 Install additional models (optional)", expanded=False):
+            install_commands = []
+            if "LightGBM" in missing_models:
+                install_commands.append("`pip install lightgbm`")
+            if "XGBoost" in missing_models:
+                install_commands.append("`pip install xgboost`")
+            st.info(
+                f"To use {', '.join(missing_models)}, install them with: {', '.join(install_commands)}. "
+                f"Current options ({', '.join(model_options)}) are sufficient for training."
+            )
     st.session_state["credit_model_choice"] = model_choice
 
     # ---------------------------------------------------------
@@ -2621,11 +2666,12 @@ with tab_train:
 
             # Detect non-numeric columns
             non_numeric_cols = X.select_dtypes(include=["object"]).columns.tolist()
-
+            
             if non_numeric_cols:
                 st.warning(f"Encoding non-numeric columns: {non_numeric_cols}")
 
-                # ✅ Safe label encoding for LightGBM / RF / XGB / LR
+                # ✅ Safe label encoding for all models (LightGBM, XGBoost, RandomForest, LogisticRegression)
+                # All models work correctly with label-encoded categorical features
                 from sklearn.preprocessing import LabelEncoder
 
                 for col in non_numeric_cols:
@@ -2651,36 +2697,48 @@ with tab_train:
             if model_choice == "LogisticRegression":
                 from sklearn.linear_model import LogisticRegression
                 model = LogisticRegression(max_iter=2000)
-
-                model = LogisticRegression(max_iter=2000)
             elif model_choice == "RandomForest":
                 from sklearn.ensemble import RandomForestClassifier
                 model = RandomForestClassifier(n_estimators=300)
-
-                model = RandomForestClassifier(n_estimators=300)
             elif model_choice == "LightGBM":
-<<<<<<< HEAD
-                from lightgbm import LGBMClassifier
-=======
                 try:
                     from lightgbm import LGBMClassifier
-                except ModuleNotFoundError:
-                    with st.expander("⚠️ Install LightGBM to use this model", expanded=True):
-                        st.error(
-                            "LightGBM is not installed in this environment. "
-                            "Install it with `pip install lightgbm` (inside the virtualenv) "
-                            "or choose RandomForest / LogisticRegression instead."
-                        )
+                    # LightGBM works well with label-encoded categoricals
+                    # Using 'auto' lets LightGBM detect categorical features automatically
+                    model = LGBMClassifier(
+                        verbose=-1,  # Suppress LightGBM output
+                        random_state=42,
+                        n_estimators=300,
+                        learning_rate=0.05
+                    )
+                except ImportError:
+                    st.error(
+                        "❌ LightGBM is not installed. "
+                        "Install it with `pip install lightgbm` or choose another model."
+                    )
                     st.stop()
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
-                model = LGBMClassifier()
-
-                model = LGBMClassifier()
+            elif model_choice == "XGBoost":
+                try:
+                    from xgboost import XGBClassifier
+                    # XGBoost works well with label-encoded categoricals
+                    # Can optionally enable tree_method='hist' for better performance
+                    model = XGBClassifier(
+                        tree_method='hist',  # Faster and handles categoricals better
+                        eval_metric='logloss',
+                        use_label_encoder=False  # Use native XGBoost evaluation
+                    )
+                except ImportError:
+                    st.error(
+                        "❌ XGBoost is not installed. "
+                        "Install it with `pip install xgboost` or choose another model."
+                    )
+                    st.stop()
             else:
-                from xgboost import XGBClassifier
+                st.error(f"❌ Unknown model choice: {model_choice}")
+                st.stop()
 
-                model = XGBClassifier()
-
+            # Fit model with encoded features
+            # All models (LR, RF, LightGBM, XGBoost) work with label-encoded categoricals
             model.fit(Xtr, ytr)
 
             # ---------------------------------------------------------
@@ -2712,10 +2770,56 @@ with tab_train:
             # -----------------------------------------------------
             PROD_DIR = Path("./agents/credit_appraisal/models/production")
             prod_meta_path = PROD_DIR / "production_meta.json"
-            if prod_meta_path.exists():
-                prod_m = json.load(open(prod_meta_path))["metrics"]
-            else:
-                prod_m = None
+            prod_m = None
+            
+            # Try multiple possible paths
+            possible_paths = [
+                prod_meta_path,
+                Path("services/ui/agents/credit_appraisal/models/production/production_meta.json"),
+                Path(__file__).resolve().parents[2] / "agents" / "credit_appraisal" / "models" / "production" / "production_meta.json",
+            ]
+            
+            loaded = False
+            for meta_path in possible_paths:
+                if meta_path.exists():
+                    try:
+                        with open(meta_path, "r", encoding="utf-8") as f:
+                            content = f.read()
+                            # Remove any merge conflict markers that might exist
+                            if "<<<<<<< HEAD" in content or "=======" in content or ">>>>>>>" in content:
+                                st.warning(f"⚠️ Found merge conflict markers in {meta_path}. Attempting to fix...")
+                                # Backup corrupted file
+                                try:
+                                    backup_path = meta_path.with_suffix(".json.bak")
+                                    import shutil
+                                    shutil.copy2(meta_path, backup_path)
+                                except Exception:
+                                    pass
+                                # Skip this file, try next one
+                                continue
+                            
+                            prod_meta_data = json.loads(content)
+                            prod_m = prod_meta_data.get("metrics")
+                            loaded = True
+                            break
+                    except json.JSONDecodeError as e:
+                        st.warning(f"⚠️ Production metadata file {meta_path} is corrupted (line {e.lineno}, col {e.colno}). Error: {e}")
+                        # Try to backup corrupted file
+                        try:
+                            backup_path = meta_path.with_suffix(".json.bak")
+                            import shutil
+                            shutil.copy2(meta_path, backup_path)
+                            st.info(f"Backed up corrupted file to {backup_path}")
+                        except Exception:
+                            pass
+                        continue
+                    except Exception as e:
+                        # Skip this path, try next one
+                        continue
+            
+            if not loaded:
+                # No valid production metadata found - that's OK, will create new baseline
+                pass
 
             st.markdown("---")
             st.subheader("📊 A/B Model Comparison")
@@ -3381,77 +3485,6 @@ with tab_handoff:
 
 with tab_feedback:
     render_feedback_tab("💳 Credit Appraisal Agent")
-
-
-
-# ─────────────────────────────────────────────
-# 🗣️ TAB 8 — Feedback & Feature Requests
-# ─────────────────────────────────────────────
-with tab_feedback:
-    st.subheader("🗣️ Share Your Feedback and Feature Ideas")
-
-    FEEDBACK_FILE = os.path.join(BASE_DIR, "agents_feedback.json")
-
-    def load_feedback() -> dict:
-        try:
-            with open(FEEDBACK_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return {}
-
-    def save_feedback(data: dict):
-        try:
-            with open(FEEDBACK_FILE, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            st.error(f"Could not save feedback: {e}")
-
-    feedback_data = load_feedback()
-
-    # View all current agent feedback
-    st.markdown("### 💬 Current Agent Reviews & Ratings")
-    for agent, fb in feedback_data.items():
-        with st.expander(f"⭐ {agent} — {fb.get('rating', 0)}/5  |  👥 {fb.get('users', 0)} users"):
-            st.markdown("#### Recent Comments:")
-            for cmt in reversed(fb.get("comments", [])):
-                st.markdown(f"- {cmt}")
-            st.markdown("---")
-
-    st.markdown("### ✍️ Submit Your Own Feedback or Feature Request")
-
-    agent_choice = st.selectbox("Select Agent", list(feedback_data.keys()))
-    new_comment = st.text_area("Your Comment or Feature Suggestion", placeholder="e.g. Add multi-language support for reports...")
-    new_rating = st.slider("Your Rating", 1, 5, 5)
-
-    # if st.button("📨 Submit Feedback"):
-    #     if new_comment.strip():
-    #         fb = feedback_data.get(agent_choice, {"rating": 0, "users": 0, "comments": []})
-    #         fb["comments"].append(new_comment.strip())
-    #         fb["rating"] = round((fb.get("rating", 0) + new_rating) / 2, 2)
-    #         fb["users"] = fb.get("users", 0) + 1
-    #         feedback_data[agent_choice] = fb
-    #         save_feedback(feedback_data)
-    #         st.success("✅ Feedback submitted successfully!")
-    #         st.rerun()
-    #     else:
-    #         st.warning("Please enter a comment before submitting.")
-    if st.button("📨 Submit Feedback"):
-        if new_comment.strip():
-            fb = feedback_data.get(agent_choice, {"rating": 0, "users": 0, "comments": []})
-            fb["comments"].append(new_comment.strip())
-            fb["rating"] = round((fb.get("rating", 0) + new_rating) / 2, 2)
-            fb["users"] = fb.get("users", 0) + 1
-            feedback_data[agent_choice] = fb
-            save_feedback(feedback_data)
-
-            # ✅ Sync latest feedback globally
-            st.session_state["feedback_data"] = feedback_data
-
-            # ✅ Force full reload so Landing updates instantly
-            st.success("✅ Feedback submitted successfully!")
-            st.rerun()
-        else:
-            st.warning("Please enter a comment before submitting.")
 
 
 

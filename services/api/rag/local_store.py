@@ -3,11 +3,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-<<<<<<< HEAD
-from typing import Any, Dict, Iterable, List
-=======
 from typing import Any, Dict, Iterable, List, Optional
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 import numpy as np
 
@@ -42,11 +38,8 @@ class LocalVectorStore:
         meta_list = list(metadata)
         if not vector_list:
             return
-<<<<<<< HEAD
-=======
         if len(vector_list) != len(meta_list):
             raise ValueError("Vectors and metadata must have the same length")
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
         arr = np.array(vector_list, dtype=np.float32)
         if arr.ndim != 2:
             raise ValueError("Vectors must have shape (n, dim)")
@@ -67,32 +60,13 @@ class LocalVectorStore:
         with self.metadata_path.open("w", encoding="utf-8") as f:
             json.dump(self._metadata, f, ensure_ascii=False, indent=2)
 
-<<<<<<< HEAD
-    def query(self, vector: Iterable[float], top_k: int = 3) -> List[Dict[str, Any]]:
-=======
     def query(self, vector: Iterable[float], top_k: int = 3, namespace: Optional[str] = None) -> List[Dict[str, Any]]:
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
         if not self.available:
             return []
         vec = np.array(vector, dtype=np.float32)
         if vec.ndim == 2:
             vec = vec[0]
         vec_norm = np.linalg.norm(vec)
-<<<<<<< HEAD
-        if vec_norm == 0:
-            return []
-        matrix = self._embeddings  # type: ignore[assignment]
-        matrix_norms = np.linalg.norm(matrix, axis=1)
-        denom = (matrix_norms * vec_norm) + 1e-10
-        scores = (matrix @ vec) / denom
-        idx = np.argsort(scores)[::-1][:top_k]
-        results = []
-        for i in idx:
-            meta = dict(self._metadata[i])
-            meta["score"] = float(scores[i])
-            results.append(meta)
-        return results
-=======
         if vec_norm == 0 or self._embeddings is None:
             return []
 
@@ -133,4 +107,3 @@ class LocalVectorStore:
 
     def namespace_present(self, namespace: str) -> bool:
         return any(meta.get("namespace") == namespace for meta in self._metadata)
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2

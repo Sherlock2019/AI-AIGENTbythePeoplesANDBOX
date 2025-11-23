@@ -335,6 +335,21 @@ def first_nonempty_df(*candidates):
 def is_nonempty_df(x) -> bool:
     return isinstance(x, pd.DataFrame) and not x.empty
 
+def _go_stage(target_stage: str) -> None:
+    """Navigate back to the main Streamlit router safely."""
+    st.session_state["stage"] = target_stage
+    try:
+        st.switch_page("app.py")
+        return
+    except Exception:
+        pass
+    try:
+        st.experimental_set_query_params(stage=target_stage)
+    except Exception:
+        pass
+    st.rerun()
+
+
 def render_nav_bar_app():
     stage = st.session_state.get("stage", "landing")
 

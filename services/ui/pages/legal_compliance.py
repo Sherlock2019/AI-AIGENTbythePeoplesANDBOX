@@ -1,24 +1,12 @@
 #!/usr/bin/env python3
 """
-<<<<<<< HEAD
 ⚖️ Legal & Compliance Agent — Beautiful Dashboard
 Checks regulatory compliance, sanctions, PEP, licensing requirements
 Feeds into Credit Appraisal and Asset Appraisal agents
-=======
-⚖️ Legal & Compliance Agent (Stage-only view)
----------------------------------------------
-Lightweight Streamlit page derived from the Asset Appraisal template. It presents
-only the compliance stages that sit between KYC / Anti-Fraud / Asset intel and
-the downstream Credit Appraisal decisioning stack.
-
-Outputs are stored in ``st.session_state["credit_policy_df"]`` so Credit Appraisal
-can overlay hard-policy constraints onto the shared scoring outputs.
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 """
 from __future__ import annotations
 
 import os
-<<<<<<< HEAD
 import io
 import json
 from datetime import datetime, timezone
@@ -28,30 +16,21 @@ import numpy as np
 import streamlit as st
 import requests
 import plotly.express as px
-=======
-from datetime import datetime, timezone
-from typing import Any, Dict, List
-
-import numpy as np
-import pandas as pd
-import streamlit as st
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 import plotly.graph_objects as go
 
 from services.ui.theme_manager import (
     apply_theme as apply_global_theme,
-<<<<<<< HEAD
-=======
     get_palette,
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     get_theme,
     render_theme_toggle,
 )
 from services.ui.components.operator_banner import render_operator_banner
-<<<<<<< HEAD
 from services.ui.components.telemetry_dashboard import render_telemetry_dashboard
 from services.ui.components.feedback import render_feedback_tab
 from services.ui.components.chat_assistant import render_chat_assistant
+from services.common.model_registry import get_hf_models, get_llm_lookup, get_llm_display_info
+from services.ui.utils.llm_selector import render_llm_selector
+from services.ui.utils.ai_insights import llm_generate_summary
 
 st.set_page_config(page_title="⚖️ Legal & Compliance Agent", layout="wide")
 apply_global_theme()
@@ -578,74 +557,6 @@ with st.sidebar:
             "How does Legal Compliance integrate with Asset Appraisal?",
         ],
     )
-=======
-from services.ui.components.chat_assistant import render_chat_assistant
-from services.common.model_registry import get_hf_models, get_llm_lookup, get_llm_display_info
-from services.ui.utils.llm_selector import render_llm_selector
-from services.ui.utils.ai_insights import llm_generate_summary
-
-
-st.set_page_config(page_title="Legal Compliance Agent", layout="wide")
-ss = st.session_state
-
-
-def _init_state() -> None:
-    llm_lookup = get_llm_lookup()
-    default_label = llm_lookup["labels"][0]
-    ss.setdefault("stage", "legal_compliance_agent")
-    ss.setdefault("legal_compliance_stage", "stages_only")
-    ss.setdefault(
-        "legal_compliance_user",
-        ss.get("compliance_user")
-        or ss.get("credit_scoring_user")
-        or ss.get("credit_user")
-        or {"name": "Operator", "email": "operator@demo.local"},
-    )
-    ss.setdefault("legal_compliance_pending", 11)
-    ss.setdefault("legal_compliance_flags", 2)
-    ss.setdefault("legal_compliance_avg_time", "6 min")
-    ss.setdefault("legal_compliance_last_run_ts", None)
-    ss.setdefault("legal_compliance_status", "idle")
-    ss.setdefault("legal_compliance_llm_label", default_label)
-    ss.setdefault("legal_compliance_llm_model", llm_lookup["value_by_label"][default_label])
-    ss.setdefault("legal_compliance_llm_score", 88.0)
-
-
-_init_state()
-apply_global_theme(get_theme())
-
-
-def _safe_switch(target: str) -> None:
-    ss["stage"] = target
-    try:
-        st.switch_page("app.py")
-        return
-    except Exception:
-        pass
-    try:
-        st.query_params["stage"] = target
-    except Exception:
-        pass
-    try:
-        st.experimental_rerun()
-    except Exception:
-        pass
-
-
-def _render_nav():
-    stage = ss.get("stage", "legal_compliance_agent")
-    c1, c2, c3 = st.columns([1, 1, 2.5])
-    with c1:
-        if st.button("🏠 Home", key=f"lc_nav_home_{stage}"):
-            _safe_switch("landing")
-    with c2:
-        if st.button("🤖 Agents", key=f"lc_nav_agents_{stage}"):
-            _safe_switch("agents")
-    with c3:
-        render_theme_toggle("🌗 Theme", key="legal_compliance_top_theme")
-
-
-_render_nav()
 
 
 # ---------------------------------------------------------------------------
@@ -1078,4 +989,3 @@ st.markdown(
     "<h1 style='font-size:2.2rem;font-weight:700;'>🔥 Local/HF LLM (narratives + explainability)</h1>",
     unsafe_allow_html=True,
 )
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2

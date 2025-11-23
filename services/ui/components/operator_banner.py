@@ -1,17 +1,11 @@
 from __future__ import annotations
 
-<<<<<<< HEAD
-from typing import Iterable, Sequence
-=======
 from typing import Iterable, Sequence, Tuple
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 import streamlit as st
 
 from services.ui.theme_manager import get_palette
 
-<<<<<<< HEAD
-=======
 _CHATBOT_POINTS: Tuple[Tuple[str, str], ...] = (
     (
         "RAG-first pipeline with fallback",
@@ -46,8 +40,6 @@ _CHATBOT_POINTS: Tuple[Tuple[str, str], ...] = (
     ),
 )
 
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
-
 def _chunk(seq: Sequence, size: int) -> Iterable[Sequence]:
     for idx in range(0, len(seq), size):
         yield seq[idx : idx + size]
@@ -61,16 +53,11 @@ def render_operator_banner(
     bullets: Sequence[str],
     metrics: Sequence[dict] | None = None,
     icon: str = "👤",
-<<<<<<< HEAD
-=======
     show_chatbot_brief: bool = True,
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 ) -> None:
     """Render the operator hero plus simple metric cards."""
     pal = get_palette()
 
-<<<<<<< HEAD
-=======
     chatbot_brief_html = ""
     if show_chatbot_brief:
         upgrade_items = "".join(
@@ -82,7 +69,6 @@ def render_operator_banner(
             f"<ul>{upgrade_items}</ul></div>"
         )
 
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     st.markdown(
         f"""
         <style>
@@ -103,8 +89,6 @@ def render_operator_banner(
             padding-left: 1.2rem;
             color: {pal['subtext']};
         }}
-<<<<<<< HEAD
-=======
         .chatbot-brief {{
             margin-top: 1rem;
             padding: 0.8rem 1rem;
@@ -121,7 +105,6 @@ def render_operator_banner(
         .chatbot-brief li {{
             margin-bottom: 0.35rem;
         }}
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
         </style>
         """,
         unsafe_allow_html=True,
@@ -137,10 +120,7 @@ def render_operator_banner(
                 <h3>{icon} {title}: {operator_name}</h3>
                 <p style="color:{pal['subtext']}; margin-bottom:0.6rem;">{summary}</p>
                 <ul>{bullet_html}</ul>
-<<<<<<< HEAD
-=======
                 {chatbot_brief_html}
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
             </div>
             """,
             unsafe_allow_html=True,

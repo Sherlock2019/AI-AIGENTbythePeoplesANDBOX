@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hugme-sandbox
+  namespace: ${K8S_NAMESPACE}
+spec:
+  replicas: ${K8S_REPLICAS}
+  selector:
+    matchLabels:
+      app: hugme-sandbox
+  template:
+    metadata:
+      labels:
+        app: hugme-sandbox
+    spec:
+      containers:
+        - name: app
+          image: ${K8S_IMAGE}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8090
+              name: api
+            - containerPort: 8502
+              name: ui
+          env:
+            - name: API_PORT
+              value: "8090"
+            - name: UI_PORT
+              value: "8502"
+            - name: OLLAMA_URL
+              value: "${K8S_OLLAMA_URL}"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hugme-sandbox
+  namespace: ${K8S_NAMESPACE}
+spec:
+  type: ${K8S_SERVICE_TYPE}
+  selector:
+    app: hugme-sandbox
+  ports:
+    - name: api
+      port: 8090
+      targetPort: 8090
+    - name: ui
+      port: 8502
+      targetPort: 8502

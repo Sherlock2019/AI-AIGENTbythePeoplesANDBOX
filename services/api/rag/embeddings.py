@@ -6,22 +6,15 @@ from typing import Iterable, List
 
 from sentence_transformers import SentenceTransformer
 
-<<<<<<< HEAD
-DEFAULT_MODEL = os.getenv("SENTENCE_TRANSFORMER_MODEL", "all-MiniLM-L6-v2")
-_MODEL: SentenceTransformer | None = None
-_DEVICE = "cpu"
-
-
-def _get_model() -> SentenceTransformer:
-    global _MODEL
-    if _MODEL is None:
-        _MODEL = SentenceTransformer(DEFAULT_MODEL, device=_DEVICE)
-=======
-from .utils import select_device
+# Try to import select_device, fallback to "cpu" if not available
+try:
+    from .utils import select_device
+    _DEVICE = select_device()
+except ImportError:
+    _DEVICE = "cpu"
 
 DEFAULT_MODEL = os.getenv("SENTENCE_TRANSFORMER_MODEL", "all-MiniLM-L6-v2")
 _MODEL: SentenceTransformer | None = None
-_DEVICE = select_device()
 
 
 def _load_model(device: str | None = None) -> SentenceTransformer:
@@ -33,9 +26,9 @@ def _load_model(device: str | None = None) -> SentenceTransformer:
 
 
 def _get_model() -> SentenceTransformer:
+    global _MODEL
     if _MODEL is None:
         return _load_model(_DEVICE)
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     return _MODEL
 
 
@@ -54,9 +47,6 @@ def embed_texts(texts: Iterable[str], model: str | None = None) -> List[List[flo
     encoder = _get_model()
     if model and model != DEFAULT_MODEL:
         encoder = SentenceTransformer(model, device=_DEVICE)
-<<<<<<< HEAD
-    vectors = encoder.encode(payload, show_progress_bar=False)
-=======
     try:
         vectors = encoder.encode(payload, show_progress_bar=False)
     except Exception:
@@ -66,5 +56,4 @@ def embed_texts(texts: Iterable[str], model: str | None = None) -> List[List[flo
             vectors = encoder.encode(payload, show_progress_bar=False)
         else:
             raise
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     return [vec.tolist() for vec in vectors]

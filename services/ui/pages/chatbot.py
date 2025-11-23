@@ -10,11 +10,11 @@ from services.ui.data.chatbot_faqs import get_agent_faqs
 
 API_URL = os.getenv("AGENT_API_URL", "http://localhost:8090")
 
-st.set_page_config(page_title="🤖 Gemma Chatbot", layout="wide")
+st.set_page_config(page_title="🤖 Phi-3 Chatbot", layout="wide")
 apply_theme()
 
-st.title("🤖 Gemma CPU Chatbot")
-st.caption("External Gemma (Ollama) + Chroma RAG powered by recent agent CSV outputs.")
+st.title("🤖 Phi-3 Control Tower")
+st.caption("External Phi-3 (Ollama) + Chroma RAG powered by recent agent CSV outputs.")
 render_theme_toggle()
 
 if "chatbot_history" not in st.session_state:
@@ -117,8 +117,8 @@ with st.sidebar:
         except requests.RequestException as exc:
             st.error(f"Rebuild failed: {exc}")
 
-    st.markdown("**Current Model:** `Gemma (Ollama)`")
-    st.caption("Ensure `ollama run gemma2:2b` (or similar) is active locally.")
+    st.markdown("**Current Model:** `Phi-3 (Ollama)`")
+    st.caption("Ensure `ollama run phi3:latest` (or similar) is active locally.")
 
     if personas:
         st.divider()

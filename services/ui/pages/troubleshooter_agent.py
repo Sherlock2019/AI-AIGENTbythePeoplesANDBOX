@@ -5,10 +5,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-<<<<<<< HEAD
-=======
 from typing import Dict
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 import random
 from textwrap import dedent
 
@@ -20,10 +17,11 @@ from services.ui.theme_manager import (
     render_theme_toggle,
 )
 from services.ui.components.operator_banner import render_operator_banner
-<<<<<<< HEAD
-=======
-from services.ui.components.chat_assistant import render_chat_assistant
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
+from services.ui.components.feedback import render_feedback_tab
+try:
+    from services.ui.components.chat_assistant import render_chat_assistant
+except ImportError:
+    render_chat_assistant = None
 
 
 STAGE_KEYS = [
@@ -130,8 +128,6 @@ CASE_MEMORY = pd.DataFrame(
     ]
 )
 
-<<<<<<< HEAD
-=======
 TROUBLESHOOTER_FAQ = [
     "List the last 10 incidents reviewed by the Troubleshooter agent.",
     "Where do I find the latest .tmp_runs artifacts for troubleshooting?",
@@ -144,7 +140,6 @@ TROUBLESHOOTER_FAQ = [
     "Where are escalation packages stored after deployment?",
     "What evidence is required before moving to Human Review?",
 ]
-
 
 def _build_troubleshooter_chat_context() -> Dict[str, Any]:
     ss = st.session_state
@@ -161,7 +156,6 @@ def _build_troubleshooter_chat_context() -> Dict[str, Any]:
     }
     return {k: v for k, v in context.items() if v not in (None, "", [])}
 
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 
 def _set_query_params_safe(**kwargs):
     """Best-effort query param setter for cross-version Streamlit support."""
@@ -245,10 +239,7 @@ def _init_state():
     _init_stage_tracker()
     ss.setdefault("ts_ticket_source", "ServiceNow")
     ss.setdefault("ts_selected_ticket", DEFAULT_INCIDENTS[0])
-<<<<<<< HEAD
     ss.setdefault("troubleshooter_demo_loaded", True)  # Demo data already loaded
-=======
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
     ss.setdefault(
         "ts_appraisal",
         {
@@ -1038,15 +1029,13 @@ st.info(
     "or an escalation package ready for Kira / eService."
 )
 
-<<<<<<< HEAD
-=======
-render_chat_assistant(
-    page_id="troubleshooter_agent",
-    context=_build_troubleshooter_chat_context(),
-    faq_questions=TROUBLESHOOTER_FAQ,
-)
+if render_chat_assistant is not None:
+    render_chat_assistant(
+        page_id="troubleshooter_agent",
+        context=_build_troubleshooter_chat_context(),
+        faq_questions=TROUBLESHOOTER_FAQ,
+    )
 
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
 stage_tabs = st.tabs(
     [
         "📘 How-To",
@@ -1060,6 +1049,7 @@ stage_tabs = st.tabs(
         "8️⃣ Human Review",
         "9️⃣ Training & Escalation",
         "🔟 Deployment & Feedback",
+        "🗣️ Feedback & Feature Requests",
     ]
 )
 
@@ -1085,3 +1075,5 @@ with stage_tabs[9]:
     render_training_stage()
 with stage_tabs[10]:
     render_deployment_stage()
+with stage_tabs[11]:
+    render_feedback_tab("🧠 IT Troubleshooter Agent")
