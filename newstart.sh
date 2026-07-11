@@ -577,7 +577,7 @@ if python -c "import pip; import wheel" 2>/dev/null; then
   log_info "Pip and wheel are installed, skipping upgrade (run ./preinstall.sh to update)"
 else
   log_info "Installing pip and wheel..."
-  timeout 120 python -m pip install -U pip wheel --progress-bar off --root-user-action=ignore || { log_error "Failed to install pip"; exit 1; }
+  timeout 120 python -m pip install -U pip wheel --progress-bar off --no-cache-dir --root-user-action=ignore || { log_error "Failed to install pip"; exit 1; }
 fi
 
 # sentence-transformers (an API requirement) pulls in full CUDA-enabled torch
@@ -588,7 +588,7 @@ fi
 NEWSTART_CPU_TORCH="${NEWSTART_CPU_TORCH:-1}"
 if [[ "${NEWSTART_CPU_TORCH}" == "1" ]] && ! python -c "import torch" 2>/dev/null; then
   log_info "Installing CPU-only PyTorch (set NEWSTART_CPU_TORCH=0 to use GPU wheels)..."
-  timeout 300 pip install --progress-bar off --index-url https://download.pytorch.org/whl/cpu torch --root-user-action=ignore || \
+  timeout 300 pip install --progress-bar off --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch --root-user-action=ignore || \
     log_warn "CPU-only torch pre-install failed; falling back to default resolution"
 fi
 
@@ -600,7 +600,7 @@ if [[ -f "${ROOT}/services/api/requirements.txt" ]]; then
     log_info "API requirements appear to be installed, skipping (run ./preinstall.sh to update)"
   else
     log_info "Installing API requirements (this may take a few minutes)..."
-    timeout 300 pip install --progress-bar off -r "${ROOT}/services/api/requirements.txt" --root-user-action=ignore || {
+    timeout 300 pip install --progress-bar off --no-cache-dir -r "${ROOT}/services/api/requirements.txt" --root-user-action=ignore || {
       PIP_EXIT=$?
       log_error "Failed to install API requirements (exit code: ${PIP_EXIT})"
       exit 1
@@ -625,7 +625,7 @@ if [[ -f "${ROOT}/services/ui/requirements.txt" ]]; then
     log_info "UI requirements appear to be installed, skipping (run ./preinstall.sh to update)"
   else
     log_info "Installing UI requirements (this may take a few minutes)..."
-    timeout 300 pip install --progress-bar off -r "${ROOT}/services/ui/requirements.txt" --root-user-action=ignore --ignore-installed blinker || {
+    timeout 300 pip install --progress-bar off --no-cache-dir -r "${ROOT}/services/ui/requirements.txt" --root-user-action=ignore --ignore-installed blinker || {
       PIP_EXIT=$?
       log_warn "Some UI requirements may have failed to install (non-critical, exit code: ${PIP_EXIT})"
     }
@@ -638,7 +638,7 @@ fi
 # Optional urllib3 conflict fix for Kubernetes users.
 if [[ "${NEWSTART_FIX_KUBERNETES:-0}" == "1" ]] && python -c "import kubernetes" 2>/dev/null; then
   log_info "Fixing urllib3 version conflict with kubernetes..."
-  timeout 60 pip install -q "urllib3<2.4.0,>=1.24.2" --root-user-action=ignore 2>/dev/null || {
+  timeout 60 pip install -q --no-cache-dir "urllib3<2.4.0,>=1.24.2" --root-user-action=ignore 2>/dev/null || {
     log_warn "Could not fix urllib3 version (non-critical - may cause warnings)"
   }
 fi
