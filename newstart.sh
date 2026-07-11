@@ -509,9 +509,53 @@ log_success "API/UI ports cleared"
 # ---------- Python venv setup ----------
 log_info "Setting up Python virtual environment..."
 
+# Installs the distro's python3.X-venv package when `python3 -m venv` fails
+# because ensurepip is missing (common on fresh Debian/Ubuntu hosts).
+install_venv_prereq() {
+  local pyver pkg sudo_cmd
+  pyver="$(python3 -c 'import sys; print(f"{sys.version_info[0]}.{sys.version_info[1]}")')"
+  pkg="python${pyver}-venv"
+
+  if ! command -v apt-get >/dev/null 2>&1; then
+    log_error "apt-get not found; install ${pkg} manually for your distro and re-run."
+    return 1
+  fi
+
+  if [[ "$(id -u)" -eq 0 ]]; then
+    sudo_cmd=""
+  elif command -v sudo >/dev/null 2>&1; then
+    sudo_cmd="sudo"
+  else
+    log_error "Need root or sudo to install ${pkg}. Run: sudo apt install ${pkg}"
+    return 1
+  fi
+
+  log_warn "python3 -m venv failed (ensurepip missing). Installing ${pkg}..."
+  if ${sudo_cmd} apt-get update -y && ${sudo_cmd} apt-get install -y "${pkg}"; then
+    log_success "Installed ${pkg}"
+    return 0
+  fi
+  log_error "Failed to install ${pkg} automatically. Run: sudo apt install ${pkg}"
+  return 1
+}
+
+# Creates $VENV, auto-installing the missing venv/ensurepip package on failure.
+create_venv() {
+  local venv_out
+  if venv_out="$(python3 -m venv "${VENV}" 2>&1)"; then
+    return 0
+  fi
+  echo "${venv_out}" >&2
+  if echo "${venv_out}" | grep -qiE "ensurepip is not available|No module named venv"; then
+    install_venv_prereq && python3 -m venv "${VENV}"
+  else
+    return 1
+  fi
+}
+
 if [[ ! -d "${VENV}" ]]; then
   log_info "Creating virtual environment..."
-  python3 -m venv "${VENV}" || { log_error "Failed to create venv"; exit 1; }
+  create_venv || { log_error "Failed to create venv"; exit 1; }
 fi
 
 # shellcheck disable=SC1091
@@ -521,7 +565,7 @@ source "${VENV}/bin/activate" || { log_error "Failed to activate venv"; exit 1; 
 if [[ ! -f "${VENV}/bin/python" ]] || ! "${VENV}/bin/python" --version >/dev/null 2>&1; then
   log_warn "Virtual environment appears corrupted. Recreating..."
   rm -rf "${VENV}"
-  python3 -m venv "${VENV}" || { log_error "Failed to recreate venv"; exit 1; }
+  create_venv || { log_error "Failed to recreate venv"; exit 1; }
   source "${VENV}/bin/activate" || { log_error "Failed to activate recreated venv"; exit 1; }
 fi
 
