@@ -15,8 +15,11 @@ from starlette.types import ASGIApp
 
 logger = logging.getLogger(__name__)
 
-# Storage file for visitor data
-VISITOR_DATA_DIR = Path(os.getenv("VISITOR_DATA_DIR", "/root/WIP/data/visitors"))
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_DEFAULT_VISITOR_DIR = _REPO_ROOT / "services" / "api" / ".runs" / "visitors"
+
+# Storage file for visitor data (override with VISITOR_DATA_DIR)
+VISITOR_DATA_DIR = Path(os.getenv("VISITOR_DATA_DIR", str(_DEFAULT_VISITOR_DIR)))
 VISITOR_DATA_DIR.mkdir(parents=True, exist_ok=True)
 VISITOR_DATA_FILE = VISITOR_DATA_DIR / "visitors.json"
 

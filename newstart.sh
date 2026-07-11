@@ -22,12 +22,16 @@ OLLAMA_PORT="${OLLAMA_PORT:-11434}"
 OLLAMA_URL="${OLLAMA_URL:-http://localhost:${OLLAMA_PORT}}"
 # Allow power users to skip automatic Ollama pulls once models are preloaded
 NEWSTART_SKIP_MODEL_PULL="${NEWSTART_SKIP_MODEL_PULL:-1}"
+NEWSTART_OPEN_BROWSER="${NEWSTART_OPEN_BROWSER:-1}"
+NEWSTART_RESTART_OLLAMA="${NEWSTART_RESTART_OLLAMA:-0}"
+NEWSTART_API_RELOAD="${NEWSTART_API_RELOAD:-0}"
 
 # Environment knobs that can be overridden before running `newstart.sh`:
 #  * APIPORT: API server port (default 8090)
 #  * UIPORT: UI server port (default 8502)
 #  * OLLAMA_PORT: Ollama server port (default 11434)
 #  * OLLAMA_URL: Full Ollama URL (default http://localhost:11434)
+#  * NEWSTART_API_RELOAD: run uvicorn with --reload when set to 1 (default 0)
 
 # Track started services for cleanup
 declare -a STARTED_PIDS=()
@@ -102,6 +106,57 @@ log_error() {
   color_echo red "[ERROR] $*"
 }
 
+open_url() {
+  local url="$1"
+  if [[ "${NEWSTART_OPEN_BROWSER}" == "0" ]]; then
+    log_info "Browser auto-open disabled (NEWSTART_OPEN_BROWSER=0)."
+    return 0
+  fi
+
+  log_info "Opening Web UI in browser: ${url}"
+  if command -v powershell.exe >/dev/null 2>&1; then
+    powershell.exe -NoProfile -Command "Start-Process '${url}'" >/dev/null 2>&1 &
+    return 0
+  fi
+  if command -v cmd.exe >/dev/null 2>&1; then
+    cmd.exe /C start "" "${url}" >/dev/null 2>&1 &
+    return 0
+  fi
+  if command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "${url}" >/dev/null 2>&1 &
+    return 0
+  fi
+
+  log_warn "No browser opener found; open ${url} manually."
+  return 0
+}
+
+open_ui_when_ready() {
+  (
+    local ui_url="http://localhost:${UIPORT}"
+    # Streamlit can serve its shell before the Python app is ready. Give it a
+    # short cold-start window so the browser does not land on an empty shell.
+    sleep "${NEWSTART_UI_OPEN_DELAY:-8}"
+    for _ in $(seq 1 60); do
+      if curl --max-time 2 -sf "${ui_url}/" >/dev/null 2>&1; then
+        log_success "UI is online"
+        open_url "${ui_url}"
+        return 0
+      fi
+      sleep 1
+    done
+    log_warn "UI did not become healthy within 60 seconds; open ${ui_url} manually or check ${UI_LOG}."
+  ) &
+}
+
+open_ui_when_ready_once() {
+  if [[ "${UI_OPEN_WAITER_STARTED:-0}" == "1" ]]; then
+    return 0
+  fi
+  UI_OPEN_WAITER_STARTED=1
+  open_ui_when_ready
+}
+
 ensure_writable() {
   local d="$1"
   if [[ ! -d "$d" ]]; then
@@ -124,7 +179,7 @@ check_command() {
 
 check_port_free() {
   local port="$1"
-  if lsof -i :"${port}" >/dev/null 2>&1; then
+  if lsof -nP -iTCP:"${port}" -sTCP:LISTEN >/dev/null 2>&1; then
     return 1
   fi
   return 0
@@ -133,7 +188,7 @@ check_port_free() {
 free_port() {
   local port="$1"
   local pids
-  pids="$(lsof -t -i :"${port}" 2>/dev/null || true)"
+  pids="$(lsof -t -nP -iTCP:"${port}" -sTCP:LISTEN 2>/dev/null || true)"
   if [[ -n "${pids}" ]]; then
     log_info "Freeing port ${port} (PIDs: ${pids})"
     # Try graceful kill first
@@ -143,11 +198,8 @@ free_port() {
     echo "${pids}" | xargs -r kill -9 2>/dev/null || true
     sleep 1
   fi
-  # Try sudo fuser as last resort
-  if lsof -i :"${port}" >/dev/null 2>&1; then
-    sudo -n fuser -k "${port}/tcp" 2>/dev/null || {
-      log_warn "Port ${port} still in use. You may need to manually free it."
-    }
+  if lsof -nP -iTCP:"${port}" -sTCP:LISTEN >/dev/null 2>&1; then
+    log_warn "Port ${port} still has a listener. You may need to manually free it."
   fi
 }
 
@@ -180,7 +232,7 @@ wait_for_port() {
   
   log_info "Waiting for ${service_name} on port ${port}..."
   for i in $(seq 1 "${attempts}"); do
-    if curl -sf "${url}" >/dev/null 2>&1 || curl -sf "${url}/health" >/dev/null 2>&1 || curl -sf "${url}/api/tags" >/dev/null 2>&1; then
+    if curl --max-time 2 -sf "${url}" >/dev/null 2>&1 || curl --max-time 2 -sf "${url}/health" >/dev/null 2>&1 || curl --max-time 2 -sf "${url}/api/tags" >/dev/null 2>&1; then
       log_success "${service_name} is online"
       return 0
     fi
@@ -295,12 +347,22 @@ touch "${ERR_LOG}"
 log_info "Log files initialized"
 
 # ---------- free ports ----------
-log_info "Restarting Ollama server (if running)..."
-stop_ollama
-log_info "Freeing Ollama port ${OLLAMA_PORT}..."
-free_port "${OLLAMA_PORT}"
-sleep 1
-log_success "Ollama port cleared"
+if [[ "${NEWSTART_RESTART_OLLAMA}" == "1" ]]; then
+  log_info "Restarting Ollama server (NEWSTART_RESTART_OLLAMA=1)..."
+  stop_ollama
+  log_info "Freeing Ollama port ${OLLAMA_PORT}..."
+  free_port "${OLLAMA_PORT}"
+  sleep 1
+  log_success "Ollama port cleared"
+elif curl --max-time 2 -sf "${OLLAMA_URL}/api/tags" >/dev/null 2>&1; then
+  log_success "Using existing Ollama server at ${OLLAMA_URL}"
+else
+  log_info "No healthy Ollama server detected; clearing port ${OLLAMA_PORT}..."
+  stop_ollama
+  free_port "${OLLAMA_PORT}"
+  sleep 1
+  log_success "Ollama port cleared"
+fi
 
 # ---------- Ollama server ----------
 ensure_ollama_models() {
@@ -389,10 +451,21 @@ start_ollama() {
     fi
   
   # Check if Ollama is already running
-  if curl -sf "${OLLAMA_URL}/api/tags" >/dev/null 2>&1; then
-    log_warn "Ollama already running on ${OLLAMA_URL}; restarting per policy..."
-    stop_ollama
-    free_port "${OLLAMA_PORT}"
+  if curl --max-time 2 -sf "${OLLAMA_URL}/api/tags" >/dev/null 2>&1; then
+    if [[ "${NEWSTART_RESTART_OLLAMA}" == "1" ]]; then
+      log_warn "Ollama already running on ${OLLAMA_URL}; restarting per policy..."
+      stop_ollama
+      free_port "${OLLAMA_PORT}"
+    else
+      local existing_pid
+      existing_pid="$(lsof -t -nP -iTCP:"${OLLAMA_PORT}" -sTCP:LISTEN 2>/dev/null | head -n 1 || true)"
+      if [[ -n "${existing_pid}" ]]; then
+        echo "${existing_pid}" > "${pid_file}"
+      fi
+      log_success "Ollama is already online at ${OLLAMA_URL}${existing_pid:+ (PID=${existing_pid})}"
+      ensure_ollama_models
+      return 0
+    fi
   fi
   
   # Check if already running (by PID file)
@@ -506,8 +579,8 @@ else
   log_warn "UI requirements.txt not found, skipping"
 fi
 
-# Fix urllib3 conflict with kubernetes if present (after all requirements installed)
-if python -c "import kubernetes" 2>/dev/null; then
+# Optional urllib3 conflict fix for Kubernetes users.
+if [[ "${NEWSTART_FIX_KUBERNETES:-0}" == "1" ]] && python -c "import kubernetes" 2>/dev/null; then
   log_info "Fixing urllib3 version conflict with kubernetes..."
   timeout 60 pip install -q "urllib3<2.4.0,>=1.24.2" --root-user-action=ignore 2>/dev/null || {
     log_warn "Could not fix urllib3 version (non-critical - may cause warnings)"
@@ -526,9 +599,21 @@ start_api() {
   PID_FILES+=("${pid_file}")
   
   if [[ -f "${pid_file}" ]] && kill -0 "$(cat "${pid_file}")" 2>/dev/null; then
-    log_info "API already running (PID $(cat "${pid_file}"))"
-    check_service_health "${pid_file}" "API" "${APIPORT}"
-    return 0
+    local existing_pid
+    existing_pid="$(cat "${pid_file}")"
+    if curl --max-time 2 -sf "http://localhost:${APIPORT}/health" >/dev/null 2>&1; then
+      log_info "API already running (PID ${existing_pid})"
+      check_service_health "${pid_file}" "API" "${APIPORT}"
+      return 0
+    fi
+    log_warn "API PID ${existing_pid} exists but health check failed; restarting it..."
+    pkill -P "${existing_pid}" 2>/dev/null || true
+    kill "${existing_pid}" 2>/dev/null || true
+    sleep 1
+    pkill -9 -P "${existing_pid}" 2>/dev/null || true
+    kill -9 "${existing_pid}" 2>/dev/null || true
+    rm -f "${pid_file}"
+    free_port "${APIPORT}"
   fi
   
   # Verify uvicorn is available
@@ -546,13 +631,13 @@ start_api() {
     return 1
   fi
   
+  local uvicorn_args=(services.api.main:app --host 0.0.0.0 --port "${APIPORT}" --access-log --log-level debug)
+  if [[ "${NEWSTART_API_RELOAD}" == "1" ]]; then
+    uvicorn_args+=(--reload)
+  fi
+
   # Use python -m uvicorn for better venv compatibility
-  nohup "${python_cmd}" -m uvicorn services.api.main:app \
-      --host 0.0.0.0 --port "${APIPORT}" \
-      --reload \
-      --access-log \
-      --log-level debug \
-      > "${API_LOG}" 2>&1 &
+  nohup "${python_cmd}" -m uvicorn "${uvicorn_args[@]}" > "${API_LOG}" 2>&1 &
   
   local api_pid=$!
   echo "${api_pid}" > "${pid_file}"
@@ -587,9 +672,21 @@ start_ui() {
   PID_FILES+=("${pid_file}")
   
   if [[ -f "${pid_file}" ]] && kill -0 "$(cat "${pid_file}")" 2>/dev/null; then
-    log_info "UI already running (PID $(cat "${pid_file}"))"
-    check_service_health "${pid_file}" "UI" "${UIPORT}"
-    return 0
+    local existing_pid
+    existing_pid="$(cat "${pid_file}")"
+    if curl --max-time 2 -sf "http://localhost:${UIPORT}/" >/dev/null 2>&1; then
+      log_info "UI already running (PID ${existing_pid})"
+      check_service_health "${pid_file}" "UI" "${UIPORT}"
+      return 0
+    fi
+    log_warn "UI PID ${existing_pid} exists but health check failed; restarting it..."
+    pkill -P "${existing_pid}" 2>/dev/null || true
+    kill "${existing_pid}" 2>/dev/null || true
+    sleep 1
+    pkill -9 -P "${existing_pid}" 2>/dev/null || true
+    kill -9 "${existing_pid}" 2>/dev/null || true
+    rm -f "${pid_file}"
+    free_port "${UIPORT}"
   fi
   
   # Verify streamlit is available
@@ -618,6 +715,8 @@ start_ui() {
       --server.port "${UIPORT}" \
       --server.address 0.0.0.0 \
       --server.fileWatcherType none \
+      --server.headless true \
+      --browser.gatherUsageStats false \
       --logger.level error \
       > "${UI_LOG}" 2>&1 &
   
@@ -628,27 +727,28 @@ start_ui() {
   cd "${ROOT}" || true
   
   log_success "UI started (PID=${ui_pid}) | log: ${UI_LOG}"
-  
-  # Wait for UI to be ready (reduced timeout, non-blocking)
-  # Don't fail if UI takes longer - it will start in background
-  if wait_for_port "${UIPORT}" "UI" 20; then
+
+  if curl --max-time 1 -sf "http://localhost:${UIPORT}/" >/dev/null 2>&1; then
+    log_success "UI is online"
     return 0
-  else
-    # UI might still be starting - check if process is alive
-    if kill -0 "${ui_pid}" 2>/dev/null; then
-      log_info "UI is starting but not ready yet (will continue in background)"
-      return 0  # Don't fail - process is running
-    else
-      log_warn "UI process died. Check logs: ${UI_LOG}"
-      return 1
-    fi
   fi
+
+  sleep 1
+  if kill -0 "${ui_pid}" 2>/dev/null; then
+    log_info "UI is starting in the background; opening browser now."
+    return 0
+  fi
+
+  log_warn "UI process died. Check logs: ${UI_LOG}"
+  return 1
 }
 
 # Start UI (non-blocking - don't fail script if UI has issues)
 if ! start_ui; then
   log_warn "UI startup had issues (non-fatal - API will still work)"
 fi
+
+open_ui_when_ready_once
 
 # ---------- log monitor ----------
 start_log_monitor() {
@@ -676,10 +776,10 @@ start_log_monitor
 # Quick health check (non-blocking)
 (
   sleep 2
-  if curl -sf "http://localhost:${APIPORT}/health" >/dev/null 2>&1; then
+  if curl --max-time 2 -sf "http://localhost:${APIPORT}/health" >/dev/null 2>&1; then
     echo "✅ API is responding" >&2
   fi
-  if curl -sf "http://localhost:${UIPORT}" >/dev/null 2>&1; then
+  if curl --max-time 2 -sf "http://localhost:${UIPORT}/" >/dev/null 2>&1; then
     echo "✅ UI is responding" >&2
   fi
 ) &

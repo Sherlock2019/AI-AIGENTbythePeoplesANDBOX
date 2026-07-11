@@ -1,0 +1,6 @@
+# Used when Streamlit is launched with cwd = services/ui
+[browser]
+gatherUsageStats = false
+
+[server]
+headless = true

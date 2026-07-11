@@ -1,24 +1,24 @@
 {
-  "model_path": "agents/credit_appraisal/models/trained/RandomForest_20251120-035700.joblib",
-  "promoted_at": "2025-11-20T03:57:09.024718+00:00",
+  "model_path": "agents/credit_appraisal/models/trained/RandomForest_20260605-075108.joblib",
+  "promoted_at": "2026-06-05T07:51:33.802251+00:00",
   "metrics": {
-    "AUC": 0.8541666666666667,
-    "Accuracy": 0.775,
-    "Precision": 0.8260869565217391,
-    "Recall": 0.7916666666666666,
-    "F1": 0.8085106382978723
+    "AUC": 0.87890625,
+    "Accuracy": 0.825,
+    "Precision": 0.8695652173913043,
+    "Recall": 0.8333333333333334,
+    "F1": 0.851063829787234
   },
   "report": {
-    "timestamp": "20251120-035700",
+    "timestamp": "20260605-075108",
     "model_choice": "RandomForest",
     "metrics": {
-      "AUC": 0.8541666666666667,
-      "Accuracy": 0.775,
-      "Precision": 0.8260869565217391,
-      "Recall": 0.7916666666666666,
-      "F1": 0.8085106382978723
+      "AUC": 0.87890625,
+      "Accuracy": 0.825,
+      "Precision": 0.8695652173913043,
+      "Recall": 0.8333333333333334,
+      "F1": 0.851063829787234
     },
-    "model_path": "agents/credit_appraisal/models/trained/RandomForest_20251120-035700.joblib",
+    "model_path": "agents/credit_appraisal/models/trained/RandomForest_20260605-075108.joblib",
     "features": [
       "application_id",
       "age",

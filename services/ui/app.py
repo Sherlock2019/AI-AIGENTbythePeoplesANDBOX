@@ -318,8 +318,20 @@ def _normalize_launch_base(raw_value: Optional[str]) -> str:
     return fallback
 
 
-LAUNCH_BASE_URL = _normalize_launch_base("http://aibyforthepeople.com")
+# Agent Launch links: default to same-origin paths (/asset_appraisal, etc.) so local and
+# deployed hosts work. Set LAUNCH_BASE_URL or LAUNCH_HOST only if Streamlit is served on a
+# different origin than the page embedding these links.
+_LAUNCH_BASE_RAW = (os.getenv("LAUNCH_BASE_URL") or os.getenv("LAUNCH_HOST") or "").strip()
+if _LAUNCH_BASE_RAW:
+    LAUNCH_BASE_URL = _normalize_launch_base(_LAUNCH_BASE_RAW).rstrip("/")
+else:
+    LAUNCH_BASE_URL = ""
 
+
+def _launch_href(path: str) -> str:
+    """Build href for Streamlit multipage routes; optional absolute base from env."""
+    p = path if path.startswith("/") else f"/{path}"
+    return f"{LAUNCH_BASE_URL}{p}" if LAUNCH_BASE_URL else p
 
 
 # ────────────────────────────────
@@ -521,6 +533,34 @@ def save_uploaded_image(uploaded_file, base: str):
     with open(dest, "wb") as f:
         f.write(uploaded_file.getvalue())
     return dest
+
+
+def logo_display_path(saved_logo_path: str) -> str:
+    """Return a lightweight logo file for the landing page."""
+    src = Path(saved_logo_path)
+    if not src.exists():
+        return saved_logo_path
+    if src.stat().st_size <= 256 * 1024:
+        return saved_logo_path
+
+    thumb = src.with_name(f"{src.stem}_thumb.jpg")
+    try:
+        if (
+            thumb.exists()
+            and thumb.stat().st_mtime >= src.stat().st_mtime
+            and thumb.stat().st_size <= 96 * 1024
+        ):
+            return str(thumb)
+
+        from PIL import Image
+
+        with Image.open(src) as img:
+            img = img.convert("RGB")
+            img.thumbnail((320, 480))
+            img.save(thumb, "JPEG", quality=78, optimize=True, progressive=True)
+        return str(thumb)
+    except Exception:
+        return saved_logo_path
 
 
 def render_image_tag(agent_id: str, industry: str, emoji_fallback: str) -> str:
@@ -977,9 +1017,11 @@ if st.session_state.stage == "landing":
         )
 
         if os.path.exists(saved_logo_path):
-            with open(saved_logo_path, "rb") as f:
+            display_logo_path = logo_display_path(saved_logo_path)
+            with open(display_logo_path, "rb") as f:
                 logo_base64 = base64.b64encode(f.read()).decode()
-            display_logo = f'<img src="data:image/png;base64,{logo_base64}" style="width:320px;border-radius:16px;box-shadow:0 0 35px rgba(14,165,233,0.45);" />'
+            logo_mime = "image/jpeg" if display_logo_path.lower().endswith((".jpg", ".jpeg")) else "image/png"
+            display_logo = f'<img src="data:{logo_mime};base64,{logo_base64}" style="width:320px;border-radius:16px;box-shadow:0 0 35px rgba(14,165,233,0.45);" />'
         else:
             display_logo = "<div class='logo-upload-placeholder' style='width:320px;height:160px;'>Tap to upload logo</div>"
 
@@ -1032,6 +1074,8 @@ if st.session_state.stage == "landing":
         if uploaded_logo is not None:
             with open(saved_logo_path, "wb") as f:
                 f.write(uploaded_logo.read())
+            for thumb_path in Path(saved_logo_path).parent.glob(f"{Path(saved_logo_path).stem}_thumb.*"):
+                thumb_path.unlink()
             st.success("✅ Logo updated!")
             st.rerun()
 
@@ -1311,7 +1355,7 @@ if st.session_state.stage == "landing":
                 # Store agent info for login redirect
                 st.session_state[f"login_target_{route_name}"] = route_name
             else:
-                launch_url = f"{LAUNCH_BASE_URL}{launch_path}"
+                launch_url = _launch_href(launch_path)
             
             status_norm = status.strip().lower()
             is_launchable = status_norm in {"available", "being built", "new"}
@@ -1325,20 +1369,19 @@ if st.session_state.stage == "landing":
                 # Special cases: Chatbot Assistant and CEO driver DASHBOARD have preview available
                 if route_name == "chatbot_assistant":
                     button_label = "👁️ Preview"
-                    launch_url = f"{LAUNCH_BASE_URL}/chatbot_assistant"
+                    launch_url = _launch_href("/chatbot_assistant")
                     is_launchable = True
                 elif route_name in {"ceo_driver_dashboard", "ceo_driver_seat"}:
                     button_label = "👁️ Preview"
-                    launch_url = "/ceo_driver_dashboard"  # Relative path for Streamlit pages
+                    launch_url = _launch_href("/ceo_driver_dashboard")
                     is_launchable = True
                 else:
                     button_label = "🔒 Coming Soon"
                     is_launchable = False
             elif status_norm in {"wip"}:
                 button_label = "👁️ Preview"
-                # Use relative path for Streamlit pages
                 if route_name in {"ceo_driver_dashboard", "ceo_driver_seat"}:
-                    launch_url = "/ceo_driver_dashboard"
+                    launch_url = _launch_href("/ceo_driver_dashboard")
                 is_launchable = True
             else:
                 button_label = "🔧 Preview"

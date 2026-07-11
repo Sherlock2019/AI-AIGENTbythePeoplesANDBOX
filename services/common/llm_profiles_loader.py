@@ -14,19 +14,21 @@ if _PROJECT_ROOT_STR not in sys.path:
 
 
 def get_llm_profiles() -> List[Dict[str, str]]:
-    """Return the `model_full` list from `data.llm_profiles`, even when cwd varies."""
+    """Return the `model_full` list from `data.llm_profiles` or the built-in default."""
     try:
         from data.llm_profiles import model_full as profiles  # type: ignore
         return profiles
     except ModuleNotFoundError:
         candidate = _PROJECT_ROOT / "data" / "llm_profiles.py"
-        if not candidate.exists():
-            raise
-        spec = importlib.util.spec_from_file_location("data.llm_profiles", candidate)
-        module = importlib.util.module_from_spec(spec)
-        assert spec.loader is not None
-        spec.loader.exec_module(module)  # type: ignore[attr-defined]
-        return getattr(module, "model_full")
+        if candidate.exists():
+            spec = importlib.util.spec_from_file_location("data.llm_profiles", candidate)
+            module = importlib.util.module_from_spec(spec)
+            assert spec.loader is not None
+            spec.loader.exec_module(module)  # type: ignore[attr-defined]
+            return getattr(module, "model_full")
+        from services.common.default_llm_profiles import model_full as profiles
+
+        return profiles
 
 
 __all__ = ["get_llm_profiles"]

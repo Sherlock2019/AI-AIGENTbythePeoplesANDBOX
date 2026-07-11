@@ -49,6 +49,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from services.api.middleware.logging_middleware import LoggingMiddleware
+from services.api.middleware.visitor_tracker import VisitorTrackingMiddleware
+
 # Add visitor tracking middleware (tracks IPs and country origins)
 app.add_middleware(VisitorTrackingMiddleware)
 
@@ -72,8 +75,6 @@ from services.api.routers.monitoring import router as monitoring_router
 from services.api.routers.credit_score_agents import router as credit_score_router
 from services.api.routers.legal_compliance_agents import router as legal_compliance_router
 from services.api.routers.agent_manager_routes import router as agent_manager_router
-from services.api.middleware.logging_middleware import LoggingMiddleware
-from services.api.middleware.visitor_tracker import VisitorTrackingMiddleware
 
 app.include_router(system_router)
 app.include_router(agents_router)
@@ -92,11 +93,14 @@ app.include_router(agent_manager_router, prefix="/agent")  # Agent Manager route
 app.add_middleware(LoggingMiddleware)
 
 # ─────────────────────────────────────────────────────────────
-# Pre-load embedding model on startup (prevents 3.4s delay on first request)
+# Optionally pre-load the embedding model on startup.
 # ─────────────────────────────────────────────────────────────
 @app.on_event("startup")
 def preload_embeddings():
-    """Pre-load SentenceTransformer model to avoid first-request delay."""
+    """Pre-load SentenceTransformer model when explicitly requested."""
+    if os.getenv("PRELOAD_EMBEDDINGS", "0").lower() not in {"1", "true", "yes"}:
+        logger.info("Skipping embedding model preload; set PRELOAD_EMBEDDINGS=1 to enable it")
+        return
     try:
         from services.api.rag.embeddings import _get_model
         logger.info("Pre-loading embedding model...")

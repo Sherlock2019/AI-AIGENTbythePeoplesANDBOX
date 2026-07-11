@@ -292,7 +292,20 @@ if st.session_state.get("last_merged_df") is None and st.session_state.get("cred
     # Run credit appraisal agent on demo data
     try:
         from agents.credit_appraisal.runner import run as run_credit_appraisal
-        scored_df = run_credit_appraisal(demo_df)
+        demo_params = {
+            "rule_mode": "classic",
+            "max_debt_to_income": 0.45,
+            "salary_floor": 3000,
+            "requested_amount_min": 1000,
+            "requested_amount_max": 200000,
+            "min_employment_years": 2,
+            "min_credit_history_length": 3,
+            "max_num_delinquencies": 2,
+            "max_current_loans": 3,
+            "threshold": 0.45,
+            "random_band": False,
+        }
+        scored_df = run_credit_appraisal(demo_df, demo_params)
         st.session_state["last_merged_df"] = scored_df
         st.session_state["credit_scored_df"] = scored_df.copy()
         st.session_state["credit_demo_loaded"] = True
@@ -1457,9 +1470,9 @@ with tab_run:
     from datetime import datetime
     import os, shutil, streamlit as st
 
-    # Hardcoded absolute paths (your confirmed working setup)
-    trained_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/credit_appraisal/models/trained"
-    production_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/credit_appraisal/models/production"
+    # Resolve from the running Streamlit app directory so the page follows the active workspace.
+    trained_dir = str(Path("./agents/credit_appraisal/models/trained").resolve())
+    production_dir = str(Path("./agents/credit_appraisal/models/production").resolve())
 
     st.caption(f"📦 Trained dir = `{trained_dir}`")
     st.caption(f"📦 Production dir = `{production_dir}`")
@@ -2948,7 +2961,7 @@ with tab_train:
                         for root, dirs, files in os.walk(RUNS_DIR):
                             for f in files:
                                 full = os.path.join(root, f)
-                                arc = os.path.relpath(full, RUNS_PATH)
+                                arc = os.path.relpath(full, RUNS_DIR)
                                 zf.write(full, f"runs/{arc}")
 
                         # Production models
@@ -2993,11 +3006,94 @@ with tab_deploy:
     report = st.session_state.get("credit_last_report")
 
     if not last_model:
+        trained_candidates = sorted(
+            Path("./agents/credit_appraisal/models/trained").glob("*.joblib"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
+        if trained_candidates:
+            last_model = str(trained_candidates[0])
+            report_path = trained_candidates[0].with_suffix(".json")
+            if report_path.exists():
+                try:
+                    report = json.load(open(report_path, "r", encoding="utf-8"))
+                    metrics = report.get("metrics", metrics)
+                except Exception:
+                    pass
+            st.session_state["credit_last_model_path"] = last_model
+            st.session_state["credit_last_metrics"] = metrics
+            st.session_state["credit_last_report"] = report
+
+    if not last_model:
         st.warning("⚠️ Train a model in Stage F before deploying.")
         st.stop()
 
     st.success(f"✅ Latest trained model detected:\n`{last_model}`")
     st.json(metrics)
+
+    def _build_credit_project_bundle(export_dir: Path, model_path: str) -> Path:
+        """Create a Stage F-compatible credit bundle from the latest model."""
+        export_dir.mkdir(exist_ok=True)
+        ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        zip_path = export_dir / f"credit_project_bundle_{ts}.zip"
+        model_file = Path(model_path)
+        runs_dir = Path("./.tmp_runs")
+        trained_dir = Path("./agents/credit_appraisal/models/trained")
+        prod_dir = Path("./agents/credit_appraisal/models/production")
+        prod_dir.mkdir(parents=True, exist_ok=True)
+
+        prod_meta_path = prod_dir / "production_meta.json"
+        if not prod_meta_path.exists():
+            prod_meta = {
+                "model_path": str(model_file),
+                "promoted_at": datetime.now(timezone.utc).isoformat(),
+                "metrics": metrics,
+                "report": report,
+                "source": "auto-created-by-stage-g",
+            }
+            json.dump(prod_meta, open(prod_meta_path, "w", encoding="utf-8"), indent=2)
+
+        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+            if model_file.exists():
+                zf.write(model_file, f"trained/{model_file.name}")
+                model_report = model_file.with_suffix(".json")
+                if model_report.exists():
+                    zf.write(model_report, f"trained/{model_report.name}")
+
+            if trained_dir.exists():
+                for f in trained_dir.glob("*.joblib"):
+                    if model_file.exists() and f.resolve() == model_file.resolve():
+                        continue
+                    zf.write(f, f"trained/{f.name}")
+
+            for f in prod_dir.glob("*"):
+                if f.is_file():
+                    zf.write(f, f"production/{f.name}")
+
+            if runs_dir.exists():
+                for root, _, files in os.walk(runs_dir):
+                    for filename in files:
+                        full = Path(root) / filename
+                        arc = full.relative_to(runs_dir)
+                        zf.write(full, f"runs/{arc}")
+
+            zf.writestr(
+                "deployment_manifest.json",
+                json.dumps(
+                    {
+                        "bundle_type": "credit_project_bundle",
+                        "created_at": datetime.now(timezone.utc).isoformat(),
+                        "model_path": str(model_file),
+                        "metrics": metrics,
+                    },
+                    indent=2,
+                ),
+            )
+
+            if report:
+                zf.writestr("training_report.json", json.dumps(report, indent=2))
+
+        return zip_path
     
 
     # ---------------------------------------------
@@ -3009,7 +3105,13 @@ with tab_deploy:
     EXPORT_DIR.mkdir(exist_ok=True)
 
     # Find ZIP files
-    zip_files = sorted(EXPORT_DIR.glob("asset_project_bundle_*.zip"), reverse=True)
+    zip_files = sorted(EXPORT_DIR.glob("credit_project_bundle_*.zip"), key=lambda p: p.stat().st_mtime, reverse=True)
+    if not zip_files:
+        try:
+            zip_files = [_build_credit_project_bundle(EXPORT_DIR, last_model)]
+            st.info("No Stage F bundle found, so Stage G created one from the latest trained model.")
+        except Exception as e:
+            st.error(f"Could not create project ZIP: {e}")
     
     if not zip_files:
         st.warning("⚠️ No project ZIP found. Run Stage F and export a bundle first.")
@@ -3137,7 +3239,13 @@ with tab_deploy:
     EXPORT_DIR.mkdir(exist_ok=True)
 
     # Find ZIP files
-    zip_files = sorted(EXPORT_DIR.glob("asset_project_bundle_*.zip"), reverse=True)
+    zip_files = sorted(EXPORT_DIR.glob("credit_project_bundle_*.zip"), key=lambda p: p.stat().st_mtime, reverse=True)
+    if not zip_files:
+        try:
+            zip_files = [_build_credit_project_bundle(EXPORT_DIR, last_model)]
+            st.info("No Stage F bundle found, so Stage G created one from the latest trained model.")
+        except Exception as e:
+            st.error(f"Could not create project ZIP: {e}")
     
     if not zip_files:
         st.warning("⚠️ No project ZIP found. Run Stage F and export a bundle first.")

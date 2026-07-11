@@ -9,6 +9,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
+AUTO_INGEST_RUNS = os.getenv("AUTO_INGEST_RUNS", "0").strip().lower() in {"1", "true", "yes", "on"}
 
 router = APIRouter()
 
@@ -181,10 +182,16 @@ async def run_agent(
     max_debt_to_income: Optional[str] = Form(None),
     min_credit_history_length: Optional[str] = Form(None),
     max_num_delinquencies: Optional[str] = Form(None),
+    max_current_loans: Optional[str] = Form(None),
     requested_amount_min: Optional[str] = Form(None),
     requested_amount_max: Optional[str] = Form(None),
     loan_term_months_allowed: Optional[str] = Form(None),
+    salary_floor: Optional[str] = Form(None),
+    min_income_debt_ratio: Optional[str] = Form(None),
+    compounded_debt_factor: Optional[str] = Form(None),
     monthly_debt_relief: Optional[str] = Form(None),
+    ndi_value: Optional[str] = Form(None),
+    ndi_ratio: Optional[str] = Form(None),
     ):
     canon = _canonicalize(agent_id)
     df = _read_csv_from_upload(file)
@@ -213,6 +220,22 @@ async def run_agent(
         "threshold": threshold,
         "target_approval_rate": target_approval_rate,
         "random_band": (random_band or random_approval_band),
+
+        # Current credit_appraisal runner field names.
+        "max_debt_to_income": (max_debt_to_income or max_dti),
+        "min_employment_years": (min_employment_years or min_emp),
+        "min_credit_history_length": (min_credit_history_length or min_hist),
+        "max_num_delinquencies": (max_num_delinquencies or max_delin),
+        "max_current_loans": max_current_loans,
+        "salary_floor": salary_floor,
+        "requested_amount_min": (requested_amount_min or req_min),
+        "requested_amount_max": (requested_amount_max or req_max),
+        "loan_term_months_allowed": (loan_term_months_allowed or allowed_terms),
+        "min_income_debt_ratio": min_income_debt_ratio,
+        "compounded_debt_factor": compounded_debt_factor,
+        "monthly_debt_relief": (monthly_debt_relief or monthly_relief),
+        "ndi_value": ndi_value,
+        "ndi_ratio": (ndi_ratio or min_ndi_ratio),
     }
     # coerce boolean-ish strings
     for k in ("use_llm", "random_band"):
@@ -233,14 +256,16 @@ async def run_agent(
     out_df.to_csv(csv_path, index=False)
     out_df.to_json(json_path, orient="records")
 
-    # Auto-ingest CSV into RAG store after each run
-    try:
-        from services.api.rag.ingest import LocalIngestor
-        ingestor = LocalIngestor()
-        ingestor.ingest_files([csv_path], max_rows=200, dry_run=False)
-        logger.info(f"Auto-ingested {csv_path} into RAG store")
-    except Exception as e:
-        logger.warning(f"Failed to auto-ingest CSV into RAG: {e}")
+    # Keep normal agent runs fast and isolated. RAG ingest loads embedding
+    # dependencies and is opt-in because it is not required for the UI report.
+    if AUTO_INGEST_RUNS:
+        try:
+            from services.api.rag.ingest import LocalIngestor
+            ingestor = LocalIngestor()
+            ingestor.ingest_files([csv_path], max_rows=200, dry_run=False)
+            logger.info(f"Auto-ingested {csv_path} into RAG store")
+        except Exception as e:
+            logger.warning(f"Failed to auto-ingest CSV into RAG: {e}")
 
     # Cleanup: Keep only last 10 CSV runs per agent
     try:

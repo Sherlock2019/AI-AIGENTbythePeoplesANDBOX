@@ -6,16 +6,27 @@ import os
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse, FileResponse
 
-RUNS_DIR = os.path.expanduser("~/credit-appraisal-agent-poc/services/api/.runs")
+RUNS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".runs"))
 router = APIRouter()
 
 def _run_dir(run_id: str) -> str:
     return os.path.join(RUNS_DIR, run_id)
 
+def _flat_run_file(run_id: str, ext: str) -> str:
+    return os.path.join(RUNS_DIR, f"{run_id}.merged.{ext}")
+
 @router.get("/v1/runs/{run_id}/report")
 def get_report(run_id: str, format: str = "csv"):
     rdir = _run_dir(run_id)
     if not os.path.isdir(rdir):
+        if format == "csv":
+            f = _flat_run_file(run_id, "csv")
+            if os.path.isfile(f):
+                return FileResponse(f, media_type="text/csv", filename=f"{run_id}.csv")
+        if format == "json":
+            f = _flat_run_file(run_id, "json")
+            if os.path.isfile(f):
+                return FileResponse(f, media_type="application/json", filename=f"{run_id}.json")
         raise HTTPException(status_code=404, detail="run not found")
 
     if format == "csv":
@@ -49,4 +60,3 @@ def get_report(run_id: str, format: str = "csv"):
         return FileResponse(f, media_type="application/pdf", filename="run.pdf")
 
     raise HTTPException(400, "unknown format")
-

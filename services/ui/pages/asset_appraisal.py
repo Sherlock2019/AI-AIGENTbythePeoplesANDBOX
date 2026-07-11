@@ -1751,6 +1751,7 @@ with tabA:
 
     # keep a place to persist search results across reruns
     ss.setdefault("kaggle_search_df", pd.DataFrame())
+    ss.setdefault("portal_search_df", pd.DataFrame())
 
     src = st.selectbox(
         "Select source",
@@ -1812,6 +1813,217 @@ with tabA:
 
         raise RuntimeError(f"Could not parse CSV with common encodings/separators. Last error: {last_err}")
 
+    def _safe_name(value: str) -> str:
+        return re.sub(r"[^a-zA-Z0-9._-]+", "_", str(value or "dataset")).strip("_") or "dataset"
+
+    def _format_bytes(value) -> str:
+        try:
+            size = float(value or 0)
+        except Exception:
+            return ""
+        for unit in ("B", "KB", "MB", "GB", "TB"):
+            if size < 1024 or unit == "TB":
+                return f"{size:.1f} {unit}" if unit != "B" else f"{int(size)} B"
+            size /= 1024
+        return ""
+
+    def _public_headers(extra: Dict[str, str] | None = None) -> Dict[str, str]:
+        headers = {
+            "User-Agent": "Hugmesandbox/asset-appraisal-data-importer (+http://localhost)",
+            "Accept": "application/json,text/csv,application/zip,*/*",
+        }
+        if extra:
+            headers.update(extra)
+        return headers
+
+    def _search_kaggle_public(search_text: str, limit: int = 40) -> pd.DataFrame:
+        r = requests.get(
+            "https://www.kaggle.com/api/v1/datasets/list",
+            params={"search": search_text, "page": 1, "pageSize": limit},
+            headers=_public_headers(),
+            timeout=25,
+        )
+        r.raise_for_status()
+        rows = []
+        for item in r.json() or []:
+            ref = item.get("ref")
+            if not ref:
+                owner = item.get("ownerRef") or item.get("creatorUrl")
+                slug = item.get("datasetSlug") or item.get("slug")
+                ref = f"{owner}/{slug}" if owner and slug else ""
+            if not ref:
+                continue
+            rows.append({
+                "ref": ref,
+                "title": item.get("title") or item.get("titleNullable") or ref,
+                "size": _format_bytes(item.get("totalBytes") or item.get("totalBytesNullable")),
+                "lastUpdated": item.get("lastUpdated") or "",
+                "downloadCount": item.get("downloadCount") or 0,
+                "voteCount": item.get("voteCount") or 0,
+                "usabilityRating": item.get("usabilityRating") or item.get("usabilityRatingNullable") or "",
+                "license": item.get("licenseName") or item.get("licenseNameNullable") or "",
+                "url": item.get("url") or f"https://www.kaggle.com/datasets/{ref}",
+            })
+        return pd.DataFrame(rows)
+
+    def _find_tabular_files(folder: str) -> list[str]:
+        tabular_exts = (".csv", ".tsv", ".txt", ".xlsx", ".xls")
+        found = []
+        for root, _, files in os.walk(folder):
+            for name in files:
+                if name.lower().endswith(tabular_exts):
+                    found.append(os.path.join(root, name))
+        return sorted(found, key=lambda p: (0 if p.lower().endswith((".csv", ".tsv")) else 1, os.path.getsize(p)))
+
+    def _read_tabular_file(fp: str) -> pd.DataFrame:
+        ext = os.path.splitext(fp)[1].lower()
+        if ext in {".xlsx", ".xls"}:
+            return pd.read_excel(fp)
+        return _safe_read_csv(fp)
+
+    def _download_kaggle_dataset(ref: str, dest: str) -> str:
+        os.makedirs(dest, exist_ok=True)
+        archive_path = os.path.join(dest, f"{_safe_name(ref)}.zip")
+        url = f"https://www.kaggle.com/api/v1/datasets/download/{ref}"
+        with requests.get(url, headers=_public_headers(), timeout=(10, 300), stream=True, allow_redirects=True) as r:
+            if r.status_code in {401, 403}:
+                raise RuntimeError("Kaggle denied the download. Accept the dataset terms in Kaggle or configure ~/.kaggle/kaggle.json.")
+            r.raise_for_status()
+            content_type = (r.headers.get("content-type") or "").lower()
+            if "application/json" in content_type or "text/html" in content_type:
+                raise RuntimeError(r.text[:500])
+            with open(archive_path, "wb") as f:
+                for chunk in r.iter_content(chunk_size=1024 * 1024):
+                    if chunk:
+                        f.write(chunk)
+
+        if zipfile.is_zipfile(archive_path):
+            with zipfile.ZipFile(archive_path) as zf:
+                zf.extractall(dest)
+        return archive_path
+
+    def _resource_urls(value) -> list[str]:
+        if isinstance(value, str):
+            return [value]
+        if isinstance(value, list):
+            return [v for v in value if isinstance(v, str)]
+        return []
+
+    def _pick_csv_distribution(distributions: list[dict]) -> tuple[str, str]:
+        fallbacks = []
+        for dist in distributions or []:
+            urls = _resource_urls(dist.get("downloadURL")) + _resource_urls(dist.get("accessURL"))
+            fmt = str(dist.get("format") or dist.get("mediaType") or dist.get("title") or "")
+            for url in urls:
+                probe = f"{fmt} {url}".lower()
+                if "csv" in probe or url.lower().split("?")[0].endswith((".csv", ".tsv")):
+                    return url, fmt or "CSV"
+                if url:
+                    fallbacks.append((url, fmt))
+        return fallbacks[0] if fallbacks else ("", "")
+
+    def _text_value(value) -> str:
+        if isinstance(value, dict):
+            return value.get("en") or next(iter(value.values()), "")
+        return str(value or "")
+
+    def _search_data_gov(search_text: str, limit: int = 25) -> pd.DataFrame:
+        api_key = os.getenv("DATA_GOV_API_KEY", "DEMO_KEY")
+        r = requests.get(
+            "https://api.gsa.gov/technology/datagov/v4/search",
+            params={"q": search_text, "per_page": limit},
+            headers=_public_headers({"X-Api-Key": api_key}),
+            timeout=25,
+        )
+        r.raise_for_status()
+        rows = []
+        for item in (r.json() or {}).get("results", []):
+            dcat = item.get("dcat") or item
+            download_url, fmt = _pick_csv_distribution(dcat.get("distribution") or [])
+            publisher = dcat.get("publisher") or {}
+            rows.append({
+                "source": "data.gov",
+                "title": dcat.get("title") or item.get("title") or "Untitled dataset",
+                "publisher": publisher.get("name") if isinstance(publisher, dict) else str(publisher or ""),
+                "updated": dcat.get("modified") or item.get("last_harvested_date") or "",
+                "format": fmt,
+                "download_url": download_url,
+                "landing_url": dcat.get("landingPage") or item.get("landingPage") or download_url,
+            })
+        return pd.DataFrame(rows)
+
+    def _search_data_europa(search_text: str, limit: int = 10) -> pd.DataFrame:
+        r = requests.get(
+            "https://data.europa.eu/api/hub/search/search",
+            params={"query": search_text, "limit": limit},
+            headers=_public_headers(),
+            timeout=25,
+        )
+        r.raise_for_status()
+        rows = []
+        for item in ((r.json() or {}).get("result") or {}).get("results", []):
+            if item.get("index") not in {"dataset", "datasets"}:
+                continue
+            publisher = item.get("publisher") or {}
+            rows.append({
+                "source": "data.europa.eu",
+                "title": _text_value(item.get("title")) or item.get("id") or "Untitled dataset",
+                "publisher": publisher.get("name") if isinstance(publisher, dict) else str(publisher or ""),
+                "updated": item.get("modified") or item.get("issued") or "",
+                "format": "",
+                "download_url": "",
+                "landing_url": item.get("url") or f"https://data.europa.eu/data/datasets/{item.get('id', '')}",
+            })
+        return pd.DataFrame(rows)
+
+    def _search_public_portals(search_text: str) -> pd.DataFrame:
+        frames = []
+        errors = []
+        for label, fn in (("data.gov", _search_data_gov), ("data.europa.eu", _search_data_europa)):
+            try:
+                df_portal = fn(search_text)
+                if not df_portal.empty:
+                    frames.append(df_portal)
+            except Exception as e:
+                errors.append(f"{label}: {e}")
+        if errors:
+            ss["portal_search_errors"] = errors
+        return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+
+    def _download_public_resource(url: str, dest: str, name_hint: str = "public_dataset") -> str:
+        if not url:
+            raise RuntimeError("This result does not expose a direct downloadable CSV/XLSX/ZIP URL.")
+        os.makedirs(dest, exist_ok=True)
+        with requests.get(url, headers=_public_headers(), timeout=(10, 300), stream=True, allow_redirects=True) as r:
+            r.raise_for_status()
+            content_type = (r.headers.get("content-type") or "").lower()
+            clean_path = requests.utils.urlparse(r.url).path
+            ext = os.path.splitext(clean_path)[1].lower()
+            if not ext:
+                if "zip" in content_type:
+                    ext = ".zip"
+                elif "excel" in content_type or "spreadsheet" in content_type:
+                    ext = ".xlsx"
+                else:
+                    ext = ".csv"
+            out_path = os.path.join(dest, f"{_safe_name(name_hint)}{ext}")
+            with open(out_path, "wb") as f:
+                for chunk in r.iter_content(chunk_size=1024 * 1024):
+                    if chunk:
+                        f.write(chunk)
+        if zipfile.is_zipfile(out_path):
+            with zipfile.ZipFile(out_path) as zf:
+                zf.extractall(dest)
+        return out_path
+
+    def _store_public_import(df_imp: pd.DataFrame, source_name: str):
+        ss["asset_intake_df"] = df_imp
+        ss["last_dataset_name"] = _safe_name(source_name)
+        ss["asset_intake_source_name"] = source_name
+        uni_fp = os.path.join(RUNS_DIR, f"intake_table.{_ts()}.csv")
+        df_imp.to_csv(uni_fp, index=False)
+        return uni_fp
+
     
 
 
@@ -1820,18 +2032,12 @@ with tabA:
         with st.spinner("Searching datasets..."):
             try:
                 if src == "Kaggle (API)":
-                    import subprocess, io
-                    cmd = ["kaggle", "datasets", "list", "-s", query, "-v"]  # -v => CSV output
-                    out = subprocess.run(cmd, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                    if out.returncode != 0:
-                        st.error(f"Kaggle CLI failed: {out.stderr.strip() or out.stdout.strip()}")
-                        st.info("💡 Ensure ~/.kaggle/kaggle.json exists and has chmod 600.")
-                        ss["kaggle_search_df"] = pd.DataFrame()
+                    df_pub = _search_kaggle_public(query)
+                    ss["kaggle_search_df"] = df_pub
+                    if df_pub.empty:
+                        st.warning("No Kaggle datasets matched that search.")
                     else:
-                        df_pub = pd.read_csv(io.StringIO(out.stdout))
-                        keep = [c for c in ["ref","title","size","lastUpdated","downloadCount","voteCount","usabilityRating"] if c in df_pub.columns]
-                        ss["kaggle_search_df"] = df_pub[keep]
-                        st.success("✅ Kaggle API results shown.")
+                        st.success("✅ Kaggle public API results shown.")
                 elif src == "Hugging Face":
                     from huggingface_hub import list_datasets
                     results = list_datasets(search=query)
@@ -1841,12 +2047,13 @@ with tabA:
                 elif src == "OpenML":
                     st.markdown(f"[📊 OpenML Search ↗️](https://www.openml.org/search?type=data&q={query})")
                 elif src == "Public Domain Portals":
-                    st.markdown("""
-                    - [🌎 data.gov](https://www.data.gov/)
-                    - [🇪🇺 data.europa.eu](https://data.europa.eu/)
-                    - [🇸🇬 data.gov.sg](https://data.gov.sg/)
-                    - [🇻🇳 data.gov.vn](https://data.gov.vn/)
-                    """)
+                    ss["portal_search_errors"] = []
+                    df_pub = _search_public_portals(query)
+                    ss["portal_search_df"] = df_pub
+                    if df_pub.empty:
+                        st.warning("No downloadable public portal datasets found. Try a broader search or use the direct URL importer below.")
+                    else:
+                        st.success("✅ Public portal results retrieved.")
             except Exception as e:
                 st.error(f"Search failed: {e}")
 
@@ -1878,25 +2085,15 @@ with tabA:
             # Main import button
             if st.button("📥 Download & Import Selected", key="btn_asset_kaggle_dl", use_container_width=True):
                 try:
-                    import subprocess
-                    cmd = ["kaggle", "datasets", "download", "-d", selected_ref, "-p", dest, "--unzip"]
-                    r = subprocess.run(cmd, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                    if r.returncode != 0:
-                        raise RuntimeError(r.stderr.strip() or r.stdout.strip())
-
-                    csvs = [f for f in os.listdir(dest) if f.lower().endswith(".csv")]
-                    if not csvs:
-                        raise FileNotFoundError("No CSV found in the downloaded archive.")
-                    fp = os.path.join(dest, csvs[0])
+                    _download_kaggle_dataset(selected_ref, dest)
+                    tabular_files = _find_tabular_files(dest)
+                    if not tabular_files:
+                        raise FileNotFoundError("No CSV/XLSX/TSV file found in the downloaded archive.")
+                    fp = tabular_files[0]
 
                     # Load & stash for downstream stages + download button
-                    df_imp = _safe_read_csv(fp)
-                    ss["asset_intake_df"] = df_imp
-
-                    # Save a unified copy with timestamp in RUNS_DIR
-                    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-                    uni_fp = os.path.join(RUNS_DIR, f"intake_table.{ts}.csv")
-                    df_imp.to_csv(uni_fp, index=False)
+                    df_imp = _read_tabular_file(fp)
+                    uni_fp = _store_public_import(df_imp, selected_ref)
 
                     st.success(f"✅ Imported {len(df_imp):,} rows from `{selected_ref}`")
                     st.caption(f"Saved unified intake copy: `{uni_fp}`")
@@ -1937,9 +2134,81 @@ with tabA:
 
                 except Exception as e:
                     st.error(f"Import failed: {e}")
-                    st.info("Tip: check Kaggle auth and try another dataset.")
+                    st.info("Tip: public datasets usually download directly. If Kaggle blocks a dataset, open its Kaggle page once and accept the dataset terms.")
 
-    
+     
+    if src == "Public Domain Portals":
+        st.markdown("#### Public portal search")
+        st.caption("Searches data.gov and data.europa.eu. Results with a direct CSV/XLSX/ZIP resource can be imported immediately.")
+        portal_errors = ss.get("portal_search_errors") or []
+        for err in portal_errors:
+            st.caption(f"Skipped source: {err}")
+
+        if not ss["portal_search_df"].empty:
+            portal_df = ss["portal_search_df"].copy()
+            visible_cols = [c for c in ["source", "title", "publisher", "updated", "format", "download_url", "landing_url"] if c in portal_df.columns]
+            st.dataframe(portal_df[visible_cols], use_container_width=True, hide_index=True)
+
+            with st.expander("⬇️ Import Selected Public Resource", expanded=True):
+                labels = [
+                    f"{row.source} — {str(row.title)[:90]}"
+                    for row in portal_df.itertuples(index=False)
+                ]
+                selected_label = st.selectbox("Choose a public result", labels, key="asset_portal_ref")
+                selected_idx = labels.index(selected_label)
+                selected_row = portal_df.iloc[selected_idx].to_dict()
+                landing_url = selected_row.get("landing_url") or ""
+                download_url = selected_row.get("download_url") or ""
+
+                if landing_url:
+                    st.markdown(f"[Open source page ↗️]({landing_url})")
+                if not download_url:
+                    st.warning("This catalog result has no direct CSV/XLSX/ZIP resource. Open the source page or use the direct URL importer below.")
+
+                if st.button("📥 Download & Import Public Resource", key="btn_asset_portal_dl", use_container_width=True):
+                    try:
+                        dest = os.path.join(RUNS_DIR, "public_portals", _safe_name(selected_row.get("title") or "public_dataset"))
+                        downloaded = _download_public_resource(download_url, dest, selected_row.get("title") or "public_dataset")
+                        tabular_files = _find_tabular_files(dest)
+                        if downloaded.lower().endswith((".csv", ".tsv", ".txt", ".xlsx", ".xls")):
+                            tabular_files = [downloaded] + [p for p in tabular_files if p != downloaded]
+                        if not tabular_files:
+                            raise FileNotFoundError("No CSV/XLSX/TSV file found in the downloaded public resource.")
+                        df_imp = _read_tabular_file(tabular_files[0])
+                        uni_fp = _store_public_import(df_imp, selected_row.get("title") or "public_dataset")
+                        st.success(f"✅ Imported {len(df_imp):,} rows from `{selected_row.get('source')}`")
+                        st.caption(f"Saved unified intake copy: `{uni_fp}`")
+                        st.dataframe(df_imp.head(100), use_container_width=True)
+                    except Exception as e:
+                        st.error(f"Public import failed: {e}")
+
+        st.markdown("#### Direct public file URL")
+        direct_url = st.text_input(
+            "Paste a public CSV/TSV/XLSX/ZIP URL",
+            value="",
+            key="asset_public_direct_url",
+            placeholder="https://.../dataset.csv",
+        )
+        if st.button("🌐 Fetch Public URL", key="btn_asset_public_url", use_container_width=True):
+            try:
+                dest = os.path.join(RUNS_DIR, "public_url", _safe_name(direct_url))
+                downloaded = _download_public_resource(direct_url, dest, "public_url_dataset")
+                tabular_files = _find_tabular_files(dest)
+                if downloaded.lower().endswith((".csv", ".tsv", ".txt", ".xlsx", ".xls")):
+                    tabular_files = [downloaded] + [p for p in tabular_files if p != downloaded]
+                if not tabular_files:
+                    raise FileNotFoundError("No CSV/XLSX/TSV file found at that URL.")
+                df_imp = _read_tabular_file(tabular_files[0])
+                uni_fp = _store_public_import(df_imp, Path(requests.utils.urlparse(direct_url).path).stem or "public_url_dataset")
+                st.success(f"✅ Imported {len(df_imp):,} rows from public URL")
+                st.caption(f"Saved unified intake copy: `{uni_fp}`")
+                st.dataframe(df_imp.head(100), use_container_width=True)
+            except Exception as e:
+                st.error(f"Public URL import failed: {e}")
+        st.markdown("""
+        Quick links: [data.gov](https://www.data.gov/) · [data.europa.eu](https://data.europa.eu/) · [data.gov.sg](https://data.gov.sg/) · [data.gov.vn](https://data.gov.vn/)
+        """)
+   
    
 
     # Quick HF import (optional direct load)
@@ -2580,9 +2849,9 @@ with tabC:
     from datetime import datetime
     import os, shutil, streamlit as st
 
-    # Hardcoded absolute paths for your environment
-    trained_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/trained"
-    production_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/production"
+    # Resolve from the running Streamlit app directory so the page follows the active workspace.
+    trained_dir = str(Path("./agents/asset_appraisal/models/trained").resolve())
+    production_dir = str(Path("./agents/asset_appraisal/models/production").resolve())
 
     # Debug info
     st.caption(f"📂 Trained dir: `{trained_dir}`")
@@ -5690,8 +5959,7 @@ def render_stage_f_footer(
 
     if st.button("✅ Promote This Model Now"):
         try:
-            #prod_dir = "./agents/asset_appraisal/models/production"
-            prod_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/production"
+            prod_dir = "./agents/asset_appraisal/models/production"
 
             
             os.makedirs(prod_dir, exist_ok=True)
@@ -6165,8 +6433,7 @@ with tabF:
             st.info("This model does not expose importances/coefficients.")
 
         # ===== Persist artifacts =====
-        #trained_dir = "./agents/asset_appraisal/models/trained"
-        trained_dir = "/home/dzoan/AI-AIGENTbythePeoplesANDBOX/HUGKAG/agents/asset_appraisal/models/trained"
+        trained_dir = "./agents/asset_appraisal/models/trained"
         
         os.makedirs(trained_dir, exist_ok=True)
         ts = _ts()
