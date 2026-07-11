@@ -580,6 +580,18 @@ else
   timeout 120 python -m pip install -U pip wheel --progress-bar off --root-user-action=ignore || { log_error "Failed to install pip"; exit 1; }
 fi
 
+# sentence-transformers (an API requirement) pulls in full CUDA-enabled torch
+# by default, which drags in several GB of nvidia_* wheels (cublas, cudnn,
+# nccl, ...) even on CPU-only hosts and can exhaust disk space. Pre-install
+# the much smaller CPU-only build so pip's resolver treats torch as already
+# satisfied. Set NEWSTART_CPU_TORCH=0 to use GPU wheels instead.
+NEWSTART_CPU_TORCH="${NEWSTART_CPU_TORCH:-1}"
+if [[ "${NEWSTART_CPU_TORCH}" == "1" ]] && ! python -c "import torch" 2>/dev/null; then
+  log_info "Installing CPU-only PyTorch (set NEWSTART_CPU_TORCH=0 to use GPU wheels)..."
+  timeout 300 pip install --progress-bar off --index-url https://download.pytorch.org/whl/cpu torch --root-user-action=ignore || \
+    log_warn "CPU-only torch pre-install failed; falling back to default resolution"
+fi
+
 # Check if API requirements are already installed
 log_info "Checking API requirements..."
 if [[ -f "${ROOT}/services/api/requirements.txt" ]]; then
