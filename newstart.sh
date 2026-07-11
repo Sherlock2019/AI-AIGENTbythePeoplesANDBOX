@@ -580,14 +580,14 @@ else
   timeout 120 python -m pip install -U pip wheel --progress-bar off --no-cache-dir --root-user-action=ignore || { log_error "Failed to install pip"; exit 1; }
 fi
 
+# Local LLM inference is handled by Ollama (which talks to the system's own
+# GPU/CUDA driver directly, if any), so the Python stack never needs CUDA.
 # sentence-transformers (an API requirement) pulls in full CUDA-enabled torch
 # by default, which drags in several GB of nvidia_* wheels (cublas, cudnn,
-# nccl, ...) even on CPU-only hosts and can exhaust disk space. Pre-install
-# the much smaller CPU-only build so pip's resolver treats torch as already
-# satisfied. Set NEWSTART_CPU_TORCH=0 to use GPU wheels instead.
-NEWSTART_CPU_TORCH="${NEWSTART_CPU_TORCH:-1}"
-if [[ "${NEWSTART_CPU_TORCH}" == "1" ]] && ! python -c "import torch" 2>/dev/null; then
-  log_info "Installing CPU-only PyTorch (set NEWSTART_CPU_TORCH=0 to use GPU wheels)..."
+# nccl, ...) and can exhaust disk space. Always pre-install the much smaller
+# CPU-only build so pip's resolver treats torch as already satisfied.
+if ! python -c "import torch" 2>/dev/null; then
+  log_info "Installing CPU-only PyTorch (no GPU/CUDA packages; Ollama handles local LLM inference separately)..."
   timeout 300 pip install --progress-bar off --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch --root-user-action=ignore || \
     log_warn "CPU-only torch pre-install failed; falling back to default resolution"
 fi
