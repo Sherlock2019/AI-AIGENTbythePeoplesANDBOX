@@ -840,16 +840,47 @@ start_log_monitor
   fi
 ) &
 
+# ---------- detect public IP for displayed URLs ----------
+detect_public_ip() {
+  # Explicit override always wins
+  if [[ -n "${PUBLIC_IP:-}" ]]; then
+    echo "${PUBLIC_IP}"
+    return 0
+  fi
+  local ip="" token=""
+  # AWS EC2 instance metadata (IMDSv2, then IMDSv1 fallback)
+  token="$(curl -s --max-time 1 -X PUT "http://169.254.169.254/latest/api/token" \
+    -H "X-aws-ec2-metadata-token-ttl-seconds: 60" 2>/dev/null || true)"
+  if [[ -n "${token}" ]]; then
+    ip="$(curl -s --max-time 1 -H "X-aws-ec2-metadata-token: ${token}" \
+      "http://169.254.169.254/latest/meta-data/public-ipv4" 2>/dev/null || true)"
+  fi
+  if [[ -z "${ip}" ]]; then
+    ip="$(curl -s --max-time 1 "http://169.254.169.254/latest/meta-data/public-ipv4" 2>/dev/null || true)"
+  fi
+  # Generic cloud/bare-metal fallback: public IP lookup service
+  if [[ -z "${ip}" ]]; then
+    ip="$(curl -s --max-time 2 https://api.ipify.org 2>/dev/null || true)"
+  fi
+  echo "${ip}"
+}
+
+PUBLIC_HOST="$(detect_public_ip)"
+if [[ -z "${PUBLIC_HOST}" ]]; then
+  log_warn "Could not auto-detect public IP; showing 'localhost' below. Set PUBLIC_IP=<ip> to override."
+  PUBLIC_HOST="localhost"
+fi
+
 # ---------- final status ----------
 echo ""
 echo "═══════════════════════════════════════════════════════════════"
 color_echo green "🎯 Services started!"
 echo ""
 color_echo blue "📘 Swagger API Docs:"
-echo "   http://localhost:${APIPORT}/docs"
+echo "   http://${PUBLIC_HOST}:${APIPORT}/docs"
 echo ""
 color_echo blue "🌐 Web UI:"
-echo "   http://localhost:${UIPORT}"
+echo "   http://${PUBLIC_HOST}:${UIPORT}"
 echo ""
 color_echo blue "🤖 Ollama Server:"
 echo "   ${OLLAMA_URL}"
