@@ -499,9 +499,8 @@ start_ollama() {
 start_ollama || log_warn "Ollama startup had issues (non-fatal - API/UI will still work)"
 
 # ---------- free remaining ports ----------
-log_info "Freeing ports ${APIPORT}, 8501, ${UIPORT}..."
+log_info "Freeing ports ${APIPORT}, ${UIPORT}..."
 free_port "${APIPORT}"
-free_port 8501
 free_port "${UIPORT}"
 sleep 1
 log_success "API/UI ports cleared"
