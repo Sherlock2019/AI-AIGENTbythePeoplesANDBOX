@@ -1155,10 +1155,9 @@ LANE3_LOGO_PATH = Path(".cache/ceo_assets/lane3_logo.png")
 # Ensure the cache directory exists for persistence across sessions
 LOGO_UPLOAD_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-# Preload with Rackspace as default
+# Preload with Rackspace as default; read current pick from session so the logo can render first
 default_company = "Rackspace" if "Rackspace" in COMPANY_PRESETS else list(COMPANY_PRESETS.keys())[0]
-company_choice = st.selectbox("Company cockpit", list(COMPANY_PRESETS.keys()), index=list(COMPANY_PRESETS.keys()).index(default_company) if default_company in COMPANY_PRESETS else 0)
-use_live = st.toggle("Use live market scrape", value=False, help="Pulls Yahoo Finance snapshot when enabled.")
+company_choice = st.session_state.get("company_cockpit_select", default_company)
 
 # Company logo path based on selected company
 COMPANY_LOGO_PATH = Path(f".cache/ceo_assets/company_{company_choice.lower().replace(' ', '_')}_logo.png")
@@ -1168,7 +1167,7 @@ COMPANY_LOGO_PATH.parent.mkdir(parents=True, exist_ok=True)
 if f'show_company_upload_{company_choice}' not in st.session_state:
     st.session_state[f'show_company_upload_{company_choice}'] = False
 
-# Display company logo full width with upload icon button
+# Logo first (full width), company dropdown below it
 logo_container = st.container()
 with logo_container:
     logo_col1, logo_col2 = st.columns([20, 1])
@@ -1196,6 +1195,9 @@ if st.session_state[f'show_company_upload_{company_choice}']:
         st.session_state[f'show_company_upload_{company_choice}'] = False
         st.success(f"✅ {company_choice} logo saved. It will persist across sessions.")
         st.rerun()
+
+company_choice = st.selectbox("Company cockpit", list(COMPANY_PRESETS.keys()), index=list(COMPANY_PRESETS.keys()).index(company_choice) if company_choice in COMPANY_PRESETS else 0, key="company_cockpit_select")
+use_live = st.toggle("Use live market scrape", value=False, help="Pulls Yahoo Finance snapshot when enabled.")
 
 st.markdown(
     """
@@ -1277,65 +1279,119 @@ st.markdown(
     html {
         scroll-behavior: smooth;
     }
-    .nav-bar {
+    .gear-console {
         display: flex;
-        gap: 1rem;
-        padding: 1rem 1.5rem;
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
-        border-bottom: 2px solid rgba(59, 130, 246, 0.3);
-        margin-bottom: 1rem;
-        border-radius: 8px;
-        flex-wrap: wrap;
+        gap: 1.4rem;
+        padding: 1.8rem 2rem 2rem;
         justify-content: center;
+        align-items: stretch;
+        flex-wrap: wrap;
+        border-radius: 24px;
+        background:
+            radial-gradient(ellipse at 50% -20%, rgba(56,189,248,0.16), transparent 60%),
+            repeating-linear-gradient(45deg, rgba(255,255,255,0.025) 0 2px, transparent 2px 6px),
+            linear-gradient(160deg, #0b1220 0%, #131c31 45%, #0b1220 100%);
+        border: 1px solid rgba(148,163,184,0.35);
+        box-shadow:
+            inset 0 2px 6px rgba(255,255,255,0.08),
+            inset 0 -12px 32px rgba(0,0,0,0.6),
+            0 18px 45px rgba(0,0,0,0.55),
+            0 0 40px rgba(34,211,238,0.12);
         position: sticky;
         top: 0;
         z-index: 100;
         backdrop-filter: blur(10px);
+        margin-bottom: 1.2rem;
     }
-    .nav-item {
-        padding: 0.8rem 1.5rem;
-        background: rgba(59, 130, 246, 0.1);
-        border: 1px solid rgba(59, 130, 246, 0.3);
-        border-radius: 8px;
-        color: #00D4FF;
-        font-size: 1.2rem;
-        font-weight: 700;
-        transition: all 0.3s ease;
+    .gear-btn {
+        --accent: #22d3ee;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        flex: 1 1 180px;
+        max-width: 260px;
+        padding: 1.6rem 1.4rem 1.3rem;
+        border-radius: 20px;
         text-decoration: none;
         cursor: pointer;
-        text-shadow: 0 0 10px rgba(0, 212, 255, 0.6), 0 0 20px rgba(0, 212, 255, 0.4);
-        letter-spacing: 0.5px;
+        border: 2px solid var(--accent);
+        background:
+            linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0) 35%),
+            linear-gradient(180deg, rgba(15,23,42,0.92), rgba(2,6,23,0.96));
+        box-shadow:
+            inset 0 1px 2px rgba(255,255,255,0.15),
+            inset 0 -8px 16px rgba(0,0,0,0.55),
+            0 6px 18px rgba(0,0,0,0.5),
+            0 0 24px var(--accent);
+        transition: all 0.25s ease;
     }
-    .nav-item:hover {
-        background: rgba(0, 212, 255, 0.2);
-        color: #00D4FF;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(0, 212, 255, 0.5), 0 0 30px rgba(0, 212, 255, 0.3);
-        text-shadow: 0 0 15px rgba(0, 212, 255, 0.8), 0 0 30px rgba(0, 212, 255, 0.6);
+    .gear-btn .gear-letter {
+        font-size: 3.4rem;
+        line-height: 1;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+        color: var(--accent);
+        text-shadow: 0 0 14px var(--accent), 0 0 36px var(--accent);
     }
-    .nav-item.active {
-        background: linear-gradient(90deg, #3b82f6, #2563eb);
-        color: white;
-        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5);
+    .gear-btn .gear-label {
+        font-size: 1rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #e2e8f0;
+        text-align: center;
+        text-shadow: 0 0 8px rgba(226,232,240,0.35);
     }
-    .nav-item.top-btn {
-        background: linear-gradient(135deg, #10b981, #059669);
-        border-color: rgba(16, 185, 129, 0.5);
-        color: white;
+    .gear-btn .gear-sub {
+        font-size: 0.72rem;
         font-weight: 700;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--accent);
+        opacity: 0.9;
     }
-    .nav-item.top-btn:hover {
-        background: linear-gradient(135deg, #059669, #047857);
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    .gear-btn:hover {
+        transform: translateY(-5px) scale(1.05);
+        filter: brightness(1.25);
+        box-shadow:
+            inset 0 1px 2px rgba(255,255,255,0.25),
+            0 14px 34px rgba(0,0,0,0.6),
+            0 0 55px var(--accent);
     }
+    .gear-4x4 { --accent: #f59e0b; }
+    .gear-d   { --accent: #22d3ee; }
+    .gear-s   { --accent: #ef4444; }
+    .gear-n   { --accent: #a3e635; }
+    .gear-e   { --accent: #10b981; }
     </style>
-    <div class="nav-bar">
-        <a href="#road-market-conditions" class="nav-item" onclick="document.getElementById('road-market-conditions')?.scrollIntoView({behavior: 'smooth'}); return false;">🛣️ Road Market Conditions</a>
-        <a href="#driving-mode" class="nav-item" onclick="document.getElementById('driving-mode')?.scrollIntoView({behavior: 'smooth'}); return false;">🚗 Driving Mode</a>
-        <a href="#driving-mode-gauges" class="nav-item" onclick="document.getElementById('driving-mode-gauges')?.scrollIntoView({behavior: 'smooth'}); return false;">📊 Driving Mode Gauges</a>
-        <a href="#ai-copilot-navigator" class="nav-item" onclick="document.getElementById('ai-copilot-navigator')?.scrollIntoView({behavior: 'smooth'}); return false;">🏎️ CEO Copilot Navigator</a>
-        <a href="#ceo-metrics" class="nav-item" onclick="document.getElementById('ceo-metrics')?.scrollIntoView({behavior: 'smooth'}); return false;">📊 CEO Metrics Overview</a>
-        <a href="#" class="nav-item top-btn" onclick="window.scrollTo({{top: 0, behavior: 'smooth'}}); return false;">⬆️ Back to Top</a>
+    <div class="gear-console">
+        <a href="#road-market-conditions" class="gear-btn gear-4x4" onclick="document.getElementById('road-market-conditions')?.scrollIntoView({behavior: 'smooth'}); return false;">
+            <span class="gear-letter">4×4</span>
+            <span class="gear-label">🛣️ Road Market Conditions</span>
+            <span class="gear-sub">Terrain Scan</span>
+        </a>
+        <a href="#driving-mode" class="gear-btn gear-d" onclick="document.getElementById('driving-mode')?.scrollIntoView({behavior: 'smooth'}); return false;">
+            <span class="gear-letter">D</span>
+            <span class="gear-label">🚗 Driving Mode</span>
+            <span class="gear-sub">Auto Shift</span>
+        </a>
+        <a href="#driving-mode-gauges" class="gear-btn gear-s" onclick="document.getElementById('driving-mode-gauges')?.scrollIntoView({behavior: 'smooth'}); return false;">
+            <span class="gear-letter">S</span>
+            <span class="gear-label">📊 Driving Mode Gauges</span>
+            <span class="gear-sub">Sport Telemetry</span>
+        </a>
+        <a href="#ai-copilot-navigator" class="gear-btn gear-n" onclick="document.getElementById('ai-copilot-navigator')?.scrollIntoView({behavior: 'smooth'}); return false;">
+            <span class="gear-letter">N</span>
+            <span class="gear-label">🏎️ CEO Copilot Navigator</span>
+            <span class="gear-sub">Sat Nav</span>
+        </a>
+        <a href="#ceo-metrics" class="gear-btn gear-e" onclick="document.getElementById('ceo-metrics')?.scrollIntoView({behavior: 'smooth'}); return false;">
+            <span class="gear-letter">E</span>
+            <span class="gear-label">📊 CEO Metrics Overview</span>
+            <span class="gear-sub">Eco Metrics</span>
+        </a>
     </div>
     """,
     unsafe_allow_html=True,
