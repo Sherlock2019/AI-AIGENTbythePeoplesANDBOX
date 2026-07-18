@@ -476,8 +476,8 @@ start_ollama() {
   
   log_info "Starting Ollama server on port ${OLLAMA_PORT}..."
   
-  # Start Ollama serve in background
-  nohup ollama serve > "${OLLAMA_LOG}" 2>&1 &
+  # Start Ollama serve in background (own session, detached from terminal)
+  nohup setsid ollama serve > "${OLLAMA_LOG}" 2>&1 < /dev/null &
   
   local ollama_pid=$!
   echo "${ollama_pid}" > "${pid_file}"
@@ -692,8 +692,8 @@ start_api() {
     uvicorn_args+=(--reload)
   fi
 
-  # Use python -m uvicorn for better venv compatibility
-  nohup "${python_cmd}" -m uvicorn "${uvicorn_args[@]}" > "${API_LOG}" 2>&1 &
+  # Use python -m uvicorn for better venv compatibility (own session, detached from terminal)
+  nohup setsid "${python_cmd}" -m uvicorn "${uvicorn_args[@]}" > "${API_LOG}" 2>&1 < /dev/null &
   
   local api_pid=$!
   echo "${api_pid}" > "${pid_file}"
@@ -766,15 +766,15 @@ start_ui() {
     return 1
   fi
   
-  # Use python -m streamlit for better venv compatibility
-  nohup "${python_cmd}" -m streamlit run "app.py" \
+  # Use python -m streamlit for better venv compatibility (own session, detached from terminal)
+  nohup setsid "${python_cmd}" -m streamlit run "app.py" \
       --server.port "${UIPORT}" \
       --server.address 0.0.0.0 \
       --server.fileWatcherType none \
       --server.headless true \
       --browser.gatherUsageStats false \
       --logger.level error \
-      > "${UI_LOG}" 2>&1 &
+      > "${UI_LOG}" 2>&1 < /dev/null &
   
   local ui_pid=$!
   echo "${ui_pid}" > "${pid_file}"
@@ -811,14 +811,14 @@ start_log_monitor() {
   local pid_file="${ROOT}/.pids/logmonitor.pid"
   PID_FILES+=("${pid_file}")
   
-  # Start log monitor in background (non-blocking)
-  nohup bash -c "
+  # Start log monitor in background (own session, detached from terminal)
+  nohup setsid bash -c "
     tail -n +1 -F '${API_LOG}' '${UI_LOG}' '${OLLAMA_LOG}' 2>/dev/null \
       | grep -v 'missing ScriptRunContext' \
       | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[STREAM]\", \$0 }' \
       | tee -a '${COMBINED_LOG}' \
       | tee -a '${ERR_LOG}' >/dev/null
-  " >/dev/null 2>&1 &
+  " >/dev/null 2>&1 < /dev/null &
   
   local monitor_pid=$!
   echo "${monitor_pid}" > "${pid_file}"
