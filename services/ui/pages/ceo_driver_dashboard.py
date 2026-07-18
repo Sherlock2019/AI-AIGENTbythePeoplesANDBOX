@@ -1146,6 +1146,57 @@ carConfigs.forEach(cfg => {{
     components.html(html, height=820)
 
 
+# ── Cockpit controls + company logo (full width, above the title) ──
+LOGO_UPLOAD_PATH = Path(".cache/ceo_assets/driver_logo.png")
+# Separate logo paths for each data feed lane
+LANE1_LOGO_PATH = Path(".cache/ceo_assets/lane1_logo.png")
+LANE2_LOGO_PATH = Path(".cache/ceo_assets/lane2_logo.png")
+LANE3_LOGO_PATH = Path(".cache/ceo_assets/lane3_logo.png")
+# Ensure the cache directory exists for persistence across sessions
+LOGO_UPLOAD_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+# Preload with Rackspace as default
+default_company = "Rackspace" if "Rackspace" in COMPANY_PRESETS else list(COMPANY_PRESETS.keys())[0]
+company_choice = st.selectbox("Company cockpit", list(COMPANY_PRESETS.keys()), index=list(COMPANY_PRESETS.keys()).index(default_company) if default_company in COMPANY_PRESETS else 0)
+use_live = st.toggle("Use live market scrape", value=False, help="Pulls Yahoo Finance snapshot when enabled.")
+
+# Company logo path based on selected company
+COMPANY_LOGO_PATH = Path(f".cache/ceo_assets/company_{company_choice.lower().replace(' ', '_')}_logo.png")
+COMPANY_LOGO_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+# Company Logo Uploader (hidden, triggered by icon)
+if f'show_company_upload_{company_choice}' not in st.session_state:
+    st.session_state[f'show_company_upload_{company_choice}'] = False
+
+# Display company logo full width with upload icon button
+logo_container = st.container()
+with logo_container:
+    logo_col1, logo_col2 = st.columns([20, 1])
+    with logo_col1:
+        if COMPANY_LOGO_PATH.exists():
+            st.image(str(COMPANY_LOGO_PATH), use_container_width=True, caption=f"{company_choice} logo")
+        else:
+            st.info("No logo uploaded")
+    with logo_col2:
+        if st.button("📤", key=f"company_upload_btn_{company_choice}", help=f"Upload {company_choice} logo"):
+            st.session_state[f'show_company_upload_{company_choice}'] = not st.session_state[f'show_company_upload_{company_choice}']
+
+if st.session_state[f'show_company_upload_{company_choice}']:
+    company_logo_file = st.file_uploader(
+        f"Upload {company_choice} company logo",
+        type=["png", "jpg", "jpeg", "gif"],
+        key=f"company_logo_upload_{company_choice}",
+        help=f"Upload a logo for {company_choice}. Logo will be saved and persist across sessions."
+    )
+    if company_logo_file:
+        COMPANY_LOGO_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(COMPANY_LOGO_PATH, "wb") as handle:
+            handle.write(company_logo_file.getbuffer())
+        st.session_state[f'company_logo_uploaded_{company_choice}'] = True
+        st.session_state[f'show_company_upload_{company_choice}'] = False
+        st.success(f"✅ {company_choice} logo saved. It will persist across sessions.")
+        st.rerun()
+
 st.markdown(
     """
     <div style="text-align:center;margin-bottom:0.4rem;">
@@ -1294,20 +1345,6 @@ st.markdown(
 # st.warning("🚧 CEO DRIVER SEAT is flagged **Coming Soon**. Preview is disabled while we finalize verification.")
 # st.info("Thanks for your patience. Ping the platform team to request early access.")
 # st.stop()
-LOGO_UPLOAD_PATH = Path(".cache/ceo_assets/driver_logo.png")
-# Separate logo paths for each data feed lane
-LANE1_LOGO_PATH = Path(".cache/ceo_assets/lane1_logo.png")
-LANE2_LOGO_PATH = Path(".cache/ceo_assets/lane2_logo.png")
-LANE3_LOGO_PATH = Path(".cache/ceo_assets/lane3_logo.png")
-# Company logo path (will be set based on selected company)
-COMPANY_LOGO_PATH = None
-# Ensure the cache directory exists for persistence across sessions
-LOGO_UPLOAD_PATH.parent.mkdir(parents=True, exist_ok=True)
-
-# Preload with Rackspace as default
-default_company = "Rackspace" if "Rackspace" in COMPANY_PRESETS else list(COMPANY_PRESETS.keys())[0]
-company_choice = st.selectbox("Company cockpit", list(COMPANY_PRESETS.keys()), index=list(COMPANY_PRESETS.keys()).index(default_company) if default_company in COMPANY_PRESETS else 0)
-use_live = st.toggle("Use live market scrape", value=False, help="Pulls Yahoo Finance snapshot when enabled.")
 snapshot = get_company_snapshot(company_choice, prefer_live=use_live)
 metrics: Dict[str, float] = snapshot["metrics"]
 financials = snapshot["financials"]
@@ -1317,43 +1354,6 @@ revenue_target = financials.get("revenue", 0) * 1.2  # Assume 20% growth target
 revenue_current = financials.get("revenue", 0)
 revenue_deviation_pct = ((revenue_current - revenue_target) / revenue_target * 100) if revenue_target > 0 else 0
 current_date = datetime.now()
-
-# Company logo path based on selected company
-COMPANY_LOGO_PATH = Path(f".cache/ceo_assets/company_{company_choice.lower().replace(' ', '_')}_logo.png")
-COMPANY_LOGO_PATH.parent.mkdir(parents=True, exist_ok=True)
-
-# Company Logo Uploader (hidden, triggered by icon)
-if f'show_company_upload_{company_choice}' not in st.session_state:
-    st.session_state[f'show_company_upload_{company_choice}'] = False
-
-# Display company logo with upload icon button
-logo_container = st.container()
-with logo_container:
-    logo_col1, logo_col2 = st.columns([20, 1])
-    with logo_col1:
-        if COMPANY_LOGO_PATH.exists():
-            st.image(str(COMPANY_LOGO_PATH), width=200, caption=f"{company_choice} logo")
-        else:
-            st.info("No logo uploaded")
-    with logo_col2:
-        if st.button("📤", key=f"company_upload_btn_{company_choice}", help=f"Upload {company_choice} logo"):
-            st.session_state[f'show_company_upload_{company_choice}'] = not st.session_state[f'show_company_upload_{company_choice}']
-
-if st.session_state[f'show_company_upload_{company_choice}']:
-    company_logo_file = st.file_uploader(
-        f"Upload {company_choice} company logo", 
-        type=["png", "jpg", "jpeg", "gif"], 
-        key=f"company_logo_upload_{company_choice}",
-        help=f"Upload a logo for {company_choice}. Logo will be saved and persist across sessions."
-    )
-    if company_logo_file:
-        COMPANY_LOGO_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with open(COMPANY_LOGO_PATH, "wb") as handle:
-            handle.write(company_logo_file.getbuffer())
-        st.session_state[f'company_logo_uploaded_{company_choice}'] = True
-        st.session_state[f'show_company_upload_{company_choice}'] = False
-        st.success(f"✅ {company_choice} logo saved. It will persist across sessions.")
-        st.rerun()
 
 # SECTION 5: Company info (first)
 st.subheader(f"{company_choice} • {snapshot['symbol']} • {snapshot['sector']}")
