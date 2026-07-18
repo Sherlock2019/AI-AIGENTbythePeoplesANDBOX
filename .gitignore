@@ -104,3 +104,4 @@ newsandbox.tar.gz
 **/chroma.sqlite3
 backups/*.tar.gz
 services/ui/exports/*.zip
+.logs/
