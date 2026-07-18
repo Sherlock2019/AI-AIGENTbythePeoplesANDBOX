@@ -4909,7 +4909,7 @@ def color_churn_risk(val):
 
 # Display styled dataframe
 st.markdown("#### 📋 Customer Satisfaction Details")
-styled_df = filtered_df.style.applymap(color_satisfaction_score, subset=["Satisfaction Score"]).applymap(
+styled_df = filtered_df.style.map(color_satisfaction_score, subset=["Satisfaction Score"]).map(
     color_churn_risk, subset=["Churn Risk %"]
 )
 st.dataframe(
@@ -5216,7 +5216,7 @@ def color_status(val):
         return "background-color: rgba(239, 68, 68, 0.2); color: #ef4444; font-weight: 600;"
     return ""
 
-styled_wins_losses = wins_losses_df.style.applymap(color_status, subset=["Status"])
+styled_wins_losses = wins_losses_df.style.map(color_status, subset=["Status"])
 
 st.dataframe(
     styled_wins_losses,
