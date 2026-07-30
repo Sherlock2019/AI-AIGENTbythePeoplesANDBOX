@@ -1,0 +1,3 @@
+Copied from YesAIcancommunity-LAB/integrations/cloudjumper
+Excluded: models.py (depends on YES AI CAN's SQLAlchemy Base)
+Keep in sync; do not edit here.
