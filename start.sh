@@ -12,6 +12,27 @@ export SANDBOX_CHATBOT_MODEL="${SANDBOX_CHATBOT_MODEL:-${OLLAMA_MODEL}}"
 # Set SKIP_OLLAMA=1 to start API + UI without waiting for Ollama (LLM features offline until Ollama runs).
 SKIP_OLLAMA="${SKIP_OLLAMA:-0}"
 
+# Public address -- where a *browser* reaches this machine. Only used for the
+# URLs printed below and for Streamlit's browser.serverAddress. The UI's calls
+# to the API stay on localhost: Streamlit runs them on this server.
+#   PUBLIC_HOST=1.2.3.4 ./start.sh      explicit (domain, Elastic IP, load balancer)
+#   ./start.sh                          auto-detected on EC2 (IMDSv2), else localhost
+detect_public_host() {
+  local token ip
+  token="$(curl -fsS --max-time 1 -X PUT 'http://169.254.169.254/latest/api/token' \
+    -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' 2>/dev/null || true)"
+  [[ -n "${token}" ]] || return 1
+  ip="$(curl -fsS --max-time 2 -H "X-aws-ec2-metadata-token: ${token}" \
+    'http://169.254.169.254/latest/meta-data/public-ipv4' 2>/dev/null || true)"
+  [[ -n "${ip}" ]] || ip="$(curl -fsS --max-time 2 -H "X-aws-ec2-metadata-token: ${token}" \
+    'http://169.254.169.254/latest/meta-data/public-hostname' 2>/dev/null || true)"
+  [[ -n "${ip}" ]] && printf '%s' "${ip}"
+}
+if [[ -z "${PUBLIC_HOST:-}" ]]; then
+  PUBLIC_HOST="$(detect_public_host || true)"
+  PUBLIC_HOST="${PUBLIC_HOST:-localhost}"
+fi
+
 mkdir -p "$LOGDIR" \
          "${ROOT}/services/api/.runs" \
          "${ROOT}/agents/credit_appraisal/models/production" \
@@ -200,6 +221,7 @@ cd "${ROOT}"
 STREAMLIT_BROWSER_GATHER_USAGE_STATS=false \
   nohup "${VENV}/bin/streamlit" run "services/ui/app.py" \
   --server.port "${UIPORT}" --server.address 0.0.0.0 \
+  --browser.serverAddress "${PUBLIC_HOST}" --browser.serverPort "${UIPORT}" \
   --server.fileWatcherType none \
   --browser.gatherUsageStats false \
   > "${UI_LOG}" 2>&1 &
@@ -240,7 +262,12 @@ else
   ensure_ollama || color_echo yellow "Ollama setup incomplete — UI/API are still up; install zstd & Ollama or use SKIP_OLLAMA=1."
 fi
 
-color_echo blue "🎯 Summary: Swagger http://localhost:${APIPORT}/docs | Web UI http://localhost:${UIPORT}"
+color_echo blue "🎯 Summary: Swagger http://${PUBLIC_HOST}:${APIPORT}/docs | Web UI http://${PUBLIC_HOST}:${UIPORT}"
+if [[ "${PUBLIC_HOST}" != "localhost" ]]; then
+  color_echo yellow "☁  Public host ${PUBLIC_HOST}: the API and UI listen on 0.0.0.0, and the API"
+  color_echo yellow "   has no authentication. Open ${UIPORT} (and ${APIPORT} only if you need Swagger)"
+  color_echo yellow "   in the security group to YOUR IP, not 0.0.0.0/0."
+fi
 
 # ─────────────────────────────────────────────
 # Combined Log Monitor
