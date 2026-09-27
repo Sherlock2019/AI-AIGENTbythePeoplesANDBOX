@@ -1119,6 +1119,14 @@ def _faq_for_page(page_id: str) -> List[str]:
 @router.get("/v1/chat/models")
 def list_available_models() -> Dict[str, Any]:
     """List available Ollama models for chat generation. Prioritizes recommended models."""
+    if not USE_OLLAMA:
+        return {
+            "models": RECOMMENDED_MODELS,
+            "recommended": RECOMMENDED_MODELS,
+            "default": OLLAMA_MODEL,
+            "ollama_url": OLLAMA_URL,
+            "note": "Ollama disabled (CHAT_USE_OLLAMA=0, CPU-only mode) - answers come from retrieval",
+        }
     try:
         resp = requests.get(f"{OLLAMA_URL.rstrip('/')}/api/tags", timeout=10)
         resp.raise_for_status()

@@ -33,6 +33,8 @@ def _normalize_base(url: str) -> str:
 OLLAMA_URL = _normalize_base(os.getenv("OLLAMA_URL", "http://localhost:11434"))
 OLLAMA_MODEL = os.getenv("SANDBOX_CHATBOT_MODEL", os.getenv("OLLAMA_MODEL", "phi3:latest"))
 OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT_SECONDS", "120"))
+# CPU-only mode (./startcpu.sh): never contact, start or pull Ollama.
+OLLAMA_DISABLED = os.getenv("OLLAMA_DISABLED", "0").strip().lower() in {"1", "true", "yes"}
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 LOG_DIR = PROJECT_ROOT / ".logs"
 PID_DIR = PROJECT_ROOT / ".pids"
@@ -74,6 +76,8 @@ def _ping_ollama() -> bool:
 
 
 def _ensure_ollama_server(force_pull: bool = False) -> None:
+    if OLLAMA_DISABLED:
+        raise OllamaError("Ollama is disabled (OLLAMA_DISABLED=1, CPU-only mode).")
     if _ping_ollama() and not force_pull:
         return
 
@@ -216,4 +220,4 @@ def ollama_generate(prompt: str, *, model: str | None = None, timeout: int | Non
         return _generate_via_cli(prompt, target_model)
 
 
-__all__ = ["ollama_generate", "OllamaError"]
+__all__ = ["ollama_generate", "OllamaError", "OLLAMA_DISABLED"]

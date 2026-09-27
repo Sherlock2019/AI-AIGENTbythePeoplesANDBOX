@@ -94,8 +94,8 @@ class AgentManager:
         except Exception as e:
             logger.warning(f"⚠️ HF API client initialization failed: {e}")
 
-        # Check Ollama availability
-        if ollama_generate:
+        # Check Ollama availability (skipped in CPU-only mode)
+        if ollama_generate and os.getenv("OLLAMA_DISABLED", "0").strip().lower() not in {"1", "true", "yes"}:
             try:
                 import requests
                 resp = requests.get(f"{OLLAMA_URL.rstrip('/')}/api/tags", timeout=2)
