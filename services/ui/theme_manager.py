@@ -1,13 +1,13 @@
 """Centralized dark/light theme helpers shared across all Streamlit agents.
 
-The look is deliberately restrained: neutral graphite/slate surfaces, a single
-muted accent, flat fills (no gradients or glows) and thin hairline borders.
+The look is marketplace-style: neutral surfaces, thin hairline borders and a
+single neon-blue accent that carries the brand (links, ratings, primary CTAs).
 """
 from __future__ import annotations
 
 import streamlit as st
 
-DEFAULT_THEME = "dark"
+DEFAULT_THEME = "light"
 
 PALETTE = {
     "dark": {
@@ -19,8 +19,12 @@ PALETTE = {
         "annotation": "#c9ced5",
         "card": "#161a20",
         "border": "#272c35",
-        "accent": "#6b8bb0",
-        "accent_alt": "#7d9a8a",
+        "accent": "#3d8bff",
+        "accent_alt": "#22d3ee",
+        "hero_bg": "linear-gradient(180deg, #0c1f45 0%, #0f1a2e 55%, #0f1115 100%)",
+        "hero_text": "#e6edf7",
+        "hero_card": "#161a20",
+        "hero_border": "#2a3345",
         "tab_bg": "transparent",
         "tab_active_bg": "transparent",
         "tab_hover_bg": "rgba(255,255,255,0.04)",
@@ -48,8 +52,12 @@ PALETTE = {
         "annotation": "#2d3440",
         "card": "#ffffff",
         "border": "#dfe3e8",
-        "accent": "#2f4f75",
-        "accent_alt": "#3f6b55",
+        "accent": "#1a6dff",
+        "accent_alt": "#00b4ff",
+        "hero_bg": "linear-gradient(180deg, #dff1ff 0%, #eef7ff 45%, #f6f7f9 100%)",
+        "hero_text": "#0b1424",
+        "hero_card": "#ffffff",
+        "hero_border": "#d5dee9",
         "tab_bg": "transparent",
         "tab_active_bg": "transparent",
         "tab_hover_bg": "rgba(15,23,42,0.04)",
@@ -125,7 +133,7 @@ def apply_theme(theme: str | None = None) -> str:
             background: {pal['bg']} !important;
             border-bottom: 1px solid {pal['border']} !important;
         }}
-        .block-container {{
+        .block-container, [data-testid="stMainBlockContainer"] {{
             padding-top: 2.5rem !important;
         }}
         h1,h2,h3,h4,h5,h6 {{
@@ -142,11 +150,13 @@ def apply_theme(theme: str | None = None) -> str:
         small, .stCaption, [data-testid="stCaptionContainer"] {{
             color: {pal['muted']} !important;
         }}
-        a, a:link, a:visited {{
+        /* :where() keeps this at zero specificity so styled links (buttons,
+           badges) can set their own color. */
+        :where(a, a:link, a:visited) {{
             color: {pal['accent']} !important;
             text-decoration: none;
         }}
-        a:hover {{
+        :where(a:hover) {{
             text-decoration: underline;
         }}
         a:focus-visible, button:focus-visible {{

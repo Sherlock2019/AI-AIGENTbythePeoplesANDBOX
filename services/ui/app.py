@@ -240,7 +240,7 @@ def _extract_run_fields(raw_json):  # ADD
 # ─────────────────────────────────────────────
 if not hasattr(st, '_page_config_set'):
     st.set_page_config(
-        page_title="AI Sandbox — By the People, For the People",
+        page_title="AI Agent Market",
         layout="wide",
         initial_sidebar_state="collapsed"
     )
@@ -951,939 +951,815 @@ if "feedback_data" not in st.session_state:
 feedback_data = st.session_state["feedback_data"]
 
 # ────────────────────────────────
-# PAGE: LANDING
+# PAGE: AI AGENT MARKET (landing + agents stages)
 # ────────────────────────────────
-if st.session_state.stage == "landing":
+MARKET_NAME = "AI Agent Market"
 
 
+def _clean_label(label) -> str:
+    """Strip leading emoji/punctuation so names read like product titles."""
+    return re.sub(r"^[^\w]+", "", str(label)).strip()
 
-    # ────────────────────────────────
-    # Layout columns
-    # ────────────────────────────────
-    c1, c2 = st.columns([1.1, 1.9], gap="large")
 
-    # LEFT PANEL
-    with c1:
-        st.markdown("<div class='left-box'>", unsafe_allow_html=True)
+def _svg_data_uri(svg: str) -> str:
+    return "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode()
 
-        # ────────────────────────────────
-        # HERO LOGO — Tap to upload
-        # ────────────────────────────────
-        logo_dir = os.path.join(BASE_DIR, "assets")
-        os.makedirs(logo_dir, exist_ok=True)
-        saved_logo_path = os.path.join(logo_dir, "uploaded_logo.png")
 
-        st.markdown(
-            """
-            <style>
-            .logo-upload-placeholder {
-                border: 1px dashed """ + pal['input_border'] + """;
-                border-radius: 8px;
-                width: 240px;
-                height: 120px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: """ + pal['muted'] + """;
-                margin: 0 0 8px 0;
-            }
-            .logo-upload-area [data-testid="stFileUploadDropzone"] {
-                display: none !important;
-            }
-            #logo_upload { visibility:hidden; height:0; }
-            .block-container input[type="file"] { display:none !important; }
-            </style>
-            """,
-            unsafe_allow_html=True,
-        )
+# Line icons (24x24, stroke): one logo per vertical.
+_VERTICAL_ICON_PATHS = {
+    "ai tools": '<rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/>',
+    "executive": '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>',
+    "banking": '<path d="M12 3l9 5H3z"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 21h18"/>',
+    "information technology": '<rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/>',
+    "energy": '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+    "automobile": '<path d="M3 17v-4l2.5-5.5h13L21 13v4z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>',
+    "legal": '<path d="M12 3v18M7 21h10M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/>',
+    "retail": '<path d="M6 7h12l1 14H5z"/><path d="M9 7a3 3 0 0 1 6 0"/>',
+}
+_DEFAULT_ICON_PATH = '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'
+# Neon-blue family gradients so each vertical's tile is distinct but on-brand.
+_VERTICAL_GRADIENTS = {
+    "ai tools": ("#1a6dff", "#00c6ff"),
+    "executive": ("#0b2a6b", "#1a6dff"),
+    "banking": ("#1739c9", "#4f7bff"),
+    "information technology": ("#0369a1", "#22d3ee"),
+    "energy": ("#0e7490", "#2dd4bf"),
+    "automobile": ("#1e3a8a", "#60a5fa"),
+    "legal": ("#312e81", "#6d7cff"),
+    "retail": ("#0c4a6e", "#38bdf8"),
+}
+_DEFAULT_GRADIENT = ("#1a6dff", "#00c6ff")
 
-        if os.path.exists(saved_logo_path):
-            display_logo_path = logo_display_path(saved_logo_path)
-            with open(display_logo_path, "rb") as f:
-                logo_base64 = base64.b64encode(f.read()).decode()
-            logo_mime = "image/jpeg" if display_logo_path.lower().endswith((".jpg", ".jpeg")) else "image/png"
-            display_logo = f'<img src="data:{logo_mime};base64,{logo_base64}" style="width:220px;border-radius:8px;" />'
+
+def _vertical_key(sector: str) -> str:
+    s = _clean_label(sector).lower()
+    for key in _VERTICAL_ICON_PATHS:
+        if key in s:
+            return key
+    return ""
+
+
+def vertical_logo(sector: str, size: int = 52) -> str:
+    """Gradient tile with the vertical's white line icon, as an <img> tag."""
+    key = _vertical_key(sector)
+    c1, c2 = _VERTICAL_GRADIENTS.get(key, _DEFAULT_GRADIENT)
+    path = _VERTICAL_ICON_PATHS.get(key, _DEFAULT_ICON_PATH)
+    return icon_tile(path, c1, c2, size, gid=f"g{key.replace(' ', '') or 'default'}")
+
+
+# Icons for the hero's "Try these tasks" cards.
+TASK_ICON_COMPARE = '<rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="16" rx="1.5"/><path d="M5.5 9h2M16.5 9h2M5.5 13h2M16.5 13h2"/>'
+TASK_ICON_BUILD = '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/>'
+
+
+def icon_tile(path: str, c1: str, c2: str, size: int, gid: str = "gt") -> str:
+    svg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">'
+        f'<defs><linearGradient id="{gid}" x1="0" y1="0" x2="1" y2="1">'
+        f'<stop offset="0" stop-color="{c1}"/><stop offset="1" stop-color="{c2}"/></linearGradient></defs>'
+        f'<rect width="48" height="48" rx="11" fill="url(#{gid})"/>'
+        f'<g transform="translate(12 12)" fill="none" stroke="#ffffff" stroke-width="1.8" '
+        f'stroke-linecap="round" stroke-linejoin="round">{path}</g></svg>'
+    )
+    return f'<img src="{_svg_data_uri(svg)}" width="{size}" height="{size}" alt="" style="display:block;border-radius:{size // 4}px;"/>'
+
+
+BRAND_LOGO_SVG = (
+    '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">'
+    '<defs><linearGradient id="aam" x1="0" y1="0" x2="1" y2="1">'
+    '<stop offset="0" stop-color="#1a6dff"/><stop offset="1" stop-color="#00d4ff"/></linearGradient></defs>'
+    '<rect width="40" height="40" rx="10" fill="url(#aam)"/>'
+    # three "agents" on a shelf, the last one leaning: a market of agents
+    '<rect x="9" y="11" width="5" height="18" rx="1.5" fill="#ffffff"/>'
+    '<rect x="16" y="8" width="5" height="21" rx="1.5" fill="#ffffff" fill-opacity="0.85"/>'
+    '<rect x="23.5" y="10" width="5" height="19" rx="1.5" fill="#ffffff" fill-opacity="0.7" transform="rotate(14 26 29)"/>'
+    '<rect x="8" y="30" width="24" height="2.2" rx="1.1" fill="#ffffff"/>'
+    '</svg>'
+)
+
+STATUS_META = {
+    # status -> (label, css class, is_live)
+    "new": ("New", "aw-badge-new", True),
+    "available": ("Available", "aw-badge-live", True),
+    "wip": ("Preview", "aw-badge-soft", True),
+    "being built": ("In development", "aw-badge-soft", True),
+    "coming soon": ("Coming soon", "aw-badge-muted", False),
+}
+
+LAUNCH_PATH_OVERRIDES = {
+    "agent_builder": "/agent_builder",
+    "hf_wrapper": "/hf_inspector",
+    "hf_agent_wrapper": "/hf_inspector",
+    "agent_manager": "/hf_inspector",
+    "credit_appraisal": "/credit_appraisal",
+    "credit_score": "/credit_score",
+    "legal_compliance": "/legal_compliance",
+    "asset_appraisal": "/asset_appraisal",
+    "anti_fraud_kyc": "/anti_fraud_kyc",
+    "it_troubleshooter": "/troubleshooter_agent",
+    "unified_risk_orchestration": "/unified_risk",
+    "chatbot_assistant": "/chatbot_assistant",
+    "real_estate_evaluator": "/real_estate_evaluator",
+    "ceo_driver_dashboard": "/ceo_driver_dashboard",
+    "ceo_driver_seat": "/ceo_driver_dashboard",  # Map computed route to actual page
+}
+LAUNCH_PATH_OVERRIDES.update(CUSTOM_AGENT_LAUNCHES)
+# "Coming soon" agents that already have a preview page.
+PREVIEWABLE_ROUTES = {"chatbot_assistant", "ceo_driver_dashboard", "ceo_driver_seat"}
+# Deploy menu targets: (query value, short tag, label).
+DEPLOY_TARGETS = [
+    ("openstack", "OSK", "OpenStack"),
+    ("aws", "AWS", "Amazon Web Services"),
+    ("gcp", "GCP", "Google Cloud"),
+    ("azure", "AZ", "Microsoft Azure"),
+    ("gpu_cloud", "GPU", "GPU Cloud (rent)"),
+]
+
+
+def build_catalog() -> list[dict]:
+    catalog = []
+    for agent_tuple in AGENTS:
+        if len(agent_tuple) == 7:
+            sector, industry, agent, desc, status, emoji, requires_login = agent_tuple
         else:
-            display_logo = "<div class='logo-upload-placeholder' style='width:220px;height:110px;'>Upload logo</div>"
+            sector, industry, agent, desc, status, emoji = agent_tuple
+            requires_login = False  # Default to no login for old format
+        status_norm = str(status).strip().lower()
+        label, badge_cls, is_live = STATUS_META.get(status_norm, (str(status), "aw-badge-soft", True))
+        route_name = compute_route_name(agent)
+        launch_path = LAUNCH_PATH_OVERRIDES.get(route_name, f"/{route_name}")
+        launchable = is_live or route_name in PREVIEWABLE_ROUTES
+        url = f"?agent={route_name}&stage=login" if requires_login else _launch_href(launch_path)
+        if not launchable:
+            cta = "Coming soon"
+        elif status_norm in {"wip", "coming soon", "being built"}:
+            cta = "Preview"
+        else:
+            cta = "Launch free"
+        fb = feedback_data.get(agent, {"rating": 0, "users": 0, "comments": []})
+        catalog.append({
+            "route": route_name,
+            "name": _clean_label(agent),
+            "industry": _clean_label(industry),
+            "sector": _clean_label(sector) or "Other",
+            "sector_raw": sector,
+            "desc": str(desc),
+            "status_label": label,
+            "badge_cls": badge_cls,
+            "live": is_live,
+            "launchable": launchable,
+            "url": url,
+            "cta": cta,
+            "requires_login": bool(requires_login),
+            "rating": float(fb.get("rating", 0) or 0),
+            "users": int(fb.get("users", 0) or 0),
+        })
+    return catalog
 
+
+def _rating_html(item: dict) -> str:
+    if not item["rating"]:
+        return "<span class='aw-rating'><span class='aw-rating-none'>Not yet rated</span></span>"
+    full = int(round(item["rating"]))
+    return (
+        "<span class='aw-rating'>"
+        f"<b>{item['rating']:.1f}</b>"
+        f"<span class='aw-stars'>{'★' * full}<span class='aw-stars-off'>{'★' * (5 - full)}</span></span>"
+        f"<span class='aw-rating-n'>({item['users']})</span></span>"
+    )
+
+
+def _tags_html(item: dict) -> str:
+    tags = "<span class='aw-tag aw-tag-free'>Free</span><span class='aw-tag'>Runs in sandbox</span>"
+    if item["requires_login"]:
+        tags += "<span class='aw-tag'>Sign-in required</span>"
+    return f"<div class='aw-tags'>{tags}</div>"
+
+
+def _detail_href(item: dict) -> str:
+    return f"?view={html.escape(item['route'])}"
+
+
+def _title_html(item: dict) -> str:
+    """Product titles open the agent's detail page, like a marketplace listing."""
+    return f"<a class='aw-title' href='{_detail_href(item)}' target='_self'>{html.escape(item['name'])}</a>"
+
+
+def _cta_html(item: dict) -> str:
+    e = html.escape
+    if item["launchable"]:
+        return f"<a class='aw-cta' href='{e(item['url'])}' target='_self'>{e(item['cta'])}</a>"
+    return f"<span class='aw-cta aw-cta-off'>{e(item['cta'])}</span>"
+
+
+def _deploy_html(item: dict) -> str:
+    """Pure-HTML dropdown (<details>) listing the cloud deploy targets."""
+    if not item["launchable"]:
+        return ""
+    links = "".join(
+        f"<a href='{_launch_href('/deployment_in_production')}?agent={html.escape(item['route'])}&amp;target={value}' target='_self'>"
+        f"<i>{tag}</i>{label}</a>"
+        for value, tag, label in DEPLOY_TARGETS
+    )
+    return (
+        "<details class='aw-deploy'><summary>Deploy ▾</summary>"
+        f"<div class='aw-deploy-menu'><div class='aw-deploy-head'>Deploy to</div>{links}</div></details>"
+    )
+
+
+def top_card_html(item: dict, rank: int) -> str:
+    """AWS-style 'most subscribed' card."""
+    return (
+        "<div class='aw-card'>"
+        "<div class='aw-card-top'>"
+        f"<div class='aw-logo'>{vertical_logo(item['sector_raw'], size=46)}</div>"
+        f"<span class='aw-rank'>Top {rank}</span>"
+        "</div>"
+        f"<div class='aw-by'>Built by: Open AIgents · {html.escape(item['industry'])}</div>"
+        f"{_title_html(item)}"
+        f"{_rating_html(item)}"
+        f"{_tags_html(item)}"
+        f"<div class='aw-desc'>{html.escape(item['desc'])}</div>"
+        f"<div class='aw-card-actions'>{_cta_html(item)}{_deploy_html(item)}</div>"
+        "</div>"
+    )
+
+
+def list_row_html(item: dict) -> str:
+    """AWS-style search-result row."""
+    return (
+        "<div class='aw-row'>"
+        f"<div class='aw-logo'>{vertical_logo(item['sector_raw'], size=52)}</div>"
+        "<div class='aw-row-main'>"
+        f"{_title_html(item)}"
+        f"<div class='aw-by'>By Open AIgents · {html.escape(item['industry'])}</div>"
+        f"<div class='aw-desc aw-desc-row'>{html.escape(item['desc'])}</div>"
+        f"{_tags_html(item)}"
+        "</div>"
+        "<div class='aw-row-side'>"
+        f"<span class='aw-badge {item['badge_cls']}'>{html.escape(item['status_label'])}</span>"
+        f"{_rating_html(item)}"
+        f"<div class='aw-card-actions'>{_cta_html(item)}{_deploy_html(item)}</div>"
+        "</div>"
+        "</div>"
+    )
+
+
+def render_marketplace_css():
+    accent = pal["accent"]
+    st.markdown(
+        f"""
+<style>
+.block-container, [data-testid="stMainBlockContainer"] {{ max-width: 1320px !important; padding-top: 1rem !important; }}
+[data-testid="stHeader"] {{ display: none !important; }}
+/* Dark top bar */
+.st-key-aw_header {{
+    background: #0b1424; border-radius: 10px; padding: 0.6rem 1.1rem 0.75rem 1.1rem; margin-bottom: 0; gap: 0.35rem !important;
+    border-bottom: 2px solid {accent}; box-shadow: 0 6px 24px -12px rgba(26,109,255,0.7);
+}}
+.st-key-aw_header p, .st-key-aw_header span, .st-key-aw_header label {{ color:#e6edf7 !important; }}
+.aw-brand {{ display:flex; align-items:center; gap:0.6rem; text-decoration:none !important; }}
+.aw-word {{ font-size:1.25rem; font-weight:700; color:#ffffff !important; letter-spacing:-0.01em; line-height:1; }}
+.aw-word b {{ color:#3ea6ff !important; text-shadow:0 0 12px rgba(0,170,255,0.65); }}
+.aw-word small {{ display:block; font-size:0.66rem; font-weight:500; color:#8fb3d9 !important; letter-spacing:0.08em; text-transform:uppercase; margin-top:3px; }}
+.aw-nav {{ display:flex; gap:1.5rem; flex-wrap:wrap; padding:0.45rem 0 0.15rem 0; }}
+.aw-nav a {{ color:#e6edf7 !important; font-size:0.84rem; font-weight:600; text-decoration:none !important; }}
+.aw-nav a:hover {{ color:#3ea6ff !important; text-decoration:none; }}
+.aw-nav .aw-nav-right {{ margin-left:auto; display:flex; gap:1.5rem; }}
+/* Hero */
+.st-key-aw_hero {{
+    background: {pal['hero_bg']};
+    border-radius: 0 0 16px 16px; padding: 2rem 2rem 1.5rem 2rem; margin-bottom: 1.5rem;
+}}
+.st-key-aw_hero [data-testid="stVerticalBlock"] {{ max-width: 1040px; margin: 0 auto; }}
+.aw-eyebrow {{ text-align:center; font-weight:600; font-size:0.92rem; color:{pal['hero_text']} !important; }}
+.aw-eyebrow i {{ color:{accent}; font-style:normal; text-shadow:0 0 10px rgba(26,109,255,0.5); }}
+.aw-hero-title {{ text-align:center; font-size:1.9rem !important; font-weight:700 !important; color:{pal['hero_text']} !important; margin:0.35rem 0 1.1rem 0 !important; }}
+.st-key-aw_hero [data-baseweb="input"] {{
+    border-radius: 10px !important; border: 1px solid {pal['hero_border']} !important; background:{pal['hero_card']} !important; overflow:hidden;
+}}
+.st-key-aw_hero [data-baseweb="input"]:focus-within {{ border-color:{accent} !important; box-shadow:0 0 0 3px rgba(26,109,255,0.18), 0 0 22px rgba(0,170,255,0.35); }}
+.st-key-aw_hero [data-baseweb="input"] input {{
+    height: 54px; font-size: 1rem !important; color:{pal['hero_text']} !important; background:{pal['hero_card']} !important; border:none !important; padding-left:1rem !important;
+}}
+.aw-disclaimer {{ font-size:0.76rem; color:{pal['muted']} !important; margin-top:0.3rem; }}
+.aw-h3 {{ font-size:1.15rem; font-weight:700; color:{pal['hero_text']} !important; margin:1.4rem 0 0.7rem 0; }}
+.aw-tasks {{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }}
+.aw-task {{ display:flex; gap:0.9rem; align-items:flex-start; background:{pal['hero_card']}; border:1px solid {pal['hero_border']}; border-radius:12px; padding:1rem 1.1rem; text-decoration:none !important; transition: border-color .15s, box-shadow .15s; }}
+.aw-task:hover {{ border-color:{accent}; box-shadow:0 0 0 1px {accent}, 0 8px 24px -12px rgba(26,109,255,0.55); }}
+.aw-task-icon {{ flex:none; border-radius:8px; box-shadow:0 0 12px rgba(0,170,255,0.5); }}
+.aw-task b {{ display:block; color:{pal['hero_text']} !important; font-size:0.95rem; }}
+.aw-task span {{ color:{pal['subtext']} !important; font-size:0.9rem; }}
+.aw-task em {{ margin-left:auto; color:{accent} !important; font-size:0.78rem; white-space:nowrap; }}
+/* Section headings */
+.aw-h2 {{ text-align:center; font-size:1.45rem; font-weight:700; color:{pal['text']} !important; margin:1.8rem 0 0.6rem 0; }}
+/* Top cards */
+.aw-cards {{ display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-top:0.8rem; }}
+.aw-card {{ background:{pal['card']}; border:1px solid {pal['border']}; border-radius:14px; padding:1.1rem 1.2rem; display:flex; flex-direction:column; gap:0.5rem; min-height:290px; transition: box-shadow .15s, border-color .15s; }}
+.aw-card:hover {{ border-color:{accent}; box-shadow:0 10px 30px -14px rgba(26,109,255,0.55); }}
+.aw-card-top {{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.3rem; }}
+.aw-logo {{ padding:4px; border:1px solid {pal['border']}; border-radius:12px; background:{pal['card']}; flex:none; }}
+.aw-rank {{ background:{accent}; color:#ffffff !important; font-size:0.75rem; font-weight:700; padding:2px 9px; border-radius:6px; box-shadow:0 0 12px rgba(26,109,255,0.5); }}
+.aw-by {{ font-size:0.8rem; color:{pal['muted']} !important; }}
+.aw-title {{ font-size:1.02rem; font-weight:700; color:{accent} !important; line-height:1.3; text-decoration:none !important; }}
+a.aw-title:hover {{ text-decoration:underline !important; }}
+.aw-title-off {{ color:{pal['text']} !important; }}
+.aw-rating {{ display:flex; align-items:center; gap:6px; font-size:0.85rem; }}
+.aw-rating b {{ color:{pal['text']} !important; }}
+.aw-stars {{ color:{accent} !important; letter-spacing:1px; font-size:1rem; text-shadow:0 0 8px rgba(26,109,255,0.35); }}
+.aw-stars-off {{ color:{pal['border']} !important; text-shadow:none; }}
+.aw-rating-n {{ color:{accent} !important; font-size:0.8rem; }}
+.aw-rating-none {{ color:{pal['muted']} !important; font-size:0.8rem; }}
+.aw-tags {{ display:flex; gap:6px; flex-wrap:wrap; }}
+.aw-tag {{ font-size:0.74rem; padding:2px 9px; border-radius:6px; border:1px solid {pal['input_border']}; color:{pal['subtext']} !important; }}
+.aw-tag-free {{ border-color:{accent}; color:{accent} !important; font-weight:600; }}
+.aw-desc {{ font-size:0.86rem; line-height:1.5; color:{pal['subtext']} !important; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }}
+.aw-card .aw-desc {{ flex:1; }}
+.aw-card-actions {{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }}
+.aw-card .aw-card-actions {{ padding-top:0.7rem; border-top:1px solid {pal['border']}; }}
+/* Deploy dropdown */
+.aw-deploy {{ position:relative; }}
+.aw-deploy > summary {{
+    list-style:none; cursor:pointer; user-select:none; font-size:0.84rem; font-weight:600; padding:5px 12px; border-radius:8px;
+    border:1px solid {accent}; color:{accent} !important; background:transparent; white-space:nowrap;
+}}
+.aw-deploy > summary::-webkit-details-marker {{ display:none; }}
+.aw-deploy[open] > summary, .aw-deploy > summary:hover {{ background:rgba(26,109,255,0.08); box-shadow:0 0 14px rgba(26,109,255,0.35); }}
+.aw-deploy-menu {{
+    position:absolute; right:0; top:calc(100% + 6px); z-index:50; min-width:220px; padding:6px;
+    background:{pal['card']}; border:1px solid {pal['border']}; border-radius:10px;
+    box-shadow:0 18px 40px -14px rgba(15,23,42,0.45);
+}}
+.aw-deploy-head {{ font-size:0.7rem; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:{pal['muted']} !important; padding:4px 10px 6px; }}
+.aw-deploy-menu a {{ display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:6px; color:{pal['text']} !important; font-size:0.86rem; text-decoration:none !important; }}
+.aw-deploy-menu a:hover {{ background:rgba(26,109,255,0.08); color:{accent} !important; }}
+.aw-deploy-menu i {{ font-style:normal; font-size:0.66rem; font-weight:700; width:36px; text-align:center; padding:2px 0; border-radius:4px; background:rgba(26,109,255,0.10); color:{accent} !important; }}
+/* Vertical groups (collapsible) */
+.aw-vgroup {{ margin-top:0.9rem; }}
+.aw-vgroup > summary {{
+    list-style:none; cursor:pointer; display:flex; align-items:center; gap:0.75rem; padding:0.75rem 1.1rem;
+    background:{pal['card']}; border:1px solid {pal['border']}; border-radius:12px; transition:border-color .15s, box-shadow .15s;
+}}
+.aw-vgroup > summary::-webkit-details-marker {{ display:none; }}
+.aw-vgroup > summary:hover {{ border-color:{accent}; }}
+.aw-vgroup > summary h3 {{ margin:0 !important; font-size:1.08rem !important; }}
+.aw-vgroup > summary .aw-vcount {{ color:{pal['muted']} !important; font-size:0.84rem; margin-left:auto; }}
+.aw-vgroup > summary::after {{ content:"▾"; color:{pal['muted']}; font-size:1rem; transition:transform .15s; }}
+.aw-vgroup[open] > summary {{ border-radius:12px 12px 0 0; border-color:{pal['border']}; box-shadow:inset 0 -2px 0 {accent}; }}
+.aw-vgroup[open] > summary::after {{ transform:rotate(180deg); color:{accent}; }}
+/* List rows */
+.aw-list {{ background:{pal['card']}; border:1px solid {pal['border']}; border-top:none; border-radius:0 0 12px 12px; }}
+.aw-row {{ display:flex; gap:1rem; align-items:flex-start; padding:1rem 1.2rem; border-bottom:1px solid {pal['border']}; }}
+.aw-row:last-child {{ border-bottom:none; border-radius:0 0 12px 12px; }}
+.aw-row:hover {{ background:{pal['table_hover_bg']}; }}
+.aw-row-main {{ flex:1; display:flex; flex-direction:column; gap:0.3rem; min-width:0; }}
+.aw-desc-row {{ -webkit-line-clamp:2; }}
+.aw-row-side {{ display:flex; flex-direction:column; align-items:flex-end; gap:0.5rem; flex:none; min-width:150px; }}
+.aw-badge {{ font-size:0.72rem; font-weight:600; padding:2px 9px; border-radius:999px; }}
+.aw-badge-new {{ background:rgba(0,190,255,0.12); color:#0891d1 !important; border:1px solid rgba(0,190,255,0.4); }}
+.aw-badge-live {{ background:rgba(26,109,255,0.10); color:{accent} !important; border:1px solid rgba(26,109,255,0.35); }}
+.aw-badge-soft {{ background:{pal['bg']}; color:{pal['subtext']} !important; border:1px solid {pal['border']}; }}
+.aw-badge-muted {{ color:{pal['muted']} !important; border:1px dashed {pal['input_border']}; }}
+.aw-cta {{ font-size:0.84rem; font-weight:600; padding:6px 14px; border-radius:8px; white-space:nowrap; background:{accent}; color:#ffffff !important; text-decoration:none !important; box-shadow:0 0 14px rgba(26,109,255,0.35); }}
+.aw-cta:hover {{ filter:brightness(1.08); }}
+.aw-cta-off {{ background:transparent; color:{pal['muted']} !important; border:1px solid {pal['border']}; box-shadow:none; }}
+.st-key-aw_filters {{ position: sticky; top: 1rem; }}
+.aw-quote {{ background:{pal['card']}; border:1px solid {pal['border']}; border-left:3px solid {accent}; border-radius:8px; padding:0.7rem 0.9rem; margin-bottom:0.6rem; font-size:0.88rem; }}
+.aw-visitors {{ font-size:0.8rem; color:{pal['muted']} !important; text-align:center; margin-top:1.5rem; }}
+@media (max-width: 1100px) {{ .aw-cards {{ grid-template-columns:repeat(2,1fr); }} }}
+@media (max-width: 700px) {{ .aw-cards, .aw-tasks {{ grid-template-columns:1fr; }} .aw-row {{ flex-wrap:wrap; }} .aw-row-side {{ align-items:flex-start; }} }}
+</style>
+""",
+        unsafe_allow_html=True,
+    )
+
+
+def _visitor_stats() -> dict:
+    """Get visitor stats or create mock data for demonstration."""
+    try:
+        response = requests.get(f"{API_URL}/v1/monitoring/visitors/stats", timeout=2)
+        if response.status_code == 200:
+            stats = response.json()
+            # Only use real data if we have visitors
+            if stats.get("total_visitors", 0) > 0:
+                return stats
+    except Exception:
+        pass
+    return {
+        "total_visitors": 42,
+        "total_visits": 156,
+        "countries": {"United States": 25, "Canada": 8, "United Kingdom": 5, "Germany": 4, "France": 3},
+    }
+
+
+GENERAL_FEEDBACK_FILE = Path(TMP_FEEDBACK_DIR) / "general_feedback.json"
+
+
+def load_general_feedback() -> list:
+    try:
+        if GENERAL_FEEDBACK_FILE.exists():
+            with open(GENERAL_FEEDBACK_FILE, "r", encoding="utf-8") as f:
+                return json.load(f).get("comments", [])
+    except Exception:
+        pass
+    return []
+
+
+def save_general_feedback(comments: list) -> None:
+    try:
+        with open(GENERAL_FEEDBACK_FILE, "w", encoding="utf-8") as f:
+            json.dump({"comments": comments}, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"Error saving feedback: {e}")
+
+
+def _popularity(item: dict):
+    return (not item["launchable"], -item["rating"], -item["users"], item["status_label"] != "New", item["name"])
+
+
+def render_market_header():
+    """Dark top bar shared by the market and agent detail pages."""
+    with st.container(key="aw_header"):
+        brand, tog = st.columns([8, 1], vertical_alignment="center")
+        with brand:
+            st.markdown(
+                f"<a class='aw-brand' href='/' target='_self'><img src='{_svg_data_uri(BRAND_LOGO_SVG)}' width='34' height='34' alt=''/>"
+                "<span class='aw-word'>ai agent <b>market</b><small>Free agents for every vertical</small></span></a>",
+                unsafe_allow_html=True,
+            )
+        with tog:
+            render_theme_toggle(label="Dark", key="aw_theme_toggle")
         st.markdown(
-            f"""
-            <div id="logo_click_area" style="cursor:pointer; text-align:left;">
-                {display_logo}
-                <p style='font-size:11px;color:{pal['muted']};margin-top:4px;'>Click to replace logo</p>
-            </div>
-            """,
+            "<nav class='aw-nav'>"
+            "<a href='#browse-agents' target='_self'>Verticals</a>"
+            "<a href='#most-popular' target='_self'>Most popular</a>"
+            "<a href='/agent_builder' target='_self'>Agent Builder</a>"
+            "<a href='/hf_inspector' target='_self'>Agent Manager</a>"
+            "<a href='/ceo_driver_dashboard' target='_self'>CEO Dashboard</a>"
+            "<span class='aw-nav-right'><a href='/agent_builder' target='_self'>Publish an agent</a>"
+            "<a href='/deployment_in_production' target='_self'>Deploy to production</a></span>"
+            "</nav>",
             unsafe_allow_html=True,
         )
 
-        upload_label = "logo_upload_portal"
-        uploaded_logo = st.file_uploader(
-            upload_label,
-            type=["png", "jpg", "jpeg", "webp"],
-            key="logo_upload",
+
+def group_by_vertical(catalog: list[dict]) -> tuple[dict[str, list[dict]], list[str]]:
+    """Return {vertical: items} and the verticals ordered by most live agents."""
+    verticals: dict[str, list[dict]] = {}
+    for item in catalog:
+        verticals.setdefault(item["sector"], []).append(item)
+    return verticals, sorted(verticals, key=lambda v: (-sum(i["live"] for i in verticals[v]), v))
+
+
+def render_marketplace():
+    render_marketplace_css()
+    catalog = build_catalog()
+    verticals, vertical_names = group_by_vertical(catalog)
+    render_market_header()
+
+    # ── Hero: search + suggested tasks ──
+    with st.container(key="aw_hero"):
+        st.markdown(
+            "<div class='aw-eyebrow'><i>✦</i> Agent mode</div>"
+            f"<h1 class='aw-hero-title'>Find your perfect match from {len(catalog)} free AI agents</h1>",
+            unsafe_allow_html=True,
+        )
+        query = st.text_input(
+            "Search agents",
+            placeholder="Describe the agent you're looking for, e.g. \"credit risk\", \"fraud\", \"IT incidents\"…",
+            key="aw_search",
             label_visibility="collapsed",
         )
-
         st.markdown(
-            f"""
-            <style>
-            div[aria-label="{upload_label}"] {{
-                height: 0 !important;
-                opacity: 0 !important;
-                overflow: hidden !important;
-            }}
-            </style>
-            """,
+            "<div class='aw-disclaimer'>Every agent is free and runs inside your sandbox. Do not paste confidential data into demo agents.</div>"
+            "<div class='aw-h3'>Try these tasks</div>"
+            "<div class='aw-tasks'>"
+            f"<a class='aw-task' href='#browse-agents' target='_self'><div class='aw-task-icon'>{icon_tile(TASK_ICON_COMPARE, '#1a6dff', '#00c6ff', 32, gid='tc')}</div>"
+            "<div><b>Compare agents</b><span>Browse every agent in a vertical side by side.</span></div><em>By vertical</em></a>"
+            f"<a class='aw-task' href='/agent_builder' target='_self'><div class='aw-task-icon'>{icon_tile(TASK_ICON_BUILD, '#3a5bff', '#00c6ff', 32, gid='tb')}</div>"
+            "<div><b>Build your own agent</b><span>Compose reusable functions into a new agent.</span></div><em>Agent Builder</em></a>"
+            "</div>",
             unsafe_allow_html=True,
         )
 
-        st.markdown(
-            """
-            <script>
-            const logoArea = document.getElementById("logo_click_area");
-            if (logoArea) {
-                logoArea.onclick = function() {
-                    const hiddenWrapper = document.querySelector('div[aria-label="logo_upload_portal"]');
-                    const hiddenInput = hiddenWrapper ? hiddenWrapper.querySelector('input[type="file"]') : null;
-                    if (hiddenInput) hiddenInput.click();
-                };
-            }
-            </script>
-            """,
-            unsafe_allow_html=True,
-        )
-        if uploaded_logo is not None:
-            with open(saved_logo_path, "wb") as f:
-                f.write(uploaded_logo.read())
-            for thumb_path in Path(saved_logo_path).parent.glob(f"{Path(saved_logo_path).stem}_thumb.*"):
-                thumb_path.unlink()
-            st.success("✅ Logo updated!")
-            st.rerun()
+    q = (query or "").strip().lower()
 
-        # ────────────────────────────────
-        # HERO + FOUNDATIONAL MESSAGE
-        # ────────────────────────────────
-        st.markdown(
-            """
-            <div class="eyebrow">Open AI Agent Sandbox</div>
-            <h1 class="hero-title">An AI foundry, built by the people, for the people</h1>
-            <div class="hero-sub">Take an agent from idea to production: explainable, open and privacy-first.</div>
+    def matches_query(item: dict) -> bool:
+        if not q:
+            return True
+        hay = " ".join([item["name"], item["industry"], item["sector"], item["desc"]]).lower()
+        return all(term in hay for term in q.split())
 
-            <div class="hero-section">
-                <span class="label">What</span>
-                <p>The <b>Open AI Agent Sandbox</b> is a foundry where AI ideas become explainable, open, working agents.</p>
-            </div>
-            <div class="hero-section">
-                <span class="label">Why it matters</span>
-                <p>No CAPEX and no gatekeepers: <b>GPU-for-rent compute</b>, <b>open-source models</b> and <b>privacy-first design</b>. Build faster and keep ownership of your data.</p>
-            </div>
-            <div class="hero-section">
-                <span class="label">How</span>
-                <p>Start from a <b>ready-to-use agent template</b>. Customize, test, improve, and export it once it is production-ready.</p>
-            </div>
-            <div class="hero-section">
-                <span class="label">Where</span>
-                <p>Inside your <b>GPU-for-rent cloud sandbox</b>, a secure, sovereign environment for building and evolving models.</p>
-            </div>
-            <div class="hero-section" style="margin-bottom:1.25rem;">
-                <span class="label">For whom</span>
-                <p>Builders, educators and enterprises who believe AI should serve the many, not the few.</p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+    # ── Most popular, tabbed by vertical (hidden while searching) ──
+    if not q:
+        st.markdown("<div id='most-popular' class='aw-h2'>The most popular agents this month</div>", unsafe_allow_html=True)
+        tab_verticals = [v for v in vertical_names if any(i["launchable"] for i in verticals[v])][:6]
+        tabs = st.tabs(["All agents"] + tab_verticals)
+        for tab, scope in zip(tabs, [catalog] + [verticals[v] for v in tab_verticals]):
+            with tab:
+                top = sorted(scope, key=_popularity)[:4]
+                st.markdown(
+                    f"<div class='aw-cards'>{''.join(top_card_html(i, n) for n, i in enumerate(top, 1))}</div>",
+                    unsafe_allow_html=True,
+                )
 
-        # CTA
-        cta1, cta2 = st.columns(2)
-        with cta1:
-            if st.button("Start building", key="btn_start_build_now", type="primary", use_container_width=True):
-                st.session_state.stage = "agents"
-                st.rerun()
-        with cta2:
-            if st.button(
-                "CEO dashboard preview",
-                key="btn_preview_ceo",
-                help="Open CEO driver DASHBOARD",
-                use_container_width=True,
-            ):
-                st.switch_page("pages/ceo_driver_dashboard.py")
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # RIGHT PANEL — Neon Interactive Agent List
-    # ────────────────────────────────
-    with c2:
-        # Inject CSS once
-        st.markdown(f"""
-        <style>
-        .neon-frame {{
-            padding: 0.25rem 0 !important;
-            margin-top: 0.5rem;
-            margin-bottom: 2rem;
-        }}
-        .agent-card {{
-            border-bottom: 1px solid {pal['border']};
-            padding: 0.85rem 1.2rem;
-            background: transparent;
-            transition: background 0.15s ease;
-        }}
-        .agent-card:last-child {{ border-bottom: none; }}
-        .agent-card:hover {{ background: {pal['table_hover_bg']}; }}
-        .agent-header-bar {{
-            display: flex;
-            gap: 0;
-            background: {pal['table_head_bg']};
-            color: {pal['muted']};
-            padding: 0.6rem 1.2rem;
-            border-bottom: 1px solid {pal['border']};
-            font-size: 0.72rem;
-            font-weight: 600;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-        }}
-        .agent-header-bar span {{ color: {pal['muted']} !important; }}
-        .launchbtn {{ padding: 5px 14px; font-size: 0.85rem; white-space: nowrap; }}
-        .stApp .launchbtn.launch-disabled {{
-            cursor: not-allowed;
-            border-style: dashed !important;
-            color: {pal['muted']} !important;
-            background: transparent !important;
-        }}
-        .status-pill {{
-            display: inline-block;
-            font-size: 0.75rem;
-            font-weight: 500;
-            padding: 2px 8px;
-            border-radius: 999px;
-            border: 1px solid {pal['border']};
-            white-space: nowrap;
-        }}
-        .agent-comments details {{
-            cursor: pointer;
-            color: {pal['subtext']};
-            font-weight: 500;
-            font-size: 0.85rem;
-        }}
-        .agent-comments summary {{
-            list-style: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 48px;
-        }}
-        .agent-comments summary::-webkit-details-marker {{
-            display: none;
-        }}
-        .agent-comments details[open] {{
-            background: {pal['bg']};
-            border: 1px solid {pal['border']};
-            border-radius: 6px;
-            padding: 0.35rem;
-        }}
-        .agent-comments .comment-list {{
-            margin: 0.4rem 0 0;
-            padding-left: 1rem;
-            max-height: 180px;
-            overflow-y: auto;
-            font-size: 0.82rem;
-            color: {pal['subtext']};
-            text-align: left;
-        }}
-        .agent-comments .comment-list li {{
-            margin-bottom: 0.4rem;
-            border-left: 2px solid {pal['border']};
-            padding: 0.2rem 0 0.2rem 0.5rem;
-        }}
-        </style>
-        """, unsafe_allow_html=True)
-
-        # ============================================================
-        # Build all agent HTML dynamically into one single string
-        # ============================================================
-        import re
-
-        # Column flex ratios shared by the header bar and every agent row.
-        header_bar = (
-            "<div class='agent-header-bar'>"
-            "<span style='flex:1.2;'>Industry</span>"
-            "<span style='flex:1.5;'>Agent</span>"
-            "<span style='flex:3;'>Description</span>"
-            "<span style='flex:1;text-align:center;'>Status</span>"
-            "<span style='flex:0.6;text-align:center;'>Users</span>"
-            "<span style='flex:1;text-align:center;'>Feedback</span>"
-            "<span style='flex:0.9;text-align:center;'>Rating</span>"
-            "<span style='flex:0.8;text-align:center;'></span>"
-            "</div>"
-        )
-
-        html_agents = ""
-        launch_path_overrides = {
-            "agent_builder": "/agent_builder",
-            "hf_wrapper": "/hf_inspector",
-            "agent_manager": "/hf_inspector",
-            "credit_appraisal": "/credit_appraisal",
-            "credit_score": "/credit_score",
-            "legal_compliance": "/legal_compliance",
-            "asset_appraisal": "/asset_appraisal",
-            "anti_fraud_kyc": "/anti_fraud_kyc",
-            "it_troubleshooter": "/troubleshooter_agent",
-            "unified_risk_orchestration": "/unified_risk",
-            "chatbot_assistant": "/chatbot_assistant",
-            "real_estate_evaluator": "/real_estate_evaluator",
-            "ceo_driver_dashboard": "/ceo_driver_dashboard",
-            "ceo_driver_seat": "/ceo_driver_dashboard",  # Map computed route to actual page
-        }
-        launch_path_overrides.update(CUSTOM_AGENT_LAUNCHES)
-        # Handle both old tuple format (6 items) and new format (7 items with requires_login)
-        for agent_tuple in AGENTS:
-            if len(agent_tuple) == 7:
-                sector, industry, agent, desc, status, emoji, requires_login = agent_tuple
-            else:
-                sector, industry, agent, desc, status, emoji = agent_tuple
-                requires_login = False  # Default to no login for old format
-            # Skip Agent Builder since it has its own featured frame
-            if "Agent Builder" in agent:
-                continue
-            # ----- status color mapping (muted: accent for live, grey otherwise) -----
-            if status == "NEW":
-                status_label = "New"; status_color = pal["accent"]
-            elif status == "Available":
-                status_label = "Available"; status_color = pal["accent_alt"]
-            elif status == "Coming Soon":
-                status_label = "Coming soon"; status_color = pal["muted"]
-            elif status == "Being Built":
-                status_label = "In development"; status_color = pal["muted"]
-            elif status == "WIP":
-                status_label = "Preview"; status_color = pal["muted"]
-            else:
-                status_label = status; status_color = pal["muted"]
-
-            # ----- feedback / usage data -----
-            fb = feedback_data.get(agent, {"rating": 0, "users": 0, "comments": []})
-            users = fb.get("users", 0)
-            comments = fb.get("comments", [])
-            comment_count = len(comments)
-            rating = float(fb.get("rating", 0) or 0)
-            rating_html = render_stars(rating) if rating else f"<span style='color:{pal['muted']};'>—</span>"
-            rating_text = f"{rating:.1f}/5" if rating else "—"
-            # Latest comment (most recent) - show under comment bubble
-            latest_comment = html.escape(comments[-1]) if comments else "No feedback yet."
-            # Comment list in dropdown (oldest to newest, reversed so newest shows first)
-            comment_items = "".join(f"<li>{html.escape(c)}</li>" for c in reversed(comments))
-            comment_list_html = comment_items or "<li>No feedback yet.</li>"
-
-            # ----- build clean route name -----
-            route_name = compute_route_name(agent)
-            launch_path = launch_path_overrides.get(route_name, f"/{route_name}")
-            
-            # Check if login is required
-            if requires_login:
-                # Route through login page with agent info
-                launch_url = f"?agent={route_name}&stage=login"
-                # Store agent info for login redirect
-                st.session_state[f"login_target_{route_name}"] = route_name
-            else:
-                launch_url = _launch_href(launch_path)
-            
-            status_norm = status.strip().lower()
-            is_launchable = status_norm in {"available", "being built", "new"}
-            if route_name == "it_troubleshooter":
-                button_label = "Open"
-            elif status_norm == "available":
-                button_label = "Open"
-            elif status_norm == "new":
-                button_label = "Open"
-            elif status_norm == "coming soon":
-                # Special cases: Chatbot Assistant and CEO driver DASHBOARD have preview available
-                if route_name == "chatbot_assistant":
-                    button_label = "Preview"
-                    launch_url = _launch_href("/chatbot_assistant")
-                    is_launchable = True
-                elif route_name in {"ceo_driver_dashboard", "ceo_driver_seat"}:
-                    button_label = "Preview"
-                    launch_url = _launch_href("/ceo_driver_dashboard")
-                    is_launchable = True
-                else:
-                    button_label = "Coming soon"
-                    is_launchable = False
-            elif status_norm in {"wip"}:
-                button_label = "Preview"
-                if route_name in {"ceo_driver_dashboard", "ceo_driver_seat"}:
-                    launch_url = _launch_href("/ceo_driver_dashboard")
-                is_launchable = True
-            else:
-                button_label = "Preview"
-
-            # Add login indicator to button if login required
-            if requires_login and is_launchable:
-                button_label = f"{button_label} · sign in"
-
-            action_html = (
-                f"<a class='launchbtn' href='{launch_url}'>{button_label}</a>"
-                if is_launchable
-                else "<span class='launchbtn launch-disabled'>Soon</span>"
+    # ── Agents listed per vertical, with refine panel ──
+    st.markdown(
+        f"<div id='browse-agents' class='aw-h2' style='margin-top:2.5rem;'>{'Search results' if q else 'Browse agents by vertical'}</div>",
+        unsafe_allow_html=True,
+    )
+    # Breadcrumb links from a detail page arrive as ?vertical=<name>.
+    qp_vertical = st.query_params.get("vertical")
+    if qp_vertical in vertical_names and "aw_vertical" not in st.session_state:
+        st.session_state["aw_vertical"] = qp_vertical
+    side, main = st.columns([1, 3.4], gap="large")
+    with side:
+        with st.container(key="aw_filters", border=True):
+            st.markdown("**Refine results**")
+            vertical_choice = st.selectbox(
+                "Vertical",
+                ["All verticals"] + vertical_names,
+                format_func=lambda v: v if v == "All verticals" else f"{v} ({len(verticals[v])})",
+                key="aw_vertical",
             )
+            live_only = st.checkbox("Ready to run only", key="aw_live_only")
+            sort_by = st.selectbox("Sort by", ["Popularity", "Rating", "Name"], key="aw_sort")
 
-            # ----- append HTML for this agent card -----
-            # Custom agents come from user-authored blueprints, so their text is
-            # escaped before it reaches the card markup.
-            industry_html = html.escape(str(industry))
-            agent_html = html.escape(str(agent))
-            desc_html = html.escape(str(desc))
-            status_html = html.escape(str(status_label))
-            html_agents += f"""
-            <div class="agent-card">
-                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;font-size:0.9rem;">
-                    <div style="flex:1.2;color:{pal['muted']};">{industry_html}</div>
-                    <div style="flex:1.5;font-weight:600;color:{pal['text']};">{agent_html}</div>
-                    <div style="flex:3;color:{pal['subtext']};padding-right:1rem;">{desc_html}</div>
-                    <div style="flex:1;text-align:center;"><span class="status-pill" style="color:{status_color};">{status_html}</span></div>
-                    <div style="flex:0.6;text-align:center;color:{pal['subtext']};">{users}</div>
-                    <div class="agent-comments" style="flex:1;text-align:center;">
-                        <details>
-                            <summary>{comment_count} comments</summary>
-                            <ul class="comment-list">
-                                {comment_list_html}
-                            </ul>
-                        </details>
-                        <!-- Latest comment displayed under comment count -->
-                        <div style="margin-top:0.35rem;font-size:0.75rem;color:{pal['muted']};max-width:200px;text-align:left;word-wrap:break-word;">
-                            &ldquo;{latest_comment[:80]}{'...' if len(latest_comment) > 80 else ''}&rdquo;
-                        </div>
-                    </div>
-                    <div style="flex:0.9;text-align:center;line-height:1.4;">
-                        {rating_html}
-                        <div style="font-size:0.78rem;color:{pal['muted']};">{rating_text}</div>
-                    </div>
-                    <div style="flex:0.8;text-align:center;">
-                        {action_html}
-                    </div>
-                </div>
-            </div>
-            """
+    sort_key = {
+        "Popularity": _popularity,
+        "Rating": lambda i: (-i["rating"], -i["users"], i["name"]),
+        "Name": lambda i: i["name"].lower(),
+    }[sort_by]
 
-        # ============================================================
-        # Agent Builder Featured Frame (separate neon frame)
-        # ============================================================
-        builder_tile = (
-            f"background:{pal['bg']};border-radius:6px;padding:0.8rem 1rem;border:1px solid {pal['border']};"
-        )
-        st.markdown(f"""
-        <div class="neon-header">Agent Builder</div>
-        <div class="neon-frame" style="padding: 1.5rem; margin-bottom: 2.5rem;">
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: center;">
-                <div>
-                    <h3 style="font-size: 1.1rem; font-weight: 600; margin: 0 0 0.5rem 0;">
-                        Compose custom agents from reusable functions
-                    </h3>
-                    <p style="font-size: 0.92rem; line-height: 1.65; margin-bottom: 1rem;">
-                        Combine functions from Hugging Face agents, the Agent Manager and existing agents.
-                        Select functions, configure the agent, and generate production-ready Python code.
-                    </p>
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-top: 1rem;">
-                        <div style="{builder_tile}">
-                            <div style="color:{pal['text']};font-weight:600;font-size:0.88rem;">17+ functions</div>
-                            <div style="color:{pal['muted']};font-size:0.8rem;">HF, Manager and existing agents</div>
-                        </div>
-                        <div style="{builder_tile}">
-                            <div style="color:{pal['text']};font-weight:600;font-size:0.88rem;">Visual builder</div>
-                            <div style="color:{pal['muted']};font-size:0.8rem;">Point-and-click function selection</div>
-                        </div>
-                        <div style="{builder_tile}">
-                            <div style="color:{pal['text']};font-weight:600;font-size:0.88rem;">Code generation</div>
-                            <div style="color:{pal['muted']};font-size:0.8rem;">Production-ready Python</div>
-                        </div>
-                    </div>
-                </div>
-                <div style="text-align: center;">
-                    <a href="/agent_builder" class="launchbtn" style="padding: 10px 24px; font-size: 0.95rem;">
-                        Open Agent Builder
-                    </a>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+    with main:
+        # Collapsible dropdown per vertical: the first group starts open, and
+        # every group opens while a search or vertical filter is active.
+        filtering = bool(q) or vertical_choice != "All verticals" or live_only
+        groups_html = ""
+        shown = 0
+        for vertical in vertical_names:
+            if vertical_choice != "All verticals" and vertical != vertical_choice:
+                continue
+            items = [i for i in verticals[vertical] if matches_query(i) and (i["live"] or not live_only)]
+            if not items:
+                continue
+            items.sort(key=sort_key)
+            is_open = filtering or shown == 0
+            shown += len(items)
+            groups_html += (
+                f"<details class='aw-vgroup'{' open' if is_open else ''}>"
+                "<summary>"
+                f"{vertical_logo(items[0]['sector_raw'], size=32)}"
+                f"<h3>{html.escape(vertical)}</h3>"
+                f"<span class='aw-vcount'>{len(items)} agent{'s' if len(items) != 1 else ''} · {sum(i['live'] for i in items)} ready</span>"
+                "</summary>"
+                f"<div class='aw-list'>{''.join(list_row_html(i) for i in items)}</div>"
+                "</details>"
+            )
+        if groups_html:
+            st.markdown(groups_html, unsafe_allow_html=True)
+        if not shown:
+            st.info("No agents match your filters. Try another keyword or vertical.")
 
-        # ============================================================
-        # Render Agent Library Frame (separate)
-        # ============================================================
+    # ── Community feedback ──
+    st.markdown("<div class='aw-h2' style='margin-top:3rem;'>From the community</div>", unsafe_allow_html=True)
+    all_comments = load_general_feedback()
+    left, right = st.columns([3, 2], gap="large")
+    with left:
+        recent = list(reversed(all_comments))[:3] or ["No feedback yet. Be the first."]
         st.markdown(
-            f"""
-            <div class="neon-header">Agent Library</div>
-            <div class="neon-frame" style="overflow:hidden;">
-                {header_bar}
-                {html_agents}
-            </div>
-            <footer>
-                Open AIgents Sandbox Initiative · DzoanNguyenTran@gmail.com
-            </footer>
-            """,
-            unsafe_allow_html=True
+            "".join(f"<div class='aw-quote'>&ldquo;{html.escape(c)}&rdquo;</div>" for c in recent),
+            unsafe_allow_html=True,
+        )
+    with right:
+        with st.form("aw_feedback_form", clear_on_submit=True, border=False):
+            feedback_text = st.text_area("Share your feedback", placeholder="Which agent should we list next?", height=100)
+            if st.form_submit_button("Send feedback", type="primary", use_container_width=True):
+                if feedback_text.strip():
+                    all_comments.append(feedback_text.strip())
+                    save_general_feedback(all_comments)
+                    st.success("Thanks, your feedback was recorded.")
+                else:
+                    st.warning("Please enter some feedback first.")
+
+    stats = _visitor_stats()
+    countries = sorted((stats.get("countries") or {}).items(), key=lambda x: x[1], reverse=True)[:5]
+    countries_str = " · ".join(f"{html.escape(str(c))} ({n})" for c, n in countries) or "No visitors yet"
+    st.markdown(
+        f"<div class='aw-visitors'>{stats.get('total_visitors', 0)} visitors · {stats.get('total_visits', 0)} visits · {countries_str}</div>"
+        f"<footer>{MARKET_NAME} · Open AIgents Sandbox Initiative · DzoanNguyenTran@gmail.com</footer>",
+        unsafe_allow_html=True,
+    )
+
+
+def render_agent_detail_css():
+    accent = pal["accent"]
+    st.markdown(
+        f"""
+<style>
+.ad-crumbs {{ font-size:0.88rem; margin:1.1rem 0 1rem 0; color:{pal['muted']} !important; }}
+.ad-crumbs a {{ color:{accent} !important; text-decoration:underline !important; }}
+.ad-crumbs span {{ margin:0 0.45rem; color:{pal['muted']} !important; }}
+.ad-head {{ display:flex; gap:1.1rem; align-items:center; margin-bottom:0.9rem; }}
+.ad-logo {{ padding:10px; border:1px solid {pal['border']}; border-radius:14px; background:{pal['card']}; }}
+.ad-title {{ font-size:1.65rem !important; font-weight:700 !important; margin:0 !important; color:{pal['text']} !important; }}
+.ad-title small {{ font-size:0.75rem; color:{accent} !important; font-weight:600; margin-left:0.4rem; vertical-align:middle; }}
+.ad-by {{ font-size:0.9rem; color:{pal['subtext']} !important; margin-top:0.2rem; }}
+.ad-by a {{ color:{accent} !important; text-decoration:underline !important; }}
+.ad-summary {{ font-size:0.95rem; line-height:1.6; margin:0.7rem 0; max-width:760px; }}
+.ad-actions {{ display:flex; flex-direction:column; gap:10px; }}
+.ad-btn {{ display:block; text-align:center; font-weight:600; font-size:0.92rem; padding:0.55rem 1rem; border-radius:999px;
+    border:1.5px solid {accent}; color:{accent} !important; text-decoration:none !important; background:{pal['card']}; }}
+.ad-btn:hover {{ background:rgba(26,109,255,0.08); }}
+.ad-btn-primary {{ background:{accent}; color:#ffffff !important; box-shadow:0 0 18px rgba(26,109,255,0.45); }}
+.ad-btn-primary:hover {{ background:{accent}; filter:brightness(1.08); }}
+.ad-btn-off {{ border-style:dashed; color:{pal['muted']} !important; border-color:{pal['input_border']}; box-shadow:none; background:transparent; }}
+.ad-actions .aw-deploy > summary {{ display:block; text-align:center; border-radius:999px; padding:0.55rem 1rem; font-size:0.92rem; border-width:1.5px; }}
+.ad-actions .aw-deploy-menu {{ left:0; right:0; }}
+.ad-panel {{ background:{pal['card']}; border:1px solid {pal['border']}; border-radius:14px; padding:1.2rem 1.4rem; margin-bottom:1.2rem; }}
+.ad-panel h3 {{ margin:0 0 0.8rem 0 !important; font-size:1.2rem !important; }}
+.ad-panel ul {{ margin:0; padding-left:1.1rem; }}
+.ad-panel li {{ margin-bottom:0.5rem; line-height:1.55; font-size:0.92rem; }}
+.ad-media {{ border:1px solid {pal['border']}; border-radius:14px; overflow:hidden; background:{pal['card']}; margin-bottom:1.2rem; }}
+.ad-media-stage {{ height:290px; display:flex; align-items:center; justify-content:center; gap:1.5rem;
+    background: radial-gradient(500px 220px at 70% 20%, rgba(0,212,255,0.25), transparent 60%), linear-gradient(135deg,#050f2c,#0a2a6e 55%,#1456e0); }}
+.ad-media-stage span {{ color:#ffffff !important; font-size:1.5rem; font-weight:700; letter-spacing:-0.01em; text-shadow:0 0 22px rgba(0,190,255,0.55); max-width:320px; }}
+.ad-media-cap {{ padding:0.8rem 1.2rem; font-weight:600; color:{pal['text']} !important; border-top:1px solid {pal['border']}; }}
+.ad-dl {{ display:grid; grid-template-columns:160px 1fr; gap:0.55rem 1rem; font-size:0.9rem; }}
+.ad-dl dt {{ color:{pal['muted']} !important; }}
+.ad-dl dd {{ margin:0; color:{pal['text']} !important; }}
+.ad-clouds {{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; }}
+.ad-cloud {{ background:{pal['card']}; border:1px solid {pal['border']}; border-radius:12px; padding:1rem; display:flex; flex-direction:column; gap:0.5rem; }}
+.ad-cloud i {{ font-style:normal; font-size:0.72rem; font-weight:700; color:{accent} !important; background:rgba(26,109,255,0.1); border-radius:6px; padding:3px 8px; align-self:flex-start; }}
+.ad-cloud b {{ color:{pal['text']} !important; }}
+.ad-cloud span {{ font-size:0.84rem; }}
+.ad-steps {{ counter-reset: step; list-style:none; padding:0 !important; }}
+.ad-steps li {{ counter-increment: step; position:relative; padding-left:2.4rem !important; margin-bottom:0.9rem !important; }}
+.ad-steps li::before {{ content: counter(step); position:absolute; left:0; top:0; width:1.7rem; height:1.7rem; border-radius:50%;
+    background:{accent}; color:#fff; font-weight:700; font-size:0.85rem; display:flex; align-items:center; justify-content:center; box-shadow:0 0 12px rgba(26,109,255,0.45); }}
+</style>
+""",
+        unsafe_allow_html=True,
+    )
+
+
+# Short descriptions for the Deployment tab, keyed like DEPLOY_TARGETS.
+DEPLOY_TARGET_NOTES = {
+    "openstack": "Private cloud or on-prem. Data stays inside your sovereign boundary.",
+    "aws": "Amazon EKS / EC2 with GPU instances in the region of your choice.",
+    "gcp": "GKE or Compute Engine with NVIDIA GPUs and Vertex AI integration.",
+    "azure": "AKS or Azure VMs with Entra ID single sign-on.",
+    "gpu_cloud": "Pay-per-hour GPU rental. No CAPEX, scale to zero when idle.",
+}
+
+
+def render_agent_detail(item: dict, catalog: list[dict]):
+    render_marketplace_css()
+    render_agent_detail_css()
+    render_market_header()
+    e = html.escape
+
+    st.markdown(
+        "<div class='ad-crumbs'>"
+        f"<a href='/' target='_self'>{MARKET_NAME}</a><span>›</span>"
+        f"<a href='/?vertical={e(item['sector'])}#browse-agents' target='_self'>{e(item['sector'])}</a><span>›</span>"
+        f"{e(item['industry'])}<span>›</span><b>{e(item['name'])}</b>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
+    left, right = st.columns([2.6, 1], gap="large")
+    with left:
+        st.markdown(
+            "<div class='ad-head'>"
+            f"<div class='ad-logo'>{vertical_logo(item['sector_raw'], size=72)}</div>"
+            "<div>"
+            f"<h1 class='ad-title'>{e(item['name'])}<small>{e(item['status_label'])}</small></h1>"
+            f"<div class='ad-by'>Built by: <a href='https://github.com/Sherlock2019/AI-AIGENTbythePeoplesANDBOX' target='_blank'>Open AIgents Sandbox</a></div>"
+            "</div></div>"
+            f"{_tags_html(item)}"
+            f"<div class='ad-summary'>{e(item['desc'])}. Part of the {e(item['industry'])} suite in "
+            f"{e(item['sector'])}: free to use, explainable by design, and deployable to the cloud of your choice.</div>"
+            f"{_rating_html(item)}",
+            unsafe_allow_html=True,
+        )
+    with right:
+        if item["launchable"]:
+            primary = f"<a class='ad-btn ad-btn-primary' href='{e(item['url'])}' target='_self'>{e(item['cta'])}</a>"
+        else:
+            primary = "<span class='ad-btn ad-btn-off'>Coming soon</span>"
+        st.markdown(
+            "<div class='ad-actions'>"
+            f"{primary}"
+            f"{_deploy_html(item)}"
+            "<a class='ad-btn' href='mailto:DzoanNguyenTran@gmail.com?subject=Demo%20request' target='_blank'>Request demo</a>"
+            "<a class='ad-btn' href='#ask-question' target='_self'>Ask question</a>"
+            "</div>",
+            unsafe_allow_html=True,
         )
 
-        # ────────────────────────────────
-        # Visitor Bar & Feedback Section (moved to bottom of landing page)
-        # ────────────────────────────────
-        # Initialize mock visitor data if needed
-        def get_or_create_mock_visitors():
-            """Get visitor stats or create mock data for demonstration."""
-            try:
-                api_url = os.getenv("API_URL", "http://localhost:8090")
-                response = requests.get(f"{api_url}/v1/monitoring/visitors/stats", timeout=2)
-                if response.status_code == 200:
-                    stats = response.json()
-                    # Only use real data if we have visitors
-                    if stats.get("total_visitors", 0) > 0:
-                        return stats
-            except Exception:
-                pass
-            
-            # Return mock data for demonstration
-            return {
-                "total_visitors": 42,
-                "total_visits": 156,
-                "countries": {
-                    "United States": 25,
-                    "Canada": 8,
-                    "United Kingdom": 5,
-                    "Germany": 4,
-                    "France": 3,
-                    "Australia": 2,
-                    "Japan": 2,
-                    "Brazil": 1,
-                },
-                "top_ips": []
-            }
+    overview, features, deployment, usage, support, compare = st.tabs(
+        ["Overview", "Features", "Deployment", "Usage", "Support", "Product comparison"]
+    )
 
-        visitor_stats = get_or_create_mock_visitors()
-        
-        # Load and manage general feedback (not agent-specific)
-        GENERAL_FEEDBACK_FILE = Path(TMP_FEEDBACK_DIR) / "general_feedback.json"
-        
-        def load_general_feedback():
-            """Load general feedback comments."""
-            try:
-                if GENERAL_FEEDBACK_FILE.exists():
-                    with open(GENERAL_FEEDBACK_FILE, "r", encoding="utf-8") as f:
-                        data = json.load(f)
-                        return data.get("comments", [])
-            except Exception:
-                pass
-            return []
-        
-        def save_general_feedback(comments):
-            """Save general feedback comments."""
-            try:
-                data = {"comments": comments}
-                with open(GENERAL_FEEDBACK_FILE, "w", encoding="utf-8") as f:
-                    json.dump(data, f, ensure_ascii=False, indent=2)
-            except Exception as e:
-                logger.error(f"Error saving feedback: {e}")
-        
-        # Initialize with 10 mock comments if empty
-        all_comments = load_general_feedback()
-        if not all_comments:
-            mock_comments = [
-                "🌟 Amazing platform! The AI agents are incredibly useful for our business.",
-                "💡 Great work on the credit appraisal agent - it's saved us so much time!",
-                "🚀 Love the real-time visitor tracking feature. Very insightful!",
-                "⭐ The user interface is clean and intuitive. Well done!",
-                "💬 Would love to see more agents added in the future.",
-                "🎯 The fraud detection agent caught several suspicious cases for us.",
-                "✨ Excellent documentation and easy to get started.",
-                "🔥 The CEO dashboard is exactly what we needed for executive insights.",
-                "💎 Open source approach is fantastic - transparency matters!",
-                "👏 Keep up the great work! This platform has huge potential.",
-            ]
-            save_general_feedback(mock_comments)
-            all_comments = mock_comments
-        
-        # Handle feedback submission from query params (set by JavaScript)
-        if "feedback" in st.query_params:
-            feedback_text = st.query_params["feedback"]
-            if feedback_text.strip():
-                all_comments.append(feedback_text.strip())
-                save_general_feedback(all_comments)
-                st.session_state["feedback_submitted"] = True
-                # Clear query param and rerun
-                st.query_params.clear()
-                st.rerun()
-        
-        # Visitor status bar with feedback - now at bottom of page (not fixed)
-        if visitor_stats:
-            total_visitors = visitor_stats.get("total_visitors", 0)
-            total_visits = visitor_stats.get("total_visits", 0)
-            countries = visitor_stats.get("countries", {})
-            
-            # Format countries list (top 5)
-            country_list = []
-            if countries:
-                sorted_countries = sorted(countries.items(), key=lambda x: x[1], reverse=True)[:5]
-                country_list = [f"{country} ({count})" for country, count in sorted_countries]
-            
-            countries_str = " • ".join(country_list) if country_list else "No visitors yet"
-            
-            # Get current time for "live" indicator
-            current_time = datetime.now().strftime("%H:%M:%S")
-            
-            # Escape comments for HTML
-            escaped_comments = [html.escape(c) for c in all_comments]
-            comments_json = json.dumps(escaped_comments)
-            
-            # Visitor bar and feedback section at bottom (not fixed position)
+    with overview:
+        media, info = st.columns([1, 1.1], gap="large")
+        with media:
             st.markdown(
-                f"""
-                <!-- Rotating comments display -->
-                <div id="comments-rotator" style="
-                    background: {pal['card']};
-                    border: 1px solid {pal['border']};
-                    padding: 12px 20px;
-                    margin-top: 3rem;
-                    margin-bottom: 0.75rem;
-                    min-height: 40px;
-                    border-radius: 8px;
-                ">
-                    <div id="current-comment" style="
-                        color: {pal['subtext']};
-                        font-size: 0.9rem;
-                        text-align: center;
-                        transition: opacity 0.4s ease;
-                    "></div>
-                </div>
-
-                <!-- Feedback input row -->
-                <div id="feedback-input-row" style="
-                    background: {pal['card']};
-                    border: 1px solid {pal['border']};
-                    padding: 12px 20px;
-                    margin-bottom: 0.75rem;
-                    border-radius: 8px;
-                ">
-                    <div style="display: flex; align-items: center; gap: 10px; max-width: 1200px; margin: 0 auto;">
-                        <span style="color: {pal['text']}; font-weight: 500; font-size: 0.9rem; white-space: nowrap;">Feedback</span>
-                        <input
-                            type="text"
-                            id="feedback-input-field"
-                            placeholder="Share your thoughts..."
-                            style="
-                                flex: 1;
-                                padding: 8px 14px;
-                                background: {pal['input_bg']};
-                                border: 1px solid {pal['input_border']};
-                                border-radius: 6px;
-                                color: {pal['text']};
-                                font-size: 0.9rem;
-                            "
-                        />
-                        <button
-                            onclick="submitFeedback()"
-                            style="
-                                padding: 8px 18px;
-                                background: {pal['accent']};
-                                border: 1px solid {pal['accent']};
-                                border-radius: 6px;
-                                color: #ffffff;
-                                font-weight: 500;
-                                cursor: pointer;
-                                font-size: 0.9rem;
-                            "
-                        >Submit</button>
-                    </div>
-                </div>
-
-                <!-- Visitor status bar -->
-                <div id="visitor-status-bar" style="
-                    padding: 10px 20px;
-                    font-size: 0.8rem;
-                    color: {pal['muted']};
-                    text-align: center;
-                    margin-bottom: 2rem;
-                ">
-                    <div style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 14px;">
-                        <span style="color: {pal['muted']};">Visitors <b style="color: {pal['text']}; font-weight: 600;">{total_visitors}</b></span>
-                        <span style="color: {pal['border']};">|</span>
-                        <span style="color: {pal['muted']};">Total visits <b style="color: {pal['text']}; font-weight: 600;">{total_visits}</b></span>
-                        <span style="color: {pal['border']};">|</span>
-                        <span style="color: {pal['muted']};">Countries: {countries_str}</span>
-                        <span style="color: {pal['border']};">|</span>
-                        <span id="refresh-time" style="color: {pal['muted']};">Updated {current_time}</span>
-                    </div>
-                </div>
-                
-                <script>
-                    // Comments array
-                    const comments = {comments_json};
-                    let currentCommentIndex = 0;
-                    
-                    // Function to rotate comments
-                    function rotateComment() {{
-                        if (comments.length === 0) return;
-                        const commentEl = document.getElementById('current-comment');
-                        if (commentEl) {{
-                            commentEl.style.opacity = '0';
-                            setTimeout(function() {{
-                                commentEl.textContent = '“' + comments[currentCommentIndex] + '”';
-                                commentEl.style.opacity = '1';
-                                currentCommentIndex = (currentCommentIndex + 1) % comments.length;
-                            }}, 500);
-                        }}
-                    }}
-                    
-                    // Initialize first comment
-                    if (comments.length > 0) {{
-                        rotateComment();
-                        // Rotate every 5 seconds
-                        setInterval(rotateComment, 5000);
-                    }}
-                    
-                    // Submit feedback function
-                    function submitFeedback() {{
-                        const input = document.getElementById('feedback-input-field');
-                        if (input && input.value.trim()) {{
-                            // Submit via URL query parameter
-                            const feedback = encodeURIComponent(input.value.trim());
-                            const currentUrl = window.location.href.split('?')[0];
-                            window.location.href = currentUrl + '?feedback=' + feedback;
-                        }} else {{
-                            alert('Please enter your feedback before submitting.');
-                        }}
-                    }}
-                    
-                    // Allow Enter key to submit
-                    document.addEventListener('DOMContentLoaded', function() {{
-                        const input = document.getElementById('feedback-input-field');
-                        if (input) {{
-                            input.addEventListener('keypress', function(e) {{
-                                if (e.key === 'Enter') {{
-                                    submitFeedback();
-                                }}
-                            }});
-                        }}
-                    }});
-                </script>
-                """,
+                "<div class='ad-media'>"
+                f"<div class='ad-media-stage'>{vertical_logo(item['sector_raw'], size=96)}<span>{e(item['name'])}</span></div>"
+                f"<div class='ad-media-cap'>{e(item['name'])} · {e(item['industry'])}</div>"
+                "</div>",
+                unsafe_allow_html=True,
+            )
+        with info:
+            st.markdown(
+                "<div class='ad-panel'><h3>Highlights</h3><ul>"
+                f"<li><b>Purpose-built:</b> {e(item['desc'])}.</li>"
+                "<li><b>Explainable:</b> every output ships with a reasoning trail you can audit.</li>"
+                "<li><b>Human in the loop:</b> review and approve decisions before they take effect.</li>"
+                "<li><b>Portable:</b> run it on OpenStack, AWS, GCP, Azure or rented GPU cloud.</li>"
+                "</ul></div>"
+                "<div class='ad-panel'><h3>Details</h3><dl class='ad-dl'>"
+                f"<dt>Vertical</dt><dd>{e(item['sector'])}</dd>"
+                f"<dt>Category</dt><dd>{e(item['industry'])}</dd>"
+                f"<dt>Status</dt><dd>{e(item['status_label'])}</dd>"
+                f"<dt>Access</dt><dd>{'Sign-in required' if item['requires_login'] else 'Open access'}</dd>"
+                "<dt>Pricing</dt><dd>Free · open source</dd>"
+                f"<dt>Active users</dt><dd>{item['users']}</dd>"
+                "</dl></div>",
                 unsafe_allow_html=True,
             )
 
-        st.stop()
+    with features:
+        st.markdown(
+            "<div class='ad-panel'><h3>Features</h3><ul>"
+            "<li>Ready-to-run agent template with sample data, so you can evaluate it in minutes.</li>"
+            "<li>Pluggable models: Hugging Face, Ollama or local models, with automatic failover.</li>"
+            "<li>Built-in feedback loop: ratings and comments feed retraining.</li>"
+            "<li>Audit logs for every run, dataset and model version.</li>"
+            "<li>Exportable as code once it is production-ready.</li>"
+            "</ul></div>",
+            unsafe_allow_html=True,
+        )
 
-# ────────────────────────────────
-# STAGE: AGENTS (Neon Styled)
-# ────────────────────────────────
-if st.session_state.stage == "agents":
-    # Inject CSS once
-    st.markdown(f"""
-    <style>
-    .neon-frame {{
-        padding: 0 !important;
-        margin: 0.5rem 0 3rem 0;
-        overflow: hidden;
-    }}
-    .neon-table {{
-        width: 100%;
-        border-collapse: collapse;
-        border: none !important;
-    }}
-    .neon-table th, .neon-table td {{
-        padding: 12px 18px;
-        border: none !important;
-        border-bottom: 1px solid {pal['border']} !important;
-        color: {pal['subtext']};
-        text-align: left;
-        font-size: 0.9rem;
-    }}
-    .neon-table tr:last-child td {{ border-bottom: none !important; }}
-    .neon-table tbody tr:hover {{ background: {pal['table_hover_bg']}; }}
-    .neon-table td:first-child {{ color: {pal['text']}; font-weight: 600; }}
-    .neon-table th {{
-        background: {pal['table_head_bg']};
-        color: {pal['muted']};
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        font-size: 0.72rem;
-        font-weight: 600;
-    }}
-    </style>
-    """, unsafe_allow_html=True)
+    with deployment:
+        clouds = "".join(
+            "<div class='ad-cloud'>"
+            f"<i>{tag}</i><b>{label}</b><span>{DEPLOY_TARGET_NOTES.get(value, '')}</span>"
+            f"<a class='aw-cta' style='text-align:center;' href='{_launch_href('/deployment_in_production')}?agent={e(item['route'])}&amp;target={value}' target='_self'>Deploy on {tag}</a>"
+            "</div>"
+            for value, tag, label in DEPLOY_TARGETS
+        ) if item["launchable"] else "<div class='ad-panel'>Deployment opens once this agent is available.</div>"
+        st.markdown(
+            "<div class='ad-panel'><h3>Deploy this agent</h3>"
+            "<p style='margin-bottom:1rem;'>Choose a target cloud. Each option opens the production deployment workflow with this agent pre-selected.</p>"
+            f"<div class='ad-clouds'>{clouds}</div></div>",
+            unsafe_allow_html=True,
+        )
 
-    # Header section
-    st.markdown("<div class='neon-header'>Available agents</div>", unsafe_allow_html=True)
+    with usage:
+        st.markdown(
+            "<div class='ad-panel'><h3>Getting started</h3><ol class='ad-steps'>"
+            f"<li><b>Launch</b> the agent from this page{' (sign in when prompted)' if item['requires_login'] else ''}.</li>"
+            "<li><b>Load data</b>: start with the bundled sample data or upload your own CSV.</li>"
+            "<li><b>Run and review</b>: inspect the outputs and their explanations, then approve or correct them.</li>"
+            "<li><b>Deploy</b> to OpenStack, AWS, GCP, Azure or GPU cloud when you are ready for production.</li>"
+            "</ol></div>",
+            unsafe_allow_html=True,
+        )
 
-    # Data - Retail Banking Suite agents sorted in specified order
-    agent_rows = [
-        {"Agent": "🚗 CEO driver DASHBOARD",
-         "Description": "Executive cockpit with AI copilots, KPIs, and calendar automation",
-         "Status": "🧪 WIP",
-         "Action": '<a class="macbtn" href="/ceo_driver_dashboard" target="_self">👁️ Preview</a>'},
-        {"Agent": "🏠 Real Estate Evaluator Agent",
-         "Description": "Interactive map with market price comparison and zone analysis",
-         "Status": "🆕 NEW",
-         "Action": '<a class="macbtn" href="/real_estate_evaluator">🚀 Launch</a>'},
-        {"Agent": "🛡️ Anti-Fraud & KYC Agent",
-         "Description": "Streamlined onboarding with fraud scoring",
-         "Status": "✅ Available",
-         "Action": '<a class="macbtn" href="/anti_fraud_kyc">🚀 Launch</a>'},
-        {"Agent": "💳 Credit Score Agent",
-         "Description": "Calculate credit scores (300-850) for loan applications",
-         "Status": "✅ Available",
-         "Action": '<a class="macbtn" href="/credit_score">🚀 Launch</a>'},
-        {"Agent": "🏦 Asset Appraisal Agent",
-         "Description": "Market-driven collateral valuation",
-         "Status": "✅ Available",
-         "Action": '<a class="macbtn" href="/asset_appraisal">🚀 Launch</a>'},
-        {"Agent": "💳 Credit Appraisal Agent",
-         "Description": "Explainable AI for loan decisioning",
-         "Status": "✅ Available",
-         "Action": '<a class="macbtn" href="/credit_appraisal">🚀 Launch</a>'},
-        {"Agent": "⚖️ Legal Compliance Agent",
-         "Description": "Regulatory compliance, sanctions, PEP, licensing checks",
-         "Status": "✅ Available",
-         "Action": '<a class="macbtn" href="/legal_compliance">🚀 Launch</a>'},
-        {"Agent": "🧩 Unified Risk Orchestration Agent",
-         "Description": "Compounds asset+credit+fraud into one decision",
-         "Status": "✅ Available",
-         "Action": '<a class="macbtn" href="/unified_risk">🚀 Launch</a>'},
-        {"Agent": "🧠 IT Troubleshooter Agent",
-         "Description": "First-principles + case-memory incident solver",
-         "Status": "✅ Available",
-         "Action": '<a class="macbtn" href="/troubleshooter_agent">🚀 Launch</a>'},
-        {"Agent": "💬 Chatbot Assistant",
-         "Description": "Context-aware embedded assistant",
-         "Status": "⏳ Coming Soon",
-         "Action": '<a class="macbtn" href="/chatbot_assistant">👁️ Preview</a>'},
-        {"Agent": "🧑‍🚀 Persona Strategy Room",
-         "Description": "Invite multiple personas to a live meeting",
-         "Status": "✅ Available",
-         "Action": '<a class="macbtn" href="/persona_chatroom">🪩 Convene</a>'},
-    ]
-    df = pd.DataFrame(agent_rows)
+    with support:
+        st.markdown(
+            "<div id='ask-question' class='ad-panel'><h3>Support</h3>"
+            "<p>Community support from the Open AIgents Sandbox Initiative. "
+            "Email <a href='mailto:DzoanNguyenTran@gmail.com'>DzoanNguyenTran@gmail.com</a> or open an issue on "
+            "<a href='https://github.com/Sherlock2019/AI-AIGENTbythePeoplesANDBOX/issues' target='_blank'>GitHub</a>.</p></div>",
+            unsafe_allow_html=True,
+        )
 
-    # Neon table frame
-    html_table = df.to_html(escape=False, index=False, classes="neon-table")
-    st.markdown(f"<div class='neon-frame'>{html_table}</div>", unsafe_allow_html=True)
+    with compare:
+        peers = sorted((i for i in catalog if i["sector"] == item["sector"]), key=_popularity)
+        st.markdown(
+            f"<div class='ad-panel'><h3>Other agents in {e(item['sector'])}</h3>"
+            f"<div class='aw-list' style='border-top:1px solid {pal['border']};border-radius:12px;'>"
+            f"{''.join(list_row_html(i) for i in peers)}</div></div>",
+            unsafe_allow_html=True,
+        )
 
-    # Initialize mock visitor data if needed
-    def get_or_create_mock_visitors():
-        """Get visitor stats or create mock data for demonstration."""
-        try:
-            api_url = os.getenv("API_URL", "http://localhost:8090")
-            response = requests.get(f"{api_url}/v1/monitoring/visitors/stats", timeout=2)
-            if response.status_code == 200:
-                stats = response.json()
-                # Only use real data if we have visitors
-                if stats.get("total_visitors", 0) > 0:
-                    return stats
-        except Exception:
-            pass
-        
-        # Return mock data for demonstration
-        return {
-            "total_visitors": 42,
-            "total_visits": 156,
-            "countries": {
-                "United States": 25,
-                "Canada": 8,
-                "United Kingdom": 5,
-                "Germany": 4,
-                "France": 3,
-                "Australia": 2,
-                "Japan": 2,
-                "Brazil": 1,
-            },
-            "top_ips": []
-        }
+    st.markdown(f"<footer>{MARKET_NAME} · Open AIgents Sandbox Initiative · DzoanNguyenTran@gmail.com</footer>", unsafe_allow_html=True)
 
-    visitor_stats = get_or_create_mock_visitors()
-    
-    # Load and manage general feedback (not agent-specific)
-    GENERAL_FEEDBACK_FILE = Path(TMP_FEEDBACK_DIR) / "general_feedback.json"
-    
-    def load_general_feedback():
-        """Load general feedback comments."""
-        try:
-            if GENERAL_FEEDBACK_FILE.exists():
-                with open(GENERAL_FEEDBACK_FILE, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    return data.get("comments", [])
-        except Exception:
-            pass
-        return []
-    
-    def save_general_feedback(comments):
-        """Save general feedback comments."""
-        try:
-            data = {"comments": comments}
-            with open(GENERAL_FEEDBACK_FILE, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            logger.error(f"Error saving feedback: {e}")
-    
-    # Initialize with 10 mock comments if empty
-    all_comments = load_general_feedback()
-    if not all_comments:
-        mock_comments = [
-            "🌟 Amazing platform! The AI agents are incredibly useful for our business.",
-            "💡 Great work on the credit appraisal agent - it's saved us so much time!",
-            "🚀 Love the real-time visitor tracking feature. Very insightful!",
-            "⭐ The user interface is clean and intuitive. Well done!",
-            "💬 Would love to see more agents added in the future.",
-            "🎯 The fraud detection agent caught several suspicious cases for us.",
-            "✨ Excellent documentation and easy to get started.",
-            "🔥 The CEO dashboard is exactly what we needed for executive insights.",
-            "💎 Open source approach is fantastic - transparency matters!",
-            "👏 Keep up the great work! This platform has huge potential.",
-        ]
-        save_general_feedback(mock_comments)
-        all_comments = mock_comments
-    
-    # Handle feedback submission from query params (set by JavaScript)
-    if "feedback" in st.query_params:
-        feedback_text = st.query_params["feedback"]
-        if feedback_text.strip():
-            all_comments.append(feedback_text.strip())
-            save_general_feedback(all_comments)
-            st.session_state["feedback_submitted"] = True
-            # Clear query param and rerun
-            st.query_params.clear()
-            st.rerun()
-    
-    # Visitor status bar with feedback - removed from agents page (now only on landing page)
 
-    # Footer
-    st.markdown(
-        "<footer>Open AIgents Sandbox Initiative · DzoanNguyenTran@gmail.com</footer>",
-        unsafe_allow_html=True
-    )
-
+if st.session_state.stage in ("landing", "agents"):
+    _view = st.query_params.get("view")
+    if _view:
+        _catalog = build_catalog()
+        _item = next((i for i in _catalog if i["route"] == _view), None)
+        if _item:
+            render_agent_detail(_item, _catalog)
+            st.stop()
+    render_marketplace()
     st.stop()
-
-
-
-
-# # ────────────────────────────────
-# # STAGE: AGENTS boring
-# # ────────────────────────────────
-# if st.session_state.stage == "agents":
-#     top = st.columns([1, 6, 1])
-#     with top[1]:
-#         st.title("🤖 Available AI Agents")
-
-#     df = pd.DataFrame([
-#         {"Agent": "💳 Credit Appraisal Agent",
-#          "Description": "Explainable AI for retail loan decisioning",
-#          "Status": "✅ Available",
-#          "Action": '<a class="macbtn" href="?agent=credit&stage=login">🚀 Launch</a>'},
-#         {"Agent": "🏦 Asset Appraisal Agent",
-#          "Description": "Market-driven collateral valuation",
-#          "Status": "✅ Available",
-#          "Action": '<a class="macbtn" href="?agent=asset&stage=asset_agent">🚀 Launch</a>'},
-#     ])
-#     st.write(df.to_html(escape=False, index=False), unsafe_allow_html=True)
-#     st.markdown(
-#         "<footer>Made with ❤️ by DzoanNguyenTran@gmail.com — Open AIgents Sandbox Initiative</footer>",
-#         unsafe_allow_html=True
-#     )
-#     st.stop()
 
 
 # ────────────────────────────────
