@@ -1,9 +1,9 @@
 [theme]
-base="light"                # default bright
-primaryColor="#2563EB"
-backgroundColor="#FFFFFF"
-secondaryBackgroundColor="#F8FAFC"
-textColor="#0F172A"
+base="dark"                 # matches theme_manager DEFAULT_THEME
+primaryColor="#6B8BB0"
+backgroundColor="#0F1115"
+secondaryBackgroundColor="#161A20"
+textColor="#E6E8EB"
 font="sans serif"
 
 [browser]

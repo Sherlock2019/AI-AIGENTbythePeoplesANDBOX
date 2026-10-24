@@ -73,6 +73,7 @@ except ImportError:
         json_normalize = pd.json_normalize
 
 from services.ui.theme_manager import (
+    get_palette,
     get_theme,
     init_theme,
     render_theme_toggle,
@@ -262,8 +263,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-if st.session_state.stage != "landing":
-    init_theme()
+init_theme()
+pal = get_palette()
 
 
 # ────────────────────────────────
@@ -360,18 +361,18 @@ def render_nav_bar_app():
     c1, c2, c3 = st.columns([1, 1, 2.5])
 
     with c1:
-        if show_home and st.button("🏠 Back to Home", key=f"btn_home_{stage}"):
+        if show_home and st.button("← Home", key=f"btn_home_{stage}"):
             st.session_state.stage = "landing"
             st.rerun()  # already in app.py → rerun only
 
     with c2:
-        if show_agents and st.button("🤖 Back to Agents", key=f"btn_agents_{stage}"):
+        if show_agents and st.button("← Agents", key=f"btn_agents_{stage}"):
             st.session_state.stage = "agents"
             st.rerun()  # already in app.py → rerun only
 
     with c3:
         render_theme_toggle(
-            label="🌗 Dark mode",
+            label="Dark mode",
             key="app_theme_toggle",
             help="Toggle the shared UI palette",
         )
@@ -666,7 +667,11 @@ def load_custom_agents_from_blueprints():
         requires_login = meta.get("requires_login", False)
         custom_agents.append((sector, industry, label, desc, status, emoji, requires_login))
         route_name = compute_route_name(label)
-        launch_path = meta.get("launch_path") or f"/agent_builder?blueprint={slug}"
+        # Only accept same-origin paths — a blueprint must not be able to point
+        # the Launch button at "javascript:" or an external host.
+        launch_path = str(meta.get("launch_path") or "")
+        if not re.fullmatch(r"/[\w\-/]*(\?[\w\-=&%]*)?", launch_path):
+            launch_path = f"/agent_builder?blueprint={slug}"
         launch_overrides[route_name] = launch_path
     return custom_agents, launch_overrides
 
@@ -709,60 +714,36 @@ AGENTS = MANAGED_AGENTS + CUSTOM_AGENTS
 # # ────────────────────────────────
 
 st.markdown(
-    """
+    f"""
     <style>
-    html, body, .block-container { background-color:#0f172a !important; color:#e2e8f0 !important; }
-    .block-container { max-width: 100% !important; padding-left: 2rem !important; padding-right: 2rem !important; }
-    footer { text-align:center; padding:2rem; color:#aab3c2; font-size:1.2rem; font-weight:600; margin-top:2rem; }
-    .left-box {
-        background: radial-gradient(circle at top left, #0f172a, #1e293b);
-        border-radius:20px; padding:3rem 2rem; color:#f1f5f9; box-shadow:6px 0 24px rgba(0,0,0,0.4);
-    }
-    .right-box {
-        background:linear-gradient(180deg,#1e293b,#0f172a);
-        border-radius:20px; padding:2rem; box-shadow:-6px 0 24px rgba(0,0,0,0.35);
-    }
-    .stButton > button {
-        border:none !important; cursor:pointer;
-        padding:14px 28px !important; font-size:18px !important; font-weight:700 !important;
-        border-radius:14px !important; color:#fff !important;
-        background:linear-gradient(180deg,#4ea3ff 0%,#2f86ff 60%,#0f6fff 100%) !important;
-        box-shadow:0 8px 24px rgba(15,111,255,0.35);
-    }
-    a.macbtn {
-        display:inline-block; text-decoration:none !important; color:#fff !important;
-        padding:10px 22px; font-weight:700; border-radius:12px;
-        background:linear-gradient(180deg,#4ea3ff 0%,#2f86ff 60%,#0f6fff 100%);
-    }
-    /* Larger workflow tabs */
-    [data-testid="stTabs"] [data-baseweb="tab"] {
-        font-size: 28px !important;
-        font-weight: 800 !important;
-        padding: 20px 40px !important;
-        border-radius: 12px !important;
-        background-color: #1e293b !important;
-        color: #f8fafc !important;
-    }
-    [data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] {
-        background: linear-gradient(90deg, #2563eb, #1d4ed8) !important;
-        color: white !important;
-        border-bottom: 6px solid #60a5fa !important;
-        box-shadow: 0 4px 14px rgba(37,99,235,0.5);
-    }
-
-    /* ---------------- NEW: hover/focus polish ---------------- */
-    /* Hover/active for buttons */
-    .stButton > button:hover { filter: brightness(1.06); transform: translateY(-1px); }
-    .stButton > button:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(15,111,255,0.35); }
-
-    /* Subtle hover for tabs */
-    [data-testid="stTabs"] [data-baseweb="tab"][role="tab"]:hover {
-      box-shadow: 0 6px 18px rgba(37,99,235,0.35);
-    }
-
-    /* Improve link focus visibility (a11y) */
-    a:focus { outline: 3px solid #60a5fa !important; outline-offset: 2px; border-radius: 6px; }
-    /* --------------------------------------------------------- */
+    .block-container {{ max-width: 1440px !important; padding-left: 2rem !important; padding-right: 2rem !important; }}
+    footer {{
+        text-align:center; padding:1.5rem 0; margin-top:2rem;
+        color:{pal['muted']}; font-size:0.85rem; font-weight:400;
+        border-top:1px solid {pal['border']};
+    }}
+    .left-box {{ padding: 0.5rem 0.5rem 0 0; }}
+    .eyebrow {{
+        font-size:0.75rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase;
+        color:{pal['muted']} !important; margin-bottom:0.6rem;
+    }}
+    .hero-title {{
+        font-size:2rem !important; font-weight:600 !important; line-height:1.25 !important;
+        color:{pal['text']} !important; margin:0 0 0.5rem 0 !important;
+    }}
+    .hero-sub {{
+        font-size:1.05rem; color:{pal['subtext']} !important; margin-bottom:1.75rem; line-height:1.6;
+    }}
+    .hero-section {{
+        border-top:1px solid {pal['border']}; padding:0.9rem 0;
+    }}
+    .hero-section .label {{
+        display:block; font-size:0.75rem; font-weight:600; letter-spacing:0.06em; text-transform:uppercase;
+        color:{pal['accent']} !important; margin-bottom:0.25rem;
+    }}
+    .hero-section p {{ margin:0; font-size:0.95rem; line-height:1.65; }}
+    .hero-section b {{ color:{pal['text']} !important; font-weight:600; }}
+    a.macbtn {{ padding:6px 14px; font-size:0.88rem; }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -957,11 +938,11 @@ def load_feedback() -> dict:
     return load_feedback_data()
 
 def render_stars(rating: float) -> str:
-    """Render gold stars for rating."""
+    """Render muted stars for rating."""
     full = int(round(rating))
     return "".join(
-        [f"<span style='color:gold;font-size:18px;'>★</span>" for _ in range(full)]
-        + [f"<span style='color:#334155;font-size:18px;'>★</span>" for _ in range(5 - full)]
+        [f"<span style='color:{pal['annotation']};font-size:14px;'>★</span>" for _ in range(full)]
+        + [f"<span style='color:{pal['border']};font-size:14px;'>★</span>" for _ in range(5 - full)]
     )
 
 # Cache feedback in session state (persists across reruns)
@@ -996,15 +977,15 @@ if st.session_state.stage == "landing":
             """
             <style>
             .logo-upload-placeholder {
-                border: 2px dashed #334155;
-                border-radius: 12px;
+                border: 1px dashed """ + pal['input_border'] + """;
+                border-radius: 8px;
                 width: 240px;
                 height: 120px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                color: #94a3b8;
-                margin: 0 auto 8px auto;
+                color: """ + pal['muted'] + """;
+                margin: 0 0 8px 0;
             }
             .logo-upload-area [data-testid="stFileUploadDropzone"] {
                 display: none !important;
@@ -1021,15 +1002,15 @@ if st.session_state.stage == "landing":
             with open(display_logo_path, "rb") as f:
                 logo_base64 = base64.b64encode(f.read()).decode()
             logo_mime = "image/jpeg" if display_logo_path.lower().endswith((".jpg", ".jpeg")) else "image/png"
-            display_logo = f'<img src="data:{logo_mime};base64,{logo_base64}" style="width:320px;border-radius:16px;box-shadow:0 0 35px rgba(14,165,233,0.45);" />'
+            display_logo = f'<img src="data:{logo_mime};base64,{logo_base64}" style="width:220px;border-radius:8px;" />'
         else:
-            display_logo = "<div class='logo-upload-placeholder' style='width:320px;height:160px;'>Tap to upload logo</div>"
+            display_logo = "<div class='logo-upload-placeholder' style='width:220px;height:110px;'>Upload logo</div>"
 
         st.markdown(
             f"""
-            <div id="logo_click_area" style="cursor:pointer; text-align:center;">
+            <div id="logo_click_area" style="cursor:pointer; text-align:left;">
                 {display_logo}
-                <p style='font-size:12px;color:#94a3b8;'>Tap to upload/replace logo</p>
+                <p style='font-size:11px;color:{pal['muted']};margin-top:4px;'>Click to replace logo</p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -1084,59 +1065,48 @@ if st.session_state.stage == "landing":
         # ────────────────────────────────
         st.markdown(
             """
-            <h1 style="font-size:38px; font-weight:800;">🚀 Together, Let’s Build an AI Foundry — by the People, for the People</h1>
-            <h3 style="font-size:28px; font-weight:700; color:#38bdf8;">⚙️ Open AI Agent Sandbox — From Idea to Production</h3>
+            <div class="eyebrow">Open AI Agent Sandbox</div>
+            <h1 class="hero-title">An AI foundry, built by the people, for the people</h1>
+            <div class="hero-sub">Take an agent from idea to production: explainable, open and privacy-first.</div>
 
-            <p style="font-size:18px; line-height:1.8;">
-            <span style="font-size:26px; font-weight:800; color:#60a5fa;">What:</span><br>
-            The <b>Open AI Agent Sandbox</b> is a <b>Foundry</b> where your AI ideas become reality —
-            turning imagination into explainable, open, and living agents.
-            </p>
-
-            <p style="font-size:18px; line-height:1.8;">
-            <span style="font-size:26px; font-weight:800; color:#60a5fa;">So What:</span><br>
-            No CAPEX. No gatekeepers. Just <b>GPU-for-Rent power</b>, <b>open-source models</b>, and <b>privacy-first design</b>.
-            Build faster, own your data, and innovate without limits.
-            </p>
-
-            <p style="font-size:18px; line-height:1.8;">
-            <span style="font-size:26px; font-weight:800; color:#60a5fa;">How:</span><br>
-            Start with a <b>ready-to-use AI Agent Template</b> — customize, test, improve,
-            and export when it’s production-ready.
-            </p>
-
-            <p style="font-size:18px; line-height:1.8;">
-            <span style="font-size:26px; font-weight:800; color:#60a5fa;">Where:</span><br>
-            All inside your <b>GPU-for-Rent Cloud Sandbox</b> —
-            a secure, sovereign forge where ideas ignite and models evolve.
-            </p>
-
-            <p style="font-size:18px; line-height:1.8;">
-            <span style="font-size:26px; font-weight:800; color:#60a5fa;">For Who:</span><br>
-            For builders, dreamers, educators, and enterprises who believe
-            AI should empower the many, not the few.
-            </p>
-
-            <p style="font-size:18px; line-height:1.8;">
-            <span style="font-size:26px; font-weight:800; color:#60a5fa;">What Now:</span><br>
-            Bring your spark. Shape your agent. Forge your legacy.<br>
-            <b>Your AI idea → Production-ready Reality.</b>
-            </p>
+            <div class="hero-section">
+                <span class="label">What</span>
+                <p>The <b>Open AI Agent Sandbox</b> is a foundry where AI ideas become explainable, open, working agents.</p>
+            </div>
+            <div class="hero-section">
+                <span class="label">Why it matters</span>
+                <p>No CAPEX and no gatekeepers: <b>GPU-for-rent compute</b>, <b>open-source models</b> and <b>privacy-first design</b>. Build faster and keep ownership of your data.</p>
+            </div>
+            <div class="hero-section">
+                <span class="label">How</span>
+                <p>Start from a <b>ready-to-use agent template</b>. Customize, test, improve, and export it once it is production-ready.</p>
+            </div>
+            <div class="hero-section">
+                <span class="label">Where</span>
+                <p>Inside your <b>GPU-for-rent cloud sandbox</b>, a secure, sovereign environment for building and evolving models.</p>
+            </div>
+            <div class="hero-section" style="margin-bottom:1.25rem;">
+                <span class="label">For whom</span>
+                <p>Builders, educators and enterprises who believe AI should serve the many, not the few.</p>
+            </div>
             """,
             unsafe_allow_html=True,
         )
 
         # CTA
-        if st.button("🔥 Start Building Now", key="btn_start_build_now"):
-            st.session_state.stage = "agents"
-            st.rerun()
-
-        if st.button(
-            "🚗 Preview CEO driver DASHBOARD",
-            key="btn_preview_ceo",
-            help="Open CEO driver DASHBOARD",
-        ):
-            st.switch_page("pages/ceo_driver_dashboard.py")
+        cta1, cta2 = st.columns(2)
+        with cta1:
+            if st.button("Start building", key="btn_start_build_now", type="primary", use_container_width=True):
+                st.session_state.stage = "agents"
+                st.rerun()
+        with cta2:
+            if st.button(
+                "CEO dashboard preview",
+                key="btn_preview_ceo",
+                help="Open CEO driver DASHBOARD",
+                use_container_width=True,
+            ):
+                st.switch_page("pages/ceo_driver_dashboard.py")
 
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -1144,130 +1114,86 @@ if st.session_state.stage == "landing":
     # ────────────────────────────────
     with c2:
         # Inject CSS once
-        st.markdown("""
+        st.markdown(f"""
         <style>
-        @keyframes pulseFrame {
-            0%,100% { box-shadow: 0 0 35px rgba(0,200,255,0.25), inset 0 0 15px rgba(0,200,255,0.25); }
-            50% { box-shadow: 0 0 90px rgba(0,240,255,0.7), inset 0 0 25px rgba(0,240,255,0.45); }
-        }
-
-        .neon-frame {
-            border: 2px solid rgba(0,200,255,0.6);
-            border-radius: 18px;
-            padding: 1.5rem;
-            margin-top: 1rem;
+        .neon-frame {{
+            padding: 0.25rem 0 !important;
+            margin-top: 0.5rem;
             margin-bottom: 2rem;
-            background: linear-gradient(180deg, rgba(8,17,30,0.95), rgba(10,25,45,0.95));
-            animation: pulseFrame 6s ease-in-out infinite;
-            box-shadow: 0 0 60px rgba(0,200,255,0.35);
-        }
-
-        .agent-card {
-            border: 1px solid rgba(0,200,255,0.3);
-            border-radius: 10px;
-            padding: 0.8rem 1.2rem;
-            margin: 0.6rem 0;
-            background: rgba(15,25,35,0.85);
-            transition: transform 0.25s ease-in-out, box-shadow 0.25s ease-in-out;
-        }
-
-        .agent-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 0 25px rgba(0,240,255,0.5);
-        }
-
-        .agent-header-bar {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 16px;
-            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
-            color: #fff;
-            padding: 12px 20px;
-            border-radius: 12px;
-            font-weight: 700;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-            margin-bottom: 14px;
-        }
-
-        .neon-header {
-            background: linear-gradient(90deg, #ff0033, #ff3366);
-            border-radius: 8px;
-            color: white;
-            font-weight: 700;
-            padding: 8px 14px;
-            margin-bottom: 14px;
-            text-align: center;
-            text-shadow: 0 0 8px rgba(255,80,100,0.9);
-            box-shadow: 0 0 20px rgba(255,60,100,0.6);
-            font-size: 1.6rem;
-        }
-
-        .launchbtn {
-            display: inline-block;
-            text-decoration: none;
-            color: #e6f7ff;
-            font-weight: 700;
-            padding: 6px 16px;
-            border-radius: 8px;
-            border: 1px solid rgba(0,220,255,0.8);
-            background: rgba(0,50,80,0.5);
-            box-shadow: 0 0 14px rgba(0,220,255,0.5);
-            transition: all 0.25s ease-in-out;
-        }
-
-        .launchbtn:hover {
-            box-shadow: 0 0 25px rgba(255,105,180,0.8);
-            transform: translateY(-2px) scale(1.05);
-            text-shadow: 0 0 12px #ff66cc;
-        }
-        .launchbtn.launch-disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
-            border-style: dashed;
-            box-shadow: none;
-            background: rgba(15,23,42,0.65);
-            color: #cbd5f5;
-        }
-        .agent-comments details {
-            cursor: pointer;
-            color: #f9fafb;
+        }}
+        .agent-card {{
+            border-bottom: 1px solid {pal['border']};
+            padding: 0.85rem 1.2rem;
+            background: transparent;
+            transition: background 0.15s ease;
+        }}
+        .agent-card:last-child {{ border-bottom: none; }}
+        .agent-card:hover {{ background: {pal['table_hover_bg']}; }}
+        .agent-header-bar {{
+            display: flex;
+            gap: 0;
+            background: {pal['table_head_bg']};
+            color: {pal['muted']};
+            padding: 0.6rem 1.2rem;
+            border-bottom: 1px solid {pal['border']};
+            font-size: 0.72rem;
             font-weight: 600;
-        }
-        .agent-comments summary {
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }}
+        .agent-header-bar span {{ color: {pal['muted']} !important; }}
+        .launchbtn {{ padding: 5px 14px; font-size: 0.85rem; white-space: nowrap; }}
+        .stApp .launchbtn.launch-disabled {{
+            cursor: not-allowed;
+            border-style: dashed !important;
+            color: {pal['muted']} !important;
+            background: transparent !important;
+        }}
+        .status-pill {{
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid {pal['border']};
+            white-space: nowrap;
+        }}
+        .agent-comments details {{
+            cursor: pointer;
+            color: {pal['subtext']};
+            font-weight: 500;
+            font-size: 0.85rem;
+        }}
+        .agent-comments summary {{
             list-style: none;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             min-width: 48px;
-        }
-        .agent-comments summary::-webkit-details-marker {
+        }}
+        .agent-comments summary::-webkit-details-marker {{
             display: none;
-        }
-        .agent-comments details[open] {
-            background: rgba(59,130,246,0.08);
-            border-radius: 10px;
+        }}
+        .agent-comments details[open] {{
+            background: {pal['bg']};
+            border: 1px solid {pal['border']};
+            border-radius: 6px;
             padding: 0.35rem;
-        }
-        .agent-comments .comment-list {
+        }}
+        .agent-comments .comment-list {{
             margin: 0.4rem 0 0;
             padding-left: 1rem;
             max-height: 180px;
             overflow-y: auto;
-            font-size: 0.85rem;
-            color: #cbd5f5;
+            font-size: 0.82rem;
+            color: {pal['subtext']};
             text-align: left;
-        }
-        .agent-comments .comment-list li {
-            margin-bottom: 0.5rem;
-            padding: 0.3rem;
-            border-left: 2px solid rgba(59,130,246,0.3);
-            padding-left: 0.5rem;
-        }
-        .agent-comments .comment-list li:first-child {
-            background: rgba(59,130,246,0.1);
-            border-radius: 4px;
-            font-weight: 600;
-        }
+        }}
+        .agent-comments .comment-list li {{
+            margin-bottom: 0.4rem;
+            border-left: 2px solid {pal['border']};
+            padding: 0.2rem 0 0.2rem 0.5rem;
+        }}
         </style>
         """, unsafe_allow_html=True)
 
@@ -1276,15 +1202,17 @@ if st.session_state.stage == "landing":
         # ============================================================
         import re
 
+        # Column flex ratios shared by the header bar and every agent row.
         header_bar = (
             "<div class='agent-header-bar'>"
-            "<span>Industry</span>"
-            "<span>Agent Name</span>"
-            "<span>Role / Description</span>"
-            "<span>Users</span>"
-            "<span>Comments</span>"
-            "<span>Rating</span>"
-            "<span>Action</span>"
+            "<span style='flex:1.2;'>Industry</span>"
+            "<span style='flex:1.5;'>Agent</span>"
+            "<span style='flex:3;'>Description</span>"
+            "<span style='flex:1;text-align:center;'>Status</span>"
+            "<span style='flex:0.6;text-align:center;'>Users</span>"
+            "<span style='flex:1;text-align:center;'>Feedback</span>"
+            "<span style='flex:0.9;text-align:center;'>Rating</span>"
+            "<span style='flex:0.8;text-align:center;'></span>"
             "</div>"
         )
 
@@ -1316,19 +1244,19 @@ if st.session_state.stage == "landing":
             # Skip Agent Builder since it has its own featured frame
             if "Agent Builder" in agent:
                 continue
-            # ----- status color mapping -----
+            # ----- status color mapping (muted: accent for live, grey otherwise) -----
             if status == "NEW":
-                status_label = "🆕 NEW"; status_color = "#3b82f6"
+                status_label = "New"; status_color = pal["accent"]
             elif status == "Available":
-                status_label = "✅ Available"; status_color = "#22c55e"
+                status_label = "Available"; status_color = pal["accent_alt"]
             elif status == "Coming Soon":
-                status_label = "⏳ Coming Soon"; status_color = "#f59e0b"
+                status_label = "Coming soon"; status_color = pal["muted"]
             elif status == "Being Built":
-                status_label = "🛠️ Being Built"; status_color = "#f97316"
+                status_label = "In development"; status_color = pal["muted"]
             elif status == "WIP":
-                status_label = "🧪 WIP"; status_color = "#f472b6"
+                status_label = "Preview"; status_color = pal["muted"]
             else:
-                status_label = status; status_color = "#f1f5f9"
+                status_label = status; status_color = pal["muted"]
 
             # ----- feedback / usage data -----
             fb = feedback_data.get(agent, {"rating": 0, "users": 0, "comments": []})
@@ -1336,7 +1264,7 @@ if st.session_state.stage == "landing":
             comments = fb.get("comments", [])
             comment_count = len(comments)
             rating = float(fb.get("rating", 0) or 0)
-            rating_html = render_stars(rating) if rating else "<span style='color:#475569;font-size:18px;'>—</span>"
+            rating_html = render_stars(rating) if rating else f"<span style='color:{pal['muted']};'>—</span>"
             rating_text = f"{rating:.1f}/5" if rating else "—"
             # Latest comment (most recent) - show under comment bubble
             latest_comment = html.escape(comments[-1]) if comments else "No feedback yet."
@@ -1360,66 +1288,72 @@ if st.session_state.stage == "landing":
             status_norm = status.strip().lower()
             is_launchable = status_norm in {"available", "being built", "new"}
             if route_name == "it_troubleshooter":
-                button_label = "🚀 Launch"
+                button_label = "Open"
             elif status_norm == "available":
-                button_label = "🚀 Launch"
+                button_label = "Open"
             elif status_norm == "new":
-                button_label = "🚀 Launch"
+                button_label = "Open"
             elif status_norm == "coming soon":
                 # Special cases: Chatbot Assistant and CEO driver DASHBOARD have preview available
                 if route_name == "chatbot_assistant":
-                    button_label = "👁️ Preview"
+                    button_label = "Preview"
                     launch_url = _launch_href("/chatbot_assistant")
                     is_launchable = True
                 elif route_name in {"ceo_driver_dashboard", "ceo_driver_seat"}:
-                    button_label = "👁️ Preview"
+                    button_label = "Preview"
                     launch_url = _launch_href("/ceo_driver_dashboard")
                     is_launchable = True
                 else:
-                    button_label = "🔒 Coming Soon"
+                    button_label = "Coming soon"
                     is_launchable = False
             elif status_norm in {"wip"}:
-                button_label = "👁️ Preview"
+                button_label = "Preview"
                 if route_name in {"ceo_driver_dashboard", "ceo_driver_seat"}:
                     launch_url = _launch_href("/ceo_driver_dashboard")
                 is_launchable = True
             else:
-                button_label = "🔧 Preview"
-            
+                button_label = "Preview"
+
             # Add login indicator to button if login required
             if requires_login and is_launchable:
-                button_label = f"🔐 {button_label}"
-            
+                button_label = f"{button_label} · sign in"
+
             action_html = (
                 f"<a class='launchbtn' href='{launch_url}'>{button_label}</a>"
                 if is_launchable
-                else "<span class='launchbtn launch-disabled'>🔒 Coming Soon</span>"
+                else "<span class='launchbtn launch-disabled'>Soon</span>"
             )
 
             # ----- append HTML for this agent card -----
+            # Custom agents come from user-authored blueprints, so their text is
+            # escaped before it reaches the card markup.
+            industry_html = html.escape(str(industry))
+            agent_html = html.escape(str(agent))
+            desc_html = html.escape(str(desc))
+            status_html = html.escape(str(status_label))
             html_agents += f"""
             <div class="agent-card">
-                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
-                    <div style="flex:1.2;color:#ccc;">{industry}</div>
-                    <div style="flex:1.5;font-weight:700;color:white;">{agent}</div>
-                    <div style="flex:3;color:#a0aec0;">{desc}</div>
-                    <div style="flex:1;text-align:center;color:{status_color};font-weight:700;">{status_label}</div>
-                    <div style="flex:0.6;text-align:center;">👥 {users}</div>
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;font-size:0.9rem;">
+                    <div style="flex:1.2;color:{pal['muted']};">{industry_html}</div>
+                    <div style="flex:1.5;font-weight:600;color:{pal['text']};">{agent_html}</div>
+                    <div style="flex:3;color:{pal['subtext']};padding-right:1rem;">{desc_html}</div>
+                    <div style="flex:1;text-align:center;"><span class="status-pill" style="color:{status_color};">{status_html}</span></div>
+                    <div style="flex:0.6;text-align:center;color:{pal['subtext']};">{users}</div>
                     <div class="agent-comments" style="flex:1;text-align:center;">
                         <details>
-                            <summary>💬 {comment_count}</summary>
+                            <summary>{comment_count} comments</summary>
                             <ul class="comment-list">
                                 {comment_list_html}
                             </ul>
                         </details>
-                        <!-- Latest comment displayed under comment bubble -->
-                        <div style="margin-top:0.5rem;font-size:0.75rem;color:#94a3b8;font-style:italic;max-width:200px;text-align:left;word-wrap:break-word;">
-                            💬 Latest: &ldquo;{latest_comment[:80]}{'...' if len(latest_comment) > 80 else ''}&rdquo;
+                        <!-- Latest comment displayed under comment count -->
+                        <div style="margin-top:0.35rem;font-size:0.75rem;color:{pal['muted']};max-width:200px;text-align:left;word-wrap:break-word;">
+                            &ldquo;{latest_comment[:80]}{'...' if len(latest_comment) > 80 else ''}&rdquo;
                         </div>
                     </div>
                     <div style="flex:0.9;text-align:center;line-height:1.4;">
                         {rating_html}
-                        <div style="font-size:0.85rem;color:#c7d2fe;">{rating_text}</div>
+                        <div style="font-size:0.78rem;color:{pal['muted']};">{rating_text}</div>
                     </div>
                     <div style="flex:0.8;text-align:center;">
                         {action_html}
@@ -1431,43 +1365,40 @@ if st.session_state.stage == "landing":
         # ============================================================
         # Agent Builder Featured Frame (separate neon frame)
         # ============================================================
-        st.markdown("""
-        <div class="neon-header" style="background: linear-gradient(90deg, #00f6ff, #00b5ff); margin-bottom: 1rem; box-shadow: 0 0 25px rgba(0,246,255,0.45);">
-            🧩 Agent Builder
-        </div>
-        <div class="neon-frame" style="animation: none; border-color: rgba(0,181,255,0.65); box-shadow: 0 0 45px rgba(0,181,255,0.35); margin-bottom: 2rem;">
+        builder_tile = (
+            f"background:{pal['bg']};border-radius:6px;padding:0.8rem 1rem;border:1px solid {pal['border']};"
+        )
+        st.markdown(f"""
+        <div class="neon-header">Agent Builder</div>
+        <div class="neon-frame" style="padding: 1.5rem; margin-bottom: 2.5rem;">
             <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: center;">
                 <div>
-                    <h3 style="color: #7df5ff; font-size: 1.5rem; font-weight: 700; margin-bottom: 0.8rem;">
-                        Build Custom Agents Like LEGO Blocks
+                    <h3 style="font-size: 1.1rem; font-weight: 600; margin: 0 0 0.5rem 0;">
+                        Compose custom agents from reusable functions
                     </h3>
-                    <p style="color: #cbd5e1; font-size: 1rem; line-height: 1.7; margin-bottom: 1rem;">
-                        Combine functions from Hugging Face agents, Agent Manager, and existing agents 
-                        to create powerful custom agents. Select functions, configure your agent, and 
-                        generate production-ready Python code instantly.
+                    <p style="font-size: 0.92rem; line-height: 1.65; margin-bottom: 1rem;">
+                        Combine functions from Hugging Face agents, the Agent Manager and existing agents.
+                        Select functions, configure the agent, and generate production-ready Python code.
                     </p>
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.5rem;">
-                        <div style="background: rgba(12,40,60,0.65); border-radius: 8px; padding: 1rem; border: 1px solid rgba(0,181,255,0.4);">
-                            <div style="color: #7df5ff; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.95rem;">📚 17+ Functions</div>
-                            <div style="color: #9bd8ff; font-size: 0.85rem;">HF, Manager & Existing Agents</div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-top: 1rem;">
+                        <div style="{builder_tile}">
+                            <div style="color:{pal['text']};font-weight:600;font-size:0.88rem;">17+ functions</div>
+                            <div style="color:{pal['muted']};font-size:0.8rem;">HF, Manager and existing agents</div>
                         </div>
-                        <div style="background: rgba(12,40,60,0.65); border-radius: 8px; padding: 1rem; border: 1px solid rgba(0,181,255,0.4);">
-                            <div style="color: #7df5ff; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.95rem;">🔨 Visual Builder</div>
-                            <div style="color: #9bd8ff; font-size: 0.85rem;">Easy function selection</div>
+                        <div style="{builder_tile}">
+                            <div style="color:{pal['text']};font-weight:600;font-size:0.88rem;">Visual builder</div>
+                            <div style="color:{pal['muted']};font-size:0.8rem;">Point-and-click function selection</div>
                         </div>
-                        <div style="background: rgba(12,40,60,0.65); border-radius: 8px; padding: 1rem; border: 1px solid rgba(0,181,255,0.4);">
-                            <div style="color: #7df5ff; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.95rem;">⚡ Auto Code Gen</div>
-                            <div style="color: #9bd8ff; font-size: 0.85rem;">Production-ready Python</div>
+                        <div style="{builder_tile}">
+                            <div style="color:{pal['text']};font-weight:600;font-size:0.88rem;">Code generation</div>
+                            <div style="color:{pal['muted']};font-size:0.8rem;">Production-ready Python</div>
                         </div>
                     </div>
                 </div>
                 <div style="text-align: center;">
-                    <a href="/agent_builder" class="launchbtn" style="font-size: 1.2rem; padding: 16px 32px; display: inline-block; margin-top: 1rem;">
-                        🚀 Launch Builder
+                    <a href="/agent_builder" class="launchbtn" style="padding: 10px 24px; font-size: 0.95rem;">
+                        Open Agent Builder
                     </a>
-                    <div style="color: #94a3b8; font-size: 0.85rem; margin-top: 1rem; font-style: italic;">
-                        Build your custom agent in minutes
-                    </div>
                 </div>
             </div>
         </div>
@@ -1478,13 +1409,13 @@ if st.session_state.stage == "landing":
         # ============================================================
         st.markdown(
             f"""
-            <div class="neon-header">📊 Global AI Agent Library</div>
-            <div class="neon-frame">
+            <div class="neon-header">Agent Library</div>
+            <div class="neon-frame" style="overflow:hidden;">
                 {header_bar}
                 {html_agents}
             </div>
-            <footer style="text-align:center;margin-top:2rem;color:#a3e8ff;">
-                💎 Made with ❤️ by DzoanNguyenTran@gmail.com — Open AIgents Sandbox Initiative
+            <footer>
+                Open AIgents Sandbox Initiative · DzoanNguyenTran@gmail.com
             </footer>
             """,
             unsafe_allow_html=True
@@ -1604,86 +1535,78 @@ if st.session_state.stage == "landing":
                 f"""
                 <!-- Rotating comments display -->
                 <div id="comments-rotator" style="
-                    background: linear-gradient(90deg, rgba(15,23,42,0.95), rgba(30,41,59,0.95));
-                    border-top: 1px solid rgba(0,200,255,0.3);
-                    border-bottom: 1px solid rgba(0,200,255,0.3);
+                    background: {pal['card']};
+                    border: 1px solid {pal['border']};
                     padding: 12px 20px;
                     margin-top: 3rem;
-                    margin-bottom: 1rem;
-                    box-shadow: 0 -2px 8px rgba(0,0,0,0.2);
+                    margin-bottom: 0.75rem;
                     min-height: 40px;
                     border-radius: 8px;
                 ">
                     <div id="current-comment" style="
-                        color: #cbd5e1;
-                        font-size: 0.95rem;
-                        font-style: italic;
+                        color: {pal['subtext']};
+                        font-size: 0.9rem;
                         text-align: center;
-                        animation: fadeIn 1s ease-in;
+                        transition: opacity 0.4s ease;
                     "></div>
                 </div>
-                
+
                 <!-- Feedback input row -->
                 <div id="feedback-input-row" style="
-                    background: linear-gradient(90deg, rgba(30,41,59,0.98), rgba(15,23,42,0.98));
-                    border: 1px solid rgba(0,200,255,0.3);
+                    background: {pal['card']};
+                    border: 1px solid {pal['border']};
                     padding: 12px 20px;
-                    margin-bottom: 1rem;
-                    box-shadow: 0 -2px 8px rgba(0,0,0,0.2);
+                    margin-bottom: 0.75rem;
                     border-radius: 8px;
                 ">
                     <div style="display: flex; align-items: center; gap: 10px; max-width: 1200px; margin: 0 auto;">
-                        <span style="color: #60a5fa; font-weight: 600; white-space: nowrap;">💬 Your Feedback:</span>
-                        <input 
-                            type="text" 
-                            id="feedback-input-field" 
-                            placeholder="Share your thoughts..." 
+                        <span style="color: {pal['text']}; font-weight: 500; font-size: 0.9rem; white-space: nowrap;">Feedback</span>
+                        <input
+                            type="text"
+                            id="feedback-input-field"
+                            placeholder="Share your thoughts..."
                             style="
                                 flex: 1;
                                 padding: 8px 14px;
-                                background: rgba(15,23,42,0.8);
-                                border: 1px solid rgba(0,200,255,0.4);
+                                background: {pal['input_bg']};
+                                border: 1px solid {pal['input_border']};
                                 border-radius: 6px;
-                                color: #e2e8f0;
+                                color: {pal['text']};
                                 font-size: 0.9rem;
                             "
                         />
-                        <button 
-                            onclick="submitFeedback()" 
+                        <button
+                            onclick="submitFeedback()"
                             style="
                                 padding: 8px 18px;
-                                background: linear-gradient(90deg, #3b82f6, #2563eb);
-                                border: none;
+                                background: {pal['accent']};
+                                border: 1px solid {pal['accent']};
                                 border-radius: 6px;
-                                color: white;
-                                font-weight: 600;
+                                color: #ffffff;
+                                font-weight: 500;
                                 cursor: pointer;
                                 font-size: 0.9rem;
                             "
-                        >📨 Submit</button>
+                        >Submit</button>
                     </div>
                 </div>
-                
+
                 <!-- Visitor status bar -->
                 <div id="visitor-status-bar" style="
-                    background: linear-gradient(90deg, rgba(15,23,42,0.95), rgba(30,41,59,0.95));
-                    border-top: 2px solid rgba(0,200,255,0.4);
                     padding: 10px 20px;
-                    font-size: 0.85rem;
-                    color: #a3e8ff;
+                    font-size: 0.8rem;
+                    color: {pal['muted']};
                     text-align: center;
-                    box-shadow: 0 -4px 12px rgba(0,0,0,0.3);
-                    border-radius: 8px;
                     margin-bottom: 2rem;
                 ">
-                    <div style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px;">
-                        <span style="font-weight: 700; color: #60a5fa;">👥 Visitors: <span style="color: #3b82f6;">{total_visitors}</span></span>
-                        <span style="color: #94a3b8;">|</span>
-                        <span style="font-weight: 700; color: #60a5fa;">📊 Total Visits: <span style="color: #3b82f6;">{total_visits}</span></span>
-                        <span style="color: #94a3b8;">|</span>
-                        <span style="color: #cbd5e1;">🌍 Countries: {countries_str}</span>
-                        <span style="color: #94a3b8;">|</span>
-                        <span id="refresh-time" style="color: #60a5fa; font-size: 0.75rem;">🔄 {current_time}</span>
+                    <div style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 14px;">
+                        <span style="color: {pal['muted']};">Visitors <b style="color: {pal['text']}; font-weight: 600;">{total_visitors}</b></span>
+                        <span style="color: {pal['border']};">|</span>
+                        <span style="color: {pal['muted']};">Total visits <b style="color: {pal['text']}; font-weight: 600;">{total_visits}</b></span>
+                        <span style="color: {pal['border']};">|</span>
+                        <span style="color: {pal['muted']};">Countries: {countries_str}</span>
+                        <span style="color: {pal['border']};">|</span>
+                        <span id="refresh-time" style="color: {pal['muted']};">Updated {current_time}</span>
                     </div>
                 </div>
                 
@@ -1699,7 +1622,7 @@ if st.session_state.stage == "landing":
                         if (commentEl) {{
                             commentEl.style.opacity = '0';
                             setTimeout(function() {{
-                                commentEl.textContent = '💬 ' + comments[currentCommentIndex];
+                                commentEl.textContent = '“' + comments[currentCommentIndex] + '”';
                                 commentEl.style.opacity = '1';
                                 currentCommentIndex = (currentCommentIndex + 1) % comments.length;
                             }}, 500);
@@ -1749,75 +1672,42 @@ if st.session_state.stage == "landing":
 # ────────────────────────────────
 if st.session_state.stage == "agents":
     # Inject CSS once
-    st.markdown("""
+    st.markdown(f"""
     <style>
-    @keyframes pulseFrame {
-        0%,100% { box-shadow: 0 0 35px rgba(0,200,255,0.25), inset 0 0 15px rgba(0,200,255,0.25); }
-        50% { box-shadow: 0 0 90px rgba(0,240,255,0.7), inset 0 0 25px rgba(0,240,255,0.45); }
-    }
-
-    .neon-frame {
-        border: 2px solid rgba(0,200,255,0.6);
-        border-radius: 18px;
-        padding: 2rem;
-        margin: 1rem 0 3rem 0;
-        background: linear-gradient(180deg, rgba(8,17,30,0.95), rgba(10,25,45,0.95));
-        animation: pulseFrame 6s ease-in-out infinite;
-        box-shadow: 0 0 60px rgba(0,200,255,0.35);
-    }
-
-    .neon-header {
-        background: linear-gradient(90deg, #ff0033, #ff3366);
-        border-radius: 8px;
-        color: white;
-        font-weight: 700;
-        padding: 10px 20px;
-        text-align: center;
-        text-shadow: 0 0 8px rgba(255,80,100,0.9);
-        box-shadow: 0 0 20px rgba(255,60,100,0.6);
-        font-size: 1.6rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .neon-table {
+    .neon-frame {{
+        padding: 0 !important;
+        margin: 0.5rem 0 3rem 0;
+        overflow: hidden;
+    }}
+    .neon-table {{
         width: 100%;
         border-collapse: collapse;
-    }
-    .neon-table th, .neon-table td {
-        padding: 10px 16px;
-        border-bottom: 1px solid rgba(0,200,255,0.3);
-        color: #e2e8f0;
+        border: none !important;
+    }}
+    .neon-table th, .neon-table td {{
+        padding: 12px 18px;
+        border: none !important;
+        border-bottom: 1px solid {pal['border']} !important;
+        color: {pal['subtext']};
         text-align: left;
-    }
-    .neon-table th {
-        color: #7dd3fc;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
         font-size: 0.9rem;
-    }
-
-    .macbtn {
-        text-decoration: none;
-        color: #e6f7ff;
-        font-weight: 700;
-        padding: 6px 16px;
-        border-radius: 8px;
-        border: 1px solid rgba(0,220,255,0.8);
-        background: rgba(0,50,80,0.5);
-        box-shadow: 0 0 14px rgba(0,220,255,0.5);
-        transition: all 0.25s ease-in-out;
-        display: inline-block;
-    }
-    .macbtn:hover {
-        box-shadow: 0 0 25px rgba(255,105,180,0.8);
-        transform: translateY(-2px) scale(1.05);
-        text-shadow: 0 0 12px #ff66cc;
-    }
+    }}
+    .neon-table tr:last-child td {{ border-bottom: none !important; }}
+    .neon-table tbody tr:hover {{ background: {pal['table_hover_bg']}; }}
+    .neon-table td:first-child {{ color: {pal['text']}; font-weight: 600; }}
+    .neon-table th {{
+        background: {pal['table_head_bg']};
+        color: {pal['muted']};
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
     # Header section
-    st.markdown("<div class='neon-header'>🤖 Available AI Agents</div>", unsafe_allow_html=True)
+    st.markdown("<div class='neon-header'>Available agents</div>", unsafe_allow_html=True)
 
     # Data - Retail Banking Suite agents sorted in specified order
     agent_rows = [
@@ -1961,8 +1851,7 @@ if st.session_state.stage == "agents":
 
     # Footer
     st.markdown(
-        "<footer style='text-align:center;margin-top:1rem;color:#a3e8ff;'>"
-        "💎 Made with ❤️ by DzoanNguyenTran@gmail.com — Open AIgents Sandbox Initiative</footer>",
+        "<footer>Open AIgents Sandbox Initiative · DzoanNguyenTran@gmail.com</footer>",
         unsafe_allow_html=True
     )
 
@@ -2019,11 +1908,11 @@ if st.session_state.stage == "login":
     
     top = st.columns([1, 4, 1])
     with top[0]:
-        if st.button("⬅️ Back to Agents", key="btn_back_agents_from_login"):
+        if st.button("← Agents", key="btn_back_agents_from_login"):
             st.session_state.stage = "agents"
             st.rerun()
     with top[1]:
-        st.title(f"🔐 Login to {agent_display_name}")
+        st.title(f"Sign in to {agent_display_name}")
 
     c1, c2, c3 = st.columns([1, 1, 1])
     with c1:
@@ -2032,7 +1921,7 @@ if st.session_state.stage == "login":
         email = st.text_input("Email", placeholder="e.g. dzoan@demo.local")
     with c3:
         pwd = st.text_input("Password", type="password", placeholder="Enter any password")
-    if st.button("Login", key="btn_login_submit", use_container_width=True):
+    if st.button("Sign in", key="btn_login_submit", type="primary", use_container_width=True):
         if user.strip() and email.strip():
             st.session_state.user_info = {
                 "name": user.strip(),
@@ -2057,7 +1946,7 @@ if st.session_state.stage == "login":
                 st.rerun()
         else:
             st.error("⚠️ Please fill all fields before continuing.")
-    st.markdown("<footer>Made with ❤️ by DzoanNguyenTran@gmail.com — Open AIgents Sandbox Initiative</footer>", unsafe_allow_html=True)
+    st.markdown("<footer>Open AIgents Sandbox Initiative · DzoanNguyenTran@gmail.com</footer>", unsafe_allow_html=True)
     st.stop()
 
 

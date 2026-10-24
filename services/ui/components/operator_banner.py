@@ -73,9 +73,9 @@ def render_operator_banner(
         f"""
         <style>
         .operator-hero {{
-            background: radial-gradient(circle at 15% 20%, {pal['card']}, {pal['bg']});
+            background: {pal['card']};
             border: 1px solid {pal['border']};
-            border-radius: 18px;
+            border-radius: 8px;
             padding: 1.4rem 1.8rem;
             box-shadow: {pal['shadow']};
             color: {pal['text']};
@@ -92,9 +92,9 @@ def render_operator_banner(
         .chatbot-brief {{
             margin-top: 1rem;
             padding: 0.8rem 1rem;
-            background: rgba(59, 130, 246, 0.08);
-            border-left: 3px solid {pal['accent']};
-            border-radius: 12px;
+            background: {pal['bg']};
+            border-left: 2px solid {pal['accent']};
+            border-radius: 4px;
             font-size: 0.9rem;
         }}
         .chatbot-brief ul {{

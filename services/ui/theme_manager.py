@@ -1,4 +1,8 @@
-"""Centralized dark/light theme helpers shared across all Streamlit agents."""
+"""Centralized dark/light theme helpers shared across all Streamlit agents.
+
+The look is deliberately restrained: neutral graphite/slate surfaces, a single
+muted accent, flat fills (no gradients or glows) and thin hairline borders.
+"""
 from __future__ import annotations
 
 import streamlit as st
@@ -7,56 +11,62 @@ DEFAULT_THEME = "dark"
 
 PALETTE = {
     "dark": {
-        "bg": "#05070d",
-        "bg_alt": "#0b1220",
-        "text": "#ffffff",
-        "subtext": "#cbd5e1",
-        "muted": "#9fb3d0",
-        "annotation": "#e2e8f0",
-        "card": "#0f172a",
-        "border": "rgba(148,163,184,0.35)",
-        "accent": "#3b82f6",
-        "accent_alt": "#10b981",
-        "tab_bg": "#111827",
-        "tab_active_bg": "#2563eb",
-        "tab_hover_bg": "rgba(37,99,235,0.25)",
-        "table_bg": "#0f172a",
-        "table_head_bg": "#1b2b46",
-        "table_head_tx": "#f8fafc",
-        "table_hover_bg": "rgba(37,99,235,0.18)",
-        "sidebar_bg": "linear-gradient(180deg,#05070d,#0e1527)",
-        "sidebar_border": "rgba(148,163,184,0.35)",
-        "input_bg": "#111b2f",
-        "input_border": "rgba(148,163,184,0.55)",
-        "json_bg": "#0d1526",
-        "json_text": "#f8fafc",
-        "shadow": "0 18px 50px rgba(2,6,23,0.65)",
+        "bg": "#0f1115",
+        "bg_alt": "#0f1115",
+        "text": "#e6e8eb",
+        "subtext": "#b3b9c2",
+        "muted": "#8a919c",
+        "annotation": "#c9ced5",
+        "card": "#161a20",
+        "border": "#272c35",
+        "accent": "#6b8bb0",
+        "accent_alt": "#7d9a8a",
+        "tab_bg": "transparent",
+        "tab_active_bg": "transparent",
+        "tab_hover_bg": "rgba(255,255,255,0.04)",
+        "table_bg": "#161a20",
+        "table_head_bg": "#1c2128",
+        "table_head_tx": "#c9ced5",
+        "table_hover_bg": "rgba(255,255,255,0.03)",
+        "sidebar_bg": "#12151a",
+        "sidebar_border": "#272c35",
+        "input_bg": "#12151a",
+        "input_border": "#323844",
+        "json_bg": "#12151a",
+        "json_text": "#d6dae0",
+        "shadow": "0 1px 2px rgba(0,0,0,0.35)",
+        "button_bg": "#1c2128",
+        "button_hover_bg": "#232931",
+        "button_text": "#e6e8eb",
     },
     "light": {
-        "bg": "#f5f7fa",
-        "bg_alt": "#ffffff",
-        "text": "#0f172a",
-        "subtext": "#475569",
-        "muted": "#64748b",
-        "annotation": "#1e293b",
+        "bg": "#f6f7f9",
+        "bg_alt": "#f6f7f9",
+        "text": "#1a1f27",
+        "subtext": "#4a5361",
+        "muted": "#6b7380",
+        "annotation": "#2d3440",
         "card": "#ffffff",
-        "border": "rgba(148,163,184,0.35)",
-        "accent": "#007aff",
-        "accent_alt": "#0f9d58",
-        "tab_bg": "#eef2ff",
-        "tab_active_bg": "#007aff",
-        "tab_hover_bg": "rgba(59,130,246,0.15)",
+        "border": "#dfe3e8",
+        "accent": "#2f4f75",
+        "accent_alt": "#3f6b55",
+        "tab_bg": "transparent",
+        "tab_active_bg": "transparent",
+        "tab_hover_bg": "rgba(15,23,42,0.04)",
         "table_bg": "#ffffff",
-        "table_head_bg": "#e2e8f0",
-        "table_head_tx": "#111827",
-        "table_hover_bg": "rgba(0,122,255,0.08)",
-        "sidebar_bg": "linear-gradient(180deg,#f8fafc,#edf2ff)",
-        "sidebar_border": "rgba(148,163,184,0.5)",
+        "table_head_bg": "#f1f3f6",
+        "table_head_tx": "#2d3440",
+        "table_hover_bg": "rgba(15,23,42,0.03)",
+        "sidebar_bg": "#ffffff",
+        "sidebar_border": "#dfe3e8",
         "input_bg": "#ffffff",
-        "input_border": "rgba(148,163,184,0.6)",
-        "json_bg": "#f8fafc",
-        "json_text": "#0f172a",
-        "shadow": "0 8px 24px rgba(15,23,42,0.12)",
+        "input_border": "#cfd5dc",
+        "json_bg": "#f6f7f9",
+        "json_text": "#1a1f27",
+        "shadow": "0 1px 2px rgba(15,23,42,0.06)",
+        "button_bg": "#ffffff",
+        "button_hover_bg": "#f1f3f6",
+        "button_text": "#1a1f27",
     },
 }
 
@@ -103,53 +113,99 @@ def apply_theme(theme: str | None = None) -> str:
     st.markdown(
         f"""
         <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
         html, body, [data-testid="stAppViewContainer"], .stApp {{
-            background: radial-gradient(circle at 20% 20%, {pal['bg']}, {pal['bg_alt']}) !important;
+            background: {pal['bg']} !important;
             color: {pal['text']} !important;
-            font-family: "Inter","SF Pro Display","Segoe UI",system-ui,sans-serif !important;
+            font-family: "Inter","Segoe UI",system-ui,-apple-system,sans-serif !important;
+            font-feature-settings: "cv11","ss01";
+        }}
+        [data-testid="stHeader"] {{
+            background: {pal['bg']} !important;
+            border-bottom: 1px solid {pal['border']} !important;
+        }}
+        .block-container {{
+            padding-top: 2.5rem !important;
         }}
         h1,h2,h3,h4,h5,h6 {{
             color: {pal['text']} !important;
-            letter-spacing: -0.02em !important;
+            letter-spacing: -0.015em !important;
+            font-weight: 600 !important;
         }}
+        h1 {{ font-size: 1.85rem !important; }}
+        h2 {{ font-size: 1.45rem !important; }}
+        h3 {{ font-size: 1.2rem !important; }}
         p, li, span, label, .stMarkdown {{
             color: {pal['subtext']} !important;
         }}
-        small, .stCaption {{
+        small, .stCaption, [data-testid="stCaptionContainer"] {{
             color: {pal['muted']} !important;
         }}
         a, a:link, a:visited {{
             color: {pal['accent']} !important;
+            text-decoration: none;
         }}
         a:hover {{
-            color: {pal['accent_alt']} !important;
             text-decoration: underline;
+        }}
+        a:focus-visible, button:focus-visible {{
+            outline: 2px solid {pal['accent']} !important;
+            outline-offset: 2px;
         }}
         hr {{
             border: none !important;
             height: 1px !important;
-            background: linear-gradient(90deg,transparent,{pal['accent']},transparent) !important;
+            background: {pal['border']} !important;
+            margin: 1.25rem 0 !important;
         }}
 
-        .stMarkdown, .stContainer, .stAlert, [class*="stCard"], .block-container {{
+        /* Card chrome is opt-in. Applying it to .stMarkdown wrapped every
+           st.caption/st.write — and every `---` rule — in its own box. */
+        .stAlert, [class*="stCard"], .ai-card,
+        [data-testid="stVerticalBlockBorderWrapper"] {{
             background: {pal['card']} !important;
             border: 1px solid {pal['border']} !important;
-            border-radius: 12px !important;
+            border-radius: 8px !important;
             box-shadow: {pal['shadow']} !important;
         }}
-
-        .stButton>button, button[kind="primary"], .stDownloadButton>button {{
-            background: linear-gradient(180deg,{pal['accent']},{pal['accent_alt']}) !important;
-            color: #ffffff !important;
-            border: 1px solid {pal['accent']} !important;
-            border-radius: 8px !important;
-            font-weight: 600 !important;
-            padding: 0.5rem 1rem !important;
-            transition: all 0.25s ease-in-out !important;
+        /* Nested bordered containers stay flat so cards don't stack shadows. */
+        [data-testid="stVerticalBlockBorderWrapper"]
+            [data-testid="stVerticalBlockBorderWrapper"] {{
+            background: transparent !important;
+            box-shadow: none !important;
         }}
-        .stButton>button:hover {{
-            filter: brightness(1.05);
-            transform: translateY(-1px);
+
+        /* Buttons: neutral by default, solid accent only for primary actions. */
+        .stButton>button, .stDownloadButton>button, .stFormSubmitButton>button {{
+            background: {pal['button_bg']} !important;
+            color: {pal['button_text']} !important;
+            border: 1px solid {pal['input_border']} !important;
+            border-radius: 6px !important;
+            font-weight: 500 !important;
+            font-size: 0.92rem !important;
+            padding: 0.45rem 1rem !important;
+            box-shadow: none !important;
+            transition: background 0.15s ease, border-color 0.15s ease !important;
+        }}
+        .stButton>button:hover, .stDownloadButton>button:hover, .stFormSubmitButton>button:hover {{
+            background: {pal['button_hover_bg']} !important;
+            border-color: {pal['accent']} !important;
+            filter: none !important;
+            transform: none !important;
+        }}
+        .stButton>button p, .stDownloadButton>button p {{
+            color: inherit !important;
+        }}
+        button[kind="primary"], button[data-testid="baseButton-primary"],
+        button[data-testid="stBaseButton-primary"] {{
+            background: {pal['accent']} !important;
+            border-color: {pal['accent']} !important;
+            color: #ffffff !important;
+        }}
+        button[kind="primary"]:hover, button[data-testid="baseButton-primary"]:hover,
+        button[data-testid="stBaseButton-primary"]:hover {{
+            filter: brightness(1.08) !important;
         }}
 
         .stTextInput>div>div>input,
@@ -158,60 +214,100 @@ def apply_theme(theme: str | None = None) -> str:
             background: {pal['input_bg']} !important;
             color: {pal['text']} !important;
             border: 1px solid {pal['input_border']} !important;
-            border-radius: 8px !important;
+            border-radius: 6px !important;
             padding: 6px 10px !important;
+        }}
+        .stTextInput>div>div>input:focus, textarea:focus {{
+            border-color: {pal['accent']} !important;
+            box-shadow: none !important;
         }}
         .stSelectbox>div>div {{
             background: {pal['input_bg']} !important;
             color: {pal['text']} !important;
-            border: 1px solid {pal['input_border']} !important;
-            border-radius: 8px !important;
+            border-radius: 6px !important;
         }}
         ::placeholder {{
             color: {pal['muted']} !important;
         }}
-        [data-baseweb="select"] > div {{
+        div[data-baseweb="select"] > div {{
             background: {pal['input_bg']} !important;
             color: {pal['text']} !important;
-            border-radius: 8px !important;
+            border: 1px solid {pal['input_border']} !important;
+            border-radius: 6px !important;
         }}
-        [data-baseweb="popover"], [role="listbox"] {{
+        div[data-baseweb="select"] input,
+        div[data-baseweb="select"] span {{
+            color: {pal['text']} !important;
+        }}
+        [data-baseweb="popover"], [role="listbox"],
+        ul[role="listbox"], div[role="listbox"] {{
             background: {pal['card']} !important;
             border: 1px solid {pal['border']} !important;
             color: {pal['text']} !important;
         }}
-        [data-baseweb="menu-item"] {{
+        [data-baseweb="menu-item"], [role="option"],
+        ul[role="listbox"] li, div[role="listbox"] * {{
             background: {pal['card']} !important;
             color: {pal['text']} !important;
         }}
-        [data-baseweb="menu-item"]:hover {{
-            background: {pal['tab_hover_bg'] if 'tab_hover_bg' in pal else pal['table_hover_bg']} !important;
+        [data-baseweb="menu-item"]:hover, [role="option"]:hover,
+        [role="option"][aria-selected="true"] {{
+            background: {pal['button_hover_bg']} !important;
             color: {pal['text']} !important;
+        }}
+        ul[role="listbox"] li {{
+            line-height: 1.45rem !important;
+            white-space: pre-wrap !important;
         }}
 
-        .stTabs [data-baseweb="tab-list"] button {{
-            background: {pal['tab_bg']} !important;
-            color: {pal['text']} !important;
-            border-radius: 8px !important;
-            border: 1px solid {pal['border']} !important;
-            margin-right: 6px !important;
+        /* Tabs: plain labels with an accent underline on the active tab. */
+        .stTabs [data-baseweb="tab-list"] {{
+            gap: 0.25rem !important;
+            border-bottom: 1px solid {pal['border']} !important;
         }}
-        .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {{
-            background: {pal['tab_active_bg']} !important;
-            color: #fff !important;
+        .stTabs [data-baseweb="tab-list"] button,
+        [data-testid="stTabs"] [data-baseweb="tab"] {{
+            background: transparent !important;
+            color: {pal['muted']} !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            margin-right: 0 !important;
+            padding: 0.6rem 1rem !important;
+            font-size: 0.95rem !important;
+            font-weight: 500 !important;
+        }}
+        .stTabs [data-baseweb="tab-list"] button:hover {{
+            color: {pal['text']} !important;
+            background: {pal['tab_hover_bg']} !important;
+            box-shadow: none !important;
+        }}
+        .stTabs [data-baseweb="tab-list"] button[aria-selected="true"],
+        [data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] {{
+            background: transparent !important;
+            color: {pal['text']} !important;
+            border-bottom: 2px solid {pal['accent']} !important;
+            box-shadow: none !important;
+        }}
+        .stTabs [data-baseweb="tab-list"] button p {{
+            color: inherit !important;
+            font-size: inherit !important;
+        }}
+        .stTabs [data-baseweb="tab-highlight"] {{
+            background: {pal['accent']} !important;
         }}
 
         [data-testid="stDataFrame"] {{
             background: {pal['table_bg']} !important;
             border: 1px solid {pal['border']} !important;
-            border-radius: 12px !important;
-            box-shadow: inset 0 0 12px rgba(0,0,0,0.35);
+            border-radius: 8px !important;
+            box-shadow: none !important;
         }}
         [data-testid="stDataFrame"] thead tr th {{
             background: {pal['table_head_bg']} !important;
             color: {pal['table_head_tx']} !important;
             font-weight: 600 !important;
-            border-bottom: 2px solid {pal['accent']} !important;
+            border-bottom: 1px solid {pal['border']} !important;
         }}
         [data-testid="stDataFrame"] tbody tr:hover {{
             background: {pal['table_hover_bg']} !important;
@@ -221,9 +317,9 @@ def apply_theme(theme: str | None = None) -> str:
             background: {pal['json_bg']} !important;
             color: {pal['json_text']} !important;
             border: 1px solid {pal['border']} !important;
-            border-radius: 8px !important;
-            font-family: "SF Mono","Menlo","Consolas",monospace !important;
-            font-size: 0.9rem !important;
+            border-radius: 6px !important;
+            font-family: "JetBrains Mono","SF Mono","Consolas",monospace !important;
+            font-size: 0.86rem !important;
             padding: 0.65rem 0.75rem !important;
         }}
         [data-testid="stJson"] pre {{
@@ -231,6 +327,7 @@ def apply_theme(theme: str | None = None) -> str:
         }}
         pre code {{
             background: transparent !important;
+            border: none !important;
             padding: 0 !important;
         }}
 
@@ -242,63 +339,72 @@ def apply_theme(theme: str | None = None) -> str:
             color: {pal['text']} !important;
         }}
 
+        [data-testid="stMetric"] {{
+            background: {pal['card']};
+            border: 1px solid {pal['border']};
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+        }}
         [data-testid="stMetricValue"] {{
             color: {pal['text']} !important;
+            font-weight: 600 !important;
         }}
         [data-testid="stMetricLabel"], .metric-label {{
-            color: {pal['annotation']} !important;
+            color: {pal['muted']} !important;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-size: 0.75rem !important;
         }}
-<<<<<<< HEAD
-=======
         .metric-title {{
-            font-size: 1.3rem !important;
-            font-weight: 700 !important;
+            font-size: 1.1rem !important;
+            font-weight: 600 !important;
             margin-bottom: 0.5rem !important;
         }}
         .metric-explain {{
-            font-size: 0.95rem !important;
-            opacity: 0.85 !important;
-            margin-bottom: 1.4rem !important;
+            font-size: 0.92rem !important;
+            color: {pal['muted']} !important;
+            margin-bottom: 1.2rem !important;
         }}
-        ul[role="listbox"] li {{
-            font-size: 1.15rem !important;
-            line-height: 1.45rem !important;
-            white-space: pre-wrap !important;
-        }}
->>>>>>> edc6fcd87ea2babb0c09187ad96df4e2130eaac2
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
 
-    st.markdown(
-        """
-        <style>
-        /* Global selectbox/listbox color overrides */
-        div[data-baseweb="select"] > div {
-            color: #000000 !important;
-            background-color: #ffffff !important;
-        }
-        div[data-baseweb="select"] input {
-            color: #000000 !important;
-        }
-        div[data-baseweb="select"] span {
-            color: #000000 !important;
-        }
-        ul[role="listbox"],
-        div[role="listbox"] {
-            background-color: #ffffff !important;
-            color: #000000 !important;
-        }
-        ul[role="listbox"] li,
-        div[role="option"],
-        div[role="listbox"] * {
-            color: #000000 !important;
-        }
-        [role="option"]:hover {
-            color: #000000 !important;
-            background-color: #f1f5f9 !important;
-        }
+        /* Legacy "neon" classes still used by some pages: render them flat. */
+        .stApp .neon-header {{
+            background: transparent !important;
+            color: {pal['text']} !important;
+            text-shadow: none !important;
+            box-shadow: none !important;
+            border: none !important;
+            border-bottom: 1px solid {pal['border']} !important;
+            border-radius: 0 !important;
+            text-align: left !important;
+            font-size: 1.15rem !important;
+            font-weight: 600 !important;
+            padding: 0 0 0.6rem 0 !important;
+            margin-bottom: 1rem !important;
+        }}
+        .stApp .neon-frame {{
+            background: {pal['card']} !important;
+            border: 1px solid {pal['border']} !important;
+            border-radius: 8px !important;
+            box-shadow: none !important;
+            animation: none !important;
+        }}
+        .stApp .launchbtn, .stApp .macbtn, .stApp a.macbtn {{
+            display: inline-block;
+            background: {pal['button_bg']} !important;
+            color: {pal['button_text']} !important;
+            border: 1px solid {pal['input_border']} !important;
+            border-radius: 6px !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+            font-weight: 500 !important;
+            text-decoration: none !important;
+            transform: none !important;
+        }}
+        .stApp .launchbtn:hover, .stApp .macbtn:hover {{
+            background: {pal['button_hover_bg']} !important;
+            border-color: {pal['accent']} !important;
+            text-decoration: none !important;
+        }}
         </style>
         """,
         unsafe_allow_html=True,
@@ -307,7 +413,7 @@ def apply_theme(theme: str | None = None) -> str:
 
 
 def render_theme_toggle(
-    label: str = "🌗 Dark mode",
+    label: str = "Dark mode",
     key: str = "ui_theme_toggle",
     *,
     help: str | None = None,
