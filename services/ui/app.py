@@ -1027,7 +1027,7 @@ def icon_tile(path: str, c1: str, c2: str, size: int, gid: str = "gt") -> str:
 BRAND_LOGO_SVG = (
     '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">'
     '<defs><linearGradient id="aam" x1="0" y1="0" x2="1" y2="1">'
-    '<stop offset="0" stop-color="#1a6dff"/><stop offset="1" stop-color="#00d4ff"/></linearGradient></defs>'
+    '<stop offset="0" stop-color="#e5133a"/><stop offset="0.55" stop-color="#7a3cff"/><stop offset="1" stop-color="#1a6dff"/></linearGradient></defs>'
     '<rect width="40" height="40" rx="10" fill="url(#aam)"/>'
     # three "agents" on a shelf, the last one leaning: a market of agents
     '<rect x="9" y="11" width="5" height="18" rx="1.5" fill="#ffffff"/>'
@@ -1210,31 +1210,51 @@ def render_marketplace_css():
     st.markdown(
         f"""
 <style>
-.block-container, [data-testid="stMainBlockContainer"] {{ max-width: 1320px !important; padding-top: 1rem !important; }}
+.block-container, [data-testid="stMainBlockContainer"] {{ max-width: 1320px !important; padding-top: 0 !important; }}
 [data-testid="stHeader"] {{ display: none !important; }}
-/* Dark top bar */
+[data-testid="stMain"] {{ overflow-x: hidden; }}
+/* Rows that only inject <style> still take a flex gap; collapse them (the CSS still applies). */
+[data-testid="stElementContainer"]:has(style) {{ display: none !important; }}
+/* Full-bleed sections break out of the centered content column. */
+.st-key-aw_header, .st-key-aw_hero {{ width: 100vw !important; max-width: 100vw !important; margin-left: calc(50% - 50vw) !important; }}
+/* Two-tier dark top bar */
 .st-key-aw_header {{
-    background: #0b1424; border-radius: 10px; padding: 0.6rem 1.1rem 0.75rem 1.1rem; margin-bottom: 0; gap: 0.35rem !important;
-    border-bottom: 2px solid {accent}; box-shadow: 0 6px 24px -12px rgba(26,109,255,0.7);
+    background: #0a1428; padding: 1rem max(2rem, calc(50vw - 640px)) 0 max(2rem, calc(50vw - 640px)); gap: 0 !important;
+    box-shadow: 0 10px 30px -18px rgba(10,20,40,0.9);
 }}
 .st-key-aw_header p, .st-key-aw_header span, .st-key-aw_header label {{ color:#e6edf7 !important; }}
-.aw-brand {{ display:flex; align-items:center; gap:0.6rem; text-decoration:none !important; }}
-.aw-word {{ font-size:1.25rem; font-weight:700; color:#ffffff !important; letter-spacing:-0.01em; line-height:1; }}
-.aw-word b {{ color:#3ea6ff !important; text-shadow:0 0 12px rgba(0,170,255,0.65); }}
-.aw-word small {{ display:block; font-size:0.66rem; font-weight:500; color:#8fb3d9 !important; letter-spacing:0.08em; text-transform:uppercase; margin-top:3px; }}
-.aw-nav {{ display:flex; gap:1.5rem; flex-wrap:wrap; padding:0.45rem 0 0.15rem 0; }}
-.aw-nav a {{ color:#e6edf7 !important; font-size:0.84rem; font-weight:600; text-decoration:none !important; }}
+.aw-brand {{ display:flex; align-items:center; gap:0.8rem; text-decoration:none !important; }}
+.aw-word {{ font-size:1.75rem; font-weight:800; color:#ffffff !important; letter-spacing:-0.025em; line-height:1; }}
+.aw-word b {{ color:{pal['red']} !important; font-weight:800; text-shadow:0 0 16px rgba(229,19,58,0.55); }}
+.aw-word small {{ display:block; font-size:0.7rem; font-weight:600; color:#8fb3d9 !important; letter-spacing:0.12em; text-transform:uppercase; margin-top:6px; }}
+.aw-head-actions {{ display:flex; justify-content:flex-end; gap:0.75rem; align-items:center; }}
+.aw-head-actions a {{ font-size:0.9rem; font-weight:600; text-decoration:none !important; white-space:nowrap; }}
+.aw-btn-red {{ background:{pal['red']}; color:#ffffff !important; padding:0.6rem 1.15rem; border-radius:8px; box-shadow:0 0 18px rgba(229,19,58,0.45); }}
+.aw-btn-red:hover {{ filter:brightness(1.1); }}
+.aw-btn-ghost {{ color:#e6edf7 !important; padding:0.55rem 1rem; border-radius:8px; border:1px solid rgba(255,255,255,0.28); }}
+.aw-btn-ghost:hover {{ border-color:#3ea6ff; color:#3ea6ff !important; }}
+.aw-nav {{
+    display:flex; gap:1.9rem; flex-wrap:wrap; align-items:center;
+    margin: 0.9rem calc(-1 * max(2rem, calc(50vw - 640px))) 0; padding: 0.7rem max(2rem, calc(50vw - 640px));
+    background:#13213d; border-bottom: 4px solid transparent;
+    border-image: linear-gradient(90deg, {pal['red']} 0%, {pal['red']} 35%, {accent} 65%, {accent} 100%) 1;
+}}
+.aw-nav a {{ color:#e6edf7 !important; font-size:0.95rem; font-weight:600; text-decoration:none !important; }}
 .aw-nav a:hover {{ color:#3ea6ff !important; text-decoration:none; }}
-.aw-nav .aw-nav-right {{ margin-left:auto; display:flex; gap:1.5rem; }}
+.aw-nav .aw-nav-right {{ margin-left:auto; display:flex; gap:1.9rem; }}
 /* Hero */
 .st-key-aw_hero {{
-    background: {pal['hero_bg']};
-    border-radius: 0 0 16px 16px; padding: 2rem 2rem 1.5rem 2rem; margin-bottom: 1.5rem;
+    background:
+        radial-gradient(700px 260px at 12% 0%, rgba(229,19,58,0.10), transparent 60%),
+        radial-gradient(800px 300px at 88% 10%, rgba(26,109,255,0.16), transparent 60%),
+        {pal['hero_bg']};
+    padding: 3rem max(2rem, calc(50vw - 540px)) 2.5rem; margin-bottom: 1.5rem;
 }}
-.st-key-aw_hero [data-testid="stVerticalBlock"] {{ max-width: 1040px; margin: 0 auto; }}
-.aw-eyebrow {{ text-align:center; font-weight:600; font-size:0.92rem; color:{pal['hero_text']} !important; }}
-.aw-eyebrow i {{ color:{accent}; font-style:normal; text-shadow:0 0 10px rgba(26,109,255,0.5); }}
-.aw-hero-title {{ text-align:center; font-size:1.9rem !important; font-weight:700 !important; color:{pal['hero_text']} !important; margin:0.35rem 0 1.1rem 0 !important; }}
+.aw-eyebrow {{ text-align:center; font-weight:700; font-size:0.95rem; color:{pal['hero_text']} !important; letter-spacing:0.02em; }}
+.aw-eyebrow i {{ color:{pal['red']}; font-style:normal; text-shadow:0 0 10px rgba(229,19,58,0.5); }}
+.aw-hero-title, .aw-hero-title * {{ text-align:center; font-size:2.6rem !important; font-weight:800 !important; letter-spacing:-0.03em !important; color:{pal['hero_text']} !important; margin:0.4rem 0 0.4rem 0 !important; line-height:1.15 !important; }}
+.aw-hero-title em {{ font-style:normal; color:{pal['red']} !important; }}
+.aw-hero-sub {{ text-align:center; font-size:1.08rem; color:{pal['subtext']} !important; margin-bottom:1.5rem; }}
 .st-key-aw_hero [data-baseweb="input"] {{
     border-radius: 10px !important; border: 1px solid {pal['hero_border']} !important; background:{pal['hero_card']} !important; overflow:hidden;
 }}
@@ -1251,6 +1271,45 @@ def render_marketplace_css():
 .aw-task b {{ display:block; color:{pal['hero_text']} !important; font-size:0.95rem; }}
 .aw-task span {{ color:{pal['subtext']} !important; font-size:0.9rem; }}
 .aw-task em {{ margin-left:auto; color:{accent} !important; font-size:0.78rem; white-space:nowrap; }}
+/* Value proposition intro (What / Why / So what / For who / How / What now) */
+.vp-eyebrow {{ text-align:center; font-size:0.78rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:{pal['red']} !important; margin-top:0.5rem; }}
+.vp-title {{ text-align:center; font-size:1.9rem; font-weight:800; letter-spacing:-0.02em; color:{pal['text']} !important; margin:0.3rem 0 0.4rem 0; }}
+.vp-sub {{ text-align:center; max-width:780px; margin:0 auto 1.6rem auto; font-size:1rem; line-height:1.6; color:{pal['subtext']} !important; }}
+.vp-grid {{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }}
+.vp-card {{ background:{pal['card']}; border:1px solid {pal['border']}; border-top:3px solid {accent}; border-radius:12px; padding:1.1rem 1.2rem 1.2rem; display:flex; flex-direction:column; gap:0.45rem; }}
+.vp-card:nth-child(odd) {{ border-top-color:{pal['red']}; }}
+.vp-label {{ display:flex; align-items:center; gap:0.55rem; font-size:0.74rem; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; color:{pal['red']} !important; }}
+.vp-card:nth-child(even) .vp-label {{ color:{accent} !important; }}
+.vp-card h4 {{ margin:0.2rem 0 0 0 !important; font-size:1.05rem !important; font-weight:700 !important; line-height:1.35 !important; color:{pal['text']} !important; }}
+.vp-card p, .vp-card li {{ font-size:0.88rem; line-height:1.55; color:{pal['subtext']} !important; margin:0; }}
+.vp-card ul {{ margin:0.1rem 0 0 0; padding-left:1rem; }}
+.vp-card li {{ margin-bottom:0.25rem; }}
+.vp-card li b, .vp-card p b {{ color:{pal['text']} !important; font-weight:600; }}
+.vp-how {{ margin-top:16px; background:{pal['card']}; border:1px solid {pal['border']}; border-radius:12px; padding:1.2rem 1.4rem; }}
+.vp-how-head {{ display:flex; align-items:center; gap:0.6rem; margin-bottom:0.9rem; }}
+.vp-how-head h4 {{ margin:0 !important; font-size:1.05rem !important; font-weight:700 !important; color:{pal['text']} !important; }}
+.vp-steps {{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; position:relative; }}
+.vp-step {{ position:relative; padding:0.85rem 0.9rem; border-radius:10px; background:{pal['bg']}; border:1px solid {pal['border']}; }}
+.vp-step:not(:last-child)::after {{ content:"→"; position:absolute; right:-11px; top:50%; transform:translateY(-50%); color:{pal['muted']}; font-weight:700; z-index:1; }}
+.vp-step i {{ font-style:normal; display:inline-flex; align-items:center; justify-content:center; width:1.6rem; height:1.6rem; border-radius:50%;
+    background:linear-gradient(135deg,{pal['red']},{accent}); color:#fff !important; font-size:0.8rem; font-weight:800; margin-bottom:0.4rem; box-shadow:0 0 12px rgba(26,109,255,0.35); }}
+.vp-step b {{ display:block; color:{pal['text']} !important; font-size:0.92rem; margin-bottom:0.15rem; }}
+.vp-step span {{ display:block; font-size:0.8rem; line-height:1.45; color:{pal['subtext']} !important; }}
+.vp-step em {{ display:table; margin-top:0.45rem; font-style:normal; font-size:0.68rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:{accent} !important; }}
+.vp-now {{ margin-top:16px; display:flex; align-items:center; justify-content:space-between; gap:1.25rem; flex-wrap:wrap; padding:1.35rem 1.6rem; border-radius:12px;
+    background:linear-gradient(110deg, #0a1428 0%, #13213d 55%, #14306b 100%); border-bottom:4px solid transparent;
+    border-image: linear-gradient(90deg, {pal['red']} 0%, {accent} 100%) 1; }}
+.vp-now .vp-label {{ color:#ff6b84 !important; }}
+.vp-now h4, .vp-now h4 * {{ margin:0.25rem 0 0.2rem 0 !important; font-size:1.25rem !important; font-weight:800 !important; color:#ffffff !important; }}
+.vp-now p {{ margin:0; color:#c9d6ea !important; font-size:0.92rem; }}
+.vp-now-ctas {{ display:flex; gap:0.6rem; flex-wrap:wrap; }}
+.vp-now-ctas a {{ font-size:0.9rem; font-weight:700; padding:0.6rem 1.1rem; border-radius:8px; text-decoration:none !important; white-space:nowrap; }}
+.vp-cta-red {{ background:{pal['red']}; color:#ffffff !important; box-shadow:0 0 18px rgba(229,19,58,0.45); }}
+.vp-cta-blue {{ background:{accent}; color:#ffffff !important; box-shadow:0 0 18px rgba(26,109,255,0.45); }}
+.vp-cta-ghost {{ border:1px solid rgba(255,255,255,0.35); color:#ffffff !important; }}
+.vp-now-ctas a:hover {{ filter:brightness(1.1); }}
+@media (max-width: 1100px) {{ .vp-grid {{ grid-template-columns:repeat(2,1fr); }} .vp-steps {{ grid-template-columns:repeat(2,1fr); }} .vp-step::after {{ display:none; }} }}
+@media (max-width: 700px) {{ .vp-grid, .vp-steps {{ grid-template-columns:1fr; }} }}
 /* Section headings */
 .aw-h2 {{ text-align:center; font-size:1.45rem; font-weight:700; color:{pal['text']} !important; margin:1.8rem 0 0.6rem 0; }}
 /* Top cards */
@@ -1259,7 +1318,7 @@ def render_marketplace_css():
 .aw-card:hover {{ border-color:{accent}; box-shadow:0 10px 30px -14px rgba(26,109,255,0.55); }}
 .aw-card-top {{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.3rem; }}
 .aw-logo {{ padding:4px; border:1px solid {pal['border']}; border-radius:12px; background:{pal['card']}; flex:none; }}
-.aw-rank {{ background:{accent}; color:#ffffff !important; font-size:0.75rem; font-weight:700; padding:2px 9px; border-radius:6px; box-shadow:0 0 12px rgba(26,109,255,0.5); }}
+.aw-rank {{ background:{pal['red']}; color:#ffffff !important; font-size:0.75rem; font-weight:700; padding:2px 9px; border-radius:6px; box-shadow:0 0 12px rgba(229,19,58,0.45); }}
 .aw-by {{ font-size:0.8rem; color:{pal['muted']} !important; }}
 .aw-title {{ font-size:1.02rem; font-weight:700; color:{accent} !important; line-height:1.3; text-decoration:none !important; }}
 a.aw-title:hover {{ text-decoration:underline !important; }}
@@ -1320,7 +1379,7 @@ a.aw-title:hover {{ text-decoration:underline !important; }}
 .aw-badge-live {{ background:rgba(26,109,255,0.10); color:{accent} !important; border:1px solid rgba(26,109,255,0.35); }}
 .aw-badge-soft {{ background:{pal['bg']}; color:{pal['subtext']} !important; border:1px solid {pal['border']}; }}
 .aw-badge-muted {{ color:{pal['muted']} !important; border:1px dashed {pal['input_border']}; }}
-.aw-cta {{ font-size:0.84rem; font-weight:600; padding:6px 14px; border-radius:8px; white-space:nowrap; background:{accent}; color:#ffffff !important; text-decoration:none !important; box-shadow:0 0 14px rgba(26,109,255,0.35); }}
+.aw-cta {{ font-size:0.84rem; font-weight:600; padding:6px 14px; border-radius:8px; white-space:nowrap; background:{pal['red']}; color:#ffffff !important; text-decoration:none !important; box-shadow:0 0 14px rgba(229,19,58,0.35); }}
 .aw-cta:hover {{ filter:brightness(1.08); }}
 .aw-cta-off {{ background:transparent; color:{pal['muted']} !important; border:1px solid {pal['border']}; box-shadow:none; }}
 .st-key-aw_filters {{ position: sticky; top: 1rem; }}
@@ -1380,27 +1439,118 @@ def _popularity(item: dict):
 def render_market_header():
     """Dark top bar shared by the market and agent detail pages."""
     with st.container(key="aw_header"):
-        brand, tog = st.columns([8, 1], vertical_alignment="center")
+        brand, actions, tog = st.columns([5, 3, 0.8], vertical_alignment="center")
         with brand:
             st.markdown(
-                f"<a class='aw-brand' href='/' target='_self'><img src='{_svg_data_uri(BRAND_LOGO_SVG)}' width='34' height='34' alt=''/>"
+                f"<a class='aw-brand' href='/' target='_self'><img src='{_svg_data_uri(BRAND_LOGO_SVG)}' width='52' height='52' alt=''/>"
                 "<span class='aw-word'>ai agent <b>market</b><small>Free agents for every vertical</small></span></a>",
+                unsafe_allow_html=True,
+            )
+        with actions:
+            st.markdown(
+                "<div class='aw-head-actions'>"
+                "<a class='aw-btn-ghost' href='/deployment_in_production' target='_self'>Deploy to production</a>"
+                "<a class='aw-btn-red' href='/agent_builder' target='_self'>Publish an agent</a>"
+                "</div>",
                 unsafe_allow_html=True,
             )
         with tog:
             render_theme_toggle(label="Dark", key="aw_theme_toggle")
         st.markdown(
             "<nav class='aw-nav'>"
-            "<a href='#browse-agents' target='_self'>Verticals</a>"
-            "<a href='#most-popular' target='_self'>Most popular</a>"
+            "<a href='/#browse-agents' target='_self'>All verticals</a>"
+            "<a href='/#most-popular' target='_self'>Most popular</a>"
             "<a href='/agent_builder' target='_self'>Agent Builder</a>"
             "<a href='/hf_inspector' target='_self'>Agent Manager</a>"
             "<a href='/ceo_driver_dashboard' target='_self'>CEO Dashboard</a>"
-            "<span class='aw-nav-right'><a href='/agent_builder' target='_self'>Publish an agent</a>"
-            "<a href='/deployment_in_production' target='_self'>Deploy to production</a></span>"
+            "<span class='aw-nav-right'><a href='/deployment_in_production' target='_self'>Multi-cloud deploy</a>"
+            "<a href='https://github.com/Sherlock2019/AI-AIGENTbythePeoplesANDBOX' target='_blank'>Open source</a></span>"
             "</nav>",
             unsafe_allow_html=True,
         )
+
+
+# Icons for the value-proposition cards (24x24 stroke paths).
+VP_ICONS = {
+    "what": '<path d="M4 5h6v14H4zM14 5h6v6h-6zM14 15h6v4h-6z"/>',
+    "why": '<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01"/>',
+    "so_what": '<path d="M4 17l5-5 4 4 7-8"/><path d="M15 8h5v5"/>',
+    "for_who": '<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.2A5 5 0 0 1 21 19"/>',
+    "how": '<path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="4"/>',
+    "what_now": '<path d="M5 12h12M13 6l6 6-6 6"/>',
+}
+
+
+def _vp_label(key: str, text: str, red: bool = True) -> str:
+    c1, c2 = ("#e5133a", "#ff5a76") if red else ("#1a6dff", "#00c6ff")
+    return f"<div class='vp-label'>{icon_tile(VP_ICONS[key], c1, c2, 26, gid=f'vp{key}')}{text}</div>"
+
+
+def render_value_intro(n_agents: int, n_verticals: int, n_live: int):
+    """What / Why / So what / For who / How / What now: the pitch for newcomers."""
+    st.markdown(
+        "<div class='vp-eyebrow'>Why AI Agent Market</div>"
+        "<div class='vp-title'>A ready-to-use, no-code AI agent library</div>"
+        "<div class='vp-sub'>Discover what AI agents can do for real human tasks, use them as copilots, "
+        "and take the ones that work from proof of concept to production. No code, no licence fees.</div>"
+        "<div class='vp-grid'>"
+        # WHAT
+        "<div class='vp-card'>"
+        f"{_vp_label('what', 'What', red=True)}"
+        f"<h4>{n_agents} ready-to-run agents across {n_verticals} verticals</h4>"
+        f"<p>Each agent is a working copilot for a specific human task: credit appraisal, KYC and fraud checks, "
+        f"legal compliance, IT troubleshooting, executive dashboards. {n_live} run today, straight from your browser.</p>"
+        "</div>"
+        # WHY
+        "<div class='vp-card'>"
+        f"{_vp_label('why', 'Why', red=False)}"
+        "<h4>Most people don't know what AI agents can actually do</h4>"
+        "<p>Newcomers face hype, blank prompts and costly pilots. Seeing a working agent on a real task is the fastest "
+        "way to learn where AI helps, and where a human must stay in charge.</p>"
+        "</div>"
+        # SO WHAT
+        "<div class='vp-card'>"
+        f"{_vp_label('so_what', 'So what', red=True)}"
+        "<h4>From idea to proof in minutes, not months</h4>"
+        "<p>Every agent explains its reasoning and keeps a <b>human in the loop</b>, so a POC can be trusted, measured "
+        "and promoted. <b>No CAPEX</b>, open source, and your data stays in your sandbox.</p>"
+        "</div>"
+        # FOR WHO
+        "<div class='vp-card'>"
+        f"{_vp_label('for_who', 'For who', red=False)}"
+        "<h4>Anyone with a task AI could help with</h4>"
+        "<ul>"
+        "<li><b>Newcomers</b> exploring AI for the first time</li>"
+        "<li><b>Business experts</b>: bankers, analysts, legal, IT ops</li>"
+        "<li><b>Builders and data teams</b> who want a head start</li>"
+        "<li><b>Leaders</b> deciding where AI pays off</li>"
+        "</ul>"
+        "</div>"
+        "</div>"
+        # HOW: the POC-to-production journey
+        "<div class='vp-how'>"
+        f"<div class='vp-how-head'>{_vp_label('how', 'How', red=True)}<h4>From proof of concept to production in five steps</h4></div>"
+        "<div class='vp-steps'>"
+        "<div class='vp-step'><i>1</i><b>Discover</b><span>Browse agents by vertical and pick a human task to improve.</span><em>Explore</em></div>"
+        "<div class='vp-step'><i>2</i><b>Try</b><span>Launch it free with sample data. A working POC in minutes.</span><em>POC</em></div>"
+        "<div class='vp-step'><i>3</i><b>Customize</b><span>Adapt data, rules and models in the no-code Agent Builder.</span><em>No code</em></div>"
+        "<div class='vp-step'><i>4</i><b>Co-pilot</b><span>Run it alongside your team. People review, correct and approve.</span><em>Pilot</em></div>"
+        "<div class='vp-step'><i>5</i><b>Deploy</b><span>Ship to OpenStack, AWS, GCP, Azure or GPU cloud.</span><em>Production</em></div>"
+        "</div></div>"
+        # WHAT NOW
+        "<div class='vp-now'>"
+        "<div>"
+        f"{_vp_label('what_now', 'What now', red=True)}"
+        "<h4>Pick a task. Launch your first agent free. Ship what works.</h4>"
+        "<p>Start with a vertical you know, see the agent work, then build your own or deploy it.</p>"
+        "</div>"
+        "<div class='vp-now-ctas'>"
+        "<a class='vp-cta-red' href='#browse-agents' target='_self'>Browse agents</a>"
+        "<a class='vp-cta-blue' href='/agent_builder' target='_self'>Build your own</a>"
+        "<a class='vp-cta-ghost' href='/deployment_in_production' target='_self'>Deploy to production</a>"
+        "</div></div>",
+        unsafe_allow_html=True,
+    )
 
 
 def group_by_vertical(catalog: list[dict]) -> tuple[dict[str, list[dict]], list[str]]:
@@ -1421,7 +1571,8 @@ def render_marketplace():
     with st.container(key="aw_hero"):
         st.markdown(
             "<div class='aw-eyebrow'><i>✦</i> Agent mode</div>"
-            f"<h1 class='aw-hero-title'>Find your perfect match from {len(catalog)} free AI agents</h1>",
+            f"<h1 class='aw-hero-title'>Find your perfect match from <em>{len(catalog)} free</em> AI agents</h1>"
+            "<div class='aw-hero-sub'>Launch in one click, then deploy on OpenStack, AWS, GCP, Azure or GPU cloud.</div>",
             unsafe_allow_html=True,
         )
         query = st.text_input(
@@ -1443,6 +1594,10 @@ def render_marketplace():
         )
 
     q = (query or "").strip().lower()
+
+    # ── Value proposition (hidden while searching so results come first) ──
+    if not q:
+        render_value_intro(len(catalog), len(vertical_names), sum(i["live"] for i in catalog))
 
     def matches_query(item: dict) -> bool:
         if not q:
@@ -1562,7 +1717,7 @@ def render_agent_detail_css():
 .ad-crumbs span {{ margin:0 0.45rem; color:{pal['muted']} !important; }}
 .ad-head {{ display:flex; gap:1.1rem; align-items:center; margin-bottom:0.9rem; }}
 .ad-logo {{ padding:10px; border:1px solid {pal['border']}; border-radius:14px; background:{pal['card']}; }}
-.ad-title {{ font-size:1.65rem !important; font-weight:700 !important; margin:0 !important; color:{pal['text']} !important; }}
+.ad-title, .ad-title > span:first-child {{ font-size:1.65rem !important; font-weight:700 !important; margin:0 !important; color:{pal['text']} !important; }}
 .ad-title small {{ font-size:0.75rem; color:{accent} !important; font-weight:600; margin-left:0.4rem; vertical-align:middle; }}
 .ad-by {{ font-size:0.9rem; color:{pal['subtext']} !important; margin-top:0.2rem; }}
 .ad-by a {{ color:{accent} !important; text-decoration:underline !important; }}
@@ -1571,8 +1726,8 @@ def render_agent_detail_css():
 .ad-btn {{ display:block; text-align:center; font-weight:600; font-size:0.92rem; padding:0.55rem 1rem; border-radius:999px;
     border:1.5px solid {accent}; color:{accent} !important; text-decoration:none !important; background:{pal['card']}; }}
 .ad-btn:hover {{ background:rgba(26,109,255,0.08); }}
-.ad-btn-primary {{ background:{accent}; color:#ffffff !important; box-shadow:0 0 18px rgba(26,109,255,0.45); }}
-.ad-btn-primary:hover {{ background:{accent}; filter:brightness(1.08); }}
+.ad-btn-primary {{ background:{pal['red']}; border-color:{pal['red']}; color:#ffffff !important; box-shadow:0 0 18px rgba(229,19,58,0.4); }}
+.ad-btn-primary:hover {{ background:{pal['red']}; filter:brightness(1.08); }}
 .ad-btn-off {{ border-style:dashed; color:{pal['muted']} !important; border-color:{pal['input_border']}; box-shadow:none; background:transparent; }}
 .ad-actions .aw-deploy > summary {{ display:block; text-align:center; border-radius:999px; padding:0.55rem 1rem; font-size:0.92rem; border-width:1.5px; }}
 .ad-actions .aw-deploy-menu {{ left:0; right:0; }}
