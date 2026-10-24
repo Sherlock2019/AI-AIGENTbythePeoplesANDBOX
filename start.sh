@@ -8,6 +8,7 @@ APIPORT="${APIPORT:-8090}"
 UIPORT="${UIPORT:-8502}"
 OLLAMA_HOST="${OLLAMA_HOST:-http://127.0.0.1:11434}"
 OLLAMA_MODEL="${OLLAMA_MODEL:-gemma2:9b}"
+OLLAMA_WARM_TIMEOUT="${OLLAMA_WARM_TIMEOUT:-300}"  # seconds for the background model preload
 export SANDBOX_CHATBOT_MODEL="${SANDBOX_CHATBOT_MODEL:-${OLLAMA_MODEL}}"
 # Set SKIP_OLLAMA=1 to start API + UI without waiting for Ollama (LLM features offline until Ollama runs).
 SKIP_OLLAMA="${SKIP_OLLAMA:-0}"
@@ -193,13 +194,19 @@ ensure_ollama() {
     return 1
   fi
 
-  color_echo blue "Warming model '${OLLAMA_MODEL}'..."
-  if ! curl -s -X POST "${OLLAMA_HOST}/api/chat" \
-    -H "Content-Type: application/json" \
-    -d "{\"model\":\"${OLLAMA_MODEL}\",\"messages\":[{\"role\":\"user\",\"content\":\"warm up\"}],\"stream\":false}" \
-    >/dev/null; then
-    color_echo yellow "Could not warm model automatically; it will load on first request."
-  fi
+  # Preload in the background: a request with no prompt only loads the model
+  # into memory (no generation). Large models on CPU can take minutes, so it
+  # must never block the launcher; the outcome goes to the Ollama log.
+  color_echo blue "Warming model '${OLLAMA_MODEL}' in background (timeout ${OLLAMA_WARM_TIMEOUT}s)..."
+  (
+    if curl -s --max-time "${OLLAMA_WARM_TIMEOUT}" -X POST "${OLLAMA_HOST}/api/generate" \
+      -H "Content-Type: application/json" \
+      -d "{\"model\":\"${OLLAMA_MODEL}\",\"keep_alive\":\"30m\"}" >/dev/null; then
+      echo "[warmup] ${OLLAMA_MODEL} loaded" >> "${OLLAMA_LOG}"
+    else
+      echo "[warmup] ${OLLAMA_MODEL} not loaded within ${OLLAMA_WARM_TIMEOUT}s; it will load on first request" >> "${OLLAMA_LOG}"
+    fi
+  ) &
 
   color_echo green "✅ Ollama ready (logs: ${OLLAMA_LOG})"
 }
